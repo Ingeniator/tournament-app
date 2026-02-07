@@ -4,6 +4,7 @@ dev:
 	npm -w @padel/runner run dev & npm -w @padel/planner run dev & wait
 
 build:
+	npx -w @padel/common tsc -b
 	npm -w @padel/runner run build
 	npm -w @padel/planner run build
 
@@ -16,4 +17,4 @@ deploy-build: build
 	echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=/play"></head></html>' > dist/index.html
 
 clean:
-	rm -rf dist packages/runner/dist packages/planner/dist
+	rm -rf dist packages/common/dist packages/common/tsconfig.tsbuildinfo packages/runner/dist packages/planner/dist
