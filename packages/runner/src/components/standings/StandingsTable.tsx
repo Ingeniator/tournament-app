@@ -1,0 +1,68 @@
+import type { StandingsEntry } from '@padel/common';
+import styles from './StandingsTable.module.css';
+
+interface StandingsTableProps {
+  standings: StandingsEntry[];
+  plannedGames?: Map<string, number>;
+}
+
+export function StandingsTable({ standings, plannedGames }: StandingsTableProps) {
+  if (standings.length === 0) {
+    return <div className={styles.empty}>No scores entered yet</div>;
+  }
+
+  return (
+    <table className={styles.table}>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Player</th>
+          <th className={styles.right}>Pts</th>
+          {plannedGames && <th className={styles.right}>GP</th>}
+          <th className={styles.right}>W</th>
+          <th className={styles.right}>L</th>
+          <th className={styles.right}>+/-</th>
+        </tr>
+      </thead>
+      <tbody>
+        {standings.map(entry => {
+          const rankClass =
+            entry.rank === 1
+              ? styles.rank1
+              : entry.rank === 2
+              ? styles.rank2
+              : entry.rank === 3
+              ? styles.rank3
+              : '';
+          const diffClass =
+            entry.pointDiff > 0
+              ? styles.positive
+              : entry.pointDiff < 0
+              ? styles.negative
+              : '';
+          const planned = plannedGames?.get(entry.playerId) ?? 0;
+
+          return (
+            <tr key={entry.playerId}>
+              <td className={`${styles.rank} ${rankClass}`}>{entry.rank}</td>
+              <td className={styles.name}>{entry.playerName}</td>
+              <td className={`${styles.right} ${styles.points}`}>{entry.totalPoints}</td>
+              {plannedGames && (
+                <td className={`${styles.right} ${styles.gamesCol} ${planned === 0 ? styles.noPlanned : ''}`}>
+                  {entry.matchesPlayed}
+                  <span className={styles.plannedPart}>+{planned}</span>
+                </td>
+              )}
+              <td className={styles.right}>{entry.matchesWon}</td>
+              <td className={styles.right}>{entry.matchesLost}</td>
+              <td className={`${styles.right} ${styles.diff} ${diffClass}`}>
+                {entry.pointDiff > 0 ? '+' : ''}
+                {entry.pointDiff}
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  );
+}

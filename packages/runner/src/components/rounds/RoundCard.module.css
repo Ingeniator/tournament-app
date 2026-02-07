@@ -1,0 +1,43 @@
+.round {
+  margin-bottom: var(--space-lg);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-sm);
+}
+
+.roundTitle {
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+
+.badge {
+  font-size: var(--text-xs);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-raised);
+  color: var(--color-text-muted);
+}
+
+.badgeComplete {
+  background-color: rgba(22, 199, 154, 0.15);
+  color: var(--color-success);
+}
+
+.matches {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.sitOut {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-top: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background-color: var(--color-surface-raised);
+  border-radius: var(--radius-sm);
+}

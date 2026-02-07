@@ -1,0 +1,95 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80dvh;
+  padding: var(--space-xl) var(--space-md);
+  text-align: center;
+}
+
+.logo {
+  margin-bottom: var(--space-md);
+}
+
+.title {
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  margin-bottom: var(--space-xs);
+}
+
+.subtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-2xl);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  width: 100%;
+  max-width: 320px;
+}
+
+.resumeCard {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  text-align: left;
+  width: 100%;
+}
+
+.resumeTitle {
+  font-weight: 700;
+  margin-bottom: var(--space-xs);
+}
+
+.resumeMeta {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-md);
+}
+
+.resumeActions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.importSection {
+  width: 100%;
+  text-align: left;
+}
+
+.importArea {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  font-family: monospace;
+  color: var(--color-text);
+  resize: vertical;
+  min-height: 120px;
+  margin-bottom: var(--space-sm);
+}
+
+.importArea::placeholder {
+  color: var(--color-text-muted);
+}
+
+.importArea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.importError {
+  font-size: var(--text-sm);
+  color: var(--color-danger);
+  padding: var(--space-sm) var(--space-md);
+  background-color: rgba(233, 69, 96, 0.1);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-sm);
+}

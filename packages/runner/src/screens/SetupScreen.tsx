@@ -1,0 +1,96 @@
+import { useMemo } from 'react';
+import { useTournament } from '../hooks/useTournament';
+import { getStrategy } from '../strategies';
+import { AppShell } from '../components/layout/AppShell';
+import { PlayerInput } from '../components/setup/PlayerInput';
+import { PlayerList } from '../components/setup/PlayerList';
+import { TournamentConfigForm } from '../components/setup/TournamentConfigForm';
+import { Button } from '../components/common/Button';
+import { Card } from '../components/common/Card';
+import styles from './SetupScreen.module.css';
+
+export function SetupScreen() {
+  const { tournament, dispatch } = useTournament();
+
+  if (!tournament) return null;
+
+  const strategy = getStrategy(tournament.config.format);
+  const errors = useMemo(
+    () => strategy.validateSetup(tournament.players, tournament.config),
+    [tournament.players, tournament.config, strategy]
+  );
+
+  const handleGenerate = () => {
+    if (errors.length > 0) return;
+    dispatch({ type: 'GENERATE_SCHEDULE' });
+  };
+
+  const handleBack = () => {
+    if (confirm('Discard this tournament?')) {
+      dispatch({ type: 'RESET_TOURNAMENT' });
+    }
+  };
+
+  return (
+    <AppShell
+      title="Setup"
+      headerRight={
+        <Button variant="ghost" size="small" onClick={handleBack}>
+          Cancel
+        </Button>
+      }
+    >
+      <div className={styles.section}>
+        <input
+          className={styles.nameInput}
+          type="text"
+          value={tournament.name}
+          onChange={e =>
+            dispatch({ type: 'UPDATE_NAME', payload: { name: e.target.value } })
+          }
+          placeholder="Tournament name"
+        />
+      </div>
+
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>Players</h2>
+        <PlayerInput
+          onAdd={name => dispatch({ type: 'ADD_PLAYER', payload: { name } })}
+        />
+        <PlayerList
+          players={tournament.players}
+          onRemove={playerId =>
+            dispatch({ type: 'REMOVE_PLAYER', payload: { playerId } })
+          }
+        />
+      </div>
+
+      <Card>
+        <h2 className={styles.sectionTitle}>Settings</h2>
+        <TournamentConfigForm
+          config={tournament.config}
+          playerCount={tournament.players.length}
+          onUpdate={update => dispatch({ type: 'UPDATE_CONFIG', payload: update })}
+        />
+      </Card>
+
+      <div className={styles.footer}>
+        {errors.length > 0 && (
+          <div className={styles.errors}>
+            {errors.map((err, i) => (
+              <div key={i} className={styles.error}>
+                {err}
+              </div>
+            ))}
+          </div>
+        )}
+        <div className={styles.playerCount}>
+          {tournament.players.length} player(s) added
+        </div>
+        <Button fullWidth onClick={handleGenerate} disabled={errors.length > 0}>
+          Generate Schedule
+        </Button>
+      </div>
+    </AppShell>
+  );
+}
