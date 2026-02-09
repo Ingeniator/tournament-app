@@ -8,7 +8,7 @@ import { SetupScreen } from './screens/SetupScreen';
 import { PlayScreen } from './screens/PlayScreen';
 import { LogScreen } from './screens/LogScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
-import { Button } from './components/common/Button';
+import { Button } from '@padel/common';
 import { saveUIState, loadUIState } from './state/persistence';
 
 function AppContent() {

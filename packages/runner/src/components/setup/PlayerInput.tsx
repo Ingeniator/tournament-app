@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Button } from '../common/Button';
+import { Button } from '@padel/common';
 import styles from './PlayerInput.module.css';
 
 interface PlayerInputProps {

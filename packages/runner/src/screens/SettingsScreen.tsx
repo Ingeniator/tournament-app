@@ -2,8 +2,7 @@ import { useState, useCallback } from 'react';
 import { useTournament } from '../hooks/useTournament';
 import { copyToClipboard } from '../utils/clipboard';
 import { exportTournament, validateImport } from '../utils/importExport';
-import { Button } from '../components/common/Button';
-import { Card } from '../components/common/Card';
+import { Button, Card } from '@padel/common';
 import styles from './SettingsScreen.module.css';
 
 export function SettingsScreen() {

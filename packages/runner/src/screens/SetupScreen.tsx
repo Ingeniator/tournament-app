@@ -5,8 +5,7 @@ import { AppShell } from '../components/layout/AppShell';
 import { PlayerInput } from '../components/setup/PlayerInput';
 import { PlayerList } from '../components/setup/PlayerList';
 import { TournamentConfigForm } from '../components/setup/TournamentConfigForm';
-import { Button } from '../components/common/Button';
-import { Card } from '../components/common/Card';
+import { Button, Card } from '@padel/common';
 import styles from './SetupScreen.module.css';
 
 export function SetupScreen() {

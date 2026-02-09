@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useTournament } from '../hooks/useTournament';
 import { validateImport } from '../utils/importExport';
-import { Button } from '../components/common/Button';
-import { generateId } from '@padel/common';
+import { Button, generateId } from '@padel/common';
 import styles from './HomeScreen.module.css';
 
 export function HomeScreen() {

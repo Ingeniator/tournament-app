@@ -1,7 +1,7 @@
 .PHONY: dev build deploy-build clean
 
 dev:
-	npm -w @padel/runner run dev & npm -w @padel/planner run dev & wait
+	npm -w @padel/runner run dev & npm -w @padel/planner run dev & node dev-proxy.mjs & wait
 
 build:
 	npx -w @padel/common tsc -b
@@ -14,7 +14,7 @@ deploy-build: build
 	mkdir -p dist/play dist/plan
 	cp -r packages/runner/dist/* dist/play/
 	cp -r packages/planner/dist/* dist/plan/
-	echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=/play"></head></html>' > dist/index.html
+	cp index.html dist/index.html
 
 clean:
 	rm -rf dist packages/common/dist packages/common/tsconfig.tsbuildinfo packages/runner/dist packages/planner/dist

@@ -5,7 +5,7 @@ import { RoundCard } from '../components/rounds/RoundCard';
 import { StandingsTable } from '../components/standings/StandingsTable';
 import { useShareText } from '../hooks/useShareText';
 import { copyToClipboard } from '../utils/clipboard';
-import { Button } from '../components/common/Button';
+import { Button } from '@padel/common';
 import styles from './PlayScreen.module.css';
 
 export function PlayScreen() {

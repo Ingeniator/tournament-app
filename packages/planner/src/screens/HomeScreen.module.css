@@ -1,0 +1,166 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  max-width: 480px;
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: var(--space-2xl);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.headerTitle {
+  font-size: var(--text-xl);
+  font-weight: 800;
+}
+
+.namePrompt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.namePromptLabel {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.createSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.input {
+  width: 100%;
+  padding: 12px var(--space-md);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  color: var(--color-text);
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-color: var(--color-border);
+}
+
+.joinSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.codeInput {
+  width: 100%;
+  padding: 14px var(--space-md);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-align: center;
+  color: var(--color-text);
+  text-transform: uppercase;
+}
+
+.codeInput::placeholder {
+  color: var(--color-text-muted);
+  letter-spacing: 0.3em;
+}
+
+.codeInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.error {
+  font-size: var(--text-sm);
+  color: var(--color-danger);
+  padding: var(--space-sm) var(--space-md);
+  background-color: rgba(233, 69, 96, 0.1);
+  border-radius: var(--radius-sm);
+}
+
+.sectionTitle {
+  font-size: var(--text-base);
+  font-weight: 600;
+  margin-bottom: var(--space-md);
+  color: var(--color-text-secondary);
+}
+
+.tournamentList {
+  display: flex;
+  flex-direction: column;
+}
+
+.tournamentItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+}
+
+.tournamentItem:last-child {
+  border-bottom: none;
+}
+
+.tournamentItem:active {
+  opacity: 0.7;
+}
+
+.tournamentName {
+  font-weight: 600;
+}
+
+.tournamentMeta {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.empty {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: var(--space-md);
+}

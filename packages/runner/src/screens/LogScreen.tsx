@@ -3,7 +3,7 @@ import { useTournament } from '../hooks/useTournament';
 import { usePlayerStats } from '../hooks/usePlayerStats';
 import { RoundCard } from '../components/rounds/RoundCard';
 import { PlayerStats } from '../components/stats/PlayerStats';
-import { Button } from '../components/common/Button';
+import { Button } from '@padel/common';
 import styles from './LogScreen.module.css';
 
 export function LogScreen() {

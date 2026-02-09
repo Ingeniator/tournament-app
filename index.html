@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tournament Manager</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #1a1a2e;
+      color: #e0e0e0;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+    .logo { margin-bottom: 16px; }
+    h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+    .subtitle { font-size: 14px; color: #888; margin-bottom: 48px; }
+    .cards { display: flex; flex-direction: column; gap: 16px; width: 100%; }
+    a.card {
+      display: block;
+      background: #16213e;
+      border: 1px solid #2a2a4a;
+      border-radius: 12px;
+      padding: 24px;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+    a.card:hover { border-color: #e94560; transform: translateY(-2px); }
+    a.card:active { transform: translateY(0); }
+    .card-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .card-desc { font-size: 14px; color: #888; line-height: 1.4; }
+    .card-title .arrow { color: #e94560; margin-left: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <svg viewBox="0 0 100 100" width="56" height="56">
+        <circle cx="50" cy="50" r="22" fill="none" stroke="#e94560" stroke-width="5"/>
+        <line x1="50" y1="28" x2="50" y2="72" stroke="#e94560" stroke-width="3"/>
+        <line x1="28" y1="50" x2="72" y2="50" stroke="#e94560" stroke-width="3"/>
+      </svg>
+    </div>
+    <h1>Tournament Manager</h1>
+    <p class="subtitle">Organize and run tournaments at the court</p>
+    <div class="cards">
+      <a class="card" href="/plan">
+        <div class="card-title">Planner <span class="arrow">&rarr;</span></div>
+        <div class="card-desc">Create tournaments, invite players, manage registrations</div>
+      </a>
+      <a class="card" href="/play">
+        <div class="card-title">Runner <span class="arrow">&rarr;</span></div>
+        <div class="card-desc">Run matches, track scores, see live standings</div>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

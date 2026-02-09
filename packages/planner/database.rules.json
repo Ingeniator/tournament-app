@@ -1,0 +1,44 @@
+{
+  "rules": {
+    "tournaments": {
+      "$tournamentId": {
+        ".read": true,
+        ".write": "auth != null && (!data.exists() || data.child('organizerId').val() === auth.uid)",
+        "players": {
+          "$playerId": {
+            ".write": "auth != null && $playerId === auth.uid",
+            ".validate": "newData.hasChildren(['name', 'timestamp']) && newData.child('name').isString() && newData.child('name').val().length < 30 && (!newData.hasChild('confirmed') || newData.child('confirmed').isBoolean())"
+          }
+        }
+      }
+    },
+    "codes": {
+      "$code": {
+        ".read": true,
+        ".write": "auth != null && !data.exists()"
+      }
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "name": {
+          ".read": "auth != null",
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 50"
+        },
+        "organized": {
+          "$tournamentId": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.isBoolean() || !newData.exists()"
+          }
+        },
+        "registrations": {
+          "$tournamentId": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.isBoolean() || !newData.exists()"
+          }
+        }
+      }
+    }
+  }
+}

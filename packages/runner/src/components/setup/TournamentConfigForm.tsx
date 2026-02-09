@@ -1,6 +1,5 @@
 import type { TournamentConfig, Court } from '@padel/common';
-import { Button } from '../common/Button';
-import { generateId } from '@padel/common';
+import { Button, generateId } from '@padel/common';
 import styles from './TournamentConfigForm.module.css';
 
 interface TournamentConfigFormProps {
