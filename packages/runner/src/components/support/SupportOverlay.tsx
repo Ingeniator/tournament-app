@@ -103,9 +103,7 @@ export function SupportOverlay({ open, onClose }: SupportOverlayProps) {
           <div className={styles.wallHeader}>
             Supporters{grouped.length > 0 && (totalAmount > 0 || heartCount > 0) ? ` \u00B7 ${[totalAmount > 0 ? `${totalAmount}\u20AC` : '', heartCount > 0 ? `${heartCount} \u2764\uFE0F` : ''].filter(Boolean).join(' and ')} raised` : ''}
           </div>
-          {loading ? (
-            <p className={styles.empty}>Loading...</p>
-          ) : grouped.length === 0 ? (
+          {loading || grouped.length === 0 ? (
             <p className={styles.empty}>Be the first!</p>
           ) : (
             <div className={styles.supporterList}>
