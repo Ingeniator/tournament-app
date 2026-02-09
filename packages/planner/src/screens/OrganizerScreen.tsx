@@ -206,6 +206,23 @@ export function OrganizerScreen() {
       <Card>
         <h3 className={styles.sectionTitle}>Settings</h3>
         <div className={styles.configGrid}>
+          <label className={styles.configLabel}>Date & time</label>
+          <input
+            className={styles.configInput}
+            type="datetime-local"
+            value={tournament.date ?? ''}
+            onChange={e => updateTournament({ date: e.target.value || undefined })}
+          />
+
+          <label className={styles.configLabel}>Place</label>
+          <input
+            className={styles.configInput}
+            type="text"
+            value={tournament.place ?? ''}
+            onChange={e => updateTournament({ place: e.target.value || undefined })}
+            placeholder="Venue / location"
+          />
+          
           <label className={styles.configLabel}>Format</label>
           <select
             className={styles.select}
@@ -235,23 +252,6 @@ export function OrganizerScreen() {
             onChange={e => handleMaxRoundsChange(e.target.value)}
             placeholder="Unlimited"
             min={1}
-          />
-
-          <label className={styles.configLabel}>Date & time</label>
-          <input
-            className={styles.configInput}
-            type="datetime-local"
-            value={tournament.date ?? ''}
-            onChange={e => updateTournament({ date: e.target.value || undefined })}
-          />
-
-          <label className={styles.configLabel}>Place</label>
-          <input
-            className={styles.configInput}
-            type="text"
-            value={tournament.place ?? ''}
-            onChange={e => updateTournament({ place: e.target.value || undefined })}
-            placeholder="Venue / location"
           />
         </div>
 
