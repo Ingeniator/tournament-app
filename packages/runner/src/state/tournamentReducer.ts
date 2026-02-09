@@ -237,18 +237,32 @@ export function tournamentReducer(
     case 'SET_MATCH_SCORE': {
       if (!state) return state;
       const { roundId, matchId, score } = action.payload;
+      const updatedRounds = state.rounds.map(r =>
+        r.id === roundId
+          ? {
+              ...r,
+              matches: r.matches.map(m =>
+                m.id === matchId ? { ...m, score } : m
+              ),
+            }
+          : r
+      );
+
+      const strategy = getStrategy(state.config.format);
+      if (strategy.isDynamic) {
+        const totalTarget = state.config.maxRounds ?? state.players.length - 1;
+        const allScored = updatedRounds.every(r => r.matches.every(m => m.score !== null));
+        if (allScored && updatedRounds.length < totalTarget) {
+          const active = state.players.filter(p => !p.unavailable);
+          const excl = state.players.filter(p => p.unavailable).map(p => p.id);
+          const { rounds: next } = strategy.generateAdditionalRounds(active, state.config, updatedRounds, 1, excl);
+          return { ...state, rounds: [...updatedRounds, ...next], updatedAt: Date.now() };
+        }
+      }
+
       return {
         ...state,
-        rounds: state.rounds.map(r =>
-          r.id === roundId
-            ? {
-                ...r,
-                matches: r.matches.map(m =>
-                  m.id === matchId ? { ...m, score } : m
-                ),
-              }
-            : r
-        ),
+        rounds: updatedRounds,
         updatedAt: Date.now(),
       };
     }

@@ -6,6 +6,7 @@ export interface ScheduleResult {
 }
 
 export interface TournamentStrategy {
+  isDynamic: boolean;
   generateSchedule(players: Player[], config: TournamentConfig): ScheduleResult;
   generateAdditionalRounds(players: Player[], config: TournamentConfig, existingRounds: Round[], count: number, excludePlayerIds?: string[]): ScheduleResult;
   calculateStandings(tournament: Tournament): StandingsEntry[];

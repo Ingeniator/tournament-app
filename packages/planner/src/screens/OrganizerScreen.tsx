@@ -13,6 +13,7 @@ export function OrganizerScreen() {
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const [newPlayerName, setNewPlayerName] = useState('');
+  const [showFormatInfo, setShowFormatInfo] = useState(false);
 
   const capacity = tournament ? tournament.courts.length * 4 + (tournament.extraSpots ?? 0) : 0;
   const statuses = useMemo(() => getPlayerStatuses(players, capacity), [players, capacity]);
@@ -223,7 +224,17 @@ export function OrganizerScreen() {
             placeholder="Venue / location"
           />
           
-          <label className={styles.configLabel}>Format</label>
+          <label className={styles.configLabel}>
+            Format
+            <button
+              className={styles.infoBtn}
+              onClick={() => setShowFormatInfo(v => !v)}
+              type="button"
+              aria-label="Format info"
+            >
+              i
+            </button>
+          </label>
           <select
             className={styles.select}
             value={tournament.format}
@@ -231,9 +242,13 @@ export function OrganizerScreen() {
           >
             <option value="americano">Americano</option>
             <option value="mexicano">Mexicano</option>
-            <option value="team-americano">Team Americano</option>
-            <option value="round-robin">Round Robin</option>
           </select>
+          {showFormatInfo && (
+            <div className={styles.formatInfo}>
+              <p><strong>Americano</strong> — Random partner rotation each round. Individual standings.</p>
+              <p><strong>Mexicano</strong> — After round 1, pairings based on standings — top player pairs with bottom, keeping matches competitive.</p>
+            </div>
+          )}
 
           <label className={styles.configLabel}>Points per match</label>
           <input

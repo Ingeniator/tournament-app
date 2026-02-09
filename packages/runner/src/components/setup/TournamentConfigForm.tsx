@@ -1,4 +1,4 @@
-import type { TournamentConfig, Court } from '@padel/common';
+import type { TournamentConfig, TournamentFormat, Court } from '@padel/common';
 import { Button, generateId } from '@padel/common';
 import styles from './TournamentConfigForm.module.css';
 
@@ -34,6 +34,18 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
 
   return (
     <div className={styles.form}>
+      <div className={styles.field}>
+        <label className={styles.label}>Format</label>
+        <select
+          className={styles.input}
+          value={config.format}
+          onChange={e => onUpdate({ format: e.target.value as TournamentFormat })}
+        >
+          <option value="americano">Americano</option>
+          <option value="mexicano">Mexicano</option>
+        </select>
+      </div>
+
       <div className={styles.field}>
         <label className={styles.label}>Points per match</label>
         <input

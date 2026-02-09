@@ -31,7 +31,7 @@ A Monte Carlo approach tries many random partitions and picks the best:
 - The grouping with the lowest score wins
 - **Early exit** if a perfect score (0) is found
 
-**Attempt scaling**: `min(500 * numCourts^2, 5000)` attempts are made. Quadratic scaling gives larger tournaments proportionally more search budget.
+**Attempt scaling** is tiered by court count: 1-2 courts → 250, 3-4 courts → 6,000, 5+ courts → 20,000.
 
 ### Step 3: Team Pairing (who partners with whom within each court)
 
@@ -88,9 +88,10 @@ When generating additional rounds (`generateAdditionalRounds`), the algorithm re
 
 | Players | Courts | Partition Space | Attempts | Raw Coverage |
 |---------|--------|-----------------|----------|--------------|
-| 8       | 2      | 35              | 2,000    | Full         |
-| 12      | 3      | 5,775           | 4,500    | ~78%         |
-| 16      | 4      | ~2.6M           | 5,000    | ~0.2%        |
-| 18      | 4      | ~2.6M (16 active) | 5,000  | ~0.2%        |
+| 4       | 1      | 1               | 250      | Full         |
+| 8       | 2      | 35              | 250      | Full         |
+| 12      | 3      | 5,775           | 6,000    | Full         |
+| 16      | 4      | ~2.6M           | 6,000    | ~0.2%        |
+| 24      | 6      | ~4.5T           | 20,000   | Probabilistic |
 
 Raw coverage is low for 16+ active players, but this is not the relevant metric. What matters is the probability of finding a near-optimal partition. If just 0.1% of partitions are good, 5,000 attempts gives a >99% chance of finding one. For early rounds most partitions score 0, so the search exits immediately. Coverage only matters in late rounds when constraints accumulate, and even then 5,000 attempts reliably finds good solutions.
