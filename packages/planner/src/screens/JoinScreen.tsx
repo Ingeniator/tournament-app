@@ -5,10 +5,12 @@ import { getPlayerStatuses } from '../utils/playerStatus';
 import styles from './JoinScreen.module.css';
 
 export function JoinScreen() {
-  const { tournament, players, uid, registerPlayer, updateConfirmed, isRegistered, setScreen, organizerName, userName } = usePlanner();
+  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, isRegistered, setScreen, organizerName, userName } = usePlanner();
   const [name, setName] = useState(userName ?? '');
   const [registering, setRegistering] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState('');
 
   // Pre-fill name from profile when it loads
   useEffect(() => {
@@ -47,6 +49,16 @@ export function JoinScreen() {
     }
     setRegistering(false);
     setName('');
+  };
+
+  const handleSaveName = async () => {
+    const trimmed = nameDraft.trim();
+    if (!trimmed || !uid || trimmed === myRegistration?.name) {
+      setEditingName(false);
+      return;
+    }
+    await updatePlayerName(uid, trimmed);
+    setEditingName(false);
   };
 
   const handleToggleConfirmed = async () => {
@@ -103,42 +115,69 @@ export function JoinScreen() {
                 <div className={styles.reserveIcon}>&#9888;</div>
                 <h3>You're on the reserve list</h3>
                 <p className={styles.hint}>Reserve #{myReservePosition} — you'll move up if someone cancels</p>
-                <Button
-                  variant="secondary"
-                  fullWidth
-                  onClick={handleToggleConfirmed}
-                  disabled={updating}
-                >
-                  {updating ? 'Updating...' : 'Cancel participation'}
-                </Button>
               </>
             ) : isConfirmed ? (
               <>
                 <div className={styles.checkmark}>&#10003;</div>
                 <h3>You're confirmed!</h3>
                 <p className={styles.hint}>You'll appear in the player list below</p>
-                <Button
-                  variant="secondary"
-                  fullWidth
-                  onClick={handleToggleConfirmed}
-                  disabled={updating}
-                >
-                  {updating ? 'Updating...' : 'Cancel participation'}
-                </Button>
               </>
             ) : (
               <>
                 <div className={styles.cancelled}>&#10007;</div>
                 <h3>You've cancelled</h3>
                 <p className={styles.hint}>You can confirm again at any time</p>
-                <Button
-                  fullWidth
-                  onClick={handleToggleConfirmed}
-                  disabled={updating}
-                >
-                  {updating ? 'Updating...' : 'Confirm participation'}
-                </Button>
               </>
+            )}
+
+            {myRegistration && !editingName && (
+              <div className={styles.registeredName}>
+                <span className={styles.registeredAs}>Registered as <strong>{myRegistration.name}</strong></span>
+                <button
+                  className={styles.editBtn}
+                  onClick={() => { setNameDraft(myRegistration.name); setEditingName(true); }}
+                  aria-label="Edit name"
+                >
+                  &#x270E;
+                </button>
+              </div>
+            )}
+            {editingName && (
+              <div className={styles.editNameRow}>
+                <input
+                  className={styles.nameInput}
+                  type="text"
+                  value={nameDraft}
+                  onChange={e => setNameDraft(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') handleSaveName();
+                    if (e.key === 'Escape') setEditingName(false);
+                  }}
+                  autoFocus
+                />
+                <Button size="small" onClick={handleSaveName} disabled={!nameDraft.trim()}>
+                  Save
+                </Button>
+              </div>
+            )}
+
+            {isConfirmed ? (
+              <Button
+                variant="secondary"
+                fullWidth
+                onClick={handleToggleConfirmed}
+                disabled={updating}
+              >
+                {updating ? 'Updating...' : 'Cancel participation'}
+              </Button>
+            ) : (
+              <Button
+                fullWidth
+                onClick={handleToggleConfirmed}
+                disabled={updating}
+              >
+                {updating ? 'Updating...' : 'Confirm participation'}
+              </Button>
             )}
           </div>
         ) : (

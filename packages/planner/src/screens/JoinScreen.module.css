@@ -50,6 +50,45 @@
   margin-top: var(--space-sm);
 }
 
+.registeredName {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  margin: var(--space-md) 0;
+}
+
+.registeredAs {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.editBtn {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--text-base);
+  padding: 4px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.editBtn:active {
+  opacity: 0.7;
+}
+
+.editNameRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: var(--space-md) 0;
+}
+
+.editNameRow .nameInput {
+  flex: 1;
+  min-width: 0;
+}
+
 .registerForm {
   display: flex;
   flex-direction: column;

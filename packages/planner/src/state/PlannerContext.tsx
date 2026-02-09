@@ -27,6 +27,7 @@ interface PlannerContextValue {
   updateConfirmed: (confirmed: boolean) => Promise<void>;
   addPlayer: (name: string) => Promise<void>;
   toggleConfirmed: (playerId: string, currentConfirmed: boolean) => Promise<void>;
+  updatePlayerName: (playerId: string, name: string) => Promise<void>;
   isRegistered: boolean;
   organizerName: string | null;
   userName: string | null;
@@ -59,7 +60,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     deleteTournament: deleteInDb,
   } = usePlannerTournament(tournamentId);
 
-  const { players, registerPlayer: registerInDb, removePlayer: removeInDb, updateConfirmed: updateConfirmedInDb, addPlayer: addPlayerInDb, toggleConfirmed: toggleConfirmedInDb, isRegistered: checkRegistered } = usePlayers(tournamentId);
+  const { players, registerPlayer: registerInDb, removePlayer: removeInDb, updateConfirmed: updateConfirmedInDb, addPlayer: addPlayerInDb, toggleConfirmed: toggleConfirmedInDb, updatePlayerName: updatePlayerNameInDb, isRegistered: checkRegistered } = usePlayers(tournamentId);
 
   const { name: userName, loading: userNameLoading, updateName: updateUserName } = useUserProfile(uid);
   const { tournaments: myTournaments, loading: myLoading } = useMyTournaments(uid);
@@ -125,6 +126,10 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     await toggleConfirmedInDb(playerId, currentConfirmed);
   }, [toggleConfirmedInDb]);
 
+  const updatePlayerName = useCallback(async (playerId: string, name: string) => {
+    await updatePlayerNameInDb(playerId, name);
+  }, [updatePlayerNameInDb]);
+
   const updateConfirmed = useCallback(async (confirmed: boolean) => {
     if (!uid) return;
     await updateConfirmedInDb(uid, confirmed);
@@ -161,6 +166,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       updateConfirmed,
       addPlayer,
       toggleConfirmed,
+      updatePlayerName,
       isRegistered,
       organizerName,
       userName,

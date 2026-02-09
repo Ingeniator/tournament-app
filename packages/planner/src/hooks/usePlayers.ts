@@ -75,9 +75,14 @@ export function usePlayers(tournamentId: string | null) {
     });
   }, [tournamentId]);
 
+  const updatePlayerName = useCallback(async (playerId: string, name: string) => {
+    if (!tournamentId || !db) return;
+    await update(ref(db, `tournaments/${tournamentId}/players/${playerId}`), { name });
+  }, [tournamentId]);
+
   const isRegistered = useCallback((uid: string): boolean => {
     return players.some(p => p.id === uid);
   }, [players]);
 
-  return { players, loading, registerPlayer, removePlayer, updateConfirmed, addPlayer, toggleConfirmed, isRegistered };
+  return { players, loading, registerPlayer, removePlayer, updateConfirmed, addPlayer, toggleConfirmed, updatePlayerName, isRegistered };
 }
