@@ -34,6 +34,8 @@ export function HomeScreen() {
   const [joining, setJoining] = useState(false);
   const [profileName, setProfileName] = useState('');
   const [savingName, setSavingName] = useState(false);
+  const [editingUserName, setEditingUserName] = useState(false);
+  const [userNameDraft, setUserNameDraft] = useState('');
 
   const handleCreate = async () => {
     if (!name.trim()) return;
@@ -75,6 +77,14 @@ export function HomeScreen() {
     setSavingName(false);
   };
 
+  const handleSaveUserName = async () => {
+    const trimmed = userNameDraft.trim();
+    if (trimmed && trimmed !== userName) {
+      await updateUserName(trimmed);
+    }
+    setEditingUserName(false);
+  };
+
   const renderTournamentItem = (t: TournamentSummary, screen: 'organizer' | 'join') => (
     <div key={t.id} className={styles.tournamentItem} onClick={() => openTournament(t.id, screen)}>
       <span className={styles.tournamentName}>{t.name}</span>
@@ -98,17 +108,52 @@ export function HomeScreen() {
         <span className={styles.headerTitle}>Tournament Planner</span>
       </div>
 
+      {userName && !editingUserName && (
+        <div className={styles.userBadge}>
+          <span className={styles.userBadgeText}>Logged in as <strong>{userName}</strong></span>
+          <button
+            className={styles.editNameBtn}
+            onClick={() => { setUserNameDraft(userName); setEditingUserName(true); }}
+            aria-label="Edit name"
+          >
+            &#x270E;
+          </button>
+        </div>
+      )}
+      {editingUserName && (
+        <div className={styles.editNameRow}>
+          <input
+            className={styles.input}
+            type="text"
+            value={userNameDraft}
+            onChange={e => setUserNameDraft(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') handleSaveUserName();
+              if (e.key === 'Escape') setEditingUserName(false);
+            }}
+            autoFocus
+          />
+          <Button size="small" onClick={handleSaveUserName} disabled={!userNameDraft.trim()}>
+            Save
+          </Button>
+          <Button size="small" variant="ghost" onClick={() => setEditingUserName(false)}>
+            Cancel
+          </Button>
+        </div>
+      )}
+
       {/* Name prompt */}
       {!userNameLoading && !userName && (
         <Card>
           <div className={styles.namePrompt}>
             <span className={styles.namePromptLabel}>Set your name to get started</span>
+            <span className={styles.namePromptLabel}>(will be shown as tournament owner name)</span>
             <input
               className={styles.input}
               type="text"
               value={profileName}
               onChange={e => setProfileName(e.target.value)}
-              placeholder="Your name"
+              placeholder="Group Name / Your name"
               onKeyDown={e => e.key === 'Enter' && handleSaveName()}
             />
             <Button fullWidth onClick={handleSaveName} disabled={savingName || !profileName.trim()}>
@@ -195,6 +240,13 @@ export function HomeScreen() {
           )}
         </Card>
       )}
+
+      <div className={styles.footer}>
+        Free &amp; open source &middot;{' '}
+        <button className={styles.footerLink} onClick={() => setScreen('supporters')}>
+          View supporters
+        </button>
+      </div>
     </div>
   );
 }

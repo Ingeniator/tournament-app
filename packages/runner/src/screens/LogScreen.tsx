@@ -6,7 +6,7 @@ import { PlayerStats } from '../components/stats/PlayerStats';
 import { Button } from '@padel/common';
 import styles from './LogScreen.module.css';
 
-export function LogScreen() {
+export function LogScreen({ onNavigate }: { onNavigate?: (tab: 'play' | 'log' | 'settings') => void }) {
   const { tournament, dispatch } = useTournament();
   const stats = usePlayerStats(tournament);
   const [editingMatch, setEditingMatch] = useState<{ roundId: string; matchId: string } | null>(null);
@@ -53,6 +53,7 @@ export function LogScreen() {
       : 'Mark tournament as completed?';
     if (confirm(msg)) {
       dispatch({ type: 'COMPLETE_TOURNAMENT' });
+      onNavigate?.('play');
     }
   };
 

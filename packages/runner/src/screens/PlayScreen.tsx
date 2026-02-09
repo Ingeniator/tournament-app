@@ -3,6 +3,7 @@ import { useTournament } from '../hooks/useTournament';
 import { useStandings } from '../hooks/useStandings';
 import { RoundCard } from '../components/rounds/RoundCard';
 import { StandingsTable } from '../components/standings/StandingsTable';
+import { SupportOverlay } from '../components/support/SupportOverlay';
 import { useShareText } from '../hooks/useShareText';
 import { copyToClipboard } from '../utils/clipboard';
 import { Button } from '@padel/common';
@@ -27,6 +28,7 @@ export function PlayScreen() {
   }, [tournament]);
   const { roundResults, standingsText } = useShareText(tournament, standings);
   const [showStandings, setShowStandings] = useState(false);
+  const [showSupport, setShowSupport] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [roundCompleteNum, setRoundCompleteNum] = useState<number | null>(null);
   const prevActiveRoundIdRef = useRef<string | null>(null);
@@ -51,6 +53,11 @@ export function PlayScreen() {
         <Button fullWidth onClick={handleCopy}>
           Copy to Clipboard
         </Button>
+        <button className={styles.supportCta} onClick={() => setShowSupport(true)}>
+          <span className={styles.supportEmoji}>&#x2764;&#xFE0F;</span>
+          <span className={styles.supportText}>Enjoyed using this? Help keep it free.</span>
+        </button>
+        <SupportOverlay open={showSupport} onClose={() => setShowSupport(false)} />
         {toast && <div className={styles.toast}>{toast}</div>}
       </div>
     );
@@ -119,7 +126,19 @@ export function PlayScreen() {
 
       {!activeRound && (
         <div className={styles.allScored}>
-          All rounds scored!
+          <p>All rounds scored!</p>
+          <div className={styles.allScoredActions}>
+            <Button variant="secondary" fullWidth onClick={() => dispatch({ type: 'ADD_ROUNDS', payload: { count: 1 } })}>
+              + Add Round
+            </Button>
+            <Button fullWidth onClick={() => {
+              if (confirm('Mark tournament as completed?')) {
+                dispatch({ type: 'COMPLETE_TOURNAMENT' });
+              }
+            }}>
+              Finish Tournament
+            </Button>
+          </div>
         </div>
       )}
 

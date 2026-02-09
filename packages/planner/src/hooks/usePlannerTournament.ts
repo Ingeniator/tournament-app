@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ref, set, get, onValue } from 'firebase/database';
+import { ref, set, get, remove, onValue } from 'firebase/database';
 import type { PlannerTournament, Court } from '@padel/common';
 import { generateId } from '@padel/common';
 import { db } from '../firebase';
@@ -72,5 +72,13 @@ export function usePlannerTournament(tournamentId: string | null) {
     return null;
   }, []);
 
-  return { tournament, loading, createTournament, updateTournament, updateCourts, loadByCode };
+  const deleteTournament = useCallback(async (organizerId: string) => {
+    if (!tournamentId || !db || !tournament) return;
+    const code = tournament.code;
+    await remove(ref(db, `codes/${code}`));
+    await remove(ref(db, `tournaments/${tournamentId}`));
+    await remove(ref(db, `users/${organizerId}/organized/${tournamentId}`));
+  }, [tournamentId, tournament]);
+
+  return { tournament, loading, createTournament, updateTournament, updateCourts, loadByCode, deleteTournament };
 }

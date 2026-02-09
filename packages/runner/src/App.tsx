@@ -55,7 +55,7 @@ function AppContent() {
         }
       >
         {activeTab === 'play' && <PlayScreen />}
-        {activeTab === 'log' && <LogScreen />}
+        {activeTab === 'log' && <LogScreen onNavigate={setActiveTab} />}
         {activeTab === 'settings' && <SettingsScreen />}
       </AppShell>
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />

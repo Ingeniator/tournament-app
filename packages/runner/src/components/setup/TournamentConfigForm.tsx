@@ -90,7 +90,7 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
             onUpdate({ maxRounds: val > 0 ? val : null });
           }}
         />
-        <span className={styles.hint}>Default: {defaultRounds} (players - 1)</span>
+        <span className={styles.hint}>Default: {defaultRounds} (players count minus one)</span>
       </div>
     </div>
   );

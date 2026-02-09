@@ -57,6 +57,11 @@
   gap: var(--space-sm);
 }
 
+.planLink {
+  text-decoration: none;
+  width: 100%;
+}
+
 .importSection {
   width: 100%;
   text-align: left;

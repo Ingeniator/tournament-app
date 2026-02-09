@@ -6,17 +6,16 @@ export function useShareText(tournament: Tournament | null, standings: Standings
     if (!tournament) return '';
     const playerName = (id: string) =>
       tournament.players.find(p => p.id === id)?.name ?? '?';
+    const courtName = (courtId: string) =>
+      tournament.config.courts.find(c => c.id === courtId)?.name ?? courtId;
 
-    const lines: string[] = [`${tournament.name}`, ''];
+    const lines: string[] = [];
 
     for (const round of tournament.rounds) {
       const scoredMatches = round.matches.filter(m => m.score);
       if (scoredMatches.length === 0) continue;
 
       lines.push(`Round ${round.roundNumber}`);
-      const courtName = (courtId: string) =>
-        tournament.config.courts.find(c => c.id === courtId)?.name ?? courtId;
-
       for (const match of scoredMatches) {
         const t1 = `${playerName(match.team1[0])} & ${playerName(match.team1[1])}`;
         const t2 = `${playerName(match.team2[0])} & ${playerName(match.team2[1])}`;
@@ -29,22 +28,25 @@ export function useShareText(tournament: Tournament | null, standings: Standings
       lines.push('');
     }
 
-    return lines.join('\n');
+    return lines.join('\n').trimEnd();
   }, [tournament]);
 
   const standingsText = useMemo(() => {
     if (!tournament || standings.length === 0) return '';
-    const lines: string[] = [`${tournament.name} — Standings`, ''];
+    const nameW = Math.max(...standings.map(s => s.playerName.length), 4);
+    const ptsW = Math.max(...standings.map(s => String(s.totalPoints).length), 3);
+    const diffW = Math.max(...standings.map(s => String(Math.abs(s.pointDiff)).length + 1), 4);
 
-    const nameWidth = Math.max(...standings.map(s => s.playerName.length), 4);
-    lines.push(
-      `${'#'.padStart(3)}  ${'Name'.padEnd(nameWidth)}  ${'Pts'.padStart(4)}  ${'W'.padStart(2)}  ${'L'.padStart(2)}  ${'D'.padStart(2)}  ${'Diff'.padStart(5)}`
-    );
-    lines.push('-'.repeat(3 + 2 + nameWidth + 2 + 4 + 2 + 2 + 2 + 2 + 2 + 2 + 2 + 5));
+    const header = `${'#'.padStart(3)}  ${'Name'.padEnd(nameW)}  ${'Pts'.padStart(ptsW)}  ${'W-L'.padStart(5)}  ${'Diff'.padStart(diffW)}`;
+    const sep = '-'.repeat(header.length);
+
+    const lines: string[] = [tournament.name, '', header, sep];
 
     for (const s of standings) {
+      const diff = (s.pointDiff >= 0 ? '+' : '-') + String(Math.abs(s.pointDiff));
+      const wl = `${s.matchesWon}-${s.matchesLost}${s.matchesDraw > 0 ? `-${s.matchesDraw}` : ''}`;
       lines.push(
-        `${String(s.rank).padStart(3)}  ${s.playerName.padEnd(nameWidth)}  ${String(s.totalPoints).padStart(4)}  ${String(s.matchesWon).padStart(2)}  ${String(s.matchesLost).padStart(2)}  ${String(s.matchesDraw).padStart(2)}  ${(s.pointDiff >= 0 ? '+' : '') + String(s.pointDiff).padStart(4)}`
+        `${String(s.rank).padStart(3)}  ${s.playerName.padEnd(nameW)}  ${String(s.totalPoints).padStart(ptsW)}  ${wl.padStart(5)}  ${diff.padStart(diffW)}`
       );
     }
 
@@ -53,7 +55,7 @@ export function useShareText(tournament: Tournament | null, standings: Standings
 
   const summaryText = useMemo(() => {
     if (!tournament) return '';
-    const lines: string[] = [`${tournament.name}`, ''];
+    const lines: string[] = [`${tournament.name} - Logs`, ''];
 
     lines.push('Players');
     tournament.players.forEach((p, i) => {

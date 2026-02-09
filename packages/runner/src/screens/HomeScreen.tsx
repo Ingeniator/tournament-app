@@ -82,8 +82,13 @@ export function HomeScreen() {
         {!hasSaved && (
           <>
             <Button onClick={handleNew} fullWidth>
-              New Tournament
+              New Play
             </Button>
+            <a href="/plan" className={styles.planLink}>
+              <Button variant="secondary" fullWidth>
+                Plan & Share New Tournament
+              </Button>
+            </a>
             <Button
               variant="secondary"
               fullWidth

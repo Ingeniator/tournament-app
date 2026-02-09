@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button, Card } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
+import { getPlayerStatuses } from '../utils/playerStatus';
 import styles from './JoinScreen.module.css';
 
 export function JoinScreen() {
@@ -14,11 +15,26 @@ export function JoinScreen() {
     if (userName && !name) setName(userName);
   }, [userName]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const capacity = tournament ? tournament.courts.length * 4 + (tournament.extraSpots ?? 0) : 0;
+  const statuses = useMemo(() => getPlayerStatuses(players, capacity), [players, capacity]);
+  const myRegistration = uid ? players.find(p => p.id === uid) : undefined;
+  const myStatus = myRegistration ? statuses.get(myRegistration.id) : undefined;
+
+  // Compute reserve position (1-based) for current player
+  const myReservePosition = useMemo(() => {
+    if (myStatus !== 'reserve' || !myRegistration) return 0;
+    const confirmed = players.filter(p => p.confirmed !== false);
+    const sorted = [...confirmed].sort((a, b) => a.timestamp - b.timestamp);
+    const reservePlayers = sorted.slice(capacity);
+    return reservePlayers.findIndex(p => p.id === myRegistration.id) + 1;
+  }, [myStatus, myRegistration, players, capacity]);
+
   if (!tournament) return null;
 
-  const capacity = tournament.courts.length * 4 + (tournament.extraSpots ?? 0);
   const confirmedCount = players.filter(p => p.confirmed !== false).length;
   const spotsLeft = capacity - confirmedCount;
+  const reserveCount = [...statuses.values()].filter(s => s === 'reserve').length;
+  const isConfirmed = myRegistration?.confirmed !== false;
 
   const handleRegister = async () => {
     const trimmed = name.trim();
@@ -32,9 +48,6 @@ export function JoinScreen() {
     setRegistering(false);
     setName('');
   };
-
-  const myRegistration = uid ? players.find(p => p.id === uid) : undefined;
-  const isConfirmed = myRegistration?.confirmed !== false;
 
   const handleToggleConfirmed = async () => {
     setUpdating(true);
@@ -85,7 +98,21 @@ export function JoinScreen() {
       <Card>
         {isRegistered ? (
           <div className={styles.registered}>
-            {isConfirmed ? (
+            {isConfirmed && myStatus === 'reserve' ? (
+              <>
+                <div className={styles.reserveIcon}>&#9888;</div>
+                <h3>You're on the reserve list</h3>
+                <p className={styles.hint}>Reserve #{myReservePosition} — you'll move up if someone cancels</p>
+                <Button
+                  variant="secondary"
+                  fullWidth
+                  onClick={handleToggleConfirmed}
+                  disabled={updating}
+                >
+                  {updating ? 'Updating...' : 'Cancel participation'}
+                </Button>
+              </>
+            ) : isConfirmed ? (
               <>
                 <div className={styles.checkmark}>&#10003;</div>
                 <h3>You're confirmed!</h3>
@@ -116,7 +143,7 @@ export function JoinScreen() {
           </div>
         ) : (
           <div className={styles.registerForm}>
-            <h3 className={styles.formTitle}>Join this tournament</h3>
+            <h3 className={styles.formTitle}>Join this tournament as</h3>
             <input
               className={styles.nameInput}
               type="text"
@@ -144,7 +171,9 @@ export function JoinScreen() {
         <p className={styles.capacityHint}>
           {spotsLeft > 0
             ? `${spotsLeft} spot${spotsLeft === 1 ? '' : 's'} left`
-            : 'Full'}
+            : reserveCount > 0
+              ? `Full \u00b7 ${reserveCount} on reserve list`
+              : 'Full'}
           {` \u00b7 ${tournament.courts.length} court${tournament.courts.length !== 1 ? 's' : ''} \u00d7 4${(tournament.extraSpots ?? 0) > 0 ? ` + ${tournament.extraSpots}` : ''}`}
         </p>
         {players.length === 0 ? (
@@ -154,7 +183,12 @@ export function JoinScreen() {
             {players.map((player, i) => (
               <div key={player.id} className={styles.playerItem}>
                 <span className={styles.playerNum}>{i + 1}</span>
-                <span className={styles.playerName}>{player.name}</span>
+                <span className={styles.playerName}>
+                  {player.name}
+                  {statuses.get(player.id) === 'reserve' && (
+                    <span className={styles.reserveBadge}>reserve</span>
+                  )}
+                </span>
                 <span className={player.confirmed !== false ? styles.statusConfirmed : styles.statusCancelled}>
                   {player.confirmed !== false ? '\u2713' : '\u2717'}
                 </span>

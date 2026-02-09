@@ -9,7 +9,7 @@ import { useUserProfile } from '../hooks/useUserProfile';
 import { useMyTournaments } from '../hooks/useMyTournaments';
 import { useRegisteredTournaments } from '../hooks/useRegisteredTournaments';
 
-export type Screen = 'loading' | 'home' | 'organizer' | 'join';
+export type Screen = 'loading' | 'home' | 'organizer' | 'join' | 'supporters';
 
 interface PlannerContextValue {
   uid: string | null;
@@ -36,6 +36,7 @@ interface PlannerContextValue {
   registeredTournaments: TournamentSummary[];
   listingsLoading: boolean;
   openTournament: (id: string, screen: 'organizer' | 'join') => void;
+  deleteTournament: () => Promise<void>;
 }
 
 const PlannerCtx = createContext<PlannerContextValue>(null!);
@@ -55,6 +56,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     createTournament: createInDb,
     updateTournament: updateInDb,
     loadByCode: loadByCodeFromDb,
+    deleteTournament: deleteInDb,
   } = usePlannerTournament(tournamentId);
 
   const { players, registerPlayer: registerInDb, removePlayer: removeInDb, updateConfirmed: updateConfirmedInDb, addPlayer: addPlayerInDb, toggleConfirmed: toggleConfirmedInDb, isRegistered: checkRegistered } = usePlayers(tournamentId);
@@ -128,6 +130,13 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     await updateConfirmedInDb(uid, confirmed);
   }, [uid, updateConfirmedInDb]);
 
+  const deleteTournament = useCallback(async () => {
+    if (!uid) return;
+    await deleteInDb(uid);
+    setTournamentId(null);
+    setScreen('home');
+  }, [uid, deleteInDb]);
+
   const openTournament = useCallback((id: string, targetScreen: 'organizer' | 'join') => {
     setTournamentId(id);
     setScreen(targetScreen);
@@ -161,6 +170,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       registeredTournaments,
       listingsLoading,
       openTournament,
+      deleteTournament,
     }}>
       {children}
     </PlannerCtx.Provider>

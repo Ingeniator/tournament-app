@@ -15,7 +15,14 @@
     "codes": {
       "$code": {
         ".read": true,
-        ".write": "auth != null && !data.exists()"
+        ".write": "auth != null && (!data.exists() || !newData.exists() && root.child('tournaments').child(data.val()).child('organizerId').val() === auth.uid)"
+      }
+    },
+    "supporters": {
+      ".read": true,
+      "$id": {
+        ".write": "auth != null && !data.exists()",
+        ".validate": "newData.hasChildren(['name', 'amount', 'timestamp']) && newData.child('name').isString() && newData.child('name').val().length >= 1 && newData.child('name').val().length <= 50 && newData.child('amount').isNumber() && (newData.child('amount').val() === 0 || newData.child('amount').val() === 3 || newData.child('amount').val() === 5 || newData.child('amount').val() === 10) && newData.child('timestamp').isNumber() && (!newData.hasChild('message') || newData.child('message').isString() && newData.child('message').val().length <= 50)"
       }
     },
     "users": {

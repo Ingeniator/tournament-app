@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useTournament } from '../hooks/useTournament';
+import { SupportOverlay } from '../components/support/SupportOverlay';
 import { copyToClipboard } from '../utils/clipboard';
 import { exportTournament, validateImport } from '../utils/importExport';
 import { Button, Card } from '@padel/common';
@@ -21,6 +22,7 @@ export function SettingsScreen() {
   const [importMode, setImportMode] = useState(false);
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
+  const [showSupporters, setShowSupporters] = useState(false);
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -366,6 +368,15 @@ export function SettingsScreen() {
           Delete Tournament
         </Button>
       </div>
+
+      <div className={styles.attribution}>
+        Made with care &middot;{' '}
+        <button className={styles.attributionLink} onClick={() => setShowSupporters(true)}>
+          View our supporters
+        </button>
+      </div>
+
+      <SupportOverlay open={showSupporters} onClose={() => setShowSupporters(false)} />
 
       {toast && <div className={styles.toast}>{toast}</div>}
     </div>

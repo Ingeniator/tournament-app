@@ -4,6 +4,7 @@ import { PlannerProvider, usePlanner } from './state/PlannerContext';
 import { HomeScreen } from './screens/HomeScreen';
 import { OrganizerScreen } from './screens/OrganizerScreen';
 import { JoinScreen } from './screens/JoinScreen';
+import { SupportersScreen } from './screens/SupportersScreen';
 import styles from './App.module.css';
 
 function AppContent() {
@@ -13,10 +14,13 @@ function AppContent() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
+    const screenParam = params.get('screen');
     if (code && code.length === 6) {
       loadByCode(code).then(found => {
         setScreen(found ? 'join' : 'home');
       });
+    } else if (screenParam === 'supporters') {
+      setScreen('supporters');
     } else {
       setScreen('home');
     }
@@ -37,6 +41,8 @@ function AppContent() {
       return <OrganizerScreen />;
     case 'join':
       return <JoinScreen />;
+    case 'supporters':
+      return <SupportersScreen />;
     default:
       return <HomeScreen />;
   }

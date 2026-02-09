@@ -1,21 +1,26 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button, Card } from '@padel/common';
 import type { TournamentFormat, Court } from '@padel/common';
 import { generateId } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { launchInRunner, buildRunnerTournament } from '../utils/exportToRunner';
+import { getPlayerStatuses } from '../utils/playerStatus';
 import styles from './OrganizerScreen.module.css';
 
 export function OrganizerScreen() {
-  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, toggleConfirmed } = usePlanner();
+  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, toggleConfirmed, deleteTournament } = usePlanner();
   const [toast, setToast] = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const [newPlayerName, setNewPlayerName] = useState('');
 
+  const capacity = tournament ? tournament.courts.length * 4 + (tournament.extraSpots ?? 0) : 0;
+  const statuses = useMemo(() => getPlayerStatuses(players, capacity), [players, capacity]);
+
   if (!tournament) return null;
 
   const confirmedCount = players.filter(p => p.confirmed !== false).length;
+  const reserveCount = [...statuses.values()].filter(s => s === 'reserve').length;
 
   const shareUrl = `${window.location.origin}/plan?code=${tournament.code}`;
 
@@ -133,7 +138,9 @@ export function OrganizerScreen() {
 
       {/* Player list */}
       <Card>
-        <h3 className={styles.sectionTitle}>Players ({confirmedCount} / {tournament.courts.length * 4 + (tournament.extraSpots ?? 0)})</h3>
+        <h3 className={styles.sectionTitle}>
+          Players ({confirmedCount} / {capacity}{reserveCount > 0 ? ` + ${reserveCount} reserve` : ''})
+        </h3>
         {players.length === 0 ? (
           <p className={styles.empty}>No players registered yet</p>
         ) : (
@@ -141,7 +148,12 @@ export function OrganizerScreen() {
             {players.map((player, i) => (
               <div key={player.id} className={styles.playerItem}>
                 <span className={styles.playerNum}>{i + 1}</span>
-                <span className={styles.playerName}>{player.name}</span>
+                <span className={styles.playerName}>
+                  {player.name}
+                  {statuses.get(player.id) === 'reserve' && (
+                    <span className={styles.reserveBadge}>reserve</span>
+                  )}
+                </span>
                 <button
                   className={player.confirmed !== false ? styles.statusConfirmed : styles.statusCancelled}
                   onClick={() => toggleConfirmed(player.id, player.confirmed !== false)}
@@ -291,12 +303,35 @@ export function OrganizerScreen() {
       </Card>
 
       {/* Export */}
+      {confirmedCount > 0 && confirmedCount < capacity && (
+        <div className={styles.warning}>
+          Only {confirmedCount} of {capacity} spots filled. Some courts won't have full games.
+        </div>
+      )}
       <Button fullWidth onClick={handleLaunch} disabled={players.length === 0}>
-        Start in Runner
+        Let's play
       </Button>
       <Button variant="secondary" fullWidth onClick={handleCopyExport} disabled={players.length === 0}>
         Copy for Another Device
       </Button>
+
+      <button
+        className={styles.deleteBtn}
+        onClick={async () => {
+          if (window.confirm('Delete this tournament? This cannot be undone.')) {
+            await deleteTournament();
+          }
+        }}
+      >
+        Delete Tournament
+      </button>
+
+      <div className={styles.supportNudge}>
+        Free &amp; open source &middot;{' '}
+        <button className={styles.supportLink} onClick={() => setScreen('supporters')}>
+          View supporters
+        </button>
+      </div>
 
       {toast && <div className={styles.toast}>{toast}</div>}
     </div>
