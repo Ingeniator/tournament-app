@@ -37,7 +37,11 @@ export function OrganizerScreen() {
   const confirmedCount = players.filter(p => p.confirmed !== false).length;
   const reserveCount = [...statuses.values()].filter(s => s === 'reserve').length;
 
-  const shareUrl = `${window.location.origin}/plan?code=${tournament.code}`;
+  const botName = import.meta.env.VITE_TELEGRAM_BOT_NAME as string | undefined;
+  const isTelegram = !!window.Telegram?.WebApp?.initData;
+  const shareUrl = isTelegram && botName
+    ? `https://t.me/${botName}?startapp=${tournament.code}`
+    : `${window.location.origin}/plan?code=${tournament.code}`;
 
   const handleCopyLink = async () => {
     try {

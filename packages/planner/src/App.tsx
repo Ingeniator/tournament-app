@@ -10,10 +10,12 @@ import styles from './App.module.css';
 function AppContent() {
   const { screen, setScreen, authLoading, loadByCode } = usePlanner();
 
-  // Check URL for ?code=XXXXXX on mount
+  // Check URL for ?code=XXXXXX or Telegram startapp param on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
+    const code = params.get('code')
+      ?? window.Telegram?.WebApp?.initDataUnsafe?.start_param
+      ?? null;
     const screenParam = params.get('screen');
     if (code && code.length === 6) {
       loadByCode(code).then(found => {
