@@ -49,6 +49,11 @@ function generateMexicanoRounds(
   const n = activePlayers.length;
   const availableCourts = config.courts.filter(c => !c.unavailable);
   const numCourts = Math.min(availableCourts.length, Math.floor(n / 4));
+
+  if (numCourts === 0) {
+    return { rounds: [], warnings: ['Not enough players for a match (need at least 4)'] };
+  }
+
   const playersPerRound = numCourts * 4;
   const sitOutCount = n - playersPerRound;
   const gamesPlayed = seedGamesPlayed(existingRounds, activePlayers);

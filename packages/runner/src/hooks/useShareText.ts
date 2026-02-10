@@ -9,6 +9,22 @@ export function useShareText(tournament: Tournament | null, standings: Standings
     const courtName = (courtId: string) =>
       tournament.config.courts.find(c => c.id === courtId)?.name ?? courtId;
 
+    // Pre-compute max widths for aligned columns
+    let maxCourtW = 0;
+    let maxT1W = 0;
+    let maxScoreW = 0;
+
+    for (const round of tournament.rounds) {
+      for (const match of round.matches) {
+        if (!match.score) continue;
+        maxCourtW = Math.max(maxCourtW, courtName(match.courtId).length);
+        const t1 = `${playerName(match.team1[0])} & ${playerName(match.team1[1])}`;
+        maxT1W = Math.max(maxT1W, t1.length);
+        const score = `${match.score.team1Points}:${match.score.team2Points}`;
+        maxScoreW = Math.max(maxScoreW, score.length);
+      }
+    }
+
     const lines: string[] = [];
 
     for (const round of tournament.rounds) {
@@ -20,7 +36,10 @@ export function useShareText(tournament: Tournament | null, standings: Standings
         const t1 = `${playerName(match.team1[0])} & ${playerName(match.team1[1])}`;
         const t2 = `${playerName(match.team2[0])} & ${playerName(match.team2[1])}`;
         const s = match.score!;
-        lines.push(`  ${courtName(match.courtId)}: ${t1} ${s.team1Points}-${s.team2Points} ${t2}`);
+        const score = `${s.team1Points}:${s.team2Points}`;
+        lines.push(
+          `  ${courtName(match.courtId).padEnd(maxCourtW)}  ${t1.padEnd(maxT1W)}  ${score.padStart(maxScoreW)}  ${t2}`
+        );
       }
       if (round.sitOuts.length > 0) {
         lines.push(`  Sat out: ${round.sitOuts.map(playerName).join(', ')}`);

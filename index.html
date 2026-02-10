@@ -3,7 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tournament Manager</title>
+  <title>Padel Tournament Manager — Organize Scores & Standings | PadelDay</title>
+  <meta name="description" content="Free tournament manager for padel, tennis, and other racket sports. Create brackets, track live scores, view standings, and share results. Works offline on your phone.">
+  <meta name="keywords" content="padel tournament, tournament manager, padel americano, padel mexicano, padel scores, tournament organizer, racket sports tournament, live standings">
+  <link rel="canonical" href="https://padelday.net/">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://padelday.net/">
+  <meta property="og:title" content="Padel Tournament Manager — Organize Scores & Standings">
+  <meta property="og:description" content="Free tournament manager for padel, tennis, and other racket sports. Create brackets, track live scores, and view standings. Works offline.">
+  <meta property="og:site_name" content="PadelDay">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Padel Tournament Manager — Organize Scores & Standings">
+  <meta name="twitter:description" content="Free tournament manager for padel, tennis, and other racket sports. Create brackets, track live scores, and view standings. Works offline.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "PadelDay Tournament Manager",
+    "url": "https://padelday.net",
+    "applicationCategory": "SportsApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "description": "Free tournament manager for padel, tennis, and racket sports. Americano & Mexicano formats, live scoring, standings, and offline support.",
+    "aggregateRating": null
+  }
+  </script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -27,6 +52,7 @@
     .logo { margin-bottom: 16px; }
     h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
     .subtitle { font-size: 14px; color: #888; margin-bottom: 48px; }
+    #greeting { color: #e94560; font-size: 16px; font-weight: 600; margin-bottom: 8px; }
     .cards { display: flex; flex-direction: column; gap: 16px; width: 100%; }
     a.card {
       display: block;
@@ -55,6 +81,7 @@
       </svg>
     </div>
     <h1>Tournament Manager</h1>
+    <p id="greeting" class="subtitle" style="display:none"></p>
     <p class="subtitle">Organize and run tournaments at the court</p>
     <div class="cards">
       <a class="card" href="/plan">
@@ -67,5 +94,30 @@
       </a>
     </div>
   </div>
+  <script>
+    (function() {
+      var tg = window.Telegram && window.Telegram.WebApp;
+      if (!tg) return;
+      tg.ready();
+
+      // Show greeting
+      var user = tg.initDataUnsafe && tg.initDataUnsafe.user;
+      if (user) {
+        var name = user.first_name + (user.last_name ? ' ' + user.last_name : '');
+        var el = document.getElementById('greeting');
+        el.textContent = 'Hello, ' + name + '!';
+        el.style.display = '';
+      }
+
+      // Forward hash fragment to /plan and /play links
+      var hash = window.location.hash;
+      if (hash) {
+        var links = document.querySelectorAll('a.card');
+        for (var i = 0; i < links.length; i++) {
+          links[i].href = links[i].getAttribute('href') + hash;
+        }
+      }
+    })();
+  </script>
 </body>
 </html>

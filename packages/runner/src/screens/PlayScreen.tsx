@@ -80,10 +80,56 @@ export function PlayScreen() {
       <div className={styles.container}>
         <div className={styles.completedHeader}>
           <h2 className={styles.completedTitle}>Tournament Complete</h2>
+          <p className={styles.completedName}>{tournament.name}</p>
         </div>
-        <pre className={styles.summaryText}>{fullText}</pre>
+        <div className={styles.completedStandings}>
+          <StandingsTable standings={standings} />
+        </div>
+        {tournament.rounds.some(r => r.matches.some(m => m.score)) && (
+          <details className={styles.roundDetails}>
+            <summary className={styles.roundDetailsSummary}>Round Results</summary>
+            <div className={styles.roundResultsList}>
+              {tournament.rounds.map(round => {
+                const scoredMatches = round.matches.filter(m => m.score);
+                if (scoredMatches.length === 0) return null;
+                return (
+                  <div key={round.id} className={styles.roundResultGroup}>
+                    <div className={styles.roundResultTitle}>Round {round.roundNumber}</div>
+                    {scoredMatches.map(match => {
+                      const courtLabel = tournament.config.courts.find(c => c.id === match.courtId)?.name ?? match.courtId;
+                      const s = match.score!;
+                      const t1Won = s.team1Points > s.team2Points;
+                      const t2Won = s.team2Points > s.team1Points;
+                      return (
+                        <div key={match.id} className={styles.resultMatch}>
+                          <div className={styles.resultCourt}>{courtLabel}</div>
+                          <div className={styles.resultTeams}>
+                            <span className={`${styles.resultTeam} ${t1Won ? styles.resultWinner : ''}`}>
+                              {name(match.team1[0])} & {name(match.team1[1])}
+                            </span>
+                            <span className={styles.resultScore}>
+                              {s.team1Points} : {s.team2Points}
+                            </span>
+                            <span className={`${styles.resultTeam} ${styles.resultTeamRight} ${t2Won ? styles.resultWinner : ''}`}>
+                              {name(match.team2[0])} & {name(match.team2[1])}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {round.sitOuts.length > 0 && (
+                      <div className={styles.resultSitOut}>
+                        Sat out: {round.sitOuts.map(name).join(', ')}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </details>
+        )}
         <Button fullWidth onClick={handleCopy}>
-          Copy to Clipboard
+          Copy Results to Clipboard
         </Button>
         <button className={styles.supportCta} onClick={() => setShowSupport(true)}>
           <span className={styles.supportEmoji}>&#x2764;&#xFE0F;</span>

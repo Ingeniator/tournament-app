@@ -26,6 +26,13 @@ function AppContent() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Update URL hash for Cloudflare Web Analytics virtual pageviews
+  useEffect(() => {
+    if (screen !== 'loading') {
+      history.replaceState(null, '', `#${screen}`);
+    }
+  }, [screen]);
+
   if (authLoading || screen === 'loading') {
     return (
       <div className={styles.loading}>

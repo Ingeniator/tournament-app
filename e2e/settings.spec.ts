@@ -68,12 +68,6 @@ test.describe('Settings', () => {
   });
 
   test('toggle player availability', async ({ page }) => {
-    // First add a 5th player so we still have 4 active after toggling one off
-    await page.getByRole('button', { name: '+ Add Player' }).click();
-    await page.getByPlaceholder('Player name').fill('Eve');
-    await page.getByRole('button', { name: 'Add', exact: true }).click();
-    await expect(page.getByText('Players (5)')).toBeVisible();
-
     // Click on Alice to open edit panel
     await page.getByText('Alice').click();
 

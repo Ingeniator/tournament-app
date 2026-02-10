@@ -26,6 +26,19 @@ function AppContent() {
     saveUIState({ activeTab });
   }, [activeTab]);
 
+  // Update URL hash for Cloudflare Web Analytics virtual pageviews
+  const currentScreen = !tournament
+    ? 'home'
+    : tournament.phase === 'setup'
+      ? 'setup'
+      : tournament.phase === 'completed'
+        ? 'completed'
+        : activeTab;
+
+  useEffect(() => {
+    history.replaceState(null, '', `#${currentScreen}`);
+  }, [currentScreen]);
+
   useEffect(() => {
     const prevPhase = prevPhaseRef.current;
     const curPhase = tournament?.phase;
