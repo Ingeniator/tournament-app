@@ -42,8 +42,6 @@ export function usePlayerStats(tournament: Tournament | null): PlayerStats[] {
       }
 
       for (const match of round.matches) {
-        if (!match.score) continue;
-
         const allPlayers = [...match.team1, ...match.team2];
         for (const id of allPlayers) {
           ensure(id).gamesPlayed++;

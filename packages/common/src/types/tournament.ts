@@ -7,6 +7,7 @@ export type TournamentPhase = 'setup' | 'in-progress' | 'completed';
 export interface Court {
   id: string;
   name: string;
+  unavailable?: boolean;
 }
 
 export interface TournamentConfig {

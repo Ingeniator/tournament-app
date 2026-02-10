@@ -1,6 +1,7 @@
 .PHONY: dev build deploy-build clean
 
 dev:
+	@lsof -ti :5190,:5191 2>/dev/null | xargs kill -9 2>/dev/null || true
 	npm -w @padel/runner run dev & npm -w @padel/planner run dev & node dev-proxy.mjs & wait
 
 build:

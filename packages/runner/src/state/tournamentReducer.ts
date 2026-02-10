@@ -1,7 +1,71 @@
-import type { Tournament, Player } from '@padel/common';
+import type { Tournament, Player, Court } from '@padel/common';
 import type { TournamentAction } from './actions';
 import { generateId } from '@padel/common';
 import { getStrategy } from '../strategies';
+
+const DEDUP_SUFFIXES = [
+  'Jr.', 'Sr.', 'the Great', 'II', 'III', 'el Magnifico',
+  'the Bold', 'v2.0', 'IV', 'the Wise', 'Remix', 'el Jefe',
+  'V', 'the Swift', 'OG', 'the Brave', 'VI', 'Turbo',
+  'the Strong', 'VII', 'el Crack', 'the Lucky', 'VIII', 'Primo',
+];
+
+const SUFFIX_PATTERN = new RegExp(
+  ' (?:' + DEDUP_SUFFIXES.map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + '|#\\d+)$'
+);
+
+function deduplicateNames(players: Player[]): Player[] {
+  // Group by base name (strip known suffixes)
+  const nameGroups = new Map<string, Player[]>();
+  for (const p of players) {
+    const base = p.name.replace(SUFFIX_PATTERN, '');
+    const group = nameGroups.get(base) ?? [];
+    group.push(p);
+    nameGroups.set(base, group);
+  }
+
+  if (![...nameGroups.values()].some(g => g.length > 1)) return players;
+
+  // Collect all suffixes already in use across all players
+  const usedSuffixes = new Set<string>();
+  for (const p of players) {
+    const match = p.name.match(SUFFIX_PATTERN);
+    if (match) usedSuffixes.add(match[0].slice(1)); // strip leading space
+  }
+
+  // Shuffle available suffixes so each name group gets a random pick
+  const available = DEDUP_SUFFIXES.filter(s => !usedSuffixes.has(s));
+  for (let i = available.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [available[i], available[j]] = [available[j], available[i]];
+  }
+  let idx = 0;
+  let numFallback = 1;
+
+  const renames = new Map<string, string>();
+  for (const [base, group] of nameGroups) {
+    if (group.length <= 1) continue;
+    for (const p of group) {
+      // Already has a valid suffix — keep it
+      if (SUFFIX_PATTERN.test(p.name)) continue;
+      // Pick next random unused suffix
+      let suffix: string;
+      if (idx < available.length) {
+        suffix = available[idx++];
+      } else {
+        while (usedSuffixes.has(`#${numFallback}`)) numFallback++;
+        suffix = `#${numFallback++}`;
+      }
+      usedSuffixes.add(suffix);
+      renames.set(p.id, `${base} ${suffix}`);
+    }
+  }
+
+  if (renames.size === 0) return players;
+  return players.map(p =>
+    renames.has(p.id) ? { ...p, name: renames.get(p.id)! } : p
+  );
+}
 
 export function tournamentReducer(
   state: Tournament | null,
@@ -92,10 +156,11 @@ export function tournamentReducer(
       if (!state || state.phase !== 'in-progress') return state;
       const { oldPlayerId, newPlayerName } = action.payload;
       const replaceNew: Player = { id: generateId(), name: newPlayerName };
-      const replacePlayers = state.players.map(p =>
+      const rawReplace = state.players.map(p =>
         p.id === oldPlayerId ? { ...p, unavailable: true } : p
       );
-      replacePlayers.push(replaceNew);
+      rawReplace.push(replaceNew);
+      const replacePlayers = deduplicateNames(rawReplace);
 
       // Drop fully unscored rounds, regenerate with updated active players
       const replaceScored = state.rounds.filter(r => r.matches.some(m => m.score !== null));
@@ -126,7 +191,7 @@ export function tournamentReducer(
     case 'ADD_PLAYER_LIVE': {
       if (!state || state.phase !== 'in-progress') return state;
       const livePlayer: Player = { id: generateId(), name: action.payload.name };
-      const updatedPlayers = [...state.players, livePlayer];
+      const updatedPlayers = deduplicateNames([...state.players, livePlayer]);
 
       // Drop all fully unscored rounds, regenerate with all active players
       const scoredRounds = state.rounds.filter(r => r.matches.some(m => m.score !== null));
@@ -154,6 +219,16 @@ export function tournamentReducer(
       };
     }
 
+    case 'SET_FUTURE_ROUNDS': {
+      if (!state || state.phase !== 'in-progress') return state;
+      const sfScored = state.rounds.filter(r => r.matches.some(m => m.score !== null));
+      return {
+        ...state,
+        rounds: [...sfScored, ...action.payload.rounds],
+        updatedAt: Date.now(),
+      };
+    }
+
     case 'REGENERATE_FUTURE_ROUNDS': {
       if (!state || state.phase !== 'in-progress') return state;
       const scored = state.rounds.filter(r => r.matches.some(m => m.score !== null));
@@ -164,7 +239,7 @@ export function tournamentReducer(
       const excIds = state.players.filter(p => p.unavailable).map(p => p.id);
       const active = state.players.filter(p => !p.unavailable);
       const { rounds: regen } = strategy.generateAdditionalRounds(
-        active, state.config, scored, droppedNum, excIds
+        active, state.config, scored, droppedNum, excIds, action.payload?.timeBudgetMs
       );
       return {
         ...state,
@@ -188,6 +263,70 @@ export function tournamentReducer(
       };
     }
 
+    case 'ADD_COURT_LIVE': {
+      if (!state || state.phase !== 'in-progress') return state;
+      const activePlrs = state.players.filter(p => !p.unavailable);
+      const maxCourts = Math.max(1, Math.floor(activePlrs.length / 4));
+      const availableCourtCount = state.config.courts.filter(c => !c.unavailable).length;
+      if (availableCourtCount >= maxCourts) return state;
+
+      const newCourt: Court = {
+        id: generateId(),
+        name: `Court ${state.config.courts.length + 1}`,
+      };
+      const newConfig = { ...state.config, courts: [...state.config.courts, newCourt] };
+
+      // Regenerate unscored rounds with the new court available
+      const scoredAcl = state.rounds.filter(r => r.matches.some(m => m.score !== null));
+      const droppedAcl = state.rounds.length - scoredAcl.length;
+      if (droppedAcl > 0) {
+        const aclStrategy = getStrategy(newConfig.format);
+        const aclExcl = state.players.filter(p => p.unavailable).map(p => p.id);
+        const { rounds: aclRegen } = aclStrategy.generateAdditionalRounds(
+          activePlrs, newConfig, scoredAcl, droppedAcl, aclExcl
+        );
+        return {
+          ...state,
+          config: newConfig,
+          rounds: [...scoredAcl, ...aclRegen],
+          updatedAt: Date.now(),
+        };
+      }
+
+      return { ...state, config: newConfig, updatedAt: Date.now() };
+    }
+
+    case 'TOGGLE_COURT_AVAILABILITY': {
+      if (!state || state.phase !== 'in-progress') return state;
+      const tcCourts = state.config.courts.map(c =>
+        c.id === action.payload.courtId ? { ...c, unavailable: !c.unavailable } : c
+      );
+      // Must keep at least 1 available court
+      if (tcCourts.every(c => c.unavailable)) return state;
+
+      const tcConfig = { ...state.config, courts: tcCourts };
+
+      // Regenerate unscored rounds with updated court set
+      const tcScored = state.rounds.filter(r => r.matches.some(m => m.score !== null));
+      const tcDropped = state.rounds.length - tcScored.length;
+      if (tcDropped > 0) {
+        const tcStrategy = getStrategy(tcConfig.format);
+        const tcActive = state.players.filter(p => !p.unavailable);
+        const tcExcl = state.players.filter(p => p.unavailable).map(p => p.id);
+        const { rounds: tcRegen } = tcStrategy.generateAdditionalRounds(
+          tcActive, tcConfig, tcScored, tcDropped, tcExcl
+        );
+        return {
+          ...state,
+          config: tcConfig,
+          rounds: [...tcScored, ...tcRegen],
+          updatedAt: Date.now(),
+        };
+      }
+
+      return { ...state, config: tcConfig, updatedAt: Date.now() };
+    }
+
     case 'UPDATE_NAME': {
       if (!state) return state;
       return {
@@ -208,10 +347,12 @@ export function tournamentReducer(
 
     case 'GENERATE_SCHEDULE': {
       if (!state || state.phase !== 'setup') return state;
+      const players = deduplicateNames(state.players);
       const strategy = getStrategy(state.config.format);
-      const { rounds } = strategy.generateSchedule(state.players, state.config);
+      const { rounds } = strategy.generateSchedule(players, state.config);
       return {
         ...state,
+        players,
         phase: 'in-progress',
         rounds,
         updatedAt: Date.now(),
@@ -284,6 +425,41 @@ export function tournamentReducer(
         ),
         updatedAt: Date.now(),
       };
+    }
+
+    case 'UPDATE_POINTS': {
+      if (!state) return state;
+      return {
+        ...state,
+        config: { ...state.config, pointsPerMatch: action.payload.pointsPerMatch },
+        updatedAt: Date.now(),
+      };
+    }
+
+    case 'SET_ROUND_COUNT': {
+      if (!state || state.phase !== 'in-progress') return state;
+      const targetCount = action.payload.count;
+      const currentCount = state.rounds.length;
+      if (targetCount === currentCount) return state;
+
+      const scoredRnds = state.rounds.filter(r => r.matches.some(m => m.score !== null));
+      const minCount = scoredRnds.length;
+      if (targetCount < minCount) return state;
+
+      if (targetCount < currentCount) {
+        // Trim unscored rounds from the end
+        const unscoredFromEnd = currentCount - targetCount;
+        const kept = state.rounds.slice(0, currentCount - unscoredFromEnd);
+        return { ...state, rounds: kept, updatedAt: Date.now() };
+      }
+
+      // Increase: generate additional rounds
+      const addCount = targetCount - currentCount;
+      const strat = getStrategy(state.config.format);
+      const excl = state.players.filter(p => p.unavailable).map(p => p.id);
+      const actv = state.players.filter(p => !p.unavailable);
+      const { rounds: extra } = strat.generateAdditionalRounds(actv, state.config, state.rounds, addCount, excl);
+      return { ...state, rounds: [...state.rounds, ...extra], updatedAt: Date.now() };
     }
 
     case 'COMPLETE_TOURNAMENT': {

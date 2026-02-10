@@ -1,4 +1,4 @@
-import type { TournamentConfig, MatchScore, Tournament } from '@padel/common';
+import type { TournamentConfig, MatchScore, Tournament, Round } from '@padel/common';
 
 export type TournamentAction =
   | { type: 'CREATE_TOURNAMENT'; payload: { name: string; config: TournamentConfig } }
@@ -9,13 +9,18 @@ export type TournamentAction =
   | { type: 'TOGGLE_PLAYER_AVAILABILITY'; payload: { playerId: string } }
   | { type: 'REPLACE_PLAYER'; payload: { oldPlayerId: string; newPlayerName: string } }
   | { type: 'ADD_PLAYER_LIVE'; payload: { name: string } }
-  | { type: 'REGENERATE_FUTURE_ROUNDS' }
+  | { type: 'REGENERATE_FUTURE_ROUNDS'; payload?: { timeBudgetMs?: number } }
+  | { type: 'SET_FUTURE_ROUNDS'; payload: { rounds: Round[] } }
   | { type: 'UPDATE_COURT'; payload: { courtId: string; name: string } }
+  | { type: 'ADD_COURT_LIVE' }
+  | { type: 'TOGGLE_COURT_AVAILABILITY'; payload: { courtId: string } }
   | { type: 'UPDATE_NAME'; payload: { name: string } }
   | { type: 'UPDATE_CONFIG'; payload: Partial<TournamentConfig> }
   | { type: 'GENERATE_SCHEDULE' }
   | { type: 'ADD_ROUNDS'; payload: { count: number } }
   | { type: 'SET_MATCH_SCORE'; payload: { roundId: string; matchId: string; score: MatchScore } }
   | { type: 'CLEAR_MATCH_SCORE'; payload: { roundId: string; matchId: string } }
+  | { type: 'UPDATE_POINTS'; payload: { pointsPerMatch: number } }
+  | { type: 'SET_ROUND_COUNT'; payload: { count: number } }
   | { type: 'COMPLETE_TOURNAMENT' }
   | { type: 'RESET_TOURNAMENT' };

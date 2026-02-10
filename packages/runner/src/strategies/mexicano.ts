@@ -47,7 +47,8 @@ function generateMexicanoRounds(
     : players;
 
   const n = activePlayers.length;
-  const numCourts = Math.min(config.courts.length, Math.floor(n / 4));
+  const availableCourts = config.courts.filter(c => !c.unavailable);
+  const numCourts = Math.min(availableCourts.length, Math.floor(n / 4));
   const playersPerRound = numCourts * 4;
   const sitOutCount = n - playersPerRound;
   const gamesPlayed = seedGamesPlayed(existingRounds, activePlayers);
@@ -133,7 +134,7 @@ function generateMexicanoRounds(
 
       return {
         id: generateId(),
-        courtId: config.courts[idx].id,
+        courtId: availableCourts[idx].id,
         team1,
         team2,
         score: null,
@@ -173,7 +174,7 @@ export const mexicanoStrategy: TournamentStrategy = {
     return generateMexicanoRounds(players, config, [], 1);
   },
 
-  generateAdditionalRounds(players: Player[], config: TournamentConfig, existingRounds: Round[], count: number, excludePlayerIds?: string[]): ScheduleResult {
+  generateAdditionalRounds(players: Player[], config: TournamentConfig, existingRounds: Round[], count: number, excludePlayerIds?: string[], _timeBudgetMs?: number): ScheduleResult {
     return generateMexicanoRounds(players, config, existingRounds, count, excludePlayerIds);
   },
 };

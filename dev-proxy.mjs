@@ -6,7 +6,7 @@ import { dirname, join } from 'node:path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const indexHtml = fs.readFileSync(join(__dirname, 'index.html'), 'utf-8');
 
-const PORT = 3000;
+const PREFERRED_PORT = 3000;
 const RUNNER_PORT = 5190;
 const PLANNER_PORT = 5191;
 
@@ -68,8 +68,29 @@ server.on('upgrade', (req, socket, head) => {
   proxyReq.end();
 });
 
-server.listen(PORT, () => {
-  console.log(`\n  Dev proxy running at http://localhost:${PORT}`);
-  console.log(`    /play → runner (port ${RUNNER_PORT})`);
-  console.log(`    /plan → planner (port ${PLANNER_PORT})\n`);
+import net from 'node:net';
+
+function findFreePort(start) {
+  return new Promise((resolve, reject) => {
+    const tester = net.createServer();
+    tester.once('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.log(`  Port ${start} in use, trying ${start + 1}...`);
+        resolve(findFreePort(start + 1));
+      } else {
+        reject(err);
+      }
+    });
+    tester.listen(start, () => {
+      tester.close(() => resolve(start));
+    });
+  });
+}
+
+findFreePort(PREFERRED_PORT).then((port) => {
+  server.listen(port, () => {
+    console.log(`\n  Dev proxy running at http://localhost:${port}`);
+    console.log(`    /play → runner (port ${RUNNER_PORT})`);
+    console.log(`    /plan → planner (port ${PLANNER_PORT})\n`);
+  });
 });

@@ -4,6 +4,7 @@ import { americanoStrategy } from './americano';
 import { mexicanoStrategy } from './mexicano';
 
 export type { TournamentStrategy, ScheduleResult } from './types';
+export { scoreSchedule } from './americano';
 
 const registry = new Map<TournamentFormat, TournamentStrategy>();
 

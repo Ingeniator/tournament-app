@@ -51,6 +51,12 @@
   color: var(--color-text);
 }
 
+.fieldHint {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
 /* Inline edit */
 .inlineEdit {
   padding: var(--space-xs) 0;
@@ -79,6 +85,7 @@
   flex-direction: column;
   gap: 2px;
 }
+
 
 /* Players */
 .playerList {

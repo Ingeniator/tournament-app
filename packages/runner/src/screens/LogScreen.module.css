@@ -75,3 +75,7 @@
   overflow-y: auto;
   padding: var(--space-md);
 }
+
+.exportBtn {
+  margin-top: var(--space-md);
+}

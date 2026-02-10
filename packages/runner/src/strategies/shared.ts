@@ -18,14 +18,15 @@ export function commonValidateSetup(players: Player[], config: TournamentConfig)
   if (players.length < 4) {
     errors.push('At least 4 players are required');
   }
-  if (config.courts.length === 0) {
+  const availableCourts = config.courts.filter(c => !c.unavailable);
+  if (availableCourts.length === 0) {
     errors.push('At least 1 court is required');
   }
   if (config.pointsPerMatch < 1) {
     errors.push('Points per match must be at least 1');
   }
   const maxCourts = Math.floor(players.length / 4);
-  if (config.courts.length > maxCourts && players.length >= 4) {
+  if (availableCourts.length > maxCourts && players.length >= 4) {
     errors.push(`Too many courts: ${players.length} players need at most ${maxCourts} court(s)`);
   }
   return errors;

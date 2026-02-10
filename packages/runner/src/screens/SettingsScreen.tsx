@@ -23,11 +23,33 @@ export function SettingsScreen() {
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
   const [showSupporters, setShowSupporters] = useState(false);
+  const [editingPoints, setEditingPoints] = useState(false);
+  const [pointsDraft, setPointsDraft] = useState('');
+  const [editingRounds, setEditingRounds] = useState(false);
+  const [roundsDraft, setRoundsDraft] = useState('');
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 2000);
   }, []);
+
+  const handlePointsSave = () => {
+    const val = parseInt(pointsDraft, 10);
+    if (!isNaN(val) && val > 0 && tournament && val !== tournament.config.pointsPerMatch) {
+      dispatch({ type: 'UPDATE_POINTS', payload: { pointsPerMatch: val } });
+    }
+    setEditingPoints(false);
+  };
+
+  const handleRoundsSave = () => {
+    if (!tournament) { setEditingRounds(false); return; }
+    const val = parseInt(roundsDraft, 10);
+    const scoredCount = tournament.rounds.filter(r => r.matches.some(m => m.score !== null)).length;
+    if (!isNaN(val) && val >= scoredCount && val !== tournament.rounds.length) {
+      dispatch({ type: 'SET_ROUND_COUNT', payload: { count: val } });
+    }
+    setEditingRounds(false);
+  };
 
   if (!tournament) return null;
 
@@ -139,9 +161,85 @@ export function SettingsScreen() {
         )}
         <div className={styles.chipList}>
           <span className={styles.chip}>{tournament.config.format}</span>
-          <span className={styles.chip}>{tournament.config.pointsPerMatch} pts</span>
-          <span className={styles.chip}>{tournament.config.courts.length} court(s)</span>
+          <span className={styles.chip}>{tournament.config.courts.filter(c => !c.unavailable).length} court(s)</span>
         </div>
+
+        {tournament.phase === 'in-progress' ? (
+          <>
+            {editingPoints ? (
+              <div className={styles.inlineEdit}>
+                <input
+                  className={styles.editInput}
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  value={pointsDraft}
+                  onChange={e => setPointsDraft(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') handlePointsSave();
+                    if (e.key === 'Escape') setEditingPoints(false);
+                  }}
+                  onBlur={handlePointsSave}
+                  autoFocus
+                />
+              </div>
+            ) : (
+              <div
+                className={styles.tappableField}
+                onClick={() => {
+                  setPointsDraft(String(tournament.config.pointsPerMatch));
+                  setEditingPoints(true);
+                }}
+              >
+                <span className={styles.fieldLabel}>Points per match</span>
+                <span className={styles.fieldValue}>{tournament.config.pointsPerMatch}</span>
+              </div>
+            )}
+
+            {editingRounds ? (
+              <div className={styles.inlineEdit}>
+                <input
+                  className={styles.editInput}
+                  type="number"
+                  inputMode="numeric"
+                  min={tournament.rounds.filter(r => r.matches.some(m => m.score !== null)).length}
+                  value={roundsDraft}
+                  onChange={e => setRoundsDraft(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') handleRoundsSave();
+                    if (e.key === 'Escape') setEditingRounds(false);
+                  }}
+                  onBlur={handleRoundsSave}
+                  autoFocus
+                />
+              </div>
+            ) : (
+              <div
+                className={styles.tappableField}
+                onClick={() => {
+                  setRoundsDraft(String(tournament.rounds.length));
+                  setEditingRounds(true);
+                }}
+              >
+                <span className={styles.fieldLabel}>Rounds</span>
+                <span className={styles.fieldValue}>
+                  {tournament.rounds.length}
+                  {' '}
+                  <span className={styles.fieldHint}>
+                    (min {tournament.rounds.filter(r => r.matches.some(m => m.score !== null)).length} scored)
+                  </span>
+                </span>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className={styles.chipList}>
+            <span className={styles.chip}>{tournament.config.pointsPerMatch} pts</span>
+            {tournament.rounds.length > 0 && (
+              <span className={styles.chip}>{tournament.rounds.length} rounds</span>
+            )}
+          </div>
+        )}
       </Card>
 
       {/* Courts */}
@@ -149,9 +247,9 @@ export function SettingsScreen() {
         <h3 className={styles.sectionTitle}>Courts</h3>
         <div className={styles.courtList}>
           {tournament.config.courts.map(court => (
-            <div key={court.id}>
+            <div key={court.id} className={styles.playerItem}>
               {editingCourtId === court.id ? (
-                <div className={styles.inlineEdit}>
+                <div className={styles.playerEditPanel}>
                   <input
                     className={styles.editInput}
                     type="text"
@@ -164,21 +262,55 @@ export function SettingsScreen() {
                     onBlur={() => handleCourtSave(court.id)}
                     autoFocus
                   />
+                  {tournament.phase === 'in-progress' && (
+                    <button
+                      className={`${styles.availabilityToggle} ${court.unavailable ? styles.toggleUnavailable : styles.toggleAvailable}`}
+                      onMouseDown={e => e.preventDefault()}
+                      onClick={() => dispatch({
+                        type: 'TOGGLE_COURT_AVAILABILITY',
+                        payload: { courtId: court.id },
+                      })}
+                    >
+                      {court.unavailable ? 'Unavailable' : 'Available'}
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div
-                  className={styles.tappableField}
+                  className={styles.playerNameRow}
                   onClick={() => {
                     setEditCourtName(court.name);
                     setEditingCourtId(court.id);
                   }}
                 >
-                  <span className={styles.fieldValue}>{court.name}</span>
+                  <span className={`${styles.playerName} ${court.unavailable ? styles.playerInactive : ''}`}>
+                    {court.name}
+                  </span>
+                  {court.unavailable && (
+                    <span className={styles.statusBadge}>out</span>
+                  )}
                 </div>
               )}
             </div>
           ))}
         </div>
+
+        {tournament.phase === 'in-progress' && (() => {
+          const activePlayers = tournament.players.filter(p => !p.unavailable);
+          const maxCourts = Math.max(1, Math.floor(activePlayers.length / 4));
+          const availableCourtCount = tournament.config.courts.filter(c => !c.unavailable).length;
+          return availableCourtCount < maxCourts ? (
+            <Button
+              variant="secondary"
+              size="small"
+              fullWidth
+              onClick={() => dispatch({ type: 'ADD_COURT_LIVE' })}
+              style={{ marginTop: 'var(--space-sm)' }}
+            >
+              + Add Court
+            </Button>
+          ) : null;
+        })()}
       </Card>
 
       {/* Players */}
