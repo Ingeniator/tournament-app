@@ -9,6 +9,7 @@ export function useTelegram(): TelegramUser | null {
   return useMemo(() => {
     const tg = window.Telegram?.WebApp;
     const user = tg?.initDataUnsafe?.user;
+    console.log('[TG] WebApp:', !!tg, 'user:', user);
     if (!tg || !user) return null;
 
     tg.ready();
