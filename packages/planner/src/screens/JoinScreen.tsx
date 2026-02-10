@@ -82,7 +82,7 @@ export function JoinScreen() {
         <h1 className={styles.title}>{tournament.name}</h1>
       </div>
 
-      {(tournament.date || tournament.place || organizerName) && (
+      {(tournament.date || tournament.place || organizerName || tournament.chatLink) && (
         <Card>
           <div className={styles.detailsList}>
             {tournament.date && (
@@ -101,6 +101,14 @@ export function JoinScreen() {
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>Organizer</span>
                 <span>{organizerName}</span>
+              </div>
+            )}
+            {tournament.chatLink && (
+              <div className={styles.detailRow}>
+                <span className={styles.detailLabel}>Group chat</span>
+                <a href={tournament.chatLink} target="_blank" rel="noopener noreferrer" className={styles.chatLink}>
+                  Join group chat
+                </a>
               </div>
             )}
           </div>

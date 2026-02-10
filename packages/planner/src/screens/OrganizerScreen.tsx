@@ -237,7 +237,16 @@ export function OrganizerScreen() {
             onChange={e => updateTournament({ place: e.target.value || undefined })}
             placeholder="Venue / location"
           />
-          
+
+          <label className={styles.configLabel}>Group chat</label>
+          <input
+            className={styles.configInput}
+            type="url"
+            value={tournament.chatLink ?? ''}
+            onChange={e => updateTournament({ chatLink: e.target.value || undefined })}
+            placeholder="https://t.me/..."
+          />
+
           <label className={styles.configLabel}>
             Format
             <button

@@ -13,6 +13,7 @@ export interface PlannerTournament {
   date?: string;
   place?: string;
   extraSpots?: number;
+  chatLink?: string;
 }
 
 export interface TournamentSummary {
