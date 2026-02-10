@@ -1,14 +1,15 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useTournament } from '../hooks/useTournament';
 import { SupportOverlay } from '../components/support/SupportOverlay';
+import { EditableField } from '../components/settings/EditableField';
 import { copyToClipboard } from '../utils/clipboard';
 import { exportTournament, validateImport } from '../utils/importExport';
-import { Button, Card } from '@padel/common';
+import { Button, Card, Toast, useToast } from '@padel/common';
 import styles from './SettingsScreen.module.css';
 
 export function SettingsScreen() {
   const { tournament, dispatch } = useTournament();
-  const [toast, setToast] = useState<string | null>(null);
+  const { toastMessage, showToast } = useToast();
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [editPlayerName, setEditPlayerName] = useState('');
   const [replacingPlayerId, setReplacingPlayerId] = useState<string | null>(null);
@@ -19,39 +20,10 @@ export function SettingsScreen() {
   const [editCourtName, setEditCourtName] = useState('');
   const [replacingCourtId, setReplacingCourtId] = useState<string | null>(null);
   const [replaceCourtName, setReplaceCourtName] = useState('');
-  const [editingName, setEditingName] = useState(false);
-  const [tournamentNameDraft, setTournamentNameDraft] = useState('');
   const [importMode, setImportMode] = useState(false);
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
   const [showSupporters, setShowSupporters] = useState(false);
-  const [editingPoints, setEditingPoints] = useState(false);
-  const [pointsDraft, setPointsDraft] = useState('');
-  const [editingRounds, setEditingRounds] = useState(false);
-  const [roundsDraft, setRoundsDraft] = useState('');
-
-  const showToast = useCallback((msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2000);
-  }, []);
-
-  const handlePointsSave = () => {
-    const val = parseInt(pointsDraft, 10);
-    if (!isNaN(val) && val > 0 && tournament && val !== tournament.config.pointsPerMatch) {
-      dispatch({ type: 'UPDATE_POINTS', payload: { pointsPerMatch: val } });
-    }
-    setEditingPoints(false);
-  };
-
-  const handleRoundsSave = () => {
-    if (!tournament) { setEditingRounds(false); return; }
-    const val = parseInt(roundsDraft, 10);
-    const scoredCount = tournament.rounds.filter(r => r.matches.some(m => m.score !== null)).length;
-    if (!isNaN(val) && val >= scoredCount && val !== tournament.rounds.length) {
-      dispatch({ type: 'SET_ROUND_COUNT', payload: { count: val } });
-    }
-    setEditingRounds(false);
-  };
 
   if (!tournament) return null;
 
@@ -102,14 +74,6 @@ export function SettingsScreen() {
     showToast('Court replaced');
   };
 
-  const handleTournamentNameSave = () => {
-    const trimmed = tournamentNameDraft.trim();
-    if (trimmed && trimmed !== tournament.name) {
-      dispatch({ type: 'UPDATE_NAME', payload: { name: trimmed } });
-    }
-    setEditingName(false);
-  };
-
   const handleCopy = async () => {
     const text = exportTournament(tournament);
     const ok = await copyToClipboard(text);
@@ -143,33 +107,16 @@ export function SettingsScreen() {
       {/* Tournament info */}
       <Card>
         <h3 className={styles.sectionTitle}>Tournament</h3>
-        {editingName ? (
-          <div className={styles.inlineEdit}>
-            <input
-              className={styles.editInput}
-              type="text"
-              value={tournamentNameDraft}
-              onChange={e => setTournamentNameDraft(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter') handleTournamentNameSave();
-                if (e.key === 'Escape') setEditingName(false);
-              }}
-              onBlur={handleTournamentNameSave}
-              autoFocus
-            />
-          </div>
-        ) : (
-          <div
-            className={styles.tappableField}
-            onClick={() => {
-              setTournamentNameDraft(tournament.name);
-              setEditingName(true);
-            }}
-          >
-            <span className={styles.fieldLabel}>Name</span>
-            <span className={styles.fieldValue}>{tournament.name}</span>
-          </div>
-        )}
+        <EditableField
+          label="Name"
+          value={tournament.name}
+          onSave={val => {
+            const trimmed = val.trim();
+            if (trimmed && trimmed !== tournament.name) {
+              dispatch({ type: 'UPDATE_NAME', payload: { name: trimmed } });
+            }
+          }}
+        />
         <div className={styles.chipList}>
           <span className={styles.chip}>{tournament.config.format}</span>
           <span className={styles.chip}>{tournament.config.courts.filter(c => !c.unavailable).length} court(s)</span>
@@ -177,71 +124,33 @@ export function SettingsScreen() {
 
         {tournament.phase === 'in-progress' ? (
           <>
-            {editingPoints ? (
-              <div className={styles.inlineEdit}>
-                <input
-                  className={styles.editInput}
-                  type="number"
-                  inputMode="numeric"
-                  min={1}
-                  value={pointsDraft}
-                  onChange={e => setPointsDraft(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') handlePointsSave();
-                    if (e.key === 'Escape') setEditingPoints(false);
-                  }}
-                  onBlur={handlePointsSave}
-                  autoFocus
-                />
-              </div>
-            ) : (
-              <div
-                className={styles.tappableField}
-                onClick={() => {
-                  setPointsDraft(String(tournament.config.pointsPerMatch));
-                  setEditingPoints(true);
-                }}
-              >
-                <span className={styles.fieldLabel}>Points per match</span>
-                <span className={styles.fieldValue}>{tournament.config.pointsPerMatch}</span>
-              </div>
-            )}
+            <EditableField
+              label="Points per match"
+              value={String(tournament.config.pointsPerMatch)}
+              type="number"
+              min={1}
+              onSave={val => {
+                const num = parseInt(val, 10);
+                if (!isNaN(num) && num > 0 && num !== tournament.config.pointsPerMatch) {
+                  dispatch({ type: 'UPDATE_POINTS', payload: { pointsPerMatch: num } });
+                }
+              }}
+            />
 
-            {editingRounds ? (
-              <div className={styles.inlineEdit}>
-                <input
-                  className={styles.editInput}
-                  type="number"
-                  inputMode="numeric"
-                  min={tournament.rounds.filter(r => r.matches.some(m => m.score !== null)).length}
-                  value={roundsDraft}
-                  onChange={e => setRoundsDraft(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') handleRoundsSave();
-                    if (e.key === 'Escape') setEditingRounds(false);
-                  }}
-                  onBlur={handleRoundsSave}
-                  autoFocus
-                />
-              </div>
-            ) : (
-              <div
-                className={styles.tappableField}
-                onClick={() => {
-                  setRoundsDraft(String(tournament.rounds.length));
-                  setEditingRounds(true);
-                }}
-              >
-                <span className={styles.fieldLabel}>Rounds</span>
-                <span className={styles.fieldValue}>
-                  {tournament.rounds.length}
-                  {' '}
-                  <span className={styles.fieldHint}>
-                    (min {tournament.rounds.filter(r => r.matches.some(m => m.score !== null)).length} scored)
-                  </span>
-                </span>
-              </div>
-            )}
+            <EditableField
+              label="Rounds"
+              value={String(tournament.rounds.length)}
+              type="number"
+              min={tournament.rounds.filter(r => r.matches.some(m => m.score !== null)).length}
+              hint={`(min ${tournament.rounds.filter(r => r.matches.some(m => m.score !== null)).length} scored)`}
+              onSave={val => {
+                const num = parseInt(val, 10);
+                const scoredCount = tournament.rounds.filter(r => r.matches.some(m => m.score !== null)).length;
+                if (!isNaN(num) && num >= scoredCount && num !== tournament.rounds.length) {
+                  dispatch({ type: 'SET_ROUND_COUNT', payload: { count: num } });
+                }
+              }}
+            />
           </>
         ) : (
           <div className={styles.chipList}>
@@ -560,7 +469,7 @@ export function SettingsScreen() {
 
       <SupportOverlay open={showSupporters} onClose={() => setShowSupporters(false)} />
 
-      {toast && <div className={styles.toast}>{toast}</div>}
+      <Toast message={toastMessage} />
     </div>
   );
 }

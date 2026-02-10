@@ -1,8 +1,21 @@
-import type { Tournament, Player, Court } from '@padel/common';
+import type { Tournament, Player, Court, TournamentConfig, Round } from '@padel/common';
 import type { TournamentAction } from './actions';
 import { generateId } from '@padel/common';
 import { getStrategy } from '../strategies';
 import { deduplicateNames } from '../utils/deduplicateNames';
+
+function regenerateUnscoredRounds(
+  state: Tournament, players: Player[], config: TournamentConfig, timeBudgetMs?: number
+): Round[] {
+  const scored = state.rounds.filter(r => r.matches.some(m => m.score !== null));
+  const dropped = state.rounds.length - scored.length;
+  if (dropped === 0) return state.rounds;
+  const strategy = getStrategy(config.format);
+  const active = players.filter(p => !p.unavailable);
+  const excludeIds = players.filter(p => p.unavailable).map(p => p.id);
+  const { rounds: regen } = strategy.generateAdditionalRounds(active, config, scored, dropped, excludeIds, timeBudgetMs);
+  return [...scored, ...regen];
+}
 
 export function tournamentReducer(
   state: Tournament | null,
@@ -70,26 +83,8 @@ export function tournamentReducer(
         return { ...state, players: togglePlayers, updatedAt: Date.now() };
       }
 
-      // Drop fully unscored rounds, regenerate with updated active players
-      const toggleScored = state.rounds.filter(r => r.matches.some(m => m.score !== null));
-      const toggleDropped = state.rounds.length - toggleScored.length;
-
-      if (toggleDropped > 0) {
-        const strategy = getStrategy(state.config.format);
-        const toggleExcludeIds = togglePlayers.filter(p => p.unavailable).map(p => p.id);
-        const toggleActive = togglePlayers.filter(p => !p.unavailable);
-        const { rounds: toggleRegen } = strategy.generateAdditionalRounds(
-          toggleActive, state.config, toggleScored, toggleDropped, toggleExcludeIds
-        );
-        return {
-          ...state,
-          players: togglePlayers,
-          rounds: [...toggleScored, ...toggleRegen],
-          updatedAt: Date.now(),
-        };
-      }
-
-      return { ...state, players: togglePlayers, updatedAt: Date.now() };
+      const newRounds = regenerateUnscoredRounds(state, togglePlayers, state.config);
+      return { ...state, players: togglePlayers, rounds: newRounds, updatedAt: Date.now() };
     }
 
     case 'REPLACE_PLAYER': {
@@ -101,62 +96,16 @@ export function tournamentReducer(
       );
       rawReplace.push(replaceNew);
       const replacePlayers = deduplicateNames(rawReplace);
-
-      // Drop fully unscored rounds, regenerate with updated active players
-      const replaceScored = state.rounds.filter(r => r.matches.some(m => m.score !== null));
-      const replaceDropped = state.rounds.length - replaceScored.length;
-
-      if (replaceDropped > 0) {
-        const replaceStrategy = getStrategy(state.config.format);
-        const replaceExcludeIds = replacePlayers.filter(p => p.unavailable).map(p => p.id);
-        const replaceActive = replacePlayers.filter(p => !p.unavailable);
-        const { rounds: replaceRegen } = replaceStrategy.generateAdditionalRounds(
-          replaceActive, state.config, replaceScored, replaceDropped, replaceExcludeIds
-        );
-        return {
-          ...state,
-          players: replacePlayers,
-          rounds: [...replaceScored, ...replaceRegen],
-          updatedAt: Date.now(),
-        };
-      }
-
-      return {
-        ...state,
-        players: replacePlayers,
-        updatedAt: Date.now(),
-      };
+      const newRounds = regenerateUnscoredRounds(state, replacePlayers, state.config);
+      return { ...state, players: replacePlayers, rounds: newRounds, updatedAt: Date.now() };
     }
 
     case 'ADD_PLAYER_LIVE': {
       if (!state || state.phase !== 'in-progress') return state;
       const livePlayer: Player = { id: generateId(), name: action.payload.name };
       const updatedPlayers = deduplicateNames([...state.players, livePlayer]);
-
-      // Drop all fully unscored rounds, regenerate with all active players
-      const scoredRounds = state.rounds.filter(r => r.matches.some(m => m.score !== null));
-      const droppedCount = state.rounds.length - scoredRounds.length;
-
-      if (droppedCount > 0) {
-        const strategy = getStrategy(state.config.format);
-        const excludeIds = updatedPlayers.filter(p => p.unavailable).map(p => p.id);
-        const activePlayers = updatedPlayers.filter(p => !p.unavailable);
-        const { rounds: regenerated } = strategy.generateAdditionalRounds(
-          activePlayers, state.config, scoredRounds, droppedCount, excludeIds
-        );
-        return {
-          ...state,
-          players: updatedPlayers,
-          rounds: [...scoredRounds, ...regenerated],
-          updatedAt: Date.now(),
-        };
-      }
-
-      return {
-        ...state,
-        players: updatedPlayers,
-        updatedAt: Date.now(),
-      };
+      const newRounds = regenerateUnscoredRounds(state, updatedPlayers, state.config);
+      return { ...state, players: updatedPlayers, rounds: newRounds, updatedAt: Date.now() };
     }
 
     case 'SET_FUTURE_ROUNDS': {
@@ -171,21 +120,9 @@ export function tournamentReducer(
 
     case 'REGENERATE_FUTURE_ROUNDS': {
       if (!state || state.phase !== 'in-progress') return state;
-      const scored = state.rounds.filter(r => r.matches.some(m => m.score !== null));
-      const droppedNum = state.rounds.length - scored.length;
-      if (droppedNum === 0) return state;
-
-      const strategy = getStrategy(state.config.format);
-      const excIds = state.players.filter(p => p.unavailable).map(p => p.id);
-      const active = state.players.filter(p => !p.unavailable);
-      const { rounds: regen } = strategy.generateAdditionalRounds(
-        active, state.config, scored, droppedNum, excIds, action.payload?.timeBudgetMs
-      );
-      return {
-        ...state,
-        rounds: [...scored, ...regen],
-        updatedAt: Date.now(),
-      };
+      const newRounds = regenerateUnscoredRounds(state, state.players, state.config, action.payload?.timeBudgetMs);
+      if (newRounds === state.rounds) return state;
+      return { ...state, rounds: newRounds, updatedAt: Date.now() };
     }
 
     case 'UPDATE_COURT': {
@@ -215,25 +152,8 @@ export function tournamentReducer(
         name: `Court ${state.config.courts.length + 1}`,
       };
       const newConfig = { ...state.config, courts: [...state.config.courts, newCourt] };
-
-      // Regenerate unscored rounds with the new court available
-      const scoredAcl = state.rounds.filter(r => r.matches.some(m => m.score !== null));
-      const droppedAcl = state.rounds.length - scoredAcl.length;
-      if (droppedAcl > 0) {
-        const aclStrategy = getStrategy(newConfig.format);
-        const aclExcl = state.players.filter(p => p.unavailable).map(p => p.id);
-        const { rounds: aclRegen } = aclStrategy.generateAdditionalRounds(
-          activePlrs, newConfig, scoredAcl, droppedAcl, aclExcl
-        );
-        return {
-          ...state,
-          config: newConfig,
-          rounds: [...scoredAcl, ...aclRegen],
-          updatedAt: Date.now(),
-        };
-      }
-
-      return { ...state, config: newConfig, updatedAt: Date.now() };
+      const newRounds = regenerateUnscoredRounds(state, state.players, newConfig);
+      return { ...state, config: newConfig, rounds: newRounds, updatedAt: Date.now() };
     }
 
     case 'TOGGLE_COURT_AVAILABILITY': {
@@ -245,26 +165,8 @@ export function tournamentReducer(
       if (tcCourts.every(c => c.unavailable)) return state;
 
       const tcConfig = { ...state.config, courts: tcCourts };
-
-      // Regenerate unscored rounds with updated court set
-      const tcScored = state.rounds.filter(r => r.matches.some(m => m.score !== null));
-      const tcDropped = state.rounds.length - tcScored.length;
-      if (tcDropped > 0) {
-        const tcStrategy = getStrategy(tcConfig.format);
-        const tcActive = state.players.filter(p => !p.unavailable);
-        const tcExcl = state.players.filter(p => p.unavailable).map(p => p.id);
-        const { rounds: tcRegen } = tcStrategy.generateAdditionalRounds(
-          tcActive, tcConfig, tcScored, tcDropped, tcExcl
-        );
-        return {
-          ...state,
-          config: tcConfig,
-          rounds: [...tcScored, ...tcRegen],
-          updatedAt: Date.now(),
-        };
-      }
-
-      return { ...state, config: tcConfig, updatedAt: Date.now() };
+      const newRounds = regenerateUnscoredRounds(state, state.players, tcConfig);
+      return { ...state, config: tcConfig, rounds: newRounds, updatedAt: Date.now() };
     }
 
     case 'REPLACE_COURT': {
@@ -276,21 +178,8 @@ export function tournamentReducer(
       const rcNewCourt: Court = { id: generateId(), name: newCourtName };
       rcCourts.push(rcNewCourt);
       const rcConfig = { ...state.config, courts: rcCourts };
-
-      // Regenerate unscored rounds with updated court set
-      const rcScored = state.rounds.filter(r => r.matches.some(m => m.score !== null));
-      const rcDropped = state.rounds.length - rcScored.length;
-      if (rcDropped > 0) {
-        const rcStrategy = getStrategy(rcConfig.format);
-        const rcActive = state.players.filter(p => !p.unavailable);
-        const rcExcl = state.players.filter(p => p.unavailable).map(p => p.id);
-        const { rounds: rcRegen } = rcStrategy.generateAdditionalRounds(
-          rcActive, rcConfig, rcScored, rcDropped, rcExcl
-        );
-        return { ...state, config: rcConfig, rounds: [...rcScored, ...rcRegen], updatedAt: Date.now() };
-      }
-
-      return { ...state, config: rcConfig, updatedAt: Date.now() };
+      const newRounds = regenerateUnscoredRounds(state, state.players, rcConfig);
+      return { ...state, config: rcConfig, rounds: newRounds, updatedAt: Date.now() };
     }
 
     case 'UPDATE_NAME': {

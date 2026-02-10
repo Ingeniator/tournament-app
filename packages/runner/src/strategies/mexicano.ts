@@ -1,33 +1,7 @@
 import type { TournamentStrategy, ScheduleResult } from './types';
 import type { Player, TournamentConfig, Round, Match } from '@padel/common';
 import { generateId } from '@padel/common';
-import { shuffle, partnerKey, commonValidateSetup, commonValidateScore, calculateIndividualStandings } from './shared';
-
-function seedGamesPlayed(existingRounds: Round[], players: Player[]): Map<string, number> {
-  const gamesPlayed = new Map<string, number>();
-  players.forEach(p => gamesPlayed.set(p.id, 0));
-  for (const round of existingRounds) {
-    for (const match of round.matches) {
-      for (const pid of [...match.team1, ...match.team2]) {
-        gamesPlayed.set(pid, (gamesPlayed.get(pid) ?? 0) + 1);
-      }
-    }
-  }
-  return gamesPlayed;
-}
-
-function seedPartnerCounts(existingRounds: Round[]): Map<string, number> {
-  const partnerCounts = new Map<string, number>();
-  for (const round of existingRounds) {
-    for (const match of round.matches) {
-      const k1 = partnerKey(match.team1[0], match.team1[1]);
-      const k2 = partnerKey(match.team2[0], match.team2[1]);
-      partnerCounts.set(k1, (partnerCounts.get(k1) ?? 0) + 1);
-      partnerCounts.set(k2, (partnerCounts.get(k2) ?? 0) + 1);
-    }
-  }
-  return partnerCounts;
-}
+import { shuffle, partnerKey, commonValidateSetup, commonValidateScore, calculateIndividualStandings, seedFromRounds, selectSitOuts } from './shared';
 
 /**
  * Generate rounds using Mexicano rules:
@@ -56,8 +30,7 @@ function generateMexicanoRounds(
 
   const playersPerRound = numCourts * 4;
   const sitOutCount = n - playersPerRound;
-  const gamesPlayed = seedGamesPlayed(existingRounds, activePlayers);
-  const partnerCounts = seedPartnerCounts(existingRounds);
+  const { gamesPlayed, partnerCounts } = seedFromRounds(existingRounds, activePlayers);
 
   if (sitOutCount > 0 && existingRounds.length === 0) {
     warnings.push(`${sitOutCount} player(s) will sit out each round`);
@@ -67,12 +40,7 @@ function generateMexicanoRounds(
   const startRoundNumber = existingRounds.length + 1;
 
   for (let r = 0; r < count; r++) {
-    // Select sit-outs: players with most games sit out first, randomize ties
-    const sorted = shuffle([...activePlayers]).sort(
-      (a, b) => (gamesPlayed.get(b.id) ?? 0) - (gamesPlayed.get(a.id) ?? 0)
-    );
-    const sitOutPlayers = sorted.slice(0, sitOutCount);
-    const sitOutIds = new Set(sitOutPlayers.map(p => p.id));
+    const { sitOutIds } = selectSitOuts(activePlayers, sitOutCount, gamesPlayed);
     const roundPlayers = activePlayers.filter(p => !sitOutIds.has(p.id));
 
     let groups: string[][];

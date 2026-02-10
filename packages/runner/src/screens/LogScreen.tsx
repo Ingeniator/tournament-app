@@ -5,7 +5,7 @@ import { useDistributionStats } from '../hooks/useDistributionStats';
 import { RoundCard } from '../components/rounds/RoundCard';
 import { PlayerStats } from '../components/stats/PlayerStats';
 import { DistributionStats } from '../components/stats/DistributionStats';
-import { Button } from '@padel/common';
+import { Button, Modal } from '@padel/common';
 import { getStrategy, scoreSchedule } from '../strategies';
 import type { Round } from '@padel/common';
 import styles from './LogScreen.module.css';
@@ -255,46 +255,34 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
         </Button>
       </div>
 
-      {showStats && (
-        <div className={styles.overlay} onClick={handleCloseStats}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h3>Statistics</h3>
-              <button className={styles.closeBtn} onClick={handleCloseStats}>
-                ✕
-              </button>
-            </div>
-            <div className={styles.modalBody}>
-              {distributionStats && (
-                <DistributionStats
-                  data={distributionStats}
-                  canReshuffle={
-                    tournament.phase === 'in-progress' &&
-                    tournament.rounds.some(r => r.matches.every(m => !m.score))
-                  }
-                  onReshuffle={handleReshuffle}
-                  onOptimize={handleOptimize}
-                  onCancelOptimize={handleCancelOptimize}
-                  optimizeElapsed={optimizeElapsed}
-                  hasOptimalBackup={
-                    optimalBackup !== null &&
-                    optimalBackup.map(r => r.id).join() !==
-                      tournament.rounds.filter(r => r.matches.every(m => !m.score)).map(r => r.id).join()
-                  }
-                  onRevertOptimal={handleRevertOptimal}
-                  onPlay={onNavigate ? () => { handleCloseStats(); onNavigate('play'); } : undefined}
-                />
-              )}
-              <PlayerStats stats={stats} />
-              <div className={styles.exportBtn}>
-                <Button variant="secondary" fullWidth onClick={handleExportPlan}>
-                  Export Plan
-                </Button>
-              </div>
-            </div>
-          </div>
+      <Modal open={showStats} title="Statistics" onClose={handleCloseStats}>
+        {distributionStats && (
+          <DistributionStats
+            data={distributionStats}
+            canReshuffle={
+              tournament.phase === 'in-progress' &&
+              tournament.rounds.some(r => r.matches.every(m => !m.score))
+            }
+            onReshuffle={handleReshuffle}
+            onOptimize={handleOptimize}
+            onCancelOptimize={handleCancelOptimize}
+            optimizeElapsed={optimizeElapsed}
+            hasOptimalBackup={
+              optimalBackup !== null &&
+              optimalBackup.map(r => r.id).join() !==
+                tournament.rounds.filter(r => r.matches.every(m => !m.score)).map(r => r.id).join()
+            }
+            onRevertOptimal={handleRevertOptimal}
+            onPlay={onNavigate ? () => { handleCloseStats(); onNavigate('play'); } : undefined}
+          />
+        )}
+        <PlayerStats stats={stats} />
+        <div className={styles.exportBtn}>
+          <Button variant="secondary" fullWidth onClick={handleExportPlan}>
+            Export Plan
+          </Button>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

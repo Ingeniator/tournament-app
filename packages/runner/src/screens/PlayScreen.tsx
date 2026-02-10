@@ -6,7 +6,7 @@ import { StandingsTable } from '../components/standings/StandingsTable';
 import { SupportOverlay } from '../components/support/SupportOverlay';
 import { useShareText } from '../hooks/useShareText';
 import { copyToClipboard } from '../utils/clipboard';
-import { Button } from '@padel/common';
+import { Button, Modal, Toast, useToast } from '@padel/common';
 import styles from './PlayScreen.module.css';
 
 export function PlayScreen() {
@@ -29,7 +29,7 @@ export function PlayScreen() {
   const { roundResults, standingsText } = useShareText(tournament, standings);
   const [showStandings, setShowStandings] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
+  const { toastMessage, showToast } = useToast();
   const [roundCompleteNum, setRoundCompleteNum] = useState<number | null>(null);
   const prevActiveRoundIdRef = useRef<string | null>(null);
 
@@ -72,8 +72,7 @@ export function PlayScreen() {
     const fullText = [standingsText, '', roundResults].filter(Boolean).join('\n');
     const handleCopy = async () => {
       const ok = await copyToClipboard(fullText);
-      setToast(ok ? 'Copied!' : 'Failed to copy');
-      setTimeout(() => setToast(null), 2000);
+      showToast(ok ? 'Copied!' : 'Failed to copy');
     };
 
     return (
@@ -136,7 +135,7 @@ export function PlayScreen() {
           <span className={styles.supportText}>Enjoyed using this? Help keep it free.</span>
         </button>
         <SupportOverlay open={showSupport} onClose={() => setShowSupport(false)} />
-        {toast && <div className={styles.toast}>{toast}</div>}
+        <Toast message={toastMessage} />
       </div>
     );
   }
@@ -258,7 +257,7 @@ export function PlayScreen() {
 
       {/* Round complete interstitial */}
       {roundCompleteNum !== null && (
-        <div className={`${styles.overlay} ${styles.overlayCentered}`} onClick={() => setRoundCompleteNum(null)}>
+        <div className={styles.interstitialOverlay} onClick={() => setRoundCompleteNum(null)}>
           <div className={styles.interstitial} onClick={e => e.stopPropagation()}>
             <div className={styles.interstitialContent}>
               <div className={styles.interstitialTitle}>Round {roundCompleteNum} complete!</div>
@@ -272,23 +271,11 @@ export function PlayScreen() {
       )}
 
       {/* Standings overlay */}
-      {showStandings && (
-        <div className={styles.overlay} onClick={() => setShowStandings(false)}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h3>Standings</h3>
-              <button className={styles.closeBtn} onClick={() => setShowStandings(false)}>
-                ✕
-              </button>
-            </div>
-            <div className={styles.modalBody}>
-              <StandingsTable standings={standings} plannedGames={plannedGames} />
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal open={showStandings} title="Standings" onClose={() => setShowStandings(false)}>
+        <StandingsTable standings={standings} plannedGames={plannedGames} />
+      </Modal>
 
-      {toast && <div className={styles.toast}>{toast}</div>}
+      <Toast message={toastMessage} />
     </div>
   );
 }

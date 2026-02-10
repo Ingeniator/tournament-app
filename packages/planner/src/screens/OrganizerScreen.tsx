@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Button, Card } from '@padel/common';
+import { Button, Card, Toast, useToast } from '@padel/common';
 import type { TournamentFormat, Court } from '@padel/common';
 import { generateId } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
@@ -9,7 +9,7 @@ import styles from './OrganizerScreen.module.css';
 
 export function OrganizerScreen() {
   const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, toggleConfirmed, deleteTournament } = usePlanner();
-  const [toast, setToast] = useState<string | null>(null);
+  const { toastMessage, showToast } = useToast();
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const [newPlayerName, setNewPlayerName] = useState('');
@@ -42,21 +42,19 @@ export function OrganizerScreen() {
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
-      setToast('Link copied!');
+      showToast('Link copied!');
     } catch {
-      setToast('Failed to copy');
+      showToast('Failed to copy');
     }
-    setTimeout(() => setToast(null), 2000);
   };
 
   const handleCopyCode = async () => {
     try {
       await navigator.clipboard.writeText(tournament.code);
-      setToast('Code copied!');
+      showToast('Code copied!');
     } catch {
-      setToast('Failed to copy');
+      showToast('Failed to copy');
     }
-    setTimeout(() => setToast(null), 2000);
   };
 
   const handleLaunch = () => {
@@ -67,11 +65,10 @@ export function OrganizerScreen() {
     const json = JSON.stringify(buildRunnerTournament(tournament, players), null, 2);
     try {
       await navigator.clipboard.writeText(json);
-      setToast('Tournament JSON copied!');
+      showToast('Tournament JSON copied!');
     } catch {
-      setToast('Failed to copy');
+      showToast('Failed to copy');
     }
-    setTimeout(() => setToast(null), 2000);
   };
 
   const handleNameSave = async () => {
@@ -376,7 +373,7 @@ export function OrganizerScreen() {
         </button>
       </div>
 
-      {toast && <div className={styles.toast}>{toast}</div>}
+      <Toast message={toastMessage} className={styles.toast} />
     </div>
   );
 }
