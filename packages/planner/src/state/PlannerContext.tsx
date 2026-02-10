@@ -8,6 +8,7 @@ import { usePlayers } from '../hooks/usePlayers';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { useMyTournaments } from '../hooks/useMyTournaments';
 import { useRegisteredTournaments } from '../hooks/useRegisteredTournaments';
+import { useTelegram, type TelegramUser } from '../hooks/useTelegram';
 
 export type Screen = 'loading' | 'home' | 'organizer' | 'join' | 'supporters';
 
@@ -38,6 +39,7 @@ interface PlannerContextValue {
   listingsLoading: boolean;
   openTournament: (id: string, screen: 'organizer' | 'join') => void;
   deleteTournament: () => Promise<void>;
+  telegramUser: TelegramUser | null;
 }
 
 const PlannerCtx = createContext<PlannerContextValue>(null!);
@@ -62,11 +64,21 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
 
   const { players, registerPlayer: registerInDb, removePlayer: removeInDb, updateConfirmed: updateConfirmedInDb, addPlayer: addPlayerInDb, toggleConfirmed: toggleConfirmedInDb, updatePlayerName: updatePlayerNameInDb, isRegistered: checkRegistered } = usePlayers(tournamentId);
 
-  const { name: userName, loading: userNameLoading, updateName: updateUserName } = useUserProfile(uid);
+  const { name: userName, loading: userNameLoading, updateName: updateUserName, updateTelegramId } = useUserProfile(uid);
+  const telegramUser = useTelegram();
   const { tournaments: myTournaments, loading: myLoading } = useMyTournaments(uid);
   const { tournaments: registeredTournaments, loading: regLoading } = useRegisteredTournaments(uid);
 
   const listingsLoading = myLoading || regLoading;
+
+  // Auto-set profile from Telegram identity
+  useEffect(() => {
+    if (!uid || !telegramUser || userNameLoading) return;
+    if (!userName) {
+      updateUserName(telegramUser.displayName);
+    }
+    updateTelegramId(telegramUser.telegramId);
+  }, [uid, telegramUser, userName, userNameLoading, updateUserName, updateTelegramId]);
 
   // Fetch organizer name for active tournament
   const [organizerName, setOrganizerName] = useState<string | null>(null);
@@ -177,6 +189,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       listingsLoading,
       openTournament,
       deleteTournament,
+      telegramUser,
     }}>
       {children}
     </PlannerCtx.Provider>

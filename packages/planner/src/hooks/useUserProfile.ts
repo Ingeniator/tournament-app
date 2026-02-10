@@ -25,5 +25,10 @@ export function useUserProfile(uid: string | null) {
     await set(ref(db, `users/${uid}/name`), newName);
   }, [uid]);
 
-  return { name, loading, updateName };
+  const updateTelegramId = useCallback(async (telegramId: number) => {
+    if (!uid || !db) return;
+    await set(ref(db, `users/${uid}/telegramId`), telegramId);
+  }, [uid]);
+
+  return { name, loading, updateName, updateTelegramId };
 }

@@ -5,17 +5,27 @@ import { getPlayerStatuses } from '../utils/playerStatus';
 import styles from './JoinScreen.module.css';
 
 export function JoinScreen() {
-  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, isRegistered, setScreen, organizerName, userName } = usePlanner();
-  const [name, setName] = useState(userName ?? '');
+  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, isRegistered, setScreen, organizerName, userName, telegramUser } = usePlanner();
+  const [name, setName] = useState(userName ?? telegramUser?.displayName ?? '');
   const [registering, setRegistering] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
 
-  // Pre-fill name from profile when it loads
+  // Pre-fill name from profile or Telegram when it loads
   useEffect(() => {
-    if (userName && !name) setName(userName);
-  }, [userName]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!name) {
+      const prefill = userName ?? telegramUser?.displayName;
+      if (prefill) setName(prefill);
+    }
+  }, [userName, telegramUser]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-register Telegram users
+  useEffect(() => {
+    if (!telegramUser || isRegistered || !uid || !tournament) return;
+    const regName = userName || telegramUser.displayName;
+    registerPlayer(regName);
+  }, [telegramUser, isRegistered, uid, tournament]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const capacity = tournament ? tournament.courts.length * 4 + (tournament.extraSpots ?? 0) : 0;
   const statuses = useMemo(() => getPlayerStatuses(players, capacity), [players, capacity]);
