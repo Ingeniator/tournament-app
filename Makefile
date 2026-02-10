@@ -1,4 +1,4 @@
-.PHONY: dev build deploy-build clean
+.PHONY: dev build deploy-build clean e2e e2e-ui
 
 dev:
 	@lsof -ti :5190,:5191 2>/dev/null | xargs kill -9 2>/dev/null || true
@@ -19,3 +19,9 @@ deploy-build: build
 
 clean:
 	rm -rf dist packages/common/dist packages/common/tsconfig.tsbuildinfo packages/runner/dist packages/planner/dist
+
+e2e:
+	npx playwright test
+
+e2e-ui:
+	npx playwright test --ui

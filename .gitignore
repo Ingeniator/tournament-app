@@ -26,3 +26,5 @@ packages/*/dist
 *.sln
 *.sw?
 docs/adr/*
+playwright-report/*
+test-results/*
