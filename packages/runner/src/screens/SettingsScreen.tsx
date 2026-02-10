@@ -444,10 +444,10 @@ export function SettingsScreen() {
                 ) : (
                   <div
                     className={styles.playerNameRow}
-                    onClick={() => {
+                    onClick={tournament.phase !== 'completed' ? () => {
                       setEditPlayerName(player.name);
                       setEditingPlayerId(player.id);
-                    }}
+                    } : undefined}
                   >
                     <span className={`${styles.playerName} ${player.unavailable ? styles.playerInactive : ''}`}>
                       {player.name}
@@ -462,7 +462,7 @@ export function SettingsScreen() {
           })}
         </div>
 
-        {showAddPlayer ? (
+        {tournament.phase === 'completed' ? null : showAddPlayer ? (
           <div className={styles.addPlayerPanel}>
             <input
               className={styles.editInput}

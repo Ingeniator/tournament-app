@@ -33,6 +33,38 @@ export function PlayScreen() {
   const [roundCompleteNum, setRoundCompleteNum] = useState<number | null>(null);
   const prevActiveRoundIdRef = useRef<string | null>(null);
 
+  const totalMatches = tournament?.rounds.reduce((n, r) => n + r.matches.length, 0) ?? 0;
+  const scoredMatches = tournament?.rounds.reduce(
+    (n, r) => n + r.matches.filter(m => m.score).length, 0
+  ) ?? 0;
+  const scoredRounds = tournament?.rounds.filter(r => r.matches.every(m => m.score)).length ?? 0;
+
+  // Find active round: first round with any unscored matches
+  const activeRoundIndex = tournament?.rounds.findIndex(r => r.matches.some(m => !m.score)) ?? -1;
+  const activeRound = tournament && activeRoundIndex >= 0 ? tournament.rounds[activeRoundIndex] : null;
+  const prevRound = tournament && activeRoundIndex > 0 ? tournament.rounds[activeRoundIndex - 1] : null;
+  const nextRound = tournament && activeRoundIndex >= 0 && activeRoundIndex + 1 < tournament.rounds.length
+    ? tournament.rounds[activeRoundIndex + 1]
+    : null;
+
+  // Detect round completion: when active round changes, show interstitial
+  useEffect(() => {
+    const prevId = prevActiveRoundIdRef.current;
+    const curId = activeRound?.id ?? null;
+
+    if (prevId !== null && curId !== null && prevId !== curId) {
+      // Active round advanced — previous round was just completed
+      const completedRound = tournament?.rounds.find(r => r.id === prevId);
+      if (completedRound) {
+        setRoundCompleteNum(completedRound.roundNumber);
+      }
+    }
+
+    prevActiveRoundIdRef.current = curId;
+  }, [activeRound?.id, tournament?.rounds]);
+
+  const name = (id: string) => tournament?.players.find(p => p.id === id)?.name ?? '?';
+
   if (!tournament) return null;
 
   // Completed state — show summary
@@ -62,38 +94,6 @@ export function PlayScreen() {
       </div>
     );
   }
-
-  const totalMatches = tournament.rounds.reduce((n, r) => n + r.matches.length, 0);
-  const scoredMatches = tournament.rounds.reduce(
-    (n, r) => n + r.matches.filter(m => m.score).length, 0
-  );
-  const scoredRounds = tournament.rounds.filter(r => r.matches.every(m => m.score)).length;
-
-  // Find active round: first round with any unscored matches
-  const activeRoundIndex = tournament.rounds.findIndex(r => r.matches.some(m => !m.score));
-  const activeRound = activeRoundIndex >= 0 ? tournament.rounds[activeRoundIndex] : null;
-  const prevRound = activeRoundIndex > 0 ? tournament.rounds[activeRoundIndex - 1] : null;
-  const nextRound = activeRoundIndex >= 0 && activeRoundIndex + 1 < tournament.rounds.length
-    ? tournament.rounds[activeRoundIndex + 1]
-    : null;
-
-  // Detect round completion: when active round changes, show interstitial
-  useEffect(() => {
-    const prevId = prevActiveRoundIdRef.current;
-    const curId = activeRound?.id ?? null;
-
-    if (prevId !== null && curId !== null && prevId !== curId) {
-      // Active round advanced — previous round was just completed
-      const completedRound = tournament.rounds.find(r => r.id === prevId);
-      if (completedRound) {
-        setRoundCompleteNum(completedRound.roundNumber);
-      }
-    }
-
-    prevActiveRoundIdRef.current = curId;
-  }, [activeRound?.id, tournament.rounds]);
-
-  const name = (id: string) => tournament.players.find(p => p.id === id)?.name ?? '?';
 
   return (
     <div className={styles.container}>

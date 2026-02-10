@@ -282,6 +282,7 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
                       tournament.rounds.filter(r => r.matches.every(m => !m.score)).map(r => r.id).join()
                   }
                   onRevertOptimal={handleRevertOptimal}
+                  onPlay={onNavigate ? () => { handleCloseStats(); onNavigate('play'); } : undefined}
                 />
               )}
               <PlayerStats stats={stats} />

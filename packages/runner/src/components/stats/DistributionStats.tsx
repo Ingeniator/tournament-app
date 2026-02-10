@@ -12,6 +12,7 @@ interface Props {
   optimizeElapsed: number | null;
   hasOptimalBackup: boolean;
   onRevertOptimal: () => void;
+  onPlay?: () => void;
 }
 
 const hints: Record<string, string> = {
@@ -52,7 +53,7 @@ function formatRange(min: number, max: number): string {
   return min === max ? `${min}` : `${min}–${max}`;
 }
 
-export function DistributionStats({ data, canReshuffle, onReshuffle, onOptimize, onCancelOptimize, optimizeElapsed, hasOptimalBackup, onRevertOptimal }: Props) {
+export function DistributionStats({ data, canReshuffle, onReshuffle, onOptimize, onCancelOptimize, optimizeElapsed, hasOptimalBackup, onRevertOptimal, onPlay }: Props) {
   const [isPending, startTransition] = useTransition();
   const isOptimizing = optimizeElapsed !== null;
   const repeatPartnersOk = data.repeatPartners.length <= data.idealRepeatPartners;
@@ -212,6 +213,14 @@ export function DistributionStats({ data, canReshuffle, onReshuffle, onOptimize,
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {onPlay && (
+        <div className={styles.reshuffleBtn}>
+          <Button fullWidth onClick={onPlay}>
+            Play
+          </Button>
         </div>
       )}
 
