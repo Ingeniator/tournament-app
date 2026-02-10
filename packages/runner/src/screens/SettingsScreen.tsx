@@ -17,6 +17,8 @@ export function SettingsScreen() {
   const [showAddPlayer, setShowAddPlayer] = useState(false);
   const [editingCourtId, setEditingCourtId] = useState<string | null>(null);
   const [editCourtName, setEditCourtName] = useState('');
+  const [replacingCourtId, setReplacingCourtId] = useState<string | null>(null);
+  const [replaceCourtName, setReplaceCourtName] = useState('');
   const [editingName, setEditingName] = useState(false);
   const [tournamentNameDraft, setTournamentNameDraft] = useState('');
   const [importMode, setImportMode] = useState(false);
@@ -89,6 +91,15 @@ export function SettingsScreen() {
       dispatch({ type: 'UPDATE_COURT', payload: { courtId, name: trimmed } });
     }
     setEditingCourtId(null);
+  };
+
+  const handleReplaceCourt = (oldCourtId: string) => {
+    const trimmed = replaceCourtName.trim();
+    if (!trimmed) return;
+    dispatch({ type: 'REPLACE_COURT', payload: { oldCourtId, newCourtName: trimmed } });
+    setReplacingCourtId(null);
+    setReplaceCourtName('');
+    showToast('Court replaced');
   };
 
   const handleTournamentNameSave = () => {
@@ -246,71 +257,110 @@ export function SettingsScreen() {
       <Card>
         <h3 className={styles.sectionTitle}>Courts</h3>
         <div className={styles.courtList}>
-          {tournament.config.courts.map(court => (
-            <div key={court.id} className={styles.playerItem}>
-              {editingCourtId === court.id ? (
-                <div className={styles.playerEditPanel}>
-                  <input
-                    className={styles.editInput}
-                    type="text"
-                    value={editCourtName}
-                    onChange={e => setEditCourtName(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') handleCourtSave(court.id);
-                      if (e.key === 'Escape') setEditingCourtId(null);
+          {tournament.config.courts.map(court => {
+            const isEditingCourt = editingCourtId === court.id;
+            const isReplacingCourt = replacingCourtId === court.id;
+
+            return (
+              <div key={court.id} className={styles.playerItem}>
+                {isEditingCourt ? (
+                  <div className={styles.playerEditPanel}>
+                    <input
+                      className={styles.editInput}
+                      type="text"
+                      value={editCourtName}
+                      onChange={e => setEditCourtName(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') handleCourtSave(court.id);
+                        if (e.key === 'Escape') setEditingCourtId(null);
+                      }}
+                      onBlur={() => handleCourtSave(court.id)}
+                      autoFocus
+                    />
+                    {tournament.phase === 'in-progress' && (
+                      <>
+                        <button
+                          className={`${styles.availabilityToggle} ${court.unavailable ? styles.toggleUnavailable : styles.toggleAvailable}`}
+                          onMouseDown={e => e.preventDefault()}
+                          onClick={() => dispatch({
+                            type: 'TOGGLE_COURT_AVAILABILITY',
+                            payload: { courtId: court.id },
+                          })}
+                        >
+                          {court.unavailable ? 'Unavailable' : 'Available'}
+                        </button>
+                        <button
+                          className={styles.replaceBtn}
+                          onMouseDown={e => e.preventDefault()}
+                          onClick={() => {
+                            setEditingCourtId(null);
+                            setReplacingCourtId(court.id);
+                            setReplaceCourtName('');
+                          }}
+                        >
+                          Replace with...
+                        </button>
+                      </>
+                    )}
+                  </div>
+                ) : isReplacingCourt ? (
+                  <div className={styles.playerEditPanel}>
+                    <div className={styles.replaceLabel}>
+                      Replace {court.name} with:
+                    </div>
+                    <input
+                      className={styles.editInput}
+                      type="text"
+                      value={replaceCourtName}
+                      placeholder="New court name"
+                      onChange={e => setReplaceCourtName(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') handleReplaceCourt(court.id);
+                        if (e.key === 'Escape') setReplacingCourtId(null);
+                      }}
+                      autoFocus
+                    />
+                    <div className={styles.replaceActions}>
+                      <Button size="small" onClick={() => handleReplaceCourt(court.id)} disabled={!replaceCourtName.trim()}>
+                        Replace
+                      </Button>
+                      <Button size="small" variant="ghost" onClick={() => setReplacingCourtId(null)}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    className={styles.playerNameRow}
+                    onClick={() => {
+                      setEditCourtName(court.name);
+                      setEditingCourtId(court.id);
                     }}
-                    onBlur={() => handleCourtSave(court.id)}
-                    autoFocus
-                  />
-                  {tournament.phase === 'in-progress' && (
-                    <button
-                      className={`${styles.availabilityToggle} ${court.unavailable ? styles.toggleUnavailable : styles.toggleAvailable}`}
-                      onMouseDown={e => e.preventDefault()}
-                      onClick={() => dispatch({
-                        type: 'TOGGLE_COURT_AVAILABILITY',
-                        payload: { courtId: court.id },
-                      })}
-                    >
-                      {court.unavailable ? 'Unavailable' : 'Available'}
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <div
-                  className={styles.playerNameRow}
-                  onClick={() => {
-                    setEditCourtName(court.name);
-                    setEditingCourtId(court.id);
-                  }}
-                >
-                  <span className={`${styles.playerName} ${court.unavailable ? styles.playerInactive : ''}`}>
-                    {court.name}
-                  </span>
-                  {court.unavailable && (
-                    <span className={styles.statusBadge}>out</span>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
+                  >
+                    <span className={`${styles.playerName} ${court.unavailable ? styles.playerInactive : ''}`}>
+                      {court.name}
+                    </span>
+                    {court.unavailable && (
+                      <span className={styles.statusBadge}>out</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
-        {tournament.phase === 'in-progress' && (() => {
-          const activePlayers = tournament.players.filter(p => !p.unavailable);
-          const maxCourts = Math.max(1, Math.floor(activePlayers.length / 4));
-          const availableCourtCount = tournament.config.courts.filter(c => !c.unavailable).length;
-          return availableCourtCount < maxCourts ? (
-            <Button
-              variant="secondary"
-              size="small"
-              fullWidth
-              onClick={() => dispatch({ type: 'ADD_COURT_LIVE' })}
-              style={{ marginTop: 'var(--space-sm)' }}
-            >
-              + Add Court
-            </Button>
-          ) : null;
-        })()}
+        {tournament.phase === 'in-progress' && (
+          <Button
+            variant="secondary"
+            size="small"
+            fullWidth
+            onClick={() => dispatch({ type: 'ADD_COURT_LIVE' })}
+            style={{ marginTop: 'var(--space-sm)' }}
+          >
+            + Add Court
+          </Button>
+        )}
       </Card>
 
       {/* Players */}

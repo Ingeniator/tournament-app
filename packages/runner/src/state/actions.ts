@@ -14,6 +14,7 @@ export type TournamentAction =
   | { type: 'UPDATE_COURT'; payload: { courtId: string; name: string } }
   | { type: 'ADD_COURT_LIVE' }
   | { type: 'TOGGLE_COURT_AVAILABILITY'; payload: { courtId: string } }
+  | { type: 'REPLACE_COURT'; payload: { oldCourtId: string; newCourtName: string } }
   | { type: 'UPDATE_NAME'; payload: { name: string } }
   | { type: 'UPDATE_CONFIG'; payload: Partial<TournamentConfig> }
   | { type: 'GENERATE_SCHEDULE' }

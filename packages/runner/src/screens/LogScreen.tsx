@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTournament } from '../hooks/useTournament';
 import { usePlayerStats } from '../hooks/usePlayerStats';
 import { useDistributionStats } from '../hooks/useDistributionStats';
@@ -10,7 +10,13 @@ import { getStrategy, scoreSchedule } from '../strategies';
 import type { Round } from '@padel/common';
 import styles from './LogScreen.module.css';
 
-export function LogScreen({ onNavigate }: { onNavigate?: (tab: 'play' | 'log' | 'settings') => void }) {
+interface LogScreenProps {
+  onNavigate?: (tab: 'play' | 'log' | 'settings') => void;
+  autoShowStats?: boolean;
+  onStatsShown?: () => void;
+}
+
+export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreenProps) {
   const { tournament, dispatch } = useTournament();
   const stats = usePlayerStats(tournament);
   const distributionStats = useDistributionStats(tournament);
@@ -19,6 +25,13 @@ export function LogScreen({ onNavigate }: { onNavigate?: (tab: 'play' | 'log' | 
   const [optimizeElapsed, setOptimizeElapsed] = useState<number | null>(null);
   const [optimalBackup, setOptimalBackup] = useState<Round[] | null>(null);
   const optimizeCtrlRef = useRef<{ cancelled: boolean }>({ cancelled: false });
+
+  useEffect(() => {
+    if (autoShowStats) {
+      setShowStats(true);
+      onStatsShown?.();
+    }
+  }, [autoShowStats, onStatsShown]);
 
   const handleExportPlan = useCallback(() => {
     if (!tournament) return;
@@ -121,6 +134,29 @@ export function LogScreen({ onNavigate }: { onNavigate?: (tab: 'play' | 'log' | 
       dispatch({ type: 'SET_FUTURE_ROUNDS', payload: { rounds: optimalBackup } });
     }
   }, [optimalBackup, dispatch]);
+
+  const handleReshuffle = useCallback(() => {
+    if (!tournament) return;
+    const scored = tournament.rounds.filter(r => r.matches.some(m => m.score !== null));
+    const unscored = tournament.rounds.filter(r => r.matches.every(m => !m.score));
+    const beforeScore = scoreSchedule([...scored, ...unscored]);
+
+    // Save current as backup if it's better than what we have
+    if (!optimalBackup) {
+      setOptimalBackup(unscored);
+    } else {
+      const backupScore = scoreSchedule([...scored, ...optimalBackup]);
+      const currentIsBetter = beforeScore.some((v, i) => {
+        for (let j = 0; j < i; j++) { if (beforeScore[j] !== backupScore[j]) return false; }
+        return v < backupScore[i];
+      });
+      if (currentIsBetter) {
+        setOptimalBackup(unscored);
+      }
+    }
+
+    dispatch({ type: 'REGENERATE_FUTURE_ROUNDS' });
+  }, [tournament, dispatch, optimalBackup]);
 
   const handleCloseStats = useCallback(() => {
     optimizeCtrlRef.current.cancelled = true;
@@ -236,7 +272,7 @@ export function LogScreen({ onNavigate }: { onNavigate?: (tab: 'play' | 'log' | 
                     tournament.phase === 'in-progress' &&
                     tournament.rounds.some(r => r.matches.every(m => !m.score))
                   }
-                  onReshuffle={() => dispatch({ type: 'REGENERATE_FUTURE_ROUNDS' })}
+                  onReshuffle={handleReshuffle}
                   onOptimize={handleOptimize}
                   onCancelOptimize={handleCancelOptimize}
                   optimizeElapsed={optimizeElapsed}

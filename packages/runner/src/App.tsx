@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { TournamentProvider } from './state/TournamentContext';
 import { useTournament } from './hooks/useTournament';
 import { AppShell } from './components/layout/AppShell';
@@ -19,10 +19,23 @@ function AppContent() {
     if (tab === 'play' || tab === 'log' || tab === 'settings') return tab;
     return 'play';
   });
+  const [showStatsOnMount, setShowStatsOnMount] = useState(false);
+  const prevPhaseRef = useRef(tournament?.phase);
 
   useEffect(() => {
     saveUIState({ activeTab });
   }, [activeTab]);
+
+  useEffect(() => {
+    const prevPhase = prevPhaseRef.current;
+    const curPhase = tournament?.phase;
+    prevPhaseRef.current = curPhase;
+
+    if (prevPhase === 'setup' && curPhase === 'in-progress') {
+      setActiveTab('log');
+      setShowStatsOnMount(true);
+    }
+  }, [tournament?.phase]);
 
   // No tournament — show home
   if (!tournament) {
@@ -55,7 +68,13 @@ function AppContent() {
         }
       >
         {activeTab === 'play' && <PlayScreen />}
-        {activeTab === 'log' && <LogScreen onNavigate={setActiveTab} />}
+        {activeTab === 'log' && (
+          <LogScreen
+            onNavigate={setActiveTab}
+            autoShowStats={showStatsOnMount}
+            onStatsShown={() => setShowStatsOnMount(false)}
+          />
+        )}
         {activeTab === 'settings' && <SettingsScreen />}
       </AppShell>
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />

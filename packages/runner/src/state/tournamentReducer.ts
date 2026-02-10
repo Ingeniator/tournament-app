@@ -2,70 +2,7 @@ import type { Tournament, Player, Court } from '@padel/common';
 import type { TournamentAction } from './actions';
 import { generateId } from '@padel/common';
 import { getStrategy } from '../strategies';
-
-const DEDUP_SUFFIXES = [
-  'Jr.', 'Sr.', 'the Great', 'II', 'III', 'el Magnifico',
-  'the Bold', 'v2.0', 'IV', 'the Wise', 'Remix', 'el Jefe',
-  'V', 'the Swift', 'OG', 'the Brave', 'VI', 'Turbo',
-  'the Strong', 'VII', 'el Crack', 'the Lucky', 'VIII', 'Primo',
-];
-
-const SUFFIX_PATTERN = new RegExp(
-  ' (?:' + DEDUP_SUFFIXES.map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + '|#\\d+)$'
-);
-
-function deduplicateNames(players: Player[]): Player[] {
-  // Group by base name (strip known suffixes)
-  const nameGroups = new Map<string, Player[]>();
-  for (const p of players) {
-    const base = p.name.replace(SUFFIX_PATTERN, '');
-    const group = nameGroups.get(base) ?? [];
-    group.push(p);
-    nameGroups.set(base, group);
-  }
-
-  if (![...nameGroups.values()].some(g => g.length > 1)) return players;
-
-  // Collect all suffixes already in use across all players
-  const usedSuffixes = new Set<string>();
-  for (const p of players) {
-    const match = p.name.match(SUFFIX_PATTERN);
-    if (match) usedSuffixes.add(match[0].slice(1)); // strip leading space
-  }
-
-  // Shuffle available suffixes so each name group gets a random pick
-  const available = DEDUP_SUFFIXES.filter(s => !usedSuffixes.has(s));
-  for (let i = available.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [available[i], available[j]] = [available[j], available[i]];
-  }
-  let idx = 0;
-  let numFallback = 1;
-
-  const renames = new Map<string, string>();
-  for (const [base, group] of nameGroups) {
-    if (group.length <= 1) continue;
-    for (const p of group) {
-      // Already has a valid suffix — keep it
-      if (SUFFIX_PATTERN.test(p.name)) continue;
-      // Pick next random unused suffix
-      let suffix: string;
-      if (idx < available.length) {
-        suffix = available[idx++];
-      } else {
-        while (usedSuffixes.has(`#${numFallback}`)) numFallback++;
-        suffix = `#${numFallback++}`;
-      }
-      usedSuffixes.add(suffix);
-      renames.set(p.id, `${base} ${suffix}`);
-    }
-  }
-
-  if (renames.size === 0) return players;
-  return players.map(p =>
-    renames.has(p.id) ? { ...p, name: renames.get(p.id)! } : p
-  );
-}
+import { deduplicateNames } from '../utils/deduplicateNames';
 
 export function tournamentReducer(
   state: Tournament | null,
@@ -86,15 +23,17 @@ export function tournamentReducer(
       };
     }
 
-    case 'LOAD_TOURNAMENT':
-      return action.payload;
+    case 'LOAD_TOURNAMENT': {
+      const loaded = action.payload;
+      return { ...loaded, players: deduplicateNames(loaded.players) };
+    }
 
     case 'ADD_PLAYER': {
       if (!state || state.phase !== 'setup') return state;
       const newPlayer = { id: generateId(), name: action.payload.name };
       return {
         ...state,
-        players: [...state.players, newPlayer],
+        players: deduplicateNames([...state.players, newPlayer]),
         updatedAt: Date.now(),
       };
     }
@@ -110,11 +49,12 @@ export function tournamentReducer(
 
     case 'UPDATE_PLAYER': {
       if (!state) return state;
+      const updatedPlrs = state.players.map(p =>
+        p.id === action.payload.playerId ? { ...p, name: action.payload.name } : p
+      );
       return {
         ...state,
-        players: state.players.map(p =>
-          p.id === action.payload.playerId ? { ...p, name: action.payload.name } : p
-        ),
+        players: deduplicateNames(updatedPlrs),
         updatedAt: Date.now(),
       };
     }
@@ -325,6 +265,32 @@ export function tournamentReducer(
       }
 
       return { ...state, config: tcConfig, updatedAt: Date.now() };
+    }
+
+    case 'REPLACE_COURT': {
+      if (!state || state.phase !== 'in-progress') return state;
+      const { oldCourtId, newCourtName } = action.payload;
+      const rcCourts = state.config.courts.map(c =>
+        c.id === oldCourtId ? { ...c, unavailable: true } : c
+      );
+      const rcNewCourt: Court = { id: generateId(), name: newCourtName };
+      rcCourts.push(rcNewCourt);
+      const rcConfig = { ...state.config, courts: rcCourts };
+
+      // Regenerate unscored rounds with updated court set
+      const rcScored = state.rounds.filter(r => r.matches.some(m => m.score !== null));
+      const rcDropped = state.rounds.length - rcScored.length;
+      if (rcDropped > 0) {
+        const rcStrategy = getStrategy(rcConfig.format);
+        const rcActive = state.players.filter(p => !p.unavailable);
+        const rcExcl = state.players.filter(p => p.unavailable).map(p => p.id);
+        const { rounds: rcRegen } = rcStrategy.generateAdditionalRounds(
+          rcActive, rcConfig, rcScored, rcDropped, rcExcl
+        );
+        return { ...state, config: rcConfig, rounds: [...rcScored, ...rcRegen], updatedAt: Date.now() };
+      }
+
+      return { ...state, config: rcConfig, updatedAt: Date.now() };
     }
 
     case 'UPDATE_NAME': {

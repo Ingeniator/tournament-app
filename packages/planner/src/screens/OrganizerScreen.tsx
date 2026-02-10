@@ -18,6 +18,20 @@ export function OrganizerScreen() {
   const capacity = tournament ? tournament.courts.length * 4 + (tournament.extraSpots ?? 0) : 0;
   const statuses = useMemo(() => getPlayerStatuses(players, capacity), [players, capacity]);
 
+  const duplicateNames = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const p of players) {
+      if (p.confirmed === false) continue;
+      const lower = p.name.trim().toLowerCase();
+      counts.set(lower, (counts.get(lower) ?? 0) + 1);
+    }
+    const dupes: string[] = [];
+    for (const [name, count] of counts) {
+      if (count > 1) dupes.push(players.find(p => p.name.trim().toLowerCase() === name)!.name);
+    }
+    return dupes;
+  }, [players]);
+
   if (!tournament) return null;
 
   const confirmedCount = players.filter(p => p.confirmed !== false).length;
@@ -321,6 +335,11 @@ export function OrganizerScreen() {
       {confirmedCount > 0 && confirmedCount < capacity && (
         <div className={styles.warning}>
           Only {confirmedCount} of {capacity} spots filled. Some courts won't have full games.
+        </div>
+      )}
+      {duplicateNames.length > 0 && (
+        <div className={styles.warning}>
+          Duplicate names: {duplicateNames.join(', ')}. Same person registered twice?
         </div>
       )}
       <Button fullWidth onClick={handleLaunch} disabled={players.length === 0}>

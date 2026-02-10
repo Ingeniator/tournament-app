@@ -1,15 +1,19 @@
 # Tournament Planner
 
-Web app for pre-tournament setup. Plan everything at home, export to Runner for the court.
+Web app for pre-tournament setup. Organize everything beforehand, share a join link with players.
 
-- Create tournament: pick format, set courts, add players
-- Generate balanced schedule (Americano, Mexicano, etc.)
-- Export as JSON — paste into Runner at the court
-- Share tournament link with players beforehand
+## Features
 
-## Status
+- Create tournament with format, courts, and settings
+- Share via 6-character short code -- players join and register their names
+- Organizer dashboard with player list management
+- Firebase-backed -- real-time sync across devices
 
-Placeholder — not yet implemented.
+## Tech
+
+- React 19, TypeScript, Vite 7, CSS Modules
+- Firebase Realtime Database + Anonymous Auth
+- State via Context (no localStorage)
 
 ## Development
 
@@ -21,3 +25,5 @@ make build      # production build
 ```
 
 Dev server runs at `http://localhost:5174/plan`.
+
+Requires Firebase environment variables (`VITE_FIREBASE_*`) for full functionality.

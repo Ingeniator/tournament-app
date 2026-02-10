@@ -1,4 +1,5 @@
 import type { Tournament } from '@padel/common';
+import { deduplicateNames } from '../utils/deduplicateNames';
 
 const STORAGE_KEY = 'padel-tournament-v1';
 const UI_STATE_KEY = 'padel-ui-state-v1';
@@ -19,7 +20,8 @@ export function loadTournament(): Tournament | null {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
     if (!data) return null;
-    return JSON.parse(data) as Tournament;
+    const tournament = JSON.parse(data) as Tournament;
+    return { ...tournament, players: deduplicateNames(tournament.players) };
   } catch {
     return null;
   }
