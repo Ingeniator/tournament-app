@@ -53,9 +53,18 @@ export function HomeScreen() {
     <div className={styles.container}>
       <div className={styles.logo}>
         <svg viewBox="0 0 100 100" width="48" height="48">
-          <circle cx="50" cy="50" r="22" fill="none" stroke="#e94560" strokeWidth="5"/>
-          <line x1="50" y1="28" x2="50" y2="72" stroke="#e94560" strokeWidth="3"/>
-          <line x1="28" y1="50" x2="72" y2="50" stroke="#e94560" strokeWidth="3"/>
+          <defs>
+            <radialGradient id="ball" cx="40%" cy="38%" r="50%">
+              <stop offset="0%" stopColor="#d4e142"/>
+              <stop offset="100%" stopColor="#b8c230"/>
+            </radialGradient>
+            <clipPath id="bc"><circle cx="50" cy="50" r="24"/></clipPath>
+          </defs>
+          <circle cx="50" cy="50" r="24" fill="url(#ball)"/>
+          <g clipPath="url(#bc)">
+            <path d="M38 23 C26 38, 26 62, 38 77" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round"/>
+            <path d="M62 23 C74 38, 74 62, 62 77" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round"/>
+          </g>
         </svg>
       </div>
       <h1 className={styles.title}>Tournament Manager</h1>
