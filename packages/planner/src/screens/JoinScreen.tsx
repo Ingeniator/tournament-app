@@ -88,10 +88,12 @@ export function JoinScreen() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <button className={styles.backBtn} onClick={handleBack}>&larr;</button>
+      <header className={styles.header}>
+        <button className={styles.backBtn} onClick={handleBack} aria-label="Back">&larr;</button>
         <h1 className={styles.title}>{tournament.name}</h1>
-      </div>
+      </header>
+
+      <main>
 
       {(tournament.date || tournament.place || organizerName || tournament.chatLink || tournament.description) && (
         <Card>
@@ -281,6 +283,7 @@ export function JoinScreen() {
           </div>
         )}
       </Card>
+      </main>
     </div>
   );
 }

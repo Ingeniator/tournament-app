@@ -19,6 +19,7 @@
 .headerTitle {
   font-size: var(--text-xl);
   font-weight: 800;
+  margin: 0;
 }
 
 .userBadge {

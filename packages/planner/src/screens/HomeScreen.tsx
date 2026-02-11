@@ -99,8 +99,8 @@ export function HomeScreen() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <svg viewBox="0 0 100 100" width="32" height="32">
+      <header className={styles.header}>
+        <svg viewBox="0 0 100 100" width="32" height="32" aria-hidden="true">
           <defs>
             <radialGradient id="ball-p" cx="40%" cy="38%" r="50%">
               <stop offset="0%" stopColor="#d4e142"/>
@@ -114,9 +114,10 @@ export function HomeScreen() {
             <path d="M62 23 C74 38, 74 62, 62 77" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round"/>
           </g>
         </svg>
-        <span className={styles.headerTitle}>Tournament Planner</span>
-      </div>
+        <h1 className={styles.headerTitle}>Tournament Planner</h1>
+      </header>
 
+      <main>
       {userName && !editingUserName && (
         <div className={styles.userBadge}>
           <span className={styles.userBadgeText}>Logged in as <strong>{userName}</strong></span>
@@ -141,6 +142,7 @@ export function HomeScreen() {
               if (e.key === 'Escape') setEditingUserName(false);
             }}
             autoFocus
+            aria-label="Your name"
           />
           <Button size="small" onClick={handleSaveUserName} disabled={!userNameDraft.trim()}>
             Save
@@ -164,6 +166,7 @@ export function HomeScreen() {
               onChange={e => setProfileName(e.target.value)}
               placeholder="Group Name / Your name"
               onKeyDown={e => e.key === 'Enter' && handleSaveName()}
+              aria-label="Group Name / Your name"
             />
             <Button fullWidth onClick={handleSaveName} disabled={savingName || !profileName.trim()}>
               {savingName ? 'Saving...' : 'Save'}
@@ -182,6 +185,7 @@ export function HomeScreen() {
             onChange={e => setName(e.target.value)}
             placeholder="Tournament name"
             onKeyDown={e => e.key === 'Enter' && handleCreate()}
+            aria-label="Tournament name"
           />
           <Button fullWidth onClick={handleCreate} disabled={creating || !name.trim() || !userName}>
             {creating ? 'Creating...' : 'Create Tournament'}
@@ -206,6 +210,7 @@ export function HomeScreen() {
               maxLength={6}
               autoFocus
               onKeyDown={e => e.key === 'Enter' && handleJoin()}
+              aria-label="Tournament join code"
             />
             {error && <div className={styles.error}>{error}</div>}
             <Button fullWidth onClick={handleJoin} disabled={joining || joinCode.length !== 6}>
@@ -225,7 +230,7 @@ export function HomeScreen() {
       {/* My Tournaments */}
       {!listingsLoading && (
         <Card>
-          <h3 className={styles.sectionTitle}>My Tournaments</h3>
+          <h2 className={styles.sectionTitle}>My Tournaments</h2>
           {myTournaments.length === 0 ? (
             <p className={styles.empty}>No tournaments created yet</p>
           ) : (
@@ -239,7 +244,7 @@ export function HomeScreen() {
       {/* Registered Tournaments */}
       {!listingsLoading && (
         <Card>
-          <h3 className={styles.sectionTitle}>Registered Tournaments</h3>
+          <h2 className={styles.sectionTitle}>Registered Tournaments</h2>
           {registeredTournaments.length === 0 ? (
             <p className={styles.empty}>No tournaments joined yet</p>
           ) : (
@@ -249,13 +254,14 @@ export function HomeScreen() {
           )}
         </Card>
       )}
+      </main>
 
-      <div className={styles.footer}>
+      <footer className={styles.footer}>
         Free &amp; open source &middot;{' '}
         <button className={styles.footerLink} onClick={() => setScreen('supporters')}>
           View supporters
         </button>
-      </div>
+      </footer>
     </div>
   );
 }

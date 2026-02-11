@@ -50,9 +50,9 @@ export function HomeScreen() {
   const hasSaved = tournament !== null;
 
   return (
-    <div className={styles.container}>
+    <main className={styles.container}>
       <div className={styles.logo}>
-        <svg viewBox="0 0 100 100" width="48" height="48">
+        <svg viewBox="0 0 100 100" width="48" height="48" aria-hidden="true">
           <defs>
             <radialGradient id="ball" cx="40%" cy="38%" r="50%">
               <stop offset="0%" stopColor="#d4e142"/>
@@ -136,6 +136,6 @@ export function HomeScreen() {
           </>
         )}
       </div>
-    </div>
+    </main>
   );
 }

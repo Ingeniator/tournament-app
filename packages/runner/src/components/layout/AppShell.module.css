@@ -17,6 +17,7 @@
 .title {
   font-size: var(--text-lg);
   font-weight: 700;
+  margin: 0;
 }
 
 .content {

@@ -35,8 +35,9 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
   return (
     <div className={styles.form}>
       <div className={styles.field}>
-        <label className={styles.label}>Format</label>
+        <label className={styles.label} htmlFor="config-format">Format</label>
         <select
+          id="config-format"
           className={styles.input}
           value={config.format}
           onChange={e => onUpdate({ format: e.target.value as TournamentFormat })}
@@ -47,8 +48,9 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
       </div>
 
       <div className={styles.field}>
-        <label className={styles.label}>Points per match</label>
+        <label className={styles.label} htmlFor="config-points">Points per match</label>
         <input
+          id="config-points"
           className={styles.input}
           type="number"
           min={1}
@@ -58,8 +60,8 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
       </div>
 
       <div className={styles.field}>
-        <label className={styles.label}>Courts</label>
-        <div className={styles.courtList}>
+        <label className={styles.label} id="courts-label">Courts</label>
+        <div className={styles.courtList} role="group" aria-labelledby="courts-label">
           {config.courts.map(court => (
             <div key={court.id} className={styles.courtRow}>
               <input
@@ -67,6 +69,7 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
                 type="text"
                 value={court.name}
                 onChange={e => updateCourtName(court.id, e.target.value)}
+                aria-label={`Court ${config.courts.indexOf(court) + 1} name`}
               />
               {config.courts.length > 1 && (
                 <button
@@ -91,8 +94,9 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
       </div>
 
       <div className={styles.field}>
-        <label className={styles.label}>Number of rounds</label>
+        <label className={styles.label} htmlFor="config-rounds">Number of rounds</label>
         <input
+          id="config-rounds"
           className={styles.input}
           type="number"
           min={1}

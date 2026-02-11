@@ -6,6 +6,7 @@
   <title>Padel Tournament Manager — Organize Scores & Standings | PadelDay</title>
   <meta name="description" content="Free tournament manager for padel, tennis, and other racket sports. Create brackets, track live scores, view standings, and share results. Works offline on your phone.">
   <meta name="keywords" content="padel tournament, tournament manager, padel americano, padel mexicano, padel scores, tournament organizer, racket sports tournament, live standings">
+  <link rel="icon" type="image/svg+xml" href="/play/favicon.svg" />
   <link rel="canonical" href="https://padelday.net/">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://padelday.net/">
@@ -51,7 +52,7 @@
     }
     .logo { margin-bottom: 16px; }
     h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
-    .subtitle { font-size: 14px; color: #888; margin-bottom: 48px; }
+    .subtitle { font-size: 14px; color: #8e8ea3; margin-bottom: 48px; }
     #greeting { color: #e94560; font-size: 16px; font-weight: 600; margin-bottom: 8px; }
     .cards { display: flex; flex-direction: column; gap: 16px; width: 100%; }
     a.card {
@@ -67,14 +68,14 @@
     a.card:hover { border-color: #e94560; transform: translateY(-2px); }
     a.card:active { transform: translateY(0); }
     .card-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-    .card-desc { font-size: 14px; color: #888; line-height: 1.4; }
+    .card-desc { font-size: 14px; color: #8e8ea3; line-height: 1.4; }
     .card-title .arrow { color: #e94560; margin-left: 4px; }
   </style>
 </head>
 <body>
-  <div class="container">
+  <main class="container">
     <div class="logo">
-      <svg viewBox="0 0 100 100" width="56" height="56">
+      <svg viewBox="0 0 100 100" width="56" height="56" aria-hidden="true">
         <defs>
           <radialGradient id="ball" cx="40%" cy="38%" r="50%">
             <stop offset="0%" stop-color="#d4e142"/>
@@ -102,7 +103,7 @@
         <div class="card-desc">Run matches, track scores, see live standings</div>
       </a>
     </div>
-  </div>
+  </main>
   <script>
     (function() {
       var tg = window.Telegram && window.Telegram.WebApp;

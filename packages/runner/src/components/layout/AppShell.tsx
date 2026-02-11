@@ -12,7 +12,7 @@ export function AppShell({ title, headerRight, children, hasBottomNav = false }:
   return (
     <div className={styles.shell}>
       <header className={styles.header}>
-        <span className={styles.title}>{title}</span>
+        <h1 className={styles.title}>{title}</h1>
         {headerRight}
       </header>
       <main className={hasBottomNav ? styles.content : styles.contentNoPad}>

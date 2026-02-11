@@ -40,6 +40,7 @@ export function PlayerInput({ onAdd, onBulkAdd }: PlayerInputProps) {
         onChange={e => setName(e.target.value)}
         onPaste={handlePaste}
         autoComplete="off"
+        aria-label="Player name"
       />
       <Button type="submit" disabled={!name.trim()}>
         Add

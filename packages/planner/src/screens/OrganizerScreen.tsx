@@ -113,8 +113,8 @@ export function OrganizerScreen() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <button className={styles.backBtn} onClick={handleBack}>&larr;</button>
+      <header className={styles.header}>
+        <button className={styles.backBtn} onClick={handleBack} aria-label="Back">&larr;</button>
         {editingName ? (
           <input
             className={styles.nameInput}
@@ -135,14 +135,15 @@ export function OrganizerScreen() {
             {tournament.name}
           </h1>
         )}
-      </div>
+      </header>
+      <main>
       {userName && (
         <span className={styles.organizerLabel}>by {userName}</span>
       )}
 
       {/* Share section */}
       <Card>
-        <h3 className={styles.sectionTitle}>Share with Players</h3>
+        <h2 className={styles.sectionTitle}>Share with Players</h2>
         <div className={styles.codeDisplay}>
           <span className={styles.code} onClick={handleCopyCode}>{tournament.code}</span>
         </div>
@@ -154,9 +155,9 @@ export function OrganizerScreen() {
 
       {/* Player list */}
       <Card>
-        <h3 className={styles.sectionTitle}>
+        <h2 className={styles.sectionTitle}>
           Players ({confirmedCount} / {capacity}{reserveCount > 0 ? ` + ${reserveCount} reserve` : ''})
-        </h3>
+        </h2>
         {players.length === 0 ? (
           <p className={styles.empty}>No players registered yet</p>
         ) : (
@@ -231,7 +232,7 @@ export function OrganizerScreen() {
 
       {/* Config section */}
       <Card>
-        <h3 className={styles.sectionTitle}>Settings</h3>
+        <h2 className={styles.sectionTitle}>Settings</h2>
         <div className={styles.configGrid}>
           <label className={styles.configLabel}>Date & time</label>
           <input
@@ -390,12 +391,14 @@ export function OrganizerScreen() {
         Delete Tournament
       </button>
 
-      <div className={styles.supportNudge}>
+      </main>
+
+      <footer className={styles.supportNudge}>
         Free &amp; open source &middot;{' '}
         <button className={styles.supportLink} onClick={() => setScreen('supporters')}>
           View supporters
         </button>
-      </div>
+      </footer>
 
       <Toast message={toastMessage} className={styles.toast} />
     </div>

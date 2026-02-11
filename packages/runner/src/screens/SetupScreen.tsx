@@ -48,6 +48,7 @@ export function SetupScreen() {
             dispatch({ type: 'UPDATE_NAME', payload: { name: e.target.value } })
           }
           placeholder="Tournament name"
+          aria-label="Tournament name"
         />
       </div>
 

@@ -17,17 +17,19 @@
 }
 
 .button:disabled {
-  opacity: 0.4;
   cursor: not-allowed;
+  background-color: var(--color-surface-raised);
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
 }
 
 .primary {
-  background-color: var(--color-primary);
+  background-color: #c93b51;
   color: white;
 }
 
 .primary:hover:not(:disabled) {
-  background-color: var(--color-primary-hover);
+  background-color: #b33347;
 }
 
 .secondary {
