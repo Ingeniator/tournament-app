@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { firebaseConfigured } from './firebase';
+import { ErrorBoundary } from '@padel/common';
 import { PlannerProvider, usePlanner } from './state/PlannerContext';
 import { HomeScreen } from './screens/HomeScreen';
 import { OrganizerScreen } from './screens/OrganizerScreen';
@@ -8,7 +9,7 @@ import { SupportersScreen } from './screens/SupportersScreen';
 import styles from './App.module.css';
 
 function AppContent() {
-  const { screen, setScreen, authLoading, loadByCode } = usePlanner();
+  const { screen, setScreen, authLoading, authError, loadByCode } = usePlanner();
 
   // Check URL for ?code=XXXXXX or Telegram startapp param on mount
   useEffect(() => {
@@ -43,6 +44,16 @@ function AppContent() {
     );
   }
 
+  if (authError) {
+    return (
+      <div className={styles.setup}>
+        <h1>Connection Error</h1>
+        <p>{authError}</p>
+        <button onClick={() => window.location.reload()}>Retry</button>
+      </div>
+    );
+  }
+
   switch (screen) {
     case 'home':
       return <HomeScreen />;
@@ -69,8 +80,10 @@ export function App() {
   }
 
   return (
-    <PlannerProvider>
-      <AppContent />
-    </PlannerProvider>
+    <ErrorBoundary>
+      <PlannerProvider>
+        <AppContent />
+      </PlannerProvider>
+    </ErrorBoundary>
   );
 }

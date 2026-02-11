@@ -89,7 +89,7 @@ export function useShareText(tournament: Tournament | null, standings: Standings
     });
     lines.push('');
 
-    lines.push(`Format: Americano · ${tournament.config.pointsPerMatch} pts/match · ${tournament.rounds.length} rounds`);
+    lines.push(`Format: ${tournament.config.format.charAt(0).toUpperCase() + tournament.config.format.slice(1)} · ${tournament.config.pointsPerMatch} pts/match · ${tournament.rounds.length} rounds`);
 
     return lines.join('\n');
   }, [tournament]);

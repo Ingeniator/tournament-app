@@ -5,6 +5,7 @@ import { auth, signIn, firebaseConfigured } from '../firebase';
 export function useAuth() {
   const [uid, setUid] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!firebaseConfigured || !auth) {
@@ -14,13 +15,17 @@ export function useAuth() {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUid(user.uid);
+        setAuthError(null);
         setLoading(false);
       } else {
-        signIn().catch(() => setLoading(false));
+        signIn().catch(() => {
+          setAuthError('Could not connect. Check your internet and try again.');
+          setLoading(false);
+        });
       }
     });
     return unsubscribe;
   }, []);
 
-  return { uid, loading };
+  return { uid, loading, authError };
 }

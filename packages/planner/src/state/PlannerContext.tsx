@@ -15,6 +15,7 @@ export type Screen = 'loading' | 'home' | 'organizer' | 'join' | 'supporters';
 interface PlannerContextValue {
   uid: string | null;
   authLoading: boolean;
+  authError: string | null;
   tournament: PlannerTournament | null;
   tournamentLoading: boolean;
   players: PlannerRegistration[];
@@ -49,7 +50,7 @@ export function usePlanner() {
 }
 
 export function PlannerProvider({ children }: { children: ReactNode }) {
-  const { uid, loading: authLoading } = useAuth();
+  const { uid, loading: authLoading, authError } = useAuth();
   const [tournamentId, setTournamentId] = useState<string | null>(null);
   const [screen, setScreen] = useState<Screen>('loading');
 
@@ -95,9 +96,13 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       setOrganizerName(userName);
       return;
     }
+    let cancelled = false;
     get(ref(db, `users/${tournament.organizerId}/name`)).then((snap) => {
-      setOrganizerName(snap.exists() ? (snap.val() as string) : null);
+      if (!cancelled) {
+        setOrganizerName(snap.exists() ? (snap.val() as string) : null);
+      }
     });
+    return () => { cancelled = true; };
   }, [tournament?.organizerId, uid, userName]);
 
   const createTournament = useCallback(async (name: string) => {
@@ -168,6 +173,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     <PlannerCtx.Provider value={{
       uid,
       authLoading,
+      authError,
       tournament,
       tournamentLoading,
       players,

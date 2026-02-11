@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ref, set, get, remove, onValue } from 'firebase/database';
+import { ref, set, get, onValue, update as firebaseUpdate } from 'firebase/database';
 import type { PlannerTournament, Court } from '@padel/common';
 import { generateId } from '@padel/common';
 import { db } from '../firebase';
@@ -43,23 +43,23 @@ export function usePlannerTournament(tournamentId: string | null) {
       code,
       createdAt: Date.now(),
     };
-    await set(ref(db, `tournaments/${id}`), tournament);
-    await set(ref(db, `codes/${code}`), id);
-    // Index in user's organized list for listing
-    await set(ref(db, `users/${organizerId}/organized/${id}`), true);
+    // Atomic multi-path write
+    await firebaseUpdate(ref(db), {
+      [`tournaments/${id}`]: tournament,
+      [`codes/${code}`]: id,
+      [`users/${organizerId}/organized/${id}`]: true,
+    });
     return id;
   }, []);
 
   const updateTournament = useCallback(async (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'pointsPerMatch' | 'courts' | 'maxRounds' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description'>>) => {
     if (!tournamentId || !db) return;
-    const snapshot = await get(ref(db, `tournaments/${tournamentId}`));
-    if (!snapshot.exists()) return;
-    const current = snapshot.val() as PlannerTournament;
     // Convert undefined to null so Firebase deletes the field
-    const cleaned = Object.fromEntries(
-      Object.entries(updates).map(([k, v]) => [k, v === undefined ? null : v])
-    );
-    await set(ref(db, `tournaments/${tournamentId}`), { ...current, ...cleaned });
+    const pathUpdates: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(updates)) {
+      pathUpdates[`tournaments/${tournamentId}/${k}`] = v === undefined ? null : v;
+    }
+    await firebaseUpdate(ref(db), pathUpdates);
   }, [tournamentId]);
 
   const updateCourts = useCallback(async (courts: Court[]) => {
@@ -77,12 +77,26 @@ export function usePlannerTournament(tournamentId: string | null) {
   }, []);
 
   const deleteTournament = useCallback(async (organizerId: string) => {
-    if (!tournamentId || !db || !tournament) return;
-    const code = tournament.code;
-    await remove(ref(db, `codes/${code}`));
-    await remove(ref(db, `tournaments/${tournamentId}`));
-    await remove(ref(db, `users/${organizerId}/organized/${tournamentId}`));
-  }, [tournamentId, tournament]);
+    if (!tournamentId || !db) return;
+    // Read fresh tournament data to get the code and player list
+    const snapshot = await get(ref(db, `tournaments/${tournamentId}`));
+    if (!snapshot.exists()) return;
+    const data = snapshot.val() as Record<string, unknown>;
+
+    const deletes: Record<string, null> = {
+      [`codes/${data.code as string}`]: null,
+      [`tournaments/${tournamentId}`]: null,
+      [`users/${organizerId}/organized/${tournamentId}`]: null,
+    };
+    // Clean up registration indexes for all players
+    const players = data.players as Record<string, unknown> | undefined;
+    if (players) {
+      for (const playerId of Object.keys(players)) {
+        deletes[`users/${playerId}/registrations/${tournamentId}`] = null;
+      }
+    }
+    await firebaseUpdate(ref(db), deletes);
+  }, [tournamentId]);
 
   return { tournament, loading, createTournament, updateTournament, updateCourts, loadByCode, deleteTournament };
 }

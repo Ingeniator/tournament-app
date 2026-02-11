@@ -4,15 +4,17 @@ import { deduplicateNames } from '../utils/deduplicateNames';
 const STORAGE_KEY = 'padel-tournament-v1';
 const UI_STATE_KEY = 'padel-ui-state-v1';
 
-export function saveTournament(tournament: Tournament | null): void {
+export function saveTournament(tournament: Tournament | null): boolean {
   try {
     if (tournament === null) {
       localStorage.removeItem(STORAGE_KEY);
     } else {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(tournament));
     }
+    return true;
   } catch {
-    // Storage full or unavailable — silently fail
+    console.warn('[persistence] Failed to save tournament — storage may be full or unavailable');
+    return false;
   }
 }
 

@@ -8,11 +8,11 @@ import { SetupScreen } from './screens/SetupScreen';
 import { PlayScreen } from './screens/PlayScreen';
 import { LogScreen } from './screens/LogScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
-import { Button } from '@padel/common';
+import { Button, ErrorBoundary } from '@padel/common';
 import { saveUIState, loadUIState } from './state/persistence';
 
 function AppContent() {
-  const { tournament, dispatch } = useTournament();
+  const { tournament, dispatch, saveError } = useTournament();
   const [activeTab, setActiveTab] = useState<TabId>(() => {
     const saved = loadUIState();
     const tab = saved?.activeTab as TabId | undefined;
@@ -63,6 +63,11 @@ function AppContent() {
   // In-progress or completed — show tab view
   return (
     <>
+      {saveError && (
+        <div style={{ background: '#d97706', color: '#fff', textAlign: 'center', padding: '6px 12px', fontSize: '13px' }}>
+          Could not save — storage may be full. Your progress may be lost if you close this page.
+        </div>
+      )}
       <AppShell
         title={tournament.name}
         hasBottomNav
@@ -97,8 +102,10 @@ function AppContent() {
 
 export function App() {
   return (
-    <TournamentProvider>
-      <AppContent />
-    </TournamentProvider>
+    <ErrorBoundary>
+      <TournamentProvider>
+        <AppContent />
+      </TournamentProvider>
+    </ErrorBoundary>
   );
 }

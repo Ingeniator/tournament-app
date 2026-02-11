@@ -7,7 +7,7 @@
         "players": {
           "$playerId": {
             ".write": "auth != null && $playerId === auth.uid",
-            ".validate": "newData.hasChildren(['name', 'timestamp']) && newData.child('name').isString() && newData.child('name').val().length < 30 && (!newData.hasChild('confirmed') || newData.child('confirmed').isBoolean())"
+            ".validate": "newData.hasChildren(['name', 'timestamp']) && newData.child('name').isString() && newData.child('name').val().length < 30 && newData.child('timestamp').isNumber() && (!newData.hasChild('confirmed') || newData.child('confirmed').isBoolean()) && (!newData.hasChild('telegramUsername') || newData.child('telegramUsername').isString() && newData.child('telegramUsername').val().length < 50)"
           }
         }
       }
