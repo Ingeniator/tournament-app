@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Button, Card } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { getPlayerStatuses } from '../utils/playerStatus';
+import { downloadICS } from '../utils/icsExport';
 import styles from './JoinScreen.module.css';
 
 export function JoinScreen() {
@@ -202,6 +203,15 @@ export function JoinScreen() {
               >
                 {updating ? 'Updating...' : 'Confirm participation'}
               </Button>
+            )}
+
+            {isConfirmed && tournament.date && (
+              <button
+                className={styles.calendarBtn}
+                onClick={() => downloadICS(tournament)}
+              >
+                &#128197; Add to Calendar
+              </button>
             )}
           </div>
         ) : (
