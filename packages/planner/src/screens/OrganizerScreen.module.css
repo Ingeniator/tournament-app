@@ -227,8 +227,27 @@
   border-color: var(--color-primary);
 }
 
-.configInput::placeholder {
+.configInput::placeholder,
+.configTextarea::placeholder {
   color: var(--color-text-muted);
+}
+
+.configTextarea {
+  grid-column: 1 / -1;
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background-color: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  font-family: inherit;
+  resize: vertical;
+}
+
+.configTextarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
 }
 
 .courtsSection {

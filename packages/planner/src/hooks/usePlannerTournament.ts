@@ -50,12 +50,16 @@ export function usePlannerTournament(tournamentId: string | null) {
     return id;
   }, []);
 
-  const updateTournament = useCallback(async (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'pointsPerMatch' | 'courts' | 'maxRounds' | 'date' | 'place' | 'extraSpots'>>) => {
+  const updateTournament = useCallback(async (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'pointsPerMatch' | 'courts' | 'maxRounds' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description'>>) => {
     if (!tournamentId || !db) return;
     const snapshot = await get(ref(db, `tournaments/${tournamentId}`));
     if (!snapshot.exists()) return;
     const current = snapshot.val() as PlannerTournament;
-    await set(ref(db, `tournaments/${tournamentId}`), { ...current, ...updates });
+    // Convert undefined to null so Firebase deletes the field
+    const cleaned = Object.fromEntries(
+      Object.entries(updates).map(([k, v]) => [k, v === undefined ? null : v])
+    );
+    await set(ref(db, `tournaments/${tournamentId}`), { ...current, ...cleaned });
   }, [tournamentId]);
 
   const updateCourts = useCallback(async (courts: Court[]) => {

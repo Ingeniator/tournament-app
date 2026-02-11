@@ -14,6 +14,7 @@ export interface PlannerTournament {
   place?: string;
   extraSpots?: number;
   chatLink?: string;
+  description?: string;
 }
 
 export interface TournamentSummary {

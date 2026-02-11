@@ -248,6 +248,15 @@ export function OrganizerScreen() {
             placeholder="https://t.me/..."
           />
 
+          <label className={styles.configLabel}>Description</label>
+          <textarea
+            className={styles.configTextarea}
+            value={tournament.description ?? ''}
+            onChange={e => updateTournament({ description: e.target.value || undefined })}
+            placeholder="Price, skill level, rules, etc."
+            rows={3}
+          />
+
           <label className={styles.configLabel}>
             Format
             <button
