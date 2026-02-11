@@ -33,4 +33,5 @@ export interface PlannerRegistration {
   name: string;
   timestamp: number;
   confirmed?: boolean;
+  telegramUsername?: string;
 }

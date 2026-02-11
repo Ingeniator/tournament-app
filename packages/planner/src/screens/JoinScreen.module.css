@@ -211,6 +211,15 @@
   flex: 1;
 }
 
+.playerLink {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.playerLink:active {
+  opacity: 0.7;
+}
+
 .reserveIcon {
   font-size: var(--text-3xl);
   color: #d97706;

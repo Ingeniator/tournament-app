@@ -64,7 +64,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
 
   const { players, registerPlayer: registerInDb, removePlayer: removeInDb, updateConfirmed: updateConfirmedInDb, addPlayer: addPlayerInDb, toggleConfirmed: toggleConfirmedInDb, updatePlayerName: updatePlayerNameInDb, isRegistered: checkRegistered } = usePlayers(tournamentId);
 
-  const { name: userName, loading: userNameLoading, updateName: updateUserName, updateTelegramId } = useUserProfile(uid);
+  const { name: userName, loading: userNameLoading, updateName: updateUserName, updateTelegramId, updateTelegramUsername } = useUserProfile(uid);
   const telegramUser = useTelegram();
   const { tournaments: myTournaments, loading: myLoading } = useMyTournaments(uid);
   const { tournaments: registeredTournaments, loading: regLoading } = useRegisteredTournaments(uid);
@@ -78,7 +78,10 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       updateUserName(telegramUser.displayName);
     }
     updateTelegramId(telegramUser.telegramId);
-  }, [uid, telegramUser, userName, userNameLoading, updateUserName, updateTelegramId]);
+    if (telegramUser.username) {
+      updateTelegramUsername(telegramUser.username);
+    }
+  }, [uid, telegramUser, userName, userNameLoading, updateUserName, updateTelegramId, updateTelegramUsername]);
 
   // Fetch organizer name for active tournament
   const [organizerName, setOrganizerName] = useState<string | null>(null);
@@ -119,12 +122,12 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
 
   const registerPlayer = useCallback(async (name: string) => {
     if (!uid) return;
-    await registerInDb(name, uid);
+    await registerInDb(name, uid, telegramUser?.username);
     // Also write name to user profile if not set yet
     if (!userName) {
       await updateUserName(name);
     }
-  }, [uid, userName, registerInDb, updateUserName]);
+  }, [uid, userName, telegramUser, registerInDb, updateUserName]);
 
   const removePlayer = useCallback(async (playerId: string) => {
     await removeInDb(playerId);

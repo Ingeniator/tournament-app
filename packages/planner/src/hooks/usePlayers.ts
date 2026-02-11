@@ -31,12 +31,13 @@ export function usePlayers(tournamentId: string | null) {
     return unsubscribe;
   }, [tournamentId]);
 
-  const registerPlayer = useCallback(async (name: string, uid: string) => {
+  const registerPlayer = useCallback(async (name: string, uid: string, telegramUsername?: string) => {
     if (!tournamentId || !db) return;
     // Rules require $playerId === auth.uid, so use uid as key
     await set(ref(db, `tournaments/${tournamentId}/players/${uid}`), {
       name,
       timestamp: Date.now(),
+      ...(telegramUsername ? { telegramUsername } : {}),
     });
     // Index in user's registrations for listing
     await set(ref(db, `users/${uid}/registrations/${tournamentId}`), true);

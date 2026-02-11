@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 export interface TelegramUser {
   telegramId: number;
   displayName: string;
+  username?: string;
 }
 
 export function useTelegram(): TelegramUser | null {
@@ -16,6 +17,6 @@ export function useTelegram(): TelegramUser | null {
     tg.expand();
 
     const displayName = [user.first_name, user.last_name].filter(Boolean).join(' ');
-    return { telegramId: user.id, displayName };
+    return { telegramId: user.id, displayName, username: user.username };
   }, []);
 }

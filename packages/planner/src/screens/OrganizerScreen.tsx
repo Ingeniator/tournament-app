@@ -165,7 +165,18 @@ export function OrganizerScreen() {
               <div key={player.id} className={styles.playerItem}>
                 <span className={styles.playerNum}>{i + 1}</span>
                 <span className={styles.playerName}>
-                  {player.name}
+                  {player.telegramUsername ? (
+                    <a
+                      href={`https://t.me/${player.telegramUsername}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.playerLink}
+                    >
+                      {player.name}
+                    </a>
+                  ) : (
+                    player.name
+                  )}
                   {statuses.get(player.id) === 'reserve' && (
                     <span className={styles.reserveBadge}>reserve</span>
                   )}
