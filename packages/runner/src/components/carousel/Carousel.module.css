@@ -19,6 +19,8 @@
   flex: 0 0 100%;
   scroll-snap-align: start;
   min-width: 0;
+  padding: 0 var(--space-xs);
+  box-sizing: border-box;
 }
 
 .dots {

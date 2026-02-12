@@ -191,50 +191,25 @@ export function renderNominationImage(
   canvas.height = canvasHeight;
 
   const cx = canvasWidth / 2;
-
-  // Background
-  ctx.fillStyle = BG;
-  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-  // Card area
-  const cardPad = s(16);
-  const cardX = cardPad;
-  const cardY = cardPad;
-  const cardW = canvasWidth - cardPad * 2;
-  const cardH = canvasHeight - cardPad * 2;
   const cardR = s(16);
 
-  // Gradient-like card bg (two-tone)
-  ctx.fillStyle = SURFACE;
-  roundRect(ctx, cardX, cardY, cardW, cardH, cardR);
+  // Card gradient background matching CSS: linear-gradient(145deg, SURFACE, SURFACE_RAISED)
+  // 145deg goes roughly from top-left to bottom-right
+  const grad = ctx.createLinearGradient(0, 0, canvasWidth * 0.7, canvasHeight * 0.7);
+  grad.addColorStop(0, SURFACE);
+  grad.addColorStop(1, SURFACE_RAISED);
+  ctx.fillStyle = grad;
+  roundRect(ctx, 0, 0, canvasWidth, canvasHeight, cardR);
   ctx.fill();
-
-  // Subtle top highlight
-  ctx.fillStyle = SURFACE_RAISED;
-  roundRect(ctx, cardX, cardY, cardW, cardH / 2, cardR);
-  ctx.save();
-  roundRect(ctx, cardX, cardY, cardW, cardH, cardR);
-  ctx.clip();
-  ctx.fillRect(cardX, cardY, cardW, cardH / 2);
-  ctx.restore();
 
   // Card border
   ctx.strokeStyle = BORDER;
   ctx.lineWidth = s(1);
-  roundRect(ctx, cardX, cardY, cardW, cardH, cardR);
+  roundRect(ctx, 0, 0, canvasWidth, canvasHeight, cardR);
   ctx.stroke();
 
-  // Accent line at top
-  ctx.fillStyle = SUCCESS;
-  roundRect(ctx, cardX, cardY, cardW, s(3), cardR);
-  ctx.save();
-  roundRect(ctx, cardX, cardY, cardW, cardH, cardR);
-  ctx.clip();
-  ctx.fillRect(cardX, cardY, cardW, s(3));
-  ctx.restore();
-
   ctx.textAlign = 'center';
-  let y = cardY + s(32);
+  let y = s(32);
 
   // Tournament name (small, top)
   ctx.fillStyle = TEXT_MUTED;
@@ -261,7 +236,8 @@ export function renderNominationImage(
     ctx.font = `bold ${s(16)}px ${FONT}`;
     const pair1 = `${nomination.playerNames[0]} & ${nomination.playerNames[1]}`;
     const pair2 = `${nomination.playerNames[2]} & ${nomination.playerNames[3]}`;
-    ctx.fillText(truncateText(ctx, pair1, cardW - s(40)), cx, y);
+    const maxTextW = canvasWidth - s(48);
+    ctx.fillText(truncateText(ctx, pair1, maxTextW), cx, y);
     y += s(16);
     ctx.fillStyle = TEXT_MUTED;
     ctx.font = `${s(10)}px ${FONT}`;
@@ -269,17 +245,18 @@ export function renderNominationImage(
     y += s(16);
     ctx.fillStyle = TEXT;
     ctx.font = `bold ${s(16)}px ${FONT}`;
-    ctx.fillText(truncateText(ctx, pair2, cardW - s(40)), cx, y);
+    ctx.fillText(truncateText(ctx, pair2, maxTextW), cx, y);
     y += s(24);
   } else {
+    const maxTextW = canvasWidth - s(48);
     const nameText = nomination.playerNames.join(' & ');
     // Measure to pick font size
     ctx.font = `bold ${s(20)}px ${FONT}`;
     const nameWidth = ctx.measureText(nameText).width;
-    if (nameWidth > cardW - s(40)) {
+    if (nameWidth > maxTextW) {
       ctx.font = `bold ${s(16)}px ${FONT}`;
     }
-    ctx.fillText(truncateText(ctx, nameText, cardW - s(40)), cx, y);
+    ctx.fillText(truncateText(ctx, nameText, maxTextW), cx, y);
     y += s(28);
   }
 
@@ -297,7 +274,7 @@ export function renderNominationImage(
   // Footer / watermark
   ctx.fillStyle = TEXT_MUTED;
   ctx.font = `${s(8)}px ${FONT}`;
-  ctx.fillText(window.location.hostname, cx, cardY + cardH - s(12));
+  ctx.fillText(window.location.hostname, cx, canvasHeight - s(16));
 
   return canvas;
 }
