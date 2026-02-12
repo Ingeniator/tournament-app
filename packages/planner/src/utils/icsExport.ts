@@ -50,17 +50,43 @@ export function generateICS(tournament: PlannerTournament): string {
   return lines.join('\r\n');
 }
 
-export function downloadICS(tournament: PlannerTournament): void {
+function formatGCalDate(date: Date): string {
+  return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+}
+
+function buildGoogleCalendarUrl(tournament: PlannerTournament): string {
+  const start = new Date(tournament.date!);
+  const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: tournament.name,
+    dates: `${formatGCalDate(start)}/${formatGCalDate(end)}`,
+  });
+  if (tournament.place) params.set('location', tournament.place);
+  if (tournament.description) params.set('details', tournament.description);
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+export async function downloadICS(tournament: PlannerTournament): Promise<void> {
   const content = generateICS(tournament);
   if (!content) return;
 
   const tg = window.Telegram?.WebApp;
-  if (tg?.openLink) {
+  if (tg) {
     // Telegram WebApp blocks blob downloads and programmatic <a>.click().
-    // Open a data URI in the external browser where the download works.
-    const dataUri =
-      'data:text/calendar;charset=utf-8,' + encodeURIComponent(content);
-    tg.openLink(dataUri);
+    // Try the Web Share API first (opens native share sheet on mobile).
+    const fileName = `${tournament.name.replace(/[^a-zA-Z0-9]/g, '_')}.ics`;
+    const file = new File([content], fileName, { type: 'text/calendar' });
+    if (navigator.share && navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: tournament.name });
+        return;
+      } catch {
+        // User cancelled or share failed — fall through to Google Calendar
+      }
+    }
+    // Fallback: open Google Calendar event URL in external browser.
+    tg.openLink?.(buildGoogleCalendarUrl(tournament));
     return;
   }
 
