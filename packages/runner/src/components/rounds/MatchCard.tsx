@@ -16,34 +16,19 @@ interface MatchCardProps {
 export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, onScore, onClear, onTapScore }: MatchCardProps) {
   const name = (id: string) => players.find(p => p.id === id)?.name ?? '?';
   const courtName = courts.find(c => c.id === match.courtId)?.name ?? match.courtId;
-
-  const team1Label = `${name(match.team1[0])} & ${name(match.team1[1])}`;
-  const team2Label = `${name(match.team2[0])} & ${name(match.team2[1])}`;
+  const team1Won = match.score && match.score.team1Points > match.score.team2Points;
+  const team2Won = match.score && match.score.team2Points > match.score.team1Points;
 
   return (
     <div className={`${styles.match} ${match.score ? styles.scored : ''}`}>
-      <div className={styles.court}>{courtName}</div>
-      <div className={styles.teams}>
-        <div className={styles.team}>
-          <div className={styles.teamName}>
-            {name(match.team1[0])}
-            <br />
-            {name(match.team1[1])}
-          </div>
-        </div>
-        <span className={styles.vs}>vs</span>
-        <div className={styles.team}>
-          <div className={styles.teamName}>
-            {name(match.team2[0])}
-            <br />
-            {name(match.team2[1])}
-          </div>
-        </div>
-      </div>
-      <div className={styles.scoreRow}>
+      <div className={styles.courtLabel}>{courtName}</div>
+      <div className={styles.court}>
+        <div className={`${styles.playerCell} ${styles.topLeft} ${team1Won ? styles.winner : ''}`} title={name(match.team1[0])}><span className={styles.playerName}>{name(match.team1[0])}</span></div>
+        <div className={`${styles.playerCell} ${styles.topRight} ${team2Won ? styles.winner : ''}`} title={name(match.team2[0])}><span className={styles.playerName}>{name(match.team2[0])}</span></div>
+
         {readOnly && match.score ? (
           <div
-            className={`${styles.readOnlyScore} ${onTapScore ? styles.tappable : ''}`}
+            className={`${styles.scoreCenter} ${onTapScore ? styles.tappable : ''}`}
             onClick={onTapScore}
           >
             <span className={styles.scoreValue}>{match.score.team1Points}</span>
@@ -51,7 +36,7 @@ export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, on
             <span className={styles.scoreValue}>{match.score.team2Points}</span>
           </div>
         ) : readOnly ? (
-          <div className={styles.readOnlyScore}>
+          <div className={styles.scoreCenter}>
             <span className={styles.noScore}>–</span>
             <span className={styles.scoreSeparator}>:</span>
             <span className={styles.noScore}>–</span>
@@ -62,10 +47,11 @@ export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, on
             pointsPerMatch={pointsPerMatch}
             onSave={onScore}
             onClear={onClear}
-            team1Label={team1Label}
-            team2Label={team2Label}
           />
         )}
+
+        <div className={`${styles.playerCell} ${styles.bottomLeft} ${team1Won ? styles.winner : ''}`} title={name(match.team1[1])}><span className={styles.playerName}>{name(match.team1[1])}</span></div>
+        <div className={`${styles.playerCell} ${styles.bottomRight} ${team2Won ? styles.winner : ''}`} title={name(match.team2[1])}><span className={styles.playerName}>{name(match.team2[1])}</span></div>
       </div>
     </div>
   );

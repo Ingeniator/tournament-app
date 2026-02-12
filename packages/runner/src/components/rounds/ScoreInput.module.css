@@ -1,5 +1,12 @@
-/* Score display row — each side independently tappable */
+/* Root uses display:contents so children participate in parent grid */
+.root {
+  display: contents;
+}
+
+/* Score display — spans full width on the net row */
 .display {
+  grid-column: 1 / -1;
+  grid-row: 2;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -26,7 +33,6 @@
   background-color: var(--color-surface);
 }
 
-/* Active side being picked — highlighted with primary color */
 .scoreBtnActive {
   border-style: solid;
   border-color: var(--color-primary);
@@ -40,59 +46,90 @@
   font-size: var(--text-lg);
 }
 
-/* Picker — expanded inline score grid */
+/* Picker — spans full width below bottom players */
 .picker {
-  padding: var(--space-xs) 0;
-}
-
-.pickerLabel {
-  font-size: var(--text-xs);
-  color: var(--color-primary);
-  font-weight: 600;
-  margin-bottom: var(--space-sm);
-  text-align: center;
+  grid-column: 1 / -1;
+  grid-row: 4;
+  padding: var(--space-sm) var(--space-sm) var(--space-xs);
 }
 
 .grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 6px;
 }
 
+/* Cells match the score button style — rounded squares */
 .cell {
-  aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: var(--color-surface);
-  border: 2px solid var(--color-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  font-size: var(--text-base);
+  font-size: var(--text-xl);
   font-weight: 700;
   color: var(--color-text);
   cursor: pointer;
-  min-height: 44px;
-  min-width: 44px;
+  min-width: 52px;
+  min-height: 48px;
+  padding: var(--space-xs) var(--space-sm);
   -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.12s, background-color 0.12s, color 0.12s, opacity 0.12s;
 }
 
 .cell:active {
-  background-color: var(--color-primary);
-  color: white;
+  border-style: solid;
   border-color: var(--color-primary);
+  background-color: rgba(233, 69, 96, 0.12);
+  color: var(--color-text);
 }
 
 .cellSelected {
+  border-style: solid;
+  border-color: var(--color-primary);
   background-color: var(--color-primary);
   color: white;
-  border-color: var(--color-primary);
+}
+
+.cellDeparting {
+  opacity: 0;
+}
+
+/* Flying cell — animates from grid position to score button */
+.flyingCell {
+  position: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: white;
+  z-index: 1000;
+  pointer-events: none;
+  animation: fly-to-score 0.28s cubic-bezier(0.32, 0, 0.15, 1) forwards;
+}
+
+@keyframes fly-to-score {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--fly-dx), var(--fly-dy)) scale(1);
+    opacity: 1;
+  }
 }
 
 /* Actions row */
 .pickerActions {
   display: flex;
   gap: var(--space-sm);
-  margin-top: var(--space-sm);
+  margin-top: var(--space-xs);
   justify-content: center;
 }
 
@@ -102,9 +139,9 @@
   border: none;
   background: none;
   color: var(--color-text-muted);
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
   cursor: pointer;
-  min-height: 44px;
+  min-height: 32px;
 }
 
 .clearBtn {
