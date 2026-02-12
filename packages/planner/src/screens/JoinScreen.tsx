@@ -46,6 +46,16 @@ export function JoinScreen() {
   const handleRegister = async () => {
     const trimmed = name.trim();
     if (!trimmed || registeringRef.current) return;
+
+    // Warn if someone with the same name is already registered (likely
+    // the same person on a different device with a different anonymous UID)
+    const duplicate = players.find(p => p.name.trim().toLowerCase() === trimmed.toLowerCase());
+    if (duplicate) {
+      if (!window.confirm(`"${duplicate.name}" is already registered. Is that a different person?`)) {
+        return;
+      }
+    }
+
     registeringRef.current = true;
     setRegistering(true);
     try {
