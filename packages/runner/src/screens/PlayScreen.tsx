@@ -1,8 +1,11 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
 import { useTournament } from '../hooks/useTournament';
 import { useStandings } from '../hooks/useStandings';
+import { useNominations } from '../hooks/useNominations';
 import { RoundCard } from '../components/rounds/RoundCard';
 import { StandingsTable } from '../components/standings/StandingsTable';
+import { NominationCard } from '../components/nominations/NominationCard';
+import { Carousel } from '../components/carousel/Carousel';
 import { SupportOverlay } from '../components/support/SupportOverlay';
 import { useShareText } from '../hooks/useShareText';
 import { copyToClipboard } from '../utils/clipboard';
@@ -13,6 +16,7 @@ import styles from './PlayScreen.module.css';
 export function PlayScreen() {
   const { tournament, dispatch } = useTournament();
   const standings = useStandings(tournament);
+  const nominations = useNominations(tournament, standings);
   const plannedGames = useMemo(() => {
     if (!tournament) return new Map<string, number>();
     const map = new Map<string, number>();
@@ -66,6 +70,27 @@ export function PlayScreen() {
 
   const name = (id: string) => tournament?.players.find(p => p.id === id)?.name ?? '?';
 
+  // Equalize nomination card heights
+  const nomCardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [nomMinHeight, setNomMinHeight] = useState(0);
+  const setNomRef = useCallback((index: number) => (el: HTMLDivElement | null) => {
+    nomCardRefs.current[index] = el;
+  }, []);
+
+  useLayoutEffect(() => {
+    if (nominations.length === 0) return;
+    // Reset height to measure natural sizes
+    setNomMinHeight(0);
+    requestAnimationFrame(() => {
+      const heights = nomCardRefs.current
+        .filter((el): el is HTMLDivElement => el !== null)
+        .map(el => el.scrollHeight);
+      if (heights.length > 0) {
+        setNomMinHeight(Math.max(...heights));
+      }
+    });
+  }, [nominations]);
+
   if (!tournament) return null;
 
   // Completed state — show summary
@@ -76,7 +101,7 @@ export function PlayScreen() {
       showToast(ok ? 'Copied!' : 'Failed to copy');
     };
     const handleShareImage = async () => {
-      const result = await shareStandingsImage(tournament.name, standings);
+      const result = await shareStandingsImage(tournament.name, standings, nominations);
       if (result === 'shared') showToast('Shared!');
       else if (result === 'downloaded') showToast('Image saved!');
       else showToast('Failed to share');
@@ -87,9 +112,16 @@ export function PlayScreen() {
         <div className={styles.completedHeader}>
           <h2 className={styles.completedName}>{tournament.name}</h2>
         </div>
-        <div className={styles.completedStandings}>
-          <StandingsTable standings={standings} />
-        </div>
+        <Carousel>
+          {[
+            <div key="standings" className={styles.completedStandings}>
+              <StandingsTable standings={standings} />
+            </div>,
+            ...nominations.map((nom, i) => (
+              <NominationCard key={nom.id} nomination={nom} cardRef={setNomRef(i)} minHeight={nomMinHeight || undefined} />
+            )),
+          ]}
+        </Carousel>
         <Button variant="secondary" fullWidth onClick={handleShareImage}>
           Share Results as Image
         </Button>

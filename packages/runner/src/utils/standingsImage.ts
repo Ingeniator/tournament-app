@@ -1,8 +1,10 @@
 import type { StandingsEntry } from '@padel/common';
+import type { Nomination } from '../hooks/useNominations';
 
 // Theme matching runner variables.css
 const BG = '#0f0f1a';
 const SURFACE = '#1a1a2e';
+const SURFACE_RAISED = '#22223a';
 const BORDER = '#2a2a44';
 const TEXT = '#f0f0f0';
 const TEXT_SECONDARY = '#a0a0b8';
@@ -14,6 +16,8 @@ const DANGER = '#e94560';
 const RANK_GOLD = '#ffd700';
 const RANK_SILVER = '#c0c0c0';
 const RANK_BRONZE = '#cd7f32';
+
+const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 
 const SCALE = 2; // retina
 
@@ -80,7 +84,7 @@ export function renderStandingsImage(
   // Table header
   y = tableY + s(4);
   ctx.textAlign = 'left';
-  ctx.font = `600 ${s(9)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  ctx.font = `600 ${s(9)}px ${FONT}`;
   ctx.fillStyle = TEXT_MUTED;
   const headerY = y + s(20);
   ctx.fillText('#', tableX + colRank, headerY);
@@ -102,8 +106,8 @@ export function renderStandingsImage(
   ctx.stroke();
 
   // Table rows
-  const bodyFont = `${s(12)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-  const boldFont = `bold ${s(12)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  const bodyFont = `${s(12)}px ${FONT}`;
+  const boldFont = `bold ${s(12)}px ${FONT}`;
   const nameMaxWidth = colPts - colName - s(8);
 
   for (let i = 0; i < standings.length; i++) {
@@ -132,7 +136,7 @@ export function renderStandingsImage(
     ctx.fillText(String(entry.rank), tableX + colRank, textY);
 
     // Name (truncated if too long)
-    ctx.font = `600 ${s(12)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.font = `600 ${s(12)}px ${FONT}`;
     ctx.fillStyle = TEXT;
     const displayName = truncateText(ctx, entry.playerName, nameMaxWidth);
     ctx.fillText(displayName, tableX + colName, textY);
@@ -161,11 +165,174 @@ export function renderStandingsImage(
   // Footer / watermark
   const footerY = tableY + tableHeight + s(8) + s(16);
   ctx.textAlign = 'center';
-  ctx.font = `${s(9)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  ctx.font = `${s(9)}px ${FONT}`;
   ctx.fillStyle = TEXT_MUTED;
   ctx.fillText(window.location.hostname, canvasWidth / 2, footerY + s(12));
 
   return canvas;
+}
+
+export function renderNominationImage(
+  tournamentName: string,
+  nomination: Nomination,
+): HTMLCanvasElement {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d')!;
+
+  const canvasWidth = s(400);
+  const canvasHeight = s(400);
+
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
+
+  const cx = canvasWidth / 2;
+  const cardR = s(16);
+
+  // Card gradient background matching CSS: linear-gradient(145deg, SURFACE, SURFACE_RAISED)
+  // 145deg goes roughly from top-left to bottom-right
+  const grad = ctx.createLinearGradient(0, 0, canvasWidth * 0.7, canvasHeight * 0.7);
+  grad.addColorStop(0, SURFACE);
+  grad.addColorStop(1, SURFACE_RAISED);
+  ctx.fillStyle = grad;
+  roundRect(ctx, 0, 0, canvasWidth, canvasHeight, cardR);
+  ctx.fill();
+
+  // Card border
+  ctx.strokeStyle = BORDER;
+  ctx.lineWidth = s(1);
+  roundRect(ctx, 0, 0, canvasWidth, canvasHeight, cardR);
+  ctx.stroke();
+
+  ctx.textAlign = 'center';
+  let y = s(32);
+
+  // Tournament name (small, top)
+  ctx.fillStyle = TEXT_MUTED;
+  ctx.font = `600 ${s(9)}px ${FONT}`;
+  ctx.fillText(tournamentName.toUpperCase(), cx, y);
+  y += s(28);
+
+  // Emoji
+  ctx.font = `${s(40)}px ${FONT}`;
+  ctx.fillText(nomination.emoji, cx, y + s(32));
+  y += s(52);
+
+  // Title
+  ctx.fillStyle = SUCCESS;
+  ctx.font = `bold ${s(11)}px ${FONT}`;
+  ctx.fillText(nomination.title.toUpperCase(), cx, y);
+  y += s(28);
+
+  // Player names
+  const isMultiPlayer = nomination.playerNames.length > 2;
+  ctx.fillStyle = TEXT;
+
+  if (isMultiPlayer) {
+    ctx.font = `bold ${s(16)}px ${FONT}`;
+    const pair1 = `${nomination.playerNames[0]} & ${nomination.playerNames[1]}`;
+    const pair2 = `${nomination.playerNames[2]} & ${nomination.playerNames[3]}`;
+    const maxTextW = canvasWidth - s(48);
+    ctx.fillText(truncateText(ctx, pair1, maxTextW), cx, y);
+    y += s(16);
+    ctx.fillStyle = TEXT_MUTED;
+    ctx.font = `${s(10)}px ${FONT}`;
+    ctx.fillText('VS', cx, y);
+    y += s(16);
+    ctx.fillStyle = TEXT;
+    ctx.font = `bold ${s(16)}px ${FONT}`;
+    ctx.fillText(truncateText(ctx, pair2, maxTextW), cx, y);
+    y += s(24);
+  } else {
+    const maxTextW = canvasWidth - s(48);
+    const nameText = nomination.playerNames.join(' & ');
+    // Measure to pick font size
+    ctx.font = `bold ${s(20)}px ${FONT}`;
+    const nameWidth = ctx.measureText(nameText).width;
+    if (nameWidth > maxTextW) {
+      ctx.font = `bold ${s(16)}px ${FONT}`;
+    }
+    ctx.fillText(truncateText(ctx, nameText, maxTextW), cx, y);
+    y += s(28);
+  }
+
+  // Stat
+  ctx.fillStyle = PRIMARY;
+  ctx.font = `bold ${s(18)}px ${FONT}`;
+  ctx.fillText(nomination.stat, cx, y);
+  y += s(24);
+
+  // Description
+  ctx.fillStyle = TEXT_MUTED;
+  ctx.font = `${s(11)}px ${FONT}`;
+  ctx.fillText(nomination.description, cx, y);
+
+  // Footer / watermark
+  ctx.fillStyle = TEXT_MUTED;
+  ctx.font = `${s(8)}px ${FONT}`;
+  ctx.fillText(window.location.hostname, cx, canvasHeight - s(16));
+
+  return canvas;
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob | null> {
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+}
+
+export async function shareStandingsImage(
+  tournamentName: string,
+  standings: StandingsEntry[],
+  nominations: Nomination[] = [],
+): Promise<'shared' | 'downloaded' | 'failed'> {
+  const safeName = tournamentName.replace(/[^a-zA-Z0-9]/g, '_');
+
+  // Render all canvases
+  const standingsCanvas = renderStandingsImage(tournamentName, standings);
+  const nominationCanvases = nominations.map(n => renderNominationImage(tournamentName, n));
+
+  try {
+    // Convert all to blobs
+    const standingsBlob = await canvasToBlob(standingsCanvas);
+    if (!standingsBlob) return 'failed';
+
+    const files: File[] = [
+      new File([standingsBlob], `${safeName}_results.png`, { type: 'image/png' }),
+    ];
+
+    for (let i = 0; i < nominationCanvases.length; i++) {
+      const blob = await canvasToBlob(nominationCanvases[i]);
+      if (blob) {
+        const nom = nominations[i];
+        const nomName = nom.id.replace(/[^a-zA-Z0-9-]/g, '_');
+        files.push(new File([blob], `${safeName}_${nomName}.png`, { type: 'image/png' }));
+      }
+    }
+
+    // Try Web Share API (mobile)
+    if (navigator.share && navigator.canShare) {
+      const shareData = { files };
+      if (navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+        return 'shared';
+      }
+    }
+
+    // Fallback: download all files
+    for (const file of files) {
+      const url = URL.createObjectURL(file);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+    return 'downloaded';
+  } catch (e) {
+    // User cancelled share dialog
+    if (e instanceof DOMException && e.name === 'AbortError') return 'failed';
+    return 'failed';
+  }
 }
 
 function truncateText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
@@ -196,45 +363,4 @@ function roundRect(
   ctx.lineTo(x, y + r);
   ctx.quadraticCurveTo(x, y, x + r, y);
   ctx.closePath();
-}
-
-export async function shareStandingsImage(
-  tournamentName: string,
-  standings: StandingsEntry[],
-): Promise<'shared' | 'downloaded' | 'failed'> {
-  const canvas = renderStandingsImage(tournamentName, standings);
-
-  try {
-    const blob = await new Promise<Blob | null>(resolve =>
-      canvas.toBlob(resolve, 'image/png'),
-    );
-    if (!blob) return 'failed';
-
-    const fileName = `${tournamentName.replace(/[^a-zA-Z0-9]/g, '_')}_results.png`;
-
-    // Try Web Share API (mobile)
-    if (navigator.share && navigator.canShare) {
-      const file = new File([blob], fileName, { type: 'image/png' });
-      const shareData = { files: [file] };
-      if (navigator.canShare(shareData)) {
-        await navigator.share(shareData);
-        return 'shared';
-      }
-    }
-
-    // Fallback: download
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    return 'downloaded';
-  } catch (e) {
-    // User cancelled share dialog
-    if (e instanceof DOMException && e.name === 'AbortError') return 'failed';
-    return 'failed';
-  }
 }
