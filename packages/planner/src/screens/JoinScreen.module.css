@@ -226,6 +226,25 @@
   margin-bottom: var(--space-sm);
 }
 
+.calendarBtn {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-sm);
+  padding: 10px var(--space-md);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+}
+
+.calendarBtn:active {
+  opacity: 0.7;
+}
+
 .reserveBadge {
   display: inline-block;
   font-size: 11px;
