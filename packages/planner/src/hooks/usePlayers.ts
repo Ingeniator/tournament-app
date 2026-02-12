@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ref, set, update, onValue } from 'firebase/database';
+import { ref, get, set, update, onValue } from 'firebase/database';
 import type { PlannerRegistration } from '@padel/common';
 import { generateId } from '@padel/common';
 import { db } from '../firebase';
@@ -33,6 +33,15 @@ export function usePlayers(tournamentId: string | null) {
 
   const registerPlayer = useCallback(async (name: string, uid: string, telegramUsername?: string) => {
     if (!tournamentId || !db) return;
+
+    // Prevent duplicate: skip if this UID is already registered
+    const existing = await get(ref(db, `tournaments/${tournamentId}/players/${uid}`));
+    if (existing.exists()) return;
+
+    // Prevent duplicate: skip if same Telegram user registered under a
+    // different UID (happens when WebView storage is cleared between sessions)
+    if (telegramUsername && players.some(p => p.telegramUsername === telegramUsername)) return;
+
     // Rules require $playerId === auth.uid, so use uid as key
     await set(ref(db, `tournaments/${tournamentId}/players/${uid}`), {
       name,
@@ -41,7 +50,7 @@ export function usePlayers(tournamentId: string | null) {
     });
     // Index in user's registrations for listing
     await set(ref(db, `users/${uid}/registrations/${tournamentId}`), true);
-  }, [tournamentId]);
+  }, [tournamentId, players]);
 
   const removePlayer = useCallback(async (playerId: string) => {
     if (!tournamentId || !db) return;

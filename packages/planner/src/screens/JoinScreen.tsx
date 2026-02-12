@@ -21,16 +21,6 @@ export function JoinScreen() {
     }
   }, [userName, telegramUser]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-register Telegram users (only once per mount to prevent
-  // re-registration loop when organizer removes a player)
-  const autoRegistered = useRef(false);
-  useEffect(() => {
-    if (!telegramUser || isRegistered || !uid || !tournament || autoRegistered.current) return;
-    autoRegistered.current = true;
-    const regName = userName || telegramUser.displayName;
-    registerPlayer(regName);
-  }, [telegramUser, isRegistered, uid, tournament]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const capacity = tournament ? tournament.courts.length * 4 + (tournament.extraSpots ?? 0) : 0;
   const statuses = useMemo(() => getPlayerStatuses(players, capacity), [players, capacity]);
   const myRegistration = uid ? players.find(p => p.id === uid) : undefined;
