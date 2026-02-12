@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ref, onValue, get, remove } from 'firebase/database';
 import type { TournamentSummary, PlannerTournament } from '@padel/common';
 import { db } from '../firebase';
@@ -19,6 +19,8 @@ function sortByDate(a: TournamentSummary, b: TournamentSummary): number {
 export function useMyTournaments(uid: string | null) {
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  // Guard against re-entrant listener calls caused by lazy cleanup remove()
+  const versionRef = useRef(0);
 
   useEffect(() => {
     if (!uid || !db) {
@@ -28,6 +30,7 @@ export function useMyTournaments(uid: string | null) {
     }
     setLoading(true);
     const unsubscribe = onValue(ref(db, `users/${uid}/organized`), async (snapshot) => {
+      const version = ++versionRef.current;
       const data = snapshot.val() as Record<string, boolean> | null;
       if (!data) {
         setTournaments([]);
@@ -47,6 +50,9 @@ export function useMyTournaments(uid: string | null) {
         }
         results.push(toSummary(id, tSnap.val() as PlannerTournament));
       }));
+
+      // Skip if a newer listener call has started (re-entrant from remove())
+      if (version !== versionRef.current) return;
 
       results.sort(sortByDate);
       setTournaments(results);

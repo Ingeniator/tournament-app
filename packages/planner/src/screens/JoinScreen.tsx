@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Button, Card, Toast, useToast } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { getPlayerStatuses } from '../utils/playerStatus';
@@ -23,13 +23,6 @@ export function JoinScreen() {
     }
   }, [userName, telegramUser]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-register Telegram users
-  useEffect(() => {
-    if (!telegramUser || isRegistered || !uid || !tournament) return;
-    const regName = userName || telegramUser.displayName;
-    registerPlayer(regName);
-  }, [telegramUser, isRegistered, uid, tournament]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const capacity = tournament ? tournament.courts.length * 4 + (tournament.extraSpots ?? 0) : 0;
   const statuses = useMemo(() => getPlayerStatuses(players, capacity), [players, capacity]);
   const myRegistration = uid ? players.find(p => p.id === uid) : undefined;
@@ -51,9 +44,21 @@ export function JoinScreen() {
   const reserveCount = [...statuses.values()].filter(s => s === 'reserve').length;
   const isConfirmed = myRegistration?.confirmed !== false;
 
+  const registeringRef = useRef(false);
   const handleRegister = async () => {
     const trimmed = name.trim();
-    if (!trimmed) return;
+    if (!trimmed || registeringRef.current) return;
+
+    // Warn if someone with the same name is already registered (likely
+    // the same person on a different device with a different anonymous UID)
+    const duplicate = players.find(p => p.name.trim().toLowerCase() === trimmed.toLowerCase());
+    if (duplicate) {
+      if (!window.confirm(`"${duplicate.name}" is already registered. Is that a different person?`)) {
+        return;
+      }
+    }
+
+    registeringRef.current = true;
     setRegistering(true);
     try {
       const willBeReserve = confirmedCount >= capacity;
@@ -70,6 +75,7 @@ export function JoinScreen() {
       showToast('Could not register, please try again');
     }
     setRegistering(false);
+    registeringRef.current = false;
     setName('');
   };
 
