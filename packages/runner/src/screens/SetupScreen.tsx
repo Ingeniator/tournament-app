@@ -42,7 +42,9 @@ export function SetupScreen() {
       }
     >
       <div className={styles.section}>
+        <label className={styles.nameLabel} htmlFor="tournament-name">Tournament name</label>
         <input
+          id="tournament-name"
           className={styles.nameInput}
           type="text"
           value={tournament.name}
@@ -50,7 +52,6 @@ export function SetupScreen() {
             dispatch({ type: 'UPDATE_NAME', payload: { name: e.target.value } })
           }
           placeholder="Tournament name"
-          aria-label="Tournament name"
         />
       </div>
 

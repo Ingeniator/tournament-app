@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Button, Card } from '@padel/common';
+import { Button, Card, Toast, useToast } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import { downloadICS } from '../utils/icsExport';
@@ -12,6 +12,8 @@ export function JoinScreen() {
   const [updating, setUpdating] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
+  const [showCalendarPrompt, setShowCalendarPrompt] = useState(false);
+  const { toastMessage, showToast } = useToast();
 
   // Pre-fill name from profile or Telegram when it loads
   useEffect(() => {
@@ -59,9 +61,18 @@ export function JoinScreen() {
     registeringRef.current = true;
     setRegistering(true);
     try {
+      const willBeReserve = confirmedCount >= capacity;
       await registerPlayer(trimmed);
+      if (willBeReserve) {
+        showToast('You\'re on the reserve list — we\'ll bump you up if a spot opens');
+      } else if (tournament.date) {
+        showToast('You\'re in! Add it to your calendar so you don\'t forget');
+        setShowCalendarPrompt(true);
+      } else {
+        showToast('You\'re in! See you on the court');
+      }
     } catch {
-      // handled silently
+      showToast('Could not register, please try again');
     }
     setRegistering(false);
     registeringRef.current = false;
@@ -82,8 +93,17 @@ export function JoinScreen() {
     setUpdating(true);
     try {
       await updateConfirmed(!isConfirmed);
+      if (isConfirmed) {
+        showToast('Participation cancelled');
+        setShowCalendarPrompt(false);
+      } else if (tournament.date) {
+        showToast('Welcome back! Add it to your calendar so you don\'t forget');
+        setShowCalendarPrompt(true);
+      } else {
+        showToast('Welcome back! You\'re confirmed');
+      }
     } catch {
-      // handled silently
+      showToast('Could not update, please try again');
     }
     setUpdating(false);
   };
@@ -215,8 +235,8 @@ export function JoinScreen() {
 
             {isConfirmed && tournament.date && (
               <button
-                className={styles.calendarBtn}
-                onClick={() => downloadICS(tournament)}
+                className={showCalendarPrompt ? styles.calendarBtnHighlight : styles.calendarBtn}
+                onClick={() => { downloadICS(tournament); setShowCalendarPrompt(false); }}
               >
                 &#128197; Add to Calendar
               </button>
@@ -290,6 +310,8 @@ export function JoinScreen() {
         )}
       </Card>
       </main>
+
+      <Toast message={toastMessage} className={styles.toast} />
     </div>
   );
 }
