@@ -54,8 +54,12 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
           className={styles.input}
           type="number"
           min={1}
-          value={config.pointsPerMatch}
-          onChange={e => onUpdate({ pointsPerMatch: Math.max(1, parseInt(e.target.value) || 1) })}
+          value={config.pointsPerMatch || ''}
+          placeholder="1"
+          onChange={e => {
+            const v = e.target.value === '' ? 0 : parseInt(e.target.value);
+            onUpdate({ pointsPerMatch: isNaN(v) || v < 1 ? 1 : v });
+          }}
         />
       </div>
 
@@ -100,10 +104,11 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
           className={styles.input}
           type="number"
           min={1}
-          value={config.maxRounds ?? defaultRounds}
+          value={config.maxRounds ?? ''}
+          placeholder={String(defaultRounds)}
           onChange={e => {
-            const val = parseInt(e.target.value);
-            onUpdate({ maxRounds: val > 0 ? val : null });
+            const val = e.target.value === '' ? null : parseInt(e.target.value);
+            onUpdate({ maxRounds: val && val > 0 ? val : null });
           }}
         />
         <span className={styles.hint}>Default: {defaultRounds} (players count minus one)</span>

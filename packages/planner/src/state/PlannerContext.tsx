@@ -28,6 +28,7 @@ interface PlannerContextValue {
   removePlayer: (playerId: string) => Promise<void>;
   updateConfirmed: (confirmed: boolean) => Promise<void>;
   addPlayer: (name: string) => Promise<void>;
+  bulkAddPlayers: (names: string[]) => Promise<void>;
   toggleConfirmed: (playerId: string, currentConfirmed: boolean) => Promise<void>;
   updatePlayerName: (playerId: string, name: string) => Promise<void>;
   isRegistered: boolean;
@@ -63,7 +64,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     deleteTournament: deleteInDb,
   } = usePlannerTournament(tournamentId);
 
-  const { players, registerPlayer: registerInDb, removePlayer: removeInDb, updateConfirmed: updateConfirmedInDb, addPlayer: addPlayerInDb, toggleConfirmed: toggleConfirmedInDb, updatePlayerName: updatePlayerNameInDb, isRegistered: checkRegistered } = usePlayers(tournamentId);
+  const { players, registerPlayer: registerInDb, removePlayer: removeInDb, updateConfirmed: updateConfirmedInDb, addPlayer: addPlayerInDb, bulkAddPlayers: bulkAddPlayersInDb, toggleConfirmed: toggleConfirmedInDb, updatePlayerName: updatePlayerNameInDb, isRegistered: checkRegistered } = usePlayers(tournamentId);
 
   const { name: userName, loading: userNameLoading, updateName: updateUserName, updateTelegramId, updateTelegramUsername } = useUserProfile(uid);
   const telegramUser = useTelegram();
@@ -142,6 +143,10 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     await addPlayerInDb(name);
   }, [addPlayerInDb]);
 
+  const bulkAddPlayers = useCallback(async (names: string[]) => {
+    await bulkAddPlayersInDb(names);
+  }, [bulkAddPlayersInDb]);
+
   const toggleConfirmed = useCallback(async (playerId: string, currentConfirmed: boolean) => {
     await toggleConfirmedInDb(playerId, currentConfirmed);
   }, [toggleConfirmedInDb]);
@@ -186,6 +191,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       removePlayer,
       updateConfirmed,
       addPlayer,
+      bulkAddPlayers,
       toggleConfirmed,
       updatePlayerName,
       isRegistered,

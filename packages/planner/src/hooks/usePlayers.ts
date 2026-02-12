@@ -67,6 +67,21 @@ export function usePlayers(tournamentId: string | null) {
     });
   }, [tournamentId]);
 
+  const bulkAddPlayers = useCallback(async (names: string[]) => {
+    if (!tournamentId || !db || names.length === 0) return;
+    const updates: Record<string, object> = {};
+    const now = Date.now();
+    for (const name of names) {
+      const id = generateId();
+      updates[`tournaments/${tournamentId}/players/${id}`] = {
+        name,
+        timestamp: now,
+        confirmed: true,
+      };
+    }
+    await update(ref(db), updates);
+  }, [tournamentId]);
+
   const toggleConfirmed = useCallback(async (playerId: string, currentConfirmed: boolean) => {
     if (!tournamentId || !db) return;
     const confirmed = !currentConfirmed;
@@ -85,5 +100,5 @@ export function usePlayers(tournamentId: string | null) {
     return players.some(p => p.id === uid);
   }, [players]);
 
-  return { players, loading, registerPlayer, removePlayer, updateConfirmed, addPlayer, toggleConfirmed, updatePlayerName, isRegistered };
+  return { players, loading, registerPlayer, removePlayer, updateConfirmed, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, isRegistered };
 }

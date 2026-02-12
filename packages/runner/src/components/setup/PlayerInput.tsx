@@ -1,6 +1,6 @@
 import { useState, type FormEvent, type ClipboardEvent } from 'react';
 import { Button } from '@padel/common';
-import { parsePlayerList } from '../../utils/parsePlayerList';
+import { parsePlayerList } from '@padel/common';
 import styles from './PlayerInput.module.css';
 
 interface PlayerInputProps {

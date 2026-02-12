@@ -1,14 +1,14 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type ClipboardEvent } from 'react';
 import { Button, Card, Toast, useToast } from '@padel/common';
 import type { TournamentFormat, Court } from '@padel/common';
-import { generateId } from '@padel/common';
+import { generateId, parsePlayerList } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { launchInRunner, buildRunnerTournament } from '../utils/exportToRunner';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import styles from './OrganizerScreen.module.css';
 
 export function OrganizerScreen() {
-  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, toggleConfirmed, deleteTournament } = usePlanner();
+  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, deleteTournament } = usePlanner();
   const { toastMessage, showToast } = useToast();
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
@@ -85,10 +85,6 @@ export function OrganizerScreen() {
 
   const handleFormatChange = (format: TournamentFormat) => {
     updateTournament({ format });
-  };
-
-  const handlePointsChange = (points: number) => {
-    if (points > 0) updateTournament({ pointsPerMatch: points });
   };
 
   const handleMaxRoundsChange = (value: string) => {
@@ -206,11 +202,20 @@ export function OrganizerScreen() {
             type="text"
             value={newPlayerName}
             onChange={e => setNewPlayerName(e.target.value)}
-            placeholder="Add player..."
+            placeholder="Player name or paste a list"
             onKeyDown={e => {
               if (e.key === 'Enter' && newPlayerName.trim()) {
                 addPlayer(newPlayerName.trim());
                 setNewPlayerName('');
+              }
+            }}
+            onPaste={(e: ClipboardEvent<HTMLInputElement>) => {
+              const text = e.clipboardData.getData('text');
+              if (!text.includes('\n')) return;
+              e.preventDefault();
+              const names = parsePlayerList(text);
+              if (names.length > 0) {
+                bulkAddPlayers(names);
               }
             }}
           />
@@ -299,9 +304,13 @@ export function OrganizerScreen() {
           <input
             className={styles.configInput}
             type="number"
-            value={tournament.pointsPerMatch}
-            onChange={e => handlePointsChange(parseInt(e.target.value, 10))}
+            value={tournament.pointsPerMatch || ''}
+            onChange={e => {
+              const v = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
+              if (!isNaN(v) && v > 0) updateTournament({ pointsPerMatch: v });
+            }}
             min={1}
+            placeholder="1"
           />
 
           <label className={styles.configLabel}>Max rounds</label>
@@ -349,12 +358,13 @@ export function OrganizerScreen() {
           <input
             className={styles.configInput}
             type="number"
-            value={tournament.extraSpots ?? 0}
+            value={tournament.extraSpots || ''}
             onChange={e => {
-              const v = parseInt(e.target.value, 10);
-              updateTournament({ extraSpots: v > 0 ? v : 0 });
+              const v = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
+              updateTournament({ extraSpots: isNaN(v) ? 0 : Math.max(0, v) });
             }}
             min={0}
+            placeholder="0"
           />
           <span className={styles.capacityTotal}>
             Total spots: {tournament.courts.length * 4 + (tournament.extraSpots ?? 0)} ({tournament.courts.length} &times; 4{(tournament.extraSpots ?? 0) > 0 ? ` + ${tournament.extraSpots}` : ''})
