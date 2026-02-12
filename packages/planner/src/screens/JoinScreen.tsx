@@ -12,6 +12,7 @@ export function JoinScreen() {
   const [updating, setUpdating] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
+  const [showCalendarPrompt, setShowCalendarPrompt] = useState(false);
   const { toastMessage, showToast } = useToast();
 
   // Pre-fill name from profile or Telegram when it loads
@@ -57,9 +58,14 @@ export function JoinScreen() {
     try {
       const willBeReserve = confirmedCount >= capacity;
       await registerPlayer(trimmed);
-      showToast(willBeReserve
-        ? 'You\'re on the reserve list — we\'ll bump you up if a spot opens'
-        : 'You\'re in! See you on the court');
+      if (willBeReserve) {
+        showToast('You\'re on the reserve list — we\'ll bump you up if a spot opens');
+      } else if (tournament.date) {
+        showToast('You\'re in! Add it to your calendar so you don\'t forget');
+        setShowCalendarPrompt(true);
+      } else {
+        showToast('You\'re in! See you on the court');
+      }
     } catch {
       showToast('Could not register, please try again');
     }
@@ -81,7 +87,15 @@ export function JoinScreen() {
     setUpdating(true);
     try {
       await updateConfirmed(!isConfirmed);
-      showToast(isConfirmed ? 'Participation cancelled' : 'Welcome back! You\'re confirmed');
+      if (isConfirmed) {
+        showToast('Participation cancelled');
+        setShowCalendarPrompt(false);
+      } else if (tournament.date) {
+        showToast('Welcome back! Add it to your calendar so you don\'t forget');
+        setShowCalendarPrompt(true);
+      } else {
+        showToast('Welcome back! You\'re confirmed');
+      }
     } catch {
       showToast('Could not update, please try again');
     }
@@ -215,8 +229,8 @@ export function JoinScreen() {
 
             {isConfirmed && tournament.date && (
               <button
-                className={styles.calendarBtn}
-                onClick={() => downloadICS(tournament)}
+                className={showCalendarPrompt ? styles.calendarBtnHighlight : styles.calendarBtn}
+                onClick={() => { downloadICS(tournament); setShowCalendarPrompt(false); }}
               >
                 &#128197; Add to Calendar
               </button>
