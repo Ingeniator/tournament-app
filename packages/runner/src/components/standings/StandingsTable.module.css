@@ -1,6 +1,7 @@
 .table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .table th {
@@ -33,7 +34,7 @@
 .rank {
   font-weight: 700;
   color: var(--color-text-muted);
-  width: 32px;
+  width: 28px;
 }
 
 .rank1 {
@@ -50,6 +51,8 @@
 
 .name {
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .points {
@@ -57,8 +60,17 @@
   color: var(--color-primary);
 }
 
+.numCol {
+  width: 36px;
+}
+
+.wtlCol {
+  width: 56px;
+}
+
 .diff {
   color: var(--color-text-secondary);
+  width: 40px;
 }
 
 .positive {

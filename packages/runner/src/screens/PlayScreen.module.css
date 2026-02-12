@@ -73,6 +73,9 @@
   color: var(--color-text-secondary);
   flex: 1;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .previewVs {
@@ -139,16 +142,9 @@
   margin-bottom: var(--space-md);
 }
 
-.completedTitle {
+.completedName {
   font-size: var(--text-xl);
   font-weight: 700;
-  color: var(--color-success);
-}
-
-.completedName {
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-  margin-top: var(--space-xs);
 }
 
 .completedStandings {
@@ -221,6 +217,9 @@
   flex: 1;
   min-width: 0;
   color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .resultTeamRight {

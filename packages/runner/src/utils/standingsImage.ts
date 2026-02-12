@@ -30,7 +30,7 @@ export function renderStandingsImage(
 
   // Layout constants
   const padding = s(20);
-  const headerHeight = s(56);
+  const headerHeight = s(36);
   const tableHeaderHeight = s(32);
   const rowHeight = s(36);
   const canvasWidth = s(400);
@@ -49,14 +49,10 @@ export function renderStandingsImage(
 
   // Header
   let y = padding;
-  ctx.fillStyle = SUCCESS;
-  ctx.font = `bold ${s(11)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.fillText('TOURNAMENT COMPLETE', canvasWidth / 2, y + s(14));
-
   ctx.fillStyle = TEXT;
   ctx.font = `bold ${s(18)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-  ctx.fillText(tournamentName, canvasWidth / 2, y + s(40));
+  ctx.textAlign = 'center';
+  ctx.fillText(tournamentName, canvasWidth / 2, y + s(24));
   y += headerHeight;
 
   // Table card background
@@ -77,9 +73,8 @@ export function renderStandingsImage(
   // Column positions (relative to tableX)
   const colRank = s(12);
   const colName = s(40);
-  const colPts = tableW - s(120);
-  const colW = tableW - s(84);
-  const colL = tableW - s(52);
+  const colPts = tableW - s(100);
+  const colWtl = tableW - s(56);
   const colDiff = tableW - s(14);
 
   // Table header
@@ -92,8 +87,9 @@ export function renderStandingsImage(
   ctx.fillText('PLAYER', tableX + colName, headerY);
   ctx.textAlign = 'right';
   ctx.fillText('PTS', tableX + colPts, headerY);
-  ctx.fillText('W', tableX + colW, headerY);
-  ctx.fillText('L', tableX + colL, headerY);
+  ctx.textAlign = 'center';
+  ctx.fillText('W-T-L', tableX + colWtl, headerY);
+  ctx.textAlign = 'right';
   ctx.fillText('+/-', tableX + colDiff, headerY);
 
   // Header separator
@@ -147,15 +143,14 @@ export function renderStandingsImage(
     ctx.fillStyle = PRIMARY;
     ctx.fillText(String(entry.totalPoints), tableX + colPts, textY);
 
-    // W
+    // W-T-L
     ctx.font = bodyFont;
     ctx.fillStyle = TEXT_SECONDARY;
-    ctx.fillText(String(entry.matchesWon), tableX + colW, textY);
-
-    // L
-    ctx.fillText(String(entry.matchesLost), tableX + colL, textY);
+    ctx.textAlign = 'center';
+    ctx.fillText(`${entry.matchesWon}-${entry.matchesDraw}-${entry.matchesLost}`, tableX + colWtl, textY);
 
     // +/-
+    ctx.textAlign = 'right';
     const diffStr = (entry.pointDiff > 0 ? '+' : '') + entry.pointDiff;
     ctx.fillStyle =
       entry.pointDiff > 0 ? SUCCESS : entry.pointDiff < 0 ? DANGER : TEXT_SECONDARY;

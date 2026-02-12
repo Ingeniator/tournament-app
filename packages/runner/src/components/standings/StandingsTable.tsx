@@ -15,13 +15,12 @@ export function StandingsTable({ standings, plannedGames }: StandingsTableProps)
     <table className={styles.table}>
       <thead>
         <tr>
-          <th>#</th>
+          <th className={styles.rank}>#</th>
           <th>Player</th>
-          <th className={styles.right}>Pts</th>
-          {plannedGames && <th className={styles.right}>GP</th>}
-          <th className={styles.right}>W</th>
-          <th className={styles.right}>L</th>
-          <th className={styles.right}>+/-</th>
+          <th className={`${styles.right} ${styles.numCol}`}>Pts</th>
+          {plannedGames && <th className={`${styles.right} ${styles.numCol}`}>GP</th>}
+          <th className={`${styles.right} ${styles.wtlCol}`}>W-T-L</th>
+          <th className={`${styles.right} ${styles.diff}`}>+/-</th>
         </tr>
       </thead>
       <tbody>
@@ -53,8 +52,7 @@ export function StandingsTable({ standings, plannedGames }: StandingsTableProps)
                   <span className={styles.plannedPart}>+{planned}</span>
                 </td>
               )}
-              <td className={styles.right}>{entry.matchesWon}</td>
-              <td className={styles.right}>{entry.matchesLost}</td>
+              <td className={styles.right}>{entry.matchesWon}-{entry.matchesDraw}-{entry.matchesLost}</td>
               <td className={`${styles.right} ${styles.diff} ${diffClass}`}>
                 {entry.pointDiff > 0 ? '+' : ''}
                 {entry.pointDiff}

@@ -85,8 +85,7 @@ export function PlayScreen() {
     return (
       <div className={styles.container}>
         <div className={styles.completedHeader}>
-          <h2 className={styles.completedTitle}>Tournament Complete</h2>
-          <p className={styles.completedName}>{tournament.name}</p>
+          <h2 className={styles.completedName}>{tournament.name}</h2>
         </div>
         <div className={styles.completedStandings}>
           <StandingsTable standings={standings} />
