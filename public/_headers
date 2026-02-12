@@ -1,0 +1,12 @@
+# Hashed assets are immutable — cache aggressively
+# (must be first: Cloudflare uses first matching rule)
+/play/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/plan/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Everything else (HTML, SW, manifest) — never cache
+# so Telegram WebApp always gets the latest version
+/*
+  Cache-Control: no-cache, no-store, must-revalidate

@@ -18,6 +18,7 @@ deploy-build: build
 	cp index.html dist/index.html
 	cp public/robots.txt dist/robots.txt
 	cp public/sitemap.xml dist/sitemap.xml
+	cp public/_headers dist/_headers
 
 clean:
 	rm -rf dist packages/common/dist packages/common/tsconfig.tsbuildinfo packages/runner/dist packages/planner/dist
