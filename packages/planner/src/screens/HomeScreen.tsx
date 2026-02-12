@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button, Card } from '@padel/common';
 import type { TournamentSummary } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
+import { randomTournamentName } from '../utils/tournamentNames';
 import styles from './HomeScreen.module.css';
 
 function formatDate(iso: string): string {
@@ -26,7 +27,7 @@ export function HomeScreen() {
     openTournament,
   } = usePlanner();
 
-  const [name, setName] = useState('Tournament');
+  const [name, setName] = useState(randomTournamentName);
   const [joinCode, setJoinCode] = useState('');
   const [joinMode, setJoinMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
