@@ -180,16 +180,39 @@ export function renderNominationImage(
   const ctx = canvas.getContext('2d')!;
 
   const canvasWidth = s(400);
-  const canvasHeight = s(400);
+  const cx = canvasWidth / 2;
+  const maxTextW = canvasWidth - s(48);
+  const isMultiPlayer = nomination.playerNames.length > 2;
+
+  // Matching CSS: gap var(--space-xs)=4px, padding var(--space-xl)=32px var(--space-lg)=24px
+  const gap = s(4);
+  const padV = s(32);
+  const headerH = s(14);    // tournament name line
+  const headerGap = s(12);
+  const emojiH = s(44);     // 2.5rem = 40px + margin
+  const titleH = s(16);     // --text-xs: 0.75rem = 12px + line-height
+  const statH = s(22);      // --text-lg: 1.125rem = 18px + line-height
+  const descH = s(18);      // --text-sm: 0.875rem = 14px + line-height
+  const footerGap = s(12);
+  const footerH = s(14);
+
+  // Calculate player names height
+  let playersH: number;
+  if (isMultiPlayer) {
+    playersH = s(24) + s(16) + s(24); // pair1 + vs + pair2
+  } else {
+    playersH = s(26); // --text-xl: 1.25rem = 20px + line-height
+  }
+
+  const contentH = emojiH + gap + titleH + gap + playersH + gap + statH + gap + descH;
+  const canvasHeight = padV + headerH + headerGap + contentH + footerGap + footerH + padV;
 
   canvas.width = canvasWidth;
   canvas.height = canvasHeight;
 
-  const cx = canvasWidth / 2;
   const cardR = s(16);
 
   // Card gradient background matching CSS: linear-gradient(145deg, SURFACE, SURFACE_RAISED)
-  // 145deg goes roughly from top-left to bottom-right
   const grad = ctx.createLinearGradient(0, 0, canvasWidth * 0.7, canvasHeight * 0.7);
   grad.addColorStop(0, SURFACE);
   grad.addColorStop(1, SURFACE_RAISED);
@@ -204,72 +227,69 @@ export function renderNominationImage(
   ctx.stroke();
 
   ctx.textAlign = 'center';
-  let y = s(32);
+  let y = padV;
 
   // Tournament name (small, top)
   ctx.fillStyle = TEXT_MUTED;
   ctx.font = `600 ${s(9)}px ${FONT}`;
-  ctx.fillText(tournamentName.toUpperCase(), cx, y);
-  y += s(28);
+  ctx.fillText(tournamentName.toUpperCase(), cx, y + s(10));
+  y += headerH + headerGap;
 
-  // Emoji
+  // Emoji — matching CSS: font-size 2.5rem
   ctx.font = `${s(40)}px ${FONT}`;
-  ctx.fillText(nomination.emoji, cx, y + s(32));
-  y += s(52);
+  ctx.fillText(nomination.emoji, cx, y + s(36));
+  y += emojiH + gap;
 
-  // Title
+  // Title — matching CSS: --text-xs (12px), bold, uppercase, letter-spacing, accent color
   ctx.fillStyle = SUCCESS;
-  ctx.font = `bold ${s(11)}px ${FONT}`;
-  ctx.fillText(nomination.title.toUpperCase(), cx, y);
-  y += s(28);
+  ctx.font = `bold ${s(12)}px ${FONT}`;
+  ctx.fillText(nomination.title.toUpperCase(), cx, y + s(12));
+  y += titleH + gap;
 
-  // Player names
-  const isMultiPlayer = nomination.playerNames.length > 2;
+  // Player names — matching CSS: --text-xl (20px), bold
   ctx.fillStyle = TEXT;
 
   if (isMultiPlayer) {
     ctx.font = `bold ${s(16)}px ${FONT}`;
     const pair1 = `${nomination.playerNames[0]} & ${nomination.playerNames[1]}`;
     const pair2 = `${nomination.playerNames[2]} & ${nomination.playerNames[3]}`;
-    const maxTextW = canvasWidth - s(48);
-    ctx.fillText(truncateText(ctx, pair1, maxTextW), cx, y);
-    y += s(16);
+    ctx.fillText(truncateText(ctx, pair1, maxTextW), cx, y + s(16));
+    y += s(24);
+    // VS — matching CSS: --text-xs (12px), muted, uppercase
     ctx.fillStyle = TEXT_MUTED;
-    ctx.font = `${s(10)}px ${FONT}`;
-    ctx.fillText('VS', cx, y);
+    ctx.font = `${s(12)}px ${FONT}`;
+    ctx.fillText('VS', cx, y + s(10));
     y += s(16);
     ctx.fillStyle = TEXT;
     ctx.font = `bold ${s(16)}px ${FONT}`;
-    ctx.fillText(truncateText(ctx, pair2, maxTextW), cx, y);
-    y += s(24);
+    ctx.fillText(truncateText(ctx, pair2, maxTextW), cx, y + s(16));
+    y += s(24) + gap;
   } else {
-    const maxTextW = canvasWidth - s(48);
     const nameText = nomination.playerNames.join(' & ');
-    // Measure to pick font size
     ctx.font = `bold ${s(20)}px ${FONT}`;
     const nameWidth = ctx.measureText(nameText).width;
     if (nameWidth > maxTextW) {
       ctx.font = `bold ${s(16)}px ${FONT}`;
     }
-    ctx.fillText(truncateText(ctx, nameText, maxTextW), cx, y);
-    y += s(28);
+    ctx.fillText(truncateText(ctx, nameText, maxTextW), cx, y + s(18));
+    y += playersH + gap;
   }
 
-  // Stat
+  // Stat — matching CSS: --text-lg (18px), bold, primary
   ctx.fillStyle = PRIMARY;
   ctx.font = `bold ${s(18)}px ${FONT}`;
-  ctx.fillText(nomination.stat, cx, y);
-  y += s(24);
+  ctx.fillText(nomination.stat, cx, y + s(16));
+  y += statH + gap;
 
-  // Description
+  // Description — matching CSS: --text-sm (14px), muted
   ctx.fillStyle = TEXT_MUTED;
-  ctx.font = `${s(11)}px ${FONT}`;
-  ctx.fillText(nomination.description, cx, y);
+  ctx.font = `${s(14)}px ${FONT}`;
+  ctx.fillText(nomination.description, cx, y + s(12));
 
   // Footer / watermark
   ctx.fillStyle = TEXT_MUTED;
   ctx.font = `${s(8)}px ${FONT}`;
-  ctx.fillText(window.location.hostname, cx, canvasHeight - s(16));
+  ctx.fillText(window.location.hostname, cx, canvasHeight - padV + s(16));
 
   return canvas;
 }

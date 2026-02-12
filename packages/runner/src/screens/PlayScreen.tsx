@@ -31,9 +31,10 @@ export function PlayScreen() {
     }
     return map;
   }, [tournament]);
-  const { roundResults, standingsText } = useShareText(tournament, standings);
+  const { buildMessengerText } = useShareText(tournament, standings, nominations);
   const [showStandings, setShowStandings] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
+  const [roundsExpanded, setRoundsExpanded] = useState(false);
   const { toastMessage, showToast } = useToast();
   const [roundCompleteNum, setRoundCompleteNum] = useState<number | null>(null);
   const prevActiveRoundIdRef = useRef<string | null>(null);
@@ -95,9 +96,8 @@ export function PlayScreen() {
 
   // Completed state — show summary
   if (tournament.phase === 'completed') {
-    const fullText = [standingsText, '', roundResults].filter(Boolean).join('\n');
     const handleCopy = async () => {
-      const ok = await copyToClipboard(fullText);
+      const ok = await copyToClipboard(buildMessengerText(roundsExpanded));
       showToast(ok ? 'Copied!' : 'Failed to copy');
     };
     const handleShareImage = async () => {
@@ -126,7 +126,7 @@ export function PlayScreen() {
           Share Results as Image
         </Button>
         {tournament.rounds.some(r => r.matches.some(m => m.score)) && (
-          <details className={styles.roundDetails}>
+          <details className={styles.roundDetails} onToggle={e => setRoundsExpanded((e.target as HTMLDetailsElement).open)}>
             <summary className={styles.roundDetailsSummary}>Round Results</summary>
             <div className={styles.roundResultsList}>
               {tournament.rounds.map(round => {
@@ -169,7 +169,7 @@ export function PlayScreen() {
           </details>
         )}
         <Button fullWidth onClick={handleCopy}>
-          Copy Results to Clipboard
+          Share Results as Text
         </Button>
         <button className={styles.supportCta} onClick={() => setShowSupport(true)}>
           <span className={styles.supportEmoji}>&#x2764;&#xFE0F;</span>

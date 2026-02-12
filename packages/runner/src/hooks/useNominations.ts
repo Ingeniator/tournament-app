@@ -89,6 +89,28 @@ export function useNominations(
     const nominations: Nomination[] = [];
     const rankOf = (id: string) => standings.find(s => s.playerId === id)?.rank ?? 999;
 
+    // PODIUM - Top 3 places
+    const MEDALS: Array<{ emoji: string; title: string; description: string }> = [
+      { emoji: '🥇', title: 'Champion', description: 'Tournament winner' },
+      { emoji: '🥈', title: 'Runner-up', description: 'Second place' },
+      { emoji: '🥉', title: 'Third Place', description: 'Bronze medal finish' },
+    ];
+    for (let i = 0; i < Math.min(3, standings.length); i++) {
+      const entry = standings[i];
+      if (entry.rank !== i + 1) continue; // skip if rank doesn't match (ties)
+      const medal = MEDALS[i];
+      const diff = entry.pointDiff >= 0 ? `+${entry.pointDiff}` : String(entry.pointDiff);
+      const wtl = `${entry.matchesWon}W-${entry.matchesDraw}T-${entry.matchesLost}L`;
+      nominations.push({
+        id: `podium-${i + 1}`,
+        title: medal.title,
+        emoji: medal.emoji,
+        description: medal.description,
+        playerNames: [entry.playerName],
+        stat: `${entry.totalPoints} pts · ${wtl} · ${diff}`,
+      });
+    }
+
     // 1. UNDEFEATED - Won every match
     for (const entry of standings) {
       if (entry.matchesPlayed >= 2 && entry.matchesWon === entry.matchesPlayed) {
