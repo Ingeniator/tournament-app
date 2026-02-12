@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Button, Card } from '@padel/common';
+import { Button, Card, Toast, useToast } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import { downloadICS } from '../utils/icsExport';
@@ -12,6 +12,7 @@ export function JoinScreen() {
   const [updating, setUpdating] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
+  const { toastMessage, showToast } = useToast();
 
   // Pre-fill name from profile or Telegram when it loads
   useEffect(() => {
@@ -55,8 +56,9 @@ export function JoinScreen() {
     setRegistering(true);
     try {
       await registerPlayer(trimmed);
+      showToast('You\'re in! See you on the court');
     } catch {
-      // handled silently
+      showToast('Could not register, please try again');
     }
     setRegistering(false);
     setName('');
@@ -76,8 +78,9 @@ export function JoinScreen() {
     setUpdating(true);
     try {
       await updateConfirmed(!isConfirmed);
+      showToast(isConfirmed ? 'Participation cancelled' : 'Welcome back! You\'re confirmed');
     } catch {
-      // handled silently
+      showToast('Could not update, please try again');
     }
     setUpdating(false);
   };
@@ -284,6 +287,8 @@ export function JoinScreen() {
         )}
       </Card>
       </main>
+
+      <Toast message={toastMessage} className={styles.toast} />
     </div>
   );
 }
