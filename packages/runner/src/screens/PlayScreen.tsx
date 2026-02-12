@@ -6,6 +6,7 @@ import { StandingsTable } from '../components/standings/StandingsTable';
 import { SupportOverlay } from '../components/support/SupportOverlay';
 import { useShareText } from '../hooks/useShareText';
 import { copyToClipboard } from '../utils/clipboard';
+import { shareStandingsImage } from '../utils/standingsImage';
 import { Button, Modal, Toast, useToast } from '@padel/common';
 import styles from './PlayScreen.module.css';
 
@@ -74,6 +75,12 @@ export function PlayScreen() {
       const ok = await copyToClipboard(fullText);
       showToast(ok ? 'Copied!' : 'Failed to copy');
     };
+    const handleShareImage = async () => {
+      const result = await shareStandingsImage(tournament.name, standings);
+      if (result === 'shared') showToast('Shared!');
+      else if (result === 'downloaded') showToast('Image saved!');
+      else showToast('Failed to share');
+    };
 
     return (
       <div className={styles.container}>
@@ -84,6 +91,9 @@ export function PlayScreen() {
         <div className={styles.completedStandings}>
           <StandingsTable standings={standings} />
         </div>
+        <Button variant="secondary" fullWidth onClick={handleShareImage}>
+          Share Results as Image
+        </Button>
         {tournament.rounds.some(r => r.matches.some(m => m.score)) && (
           <details className={styles.roundDetails}>
             <summary className={styles.roundDetailsSummary}>Round Results</summary>
