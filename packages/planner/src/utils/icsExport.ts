@@ -54,6 +54,16 @@ export function downloadICS(tournament: PlannerTournament): void {
   const content = generateICS(tournament);
   if (!content) return;
 
+  const tg = window.Telegram?.WebApp;
+  if (tg?.openLink) {
+    // Telegram WebApp blocks blob downloads and programmatic <a>.click().
+    // Open a data URI in the external browser where the download works.
+    const dataUri =
+      'data:text/calendar;charset=utf-8,' + encodeURIComponent(content);
+    tg.openLink(dataUri);
+    return;
+  }
+
   const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
