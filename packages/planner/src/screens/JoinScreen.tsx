@@ -55,8 +55,11 @@ export function JoinScreen() {
     if (!trimmed) return;
     setRegistering(true);
     try {
+      const willBeReserve = confirmedCount >= capacity;
       await registerPlayer(trimmed);
-      showToast('You\'re in! See you on the court');
+      showToast(willBeReserve
+        ? 'You\'re on the reserve list — we\'ll bump you up if a spot opens'
+        : 'You\'re in! See you on the court');
     } catch {
       showToast('Could not register, please try again');
     }
