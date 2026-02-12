@@ -438,7 +438,8 @@ export const americanoStrategy: TournamentStrategy = {
   calculateStandings: calculateIndividualStandings,
 
   generateSchedule(players: Player[], config: TournamentConfig): ScheduleResult {
-    const totalRounds = config.maxRounds ?? players.length - 1;
+    const playersPerRound = Math.min(config.courts.length * 4, players.length);
+    const totalRounds = config.maxRounds ?? Math.max(1, Math.ceil((players.length - 1) * players.length / playersPerRound));
     const gamesPlayed = new Map<string, number>();
     const lastSitOutRound = new Map<string, number>();
     players.forEach(p => { gamesPlayed.set(p.id, 0); lastSitOutRound.set(p.id, -Infinity); });

@@ -11,6 +11,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr auto 1fr;
+  padding-bottom: 6px;
 }
 
 /* Player cells — four corners of the court */
@@ -30,7 +31,6 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .topLeft {
@@ -108,17 +108,14 @@
   font-weight: 700;
 }
 
-/* Court name label — top-left corner */
+/* Court name label — above the court grid */
 .courtLabel {
-  position: absolute;
-  top: 6px;
-  left: 10px;
+  padding: 6px 12px 4px;
   font-size: 0.65rem;
   color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   opacity: 0.7;
-  z-index: 1;
 }
 
 .winner {

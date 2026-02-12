@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useTournament } from '../hooks/useTournament';
 import { getStrategy } from '../strategies';
+import { resolveConfigDefaults } from '../utils/resolveConfigDefaults';
 import { AppShell } from '../components/layout/AppShell';
 import { PlayerInput } from '../components/setup/PlayerInput';
 import { PlayerList } from '../components/setup/PlayerList';
@@ -14,9 +15,10 @@ export function SetupScreen() {
   if (!tournament) return null;
 
   const strategy = getStrategy(tournament.config.format);
+  const resolvedConfig = resolveConfigDefaults(tournament.config, tournament.players.length);
   const errors = useMemo(
-    () => strategy.validateSetup(tournament.players, tournament.config),
-    [tournament.players, tournament.config, strategy]
+    () => strategy.validateSetup(tournament.players, resolvedConfig),
+    [tournament.players, resolvedConfig, strategy]
   );
 
   const handleGenerate = () => {

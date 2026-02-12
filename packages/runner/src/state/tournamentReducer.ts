@@ -3,6 +3,7 @@ import type { TournamentAction } from './actions';
 import { generateId } from '@padel/common';
 import { getStrategy } from '../strategies';
 import { deduplicateNames } from '../utils/deduplicateNames';
+import { resolveConfigDefaults } from '../utils/resolveConfigDefaults';
 
 function regenerateUnscoredRounds(
   state: Tournament, players: Player[], config: TournamentConfig, timeBudgetMs?: number
@@ -216,11 +217,13 @@ export function tournamentReducer(
     case 'GENERATE_SCHEDULE': {
       if (!state || state.phase !== 'setup') return state;
       const players = deduplicateNames(state.players);
-      const strategy = getStrategy(state.config.format);
-      const { rounds } = strategy.generateSchedule(players, state.config);
+      const resolvedConfig = resolveConfigDefaults(state.config, players.length);
+      const strategy = getStrategy(resolvedConfig.format);
+      const { rounds } = strategy.generateSchedule(players, resolvedConfig);
       return {
         ...state,
         players,
+        config: resolvedConfig,
         phase: 'in-progress',
         rounds,
         updatedAt: Date.now(),

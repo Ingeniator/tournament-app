@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTournament } from '../hooks/useTournament';
 import { validateImport } from '../utils/importExport';
+import { randomTournamentName } from '../utils/tournamentNames';
 import { Button, generateId } from '@padel/common';
 import styles from './HomeScreen.module.css';
 
@@ -14,10 +15,10 @@ export function HomeScreen() {
     dispatch({
       type: 'CREATE_TOURNAMENT',
       payload: {
-        name: 'Tournament',
+        name: randomTournamentName(),
         config: {
           format: 'americano',
-          pointsPerMatch: 24,
+          pointsPerMatch: 0,
           courts: [{ id: generateId(), name: 'Court 1' }],
           maxRounds: null,
         },

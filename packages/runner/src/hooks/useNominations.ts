@@ -86,7 +86,10 @@ export function useNominations(
 
     if (allScored.length < 2) return [];
 
-    const nominations: Nomination[] = [];
+    const playerCount = tournament.players.filter(p => !p.unavailable).length;
+    const MAX_AWARDS = Math.min(7, Math.max(3, Math.floor(playerCount / 2)));
+    const podium: Nomination[] = [];
+    const awards: Nomination[] = [];
     const rankOf = (id: string) => standings.find(s => s.playerId === id)?.rank ?? 999;
 
     // PODIUM - Top 3 places
@@ -101,7 +104,7 @@ export function useNominations(
       const medal = MEDALS[i];
       const diff = entry.pointDiff >= 0 ? `+${entry.pointDiff}` : String(entry.pointDiff);
       const wtl = `${entry.matchesWon}W-${entry.matchesDraw}T-${entry.matchesLost}L`;
-      nominations.push({
+      podium.push({
         id: `podium-${i + 1}`,
         title: medal.title,
         emoji: medal.emoji,
@@ -114,7 +117,7 @@ export function useNominations(
     // 1. UNDEFEATED - Won every match
     for (const entry of standings) {
       if (entry.matchesPlayed >= 2 && entry.matchesWon === entry.matchesPlayed) {
-        nominations.push({
+        awards.push({
           id: 'undefeated',
           title: 'Undefeated',
           emoji: '⭐',
@@ -148,7 +151,7 @@ export function useNominations(
       const slayers = [...slayerIds].sort((a, b) => rankOf(b) - rankOf(a));
       const bestSlayer = slayers[0];
       if (bestSlayer && rankOf(bestSlayer) > 3) {
-        nominations.push({
+        awards.push({
           id: 'giant-slayer',
           title: 'Giant Slayer',
           emoji: '⚔️',
@@ -169,7 +172,7 @@ export function useNominations(
       }
     }
     if (bestPointsPlayer && bestPointsPlayer.id !== topPlayer.playerId) {
-      nominations.push({
+      awards.push({
         id: 'point-machine',
         title: 'Point Machine',
         emoji: '💥',
@@ -190,7 +193,7 @@ export function useNominations(
       }
     }
     if (bestWall) {
-      nominations.push({
+      awards.push({
         id: 'iron-wall',
         title: 'Iron Wall',
         emoji: '🛡️',
@@ -206,7 +209,7 @@ export function useNominations(
       const winners = biggestWin.t1 > biggestWin.t2 ? biggestWin.team1 : biggestWin.team2;
       const winScore = Math.max(biggestWin.t1, biggestWin.t2);
       const loseScore = Math.min(biggestWin.t1, biggestWin.t2);
-      nominations.push({
+      awards.push({
         id: 'quick-strike',
         title: 'Quick Strike',
         emoji: '⚡',
@@ -231,7 +234,7 @@ export function useNominations(
     if (bestConsistency) {
       const matches = playerMatches.get(bestConsistency.id)!;
       const avgMargin = matches.reduce((s, m) => s + m.margin, 0) / matches.length;
-      nominations.push({
+      awards.push({
         id: 'consistency-champion',
         title: 'Consistency Champion',
         emoji: '🎯',
@@ -265,7 +268,7 @@ export function useNominations(
       }
     }
     if (bestComeback) {
-      nominations.push({
+      awards.push({
         id: 'comeback-king',
         title: 'Comeback King',
         emoji: '👑',
@@ -288,7 +291,7 @@ export function useNominations(
       }
     }
     if (bestClutch && bestClutch.won > 0) {
-      nominations.push({
+      awards.push({
         id: 'clutch-player',
         title: 'Clutch Player',
         emoji: '🧊',
@@ -307,7 +310,7 @@ export function useNominations(
       }
     }
     if (bestSeeSaw) {
-      nominations.push({
+      awards.push({
         id: 'see-saw',
         title: 'See-Saw Specialist',
         emoji: '⚖️',
@@ -326,7 +329,7 @@ export function useNominations(
     const closestGame = [...allScored].sort((a, b) => a.margin - b.margin)[0];
     if (closestGame && closestGame.margin <= closeThreshold) {
       const allPlayers = [...closestGame.team1, ...closestGame.team2];
-      nominations.push({
+      awards.push({
         id: 'competitive-game',
         title: 'Instant Classic',
         emoji: '🔥',
@@ -342,7 +345,7 @@ export function useNominations(
       const gap = topPlayer.totalPoints - runnerUp.totalPoints;
       const maxGap = Math.min(10, Math.ceil(topPlayer.totalPoints * 0.05));
       if (gap <= maxGap) {
-        nominations.push({
+        awards.push({
           id: 'nearly-there',
           title: 'Nearly There',
           emoji: '🥈',
@@ -353,22 +356,22 @@ export function useNominations(
       }
     }
 
-    // 12. HEARTBREAK AWARD - Most close losses
-    let bestHeartbreak: { id: string; count: number } | null = null;
+    // 12. BATTLE TESTED - Most close games lost (reframed positively)
+    let bestBattle: { id: string; count: number } | null = null;
     for (const [pid, matches] of playerMatches) {
       const closeLosses = matches.filter(m => m.lost && Math.abs(m.margin) <= closeThreshold).length;
-      if (closeLosses >= 2 && (!bestHeartbreak || closeLosses > bestHeartbreak.count)) {
-        bestHeartbreak = { id: pid, count: closeLosses };
+      if (closeLosses >= 2 && (!bestBattle || closeLosses > bestBattle.count)) {
+        bestBattle = { id: pid, count: closeLosses };
       }
     }
-    if (bestHeartbreak) {
-      nominations.push({
-        id: 'heartbreak',
-        title: 'Heartbreak Award',
-        emoji: '💔',
-        description: 'Most close losses',
-        playerNames: [nameOf(bestHeartbreak.id)],
-        stat: `${bestHeartbreak.count} games lost by ≤${closeThreshold} pts`,
+    if (bestBattle) {
+      awards.push({
+        id: 'battle-tested',
+        title: 'Battle Tested',
+        emoji: '🫡',
+        description: 'Every game was a fight to the finish',
+        playerNames: [nameOf(bestBattle.id)],
+        stat: `${bestBattle.count} games decided by ≤${closeThreshold} pts`,
       });
     }
 
@@ -379,7 +382,7 @@ export function useNominations(
     if (maxGames > minGames) {
       const warriors = standings.filter(s => s.matchesPlayed === maxGames);
       if (warriors.length <= 2) {
-        nominations.push({
+        awards.push({
           id: 'warrior',
           title: 'Warrior',
           emoji: '💪',
@@ -390,6 +393,328 @@ export function useNominations(
       }
     }
 
-    return nominations;
+    // 14. DOMINATOR - Longest winning streak
+    let bestStreak: { id: string; streak: number } | null = null;
+    for (const [pid, matches] of playerMatches) {
+      if (matches.length < 3) continue;
+      const sorted = [...matches].sort((a, b) => a.roundNumber - b.roundNumber);
+      let streak = 0;
+      let maxStreak = 0;
+      for (const m of sorted) {
+        if (m.won) {
+          streak++;
+          maxStreak = Math.max(maxStreak, streak);
+        } else {
+          streak = 0;
+        }
+      }
+      if (maxStreak >= 3 && (!bestStreak || maxStreak > bestStreak.streak)) {
+        bestStreak = { id: pid, streak: maxStreak };
+      }
+    }
+    if (bestStreak) {
+      awards.push({
+        id: 'dominator',
+        title: 'Dominator',
+        emoji: '🔥',
+        description: 'Longest winning streak',
+        playerNames: [nameOf(bestStreak.id)],
+        stat: `${bestStreak.streak} wins in a row`,
+      });
+    }
+
+    // 15. OFFENSIVE POWERHOUSE - Highest avg points scored per game (if != #1 and != Iron Wall)
+    let bestOffense: { id: string; avg: number; games: number } | null = null;
+    for (const [pid, matches] of playerMatches) {
+      if (matches.length < 2) continue;
+      const avg = matches.reduce((sum, m) => sum + m.pointsScored, 0) / matches.length;
+      if (!bestOffense || avg > bestOffense.avg) {
+        bestOffense = { id: pid, avg, games: matches.length };
+      }
+    }
+    if (bestOffense && bestOffense.id !== topPlayer.playerId && bestOffense.id !== bestWall?.id) {
+      awards.push({
+        id: 'offensive-powerhouse',
+        title: 'Offensive Powerhouse',
+        emoji: '💣',
+        description: 'Highest scoring average per game',
+        playerNames: [nameOf(bestOffense.id)],
+        stat: `${bestOffense.avg.toFixed(1)} avg per game`,
+      });
+    }
+
+    // 16. TEAM STATS - Build pair data for team awards
+    const pairStats = new Map<string, {
+      ids: [string, string]; wins: number; losses: number; total: number;
+      scored: number; conceded: number; streak: number; maxStreak: number;
+      closeLosses: number;
+    }>();
+    for (const match of allScored) {
+      const t1Key = [...match.team1].sort().join('+');
+      const t2Key = [...match.team2].sort().join('+');
+      if (!pairStats.has(t1Key)) pairStats.set(t1Key, { ids: [...match.team1].sort() as [string, string], wins: 0, losses: 0, total: 0, scored: 0, conceded: 0, streak: 0, maxStreak: 0, closeLosses: 0 });
+      if (!pairStats.has(t2Key)) pairStats.set(t2Key, { ids: [...match.team2].sort() as [string, string], wins: 0, losses: 0, total: 0, scored: 0, conceded: 0, streak: 0, maxStreak: 0, closeLosses: 0 });
+      const p1 = pairStats.get(t1Key)!;
+      const p2 = pairStats.get(t2Key)!;
+      p1.total++; p1.scored += match.t1; p1.conceded += match.t2;
+      p2.total++; p2.scored += match.t2; p2.conceded += match.t1;
+      if (match.t1 > match.t2) {
+        p1.wins++; p1.streak++; p1.maxStreak = Math.max(p1.maxStreak, p1.streak);
+        p2.losses++; p2.streak = 0;
+        if (match.margin <= closeThreshold) p2.closeLosses++;
+      } else if (match.t2 > match.t1) {
+        p2.wins++; p2.streak++; p2.maxStreak = Math.max(p2.maxStreak, p2.streak);
+        p1.losses++; p1.streak = 0;
+        if (match.margin <= closeThreshold) p1.closeLosses++;
+      }
+    }
+
+    // BEST DUO - Pair with highest win % (min 2 games together)
+    let bestDuo: { key: string; ids: [string, string]; wins: number; total: number; rate: number } | null = null;
+    for (const [key, pair] of pairStats) {
+      if (pair.total < 2) continue;
+      const rate = pair.wins / pair.total;
+      if (!bestDuo || rate > bestDuo.rate || (rate === bestDuo.rate && pair.total > bestDuo.total)) {
+        bestDuo = { key, ids: pair.ids, wins: pair.wins, total: pair.total, rate };
+      }
+    }
+    if (bestDuo && bestDuo.wins > 0) {
+      awards.push({
+        id: 'best-duo',
+        title: 'Best Duo',
+        emoji: '🤝',
+        description: 'Unstoppable together',
+        playerNames: bestDuo.ids.map(nameOf),
+        stat: `${bestDuo.wins}/${bestDuo.total} wins together`,
+      });
+    }
+
+    // OFFENSIVE DUO - Pair with highest avg points scored (min 2 games, != Best Duo)
+    let bestOffDuo: { ids: [string, string]; avg: number; total: number } | null = null;
+    for (const [key, pair] of pairStats) {
+      if (pair.total < 2 || key === bestDuo?.key) continue;
+      const avg = pair.scored / pair.total;
+      if (!bestOffDuo || avg > bestOffDuo.avg) {
+        bestOffDuo = { ids: pair.ids, avg, total: pair.total };
+      }
+    }
+    if (bestOffDuo) {
+      awards.push({
+        id: 'offensive-duo',
+        title: 'Offensive Duo',
+        emoji: '🚀',
+        description: 'Highest scoring pair per game',
+        playerNames: bestOffDuo.ids.map(nameOf),
+        stat: `${bestOffDuo.avg.toFixed(1)} avg per game`,
+      });
+    }
+
+    // WALL PAIR - Pair with lowest avg points conceded (min 2 games)
+    let bestWallPair: { ids: [string, string]; avg: number; total: number } | null = null;
+    for (const pair of pairStats.values()) {
+      if (pair.total < 2) continue;
+      const avg = pair.conceded / pair.total;
+      if (!bestWallPair || avg < bestWallPair.avg) {
+        bestWallPair = { ids: pair.ids, avg, total: pair.total };
+      }
+    }
+    if (bestWallPair) {
+      awards.push({
+        id: 'wall-pair',
+        title: 'Defensive Duo',
+        emoji: '🏰',
+        description: 'Tightest defense as a pair',
+        playerNames: bestWallPair.ids.map(nameOf),
+        stat: `${bestWallPair.avg.toFixed(1)} avg conceded`,
+      });
+    }
+
+    // HOT STREAK DUO - Pair with longest winning streak (min 3)
+    let bestStreakDuo: { ids: [string, string]; streak: number } | null = null;
+    for (const pair of pairStats.values()) {
+      if (pair.maxStreak >= 3 && (!bestStreakDuo || pair.maxStreak > bestStreakDuo.streak)) {
+        bestStreakDuo = { ids: pair.ids, streak: pair.maxStreak };
+      }
+    }
+    if (bestStreakDuo) {
+      awards.push({
+        id: 'hot-streak-duo',
+        title: 'Hot Streak Duo',
+        emoji: '🔥',
+        description: 'Longest winning run as a pair',
+        playerNames: bestStreakDuo.ids.map(nameOf),
+        stat: `${bestStreakDuo.streak} wins in a row`,
+      });
+    }
+
+
+    // 17. NEMESIS - Player who beat the same opponent the most times
+    const vsRecord = new Map<string, Map<string, { wins: number; losses: number }>>();
+    for (const match of allScored) {
+      const t1Won = match.t1 > match.t2;
+      const t2Won = match.t2 > match.t1;
+      for (const a of match.team1) {
+        for (const b of match.team2) {
+          if (!vsRecord.has(a)) vsRecord.set(a, new Map());
+          if (!vsRecord.has(b)) vsRecord.set(b, new Map());
+          const aVsB = vsRecord.get(a)!;
+          const bVsA = vsRecord.get(b)!;
+          if (!aVsB.has(b)) aVsB.set(b, { wins: 0, losses: 0 });
+          if (!bVsA.has(a)) bVsA.set(a, { wins: 0, losses: 0 });
+          if (t1Won) {
+            aVsB.get(b)!.wins++;
+            bVsA.get(a)!.losses++;
+          } else if (t2Won) {
+            aVsB.get(b)!.losses++;
+            bVsA.get(a)!.wins++;
+          }
+        }
+      }
+    }
+    let bestNemesis: { winner: string; loser: string; wins: number } | null = null;
+    for (const [pid, opponents] of vsRecord) {
+      for (const [opp, record] of opponents) {
+        if (record.wins >= 3 && record.losses === 0 && (!bestNemesis || record.wins > bestNemesis.wins)) {
+          bestNemesis = { winner: pid, loser: opp, wins: record.wins };
+        }
+      }
+    }
+    if (bestNemesis) {
+      awards.push({
+        id: 'nemesis',
+        title: 'Nemesis',
+        emoji: '😈',
+        description: `Owned ${nameOf(bestNemesis.loser)} all tournament`,
+        playerNames: [nameOf(bestNemesis.winner)],
+        stat: `${bestNemesis.wins}-0 vs ${nameOf(bestNemesis.loser)}`,
+      });
+    }
+
+    // 18. RUBBER MATCH - Same team pair played multiple times with split results
+    const teamMatchups = new Map<string, { team1: [string, string]; team2: [string, string]; t1Wins: number; t2Wins: number; total: number }>();
+    for (const match of allScored) {
+      const k1 = [...match.team1].sort().join('+');
+      const k2 = [...match.team2].sort().join('+');
+      const key = [k1, k2].sort().join(' vs ');
+      if (!teamMatchups.has(key)) {
+        teamMatchups.set(key, {
+          team1: [...match.team1].sort() as [string, string],
+          team2: [...match.team2].sort() as [string, string],
+          t1Wins: 0, t2Wins: 0, total: 0,
+        });
+      }
+      const m = teamMatchups.get(key)!;
+      m.total++;
+      const aKey = [...match.team1].sort().join('+');
+      if (match.t1 > match.t2) {
+        if (aKey === k1) m.t1Wins++; else m.t2Wins++;
+      } else if (match.t2 > match.t1) {
+        if (aKey === k1) m.t2Wins++; else m.t1Wins++;
+      }
+    }
+    let bestRubber: { team1: [string, string]; team2: [string, string]; t1Wins: number; t2Wins: number; total: number } | null = null;
+    for (const matchup of teamMatchups.values()) {
+      if (matchup.total >= 2 && matchup.t1Wins > 0 && matchup.t2Wins > 0) {
+        if (!bestRubber || matchup.total > bestRubber.total) {
+          bestRubber = matchup;
+        }
+      }
+    }
+    if (bestRubber) {
+      awards.push({
+        id: 'rubber-match',
+        title: 'Rubber Match',
+        emoji: '🔄',
+        description: 'Split results — who really wins?',
+        playerNames: [...bestRubber.team1, ...bestRubber.team2].map(nameOf),
+        stat: `${bestRubber.t1Wins}-${bestRubber.t2Wins} in ${bestRubber.total} meetings`,
+      });
+    }
+
+    // 19. GATEKEEPER - Beat all lower-ranked, lost to all higher-ranked (min 3 games)
+    for (const entry of standings) {
+      const matches = playerMatches.get(entry.playerId);
+      if (!matches || matches.length < 3) continue;
+      const myRank = entry.rank;
+      if (myRank <= 1 || myRank >= standings.length) continue;
+
+      let beatLower = 0;
+      let lostToHigher = 0;
+      let totalLower = 0;
+      let totalHigher = 0;
+
+      for (const match of allScored) {
+        const inT1 = match.team1.includes(entry.playerId);
+        const inT2 = match.team2.includes(entry.playerId);
+        if (!inT1 && !inT2) continue;
+
+        const opponents = inT1 ? match.team2 : match.team1;
+        const won = inT1 ? match.t1 > match.t2 : match.t2 > match.t1;
+        const lost = inT1 ? match.t2 > match.t1 : match.t1 > match.t2;
+
+        const oppBestRank = Math.min(...opponents.map(rankOf));
+
+        if (oppBestRank > myRank) {
+          totalLower++;
+          if (won) beatLower++;
+        } else if (oppBestRank < myRank) {
+          totalHigher++;
+          if (lost) lostToHigher++;
+        }
+      }
+
+      if (totalLower >= 2 && totalHigher >= 1 && beatLower === totalLower && lostToHigher === totalHigher) {
+        awards.push({
+          id: 'gatekeeper',
+          title: 'Gatekeeper',
+          emoji: '🚧',
+          description: 'Beat everyone below, fell to those above',
+          playerNames: [entry.playerName],
+          stat: `${beatLower}W vs lower, ${lostToHigher}L vs higher`,
+        });
+        break;
+      }
+    }
+
+    // LUCKY ONE - Random player or pair, seeded by tournament ID for consistency
+    const lucky: Nomination[] = [];
+    const seed = tournament.rounds.reduce((h, r) => {
+      for (const m of r.matches) {
+        for (const c of m.id) h = ((h << 5) - h + c.charCodeAt(0)) | 0;
+      }
+      return h;
+    }, 0);
+
+    const isTeamFormat = tournament.config.format === 'team-americano';
+    if (isTeamFormat && pairStats.size > 0) {
+      const pairs = [...pairStats.values()].filter(p => p.total >= 1);
+      if (pairs.length > 0) {
+        const pick = pairs[Math.abs(seed) % pairs.length];
+        lucky.push({
+          id: 'lucky',
+          title: 'Lucky Ones',
+          emoji: '🍀',
+          description: 'Randomly chosen — fortune favors the bold!',
+          playerNames: pick.ids.map(nameOf),
+          stat: 'Lucky pair of the tournament',
+        });
+      }
+    } else {
+      const activePlayers = tournament.players.filter(p => !p.unavailable);
+      if (activePlayers.length > 0) {
+        const pick = activePlayers[Math.abs(seed) % activePlayers.length];
+        lucky.push({
+          id: 'lucky',
+          title: 'Lucky One',
+          emoji: '🍀',
+          description: 'Randomly chosen — fortune favors the bold!',
+          playerNames: [pick.name],
+          stat: 'Lucky player of the tournament',
+        });
+      }
+    }
+
+    // Combine: podium (always) + capped awards + lucky (always)
+    return [...podium, ...awards.slice(0, MAX_AWARDS), ...lucky];
   }, [tournament, standings]);
 }
