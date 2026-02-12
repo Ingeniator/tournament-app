@@ -51,6 +51,19 @@ export function tournamentReducer(
       };
     }
 
+    case 'ADD_PLAYERS_BULK': {
+      if (!state || state.phase !== 'setup') return state;
+      const newPlayers = action.payload.names.map(name => ({
+        id: generateId(),
+        name,
+      }));
+      return {
+        ...state,
+        players: deduplicateNames([...state.players, ...newPlayers]),
+        updatedAt: Date.now(),
+      };
+    }
+
     case 'REMOVE_PLAYER': {
       if (!state || state.phase !== 'setup') return state;
       return {

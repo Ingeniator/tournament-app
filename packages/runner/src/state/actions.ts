@@ -4,6 +4,7 @@ export type TournamentAction =
   | { type: 'CREATE_TOURNAMENT'; payload: { name: string; config: TournamentConfig } }
   | { type: 'LOAD_TOURNAMENT'; payload: Tournament }
   | { type: 'ADD_PLAYER'; payload: { name: string } }
+  | { type: 'ADD_PLAYERS_BULK'; payload: { names: string[] } }
   | { type: 'REMOVE_PLAYER'; payload: { playerId: string } }
   | { type: 'UPDATE_PLAYER'; payload: { playerId: string; name: string } }
   | { type: 'TOGGLE_PLAYER_AVAILABILITY'; payload: { playerId: string } }
