@@ -124,12 +124,16 @@ export function OrganizerScreen() {
             autoFocus
           />
         ) : (
-          <h1
-            className={styles.name}
-            onClick={() => { setNameDraft(tournament.name); setEditingName(true); }}
-          >
-            {tournament.name}
-          </h1>
+          <div className={styles.nameRow}>
+            <h1 className={styles.name}>{tournament.name}</h1>
+            <button
+              className={styles.editNameBtn}
+              onClick={() => { setNameDraft(tournament.name); setEditingName(true); }}
+              aria-label="Rename tournament"
+            >
+              &#x270E;
+            </button>
+          </div>
         )}
       </header>
       <main>
