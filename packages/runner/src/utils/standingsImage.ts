@@ -168,7 +168,7 @@ export function renderStandingsImage(
   ctx.textAlign = 'center';
   ctx.font = `${s(9)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
   ctx.fillStyle = TEXT_MUTED;
-  ctx.fillText('padelday.net', canvasWidth / 2, footerY + s(12));
+  ctx.fillText(window.location.hostname, canvasWidth / 2, footerY + s(12));
 
   return canvas;
 }
