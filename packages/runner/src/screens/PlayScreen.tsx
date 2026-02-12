@@ -1,8 +1,11 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useTournament } from '../hooks/useTournament';
 import { useStandings } from '../hooks/useStandings';
+import { useNominations } from '../hooks/useNominations';
 import { RoundCard } from '../components/rounds/RoundCard';
 import { StandingsTable } from '../components/standings/StandingsTable';
+import { NominationCard } from '../components/nominations/NominationCard';
+import { Carousel } from '../components/carousel/Carousel';
 import { SupportOverlay } from '../components/support/SupportOverlay';
 import { useShareText } from '../hooks/useShareText';
 import { copyToClipboard } from '../utils/clipboard';
@@ -13,6 +16,7 @@ import styles from './PlayScreen.module.css';
 export function PlayScreen() {
   const { tournament, dispatch } = useTournament();
   const standings = useStandings(tournament);
+  const nominations = useNominations(tournament, standings);
   const plannedGames = useMemo(() => {
     if (!tournament) return new Map<string, number>();
     const map = new Map<string, number>();
@@ -76,7 +80,7 @@ export function PlayScreen() {
       showToast(ok ? 'Copied!' : 'Failed to copy');
     };
     const handleShareImage = async () => {
-      const result = await shareStandingsImage(tournament.name, standings);
+      const result = await shareStandingsImage(tournament.name, standings, nominations);
       if (result === 'shared') showToast('Shared!');
       else if (result === 'downloaded') showToast('Image saved!');
       else showToast('Failed to share');
@@ -88,9 +92,16 @@ export function PlayScreen() {
           <h2 className={styles.completedTitle}>Tournament Complete</h2>
           <p className={styles.completedName}>{tournament.name}</p>
         </div>
-        <div className={styles.completedStandings}>
-          <StandingsTable standings={standings} />
-        </div>
+        <Carousel>
+          {[
+            <div key="standings" className={styles.completedStandings}>
+              <StandingsTable standings={standings} />
+            </div>,
+            ...nominations.map(nom => (
+              <NominationCard key={nom.id} nomination={nom} />
+            )),
+          ]}
+        </Carousel>
         <Button variant="secondary" fullWidth onClick={handleShareImage}>
           Share Results as Image
         </Button>
