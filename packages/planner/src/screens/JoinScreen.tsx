@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Button, Card } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { getPlayerStatuses } from '../utils/playerStatus';
@@ -21,9 +21,12 @@ export function JoinScreen() {
     }
   }, [userName, telegramUser]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-register Telegram users
+  // Auto-register Telegram users (only once per mount to prevent
+  // re-registration loop when organizer removes a player)
+  const autoRegistered = useRef(false);
   useEffect(() => {
-    if (!telegramUser || isRegistered || !uid || !tournament) return;
+    if (!telegramUser || isRegistered || !uid || !tournament || autoRegistered.current) return;
+    autoRegistered.current = true;
     const regName = userName || telegramUser.displayName;
     registerPlayer(regName);
   }, [telegramUser, isRegistered, uid, tournament]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -49,9 +52,11 @@ export function JoinScreen() {
   const reserveCount = [...statuses.values()].filter(s => s === 'reserve').length;
   const isConfirmed = myRegistration?.confirmed !== false;
 
+  const registeringRef = useRef(false);
   const handleRegister = async () => {
     const trimmed = name.trim();
-    if (!trimmed) return;
+    if (!trimmed || registeringRef.current) return;
+    registeringRef.current = true;
     setRegistering(true);
     try {
       await registerPlayer(trimmed);
@@ -59,6 +64,7 @@ export function JoinScreen() {
       // handled silently
     }
     setRegistering(false);
+    registeringRef.current = false;
     setName('');
   };
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ref, set, update, remove, onValue } from 'firebase/database';
+import { ref, set, update, onValue } from 'firebase/database';
 import type { PlannerRegistration } from '@padel/common';
 import { generateId } from '@padel/common';
 import { db } from '../firebase';
@@ -45,8 +45,12 @@ export function usePlayers(tournamentId: string | null) {
 
   const removePlayer = useCallback(async (playerId: string) => {
     if (!tournamentId || !db) return;
-    // Only organizer can remove (via parent tournament write rule)
-    await remove(ref(db, `tournaments/${tournamentId}/players/${playerId}`));
+    // Atomically remove both the player entry and their registration index
+    // so the player's client doesn't see a stale registration
+    await update(ref(db), {
+      [`tournaments/${tournamentId}/players/${playerId}`]: null,
+      [`users/${playerId}/registrations/${tournamentId}`]: null,
+    });
   }, [tournamentId]);
 
   const updateConfirmed = useCallback(async (uid: string, confirmed: boolean) => {

@@ -41,7 +41,7 @@
         },
         "registrations": {
           "$tournamentId": {
-            ".write": "auth != null && auth.uid === $uid",
+            ".write": "auth != null && (auth.uid === $uid || !newData.exists() && root.child('tournaments').child($tournamentId).child('organizerId').val() === auth.uid)",
             ".validate": "newData.isBoolean() || !newData.exists()"
           }
         }

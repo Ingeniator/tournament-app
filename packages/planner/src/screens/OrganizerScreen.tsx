@@ -1,4 +1,4 @@
-import { useState, useMemo, type ClipboardEvent } from 'react';
+import { useState, useMemo, useRef, type ClipboardEvent } from 'react';
 import { Button, Card, Toast, useToast } from '@padel/common';
 import type { TournamentFormat, Court } from '@padel/common';
 import { generateId, parsePlayerList } from '@padel/common';
@@ -13,6 +13,7 @@ export function OrganizerScreen() {
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const [newPlayerName, setNewPlayerName] = useState('');
+  const addingPlayer = useRef(false);
   const [showFormatInfo, setShowFormatInfo] = useState(false);
 
   const capacity = tournament ? tournament.courts.length * 4 + (tournament.extraSpots ?? 0) : 0;
@@ -203,10 +204,13 @@ export function OrganizerScreen() {
             value={newPlayerName}
             onChange={e => setNewPlayerName(e.target.value)}
             placeholder="Player name or paste a list"
-            onKeyDown={e => {
-              if (e.key === 'Enter' && newPlayerName.trim()) {
-                addPlayer(newPlayerName.trim());
+            onKeyDown={async e => {
+              if (e.key === 'Enter' && newPlayerName.trim() && !addingPlayer.current) {
+                addingPlayer.current = true;
+                const name = newPlayerName.trim();
                 setNewPlayerName('');
+                await addPlayer(name);
+                addingPlayer.current = false;
               }
             }}
             onPaste={(e: ClipboardEvent<HTMLInputElement>) => {
@@ -222,10 +226,13 @@ export function OrganizerScreen() {
           <Button
             variant="ghost"
             size="small"
-            onClick={() => {
-              if (newPlayerName.trim()) {
-                addPlayer(newPlayerName.trim());
+            onClick={async () => {
+              if (newPlayerName.trim() && !addingPlayer.current) {
+                addingPlayer.current = true;
+                const name = newPlayerName.trim();
                 setNewPlayerName('');
+                await addPlayer(name);
+                addingPlayer.current = false;
               }
             }}
             disabled={!newPlayerName.trim()}
