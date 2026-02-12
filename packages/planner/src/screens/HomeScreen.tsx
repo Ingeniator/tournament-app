@@ -179,14 +179,15 @@ export function HomeScreen() {
       {/* Actions */}
       <div className={styles.actions}>
         <div className={styles.createSection}>
+          <label className={styles.inputLabel} htmlFor="tournament-name">Tournament name</label>
           <input
+            id="tournament-name"
             className={styles.input}
             type="text"
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder="Tournament name"
             onKeyDown={e => e.key === 'Enter' && handleCreate()}
-            aria-label="Tournament name"
           />
           <Button fullWidth onClick={handleCreate} disabled={creating || !name.trim() || !userName}>
             {creating ? 'Creating...' : 'Create Tournament'}
