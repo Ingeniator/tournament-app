@@ -55,6 +55,9 @@ export function SetupScreen() {
         <h2 className={styles.sectionTitle}>Players</h2>
         <PlayerInput
           onAdd={name => dispatch({ type: 'ADD_PLAYER', payload: { name } })}
+          onBulkAdd={names =>
+            dispatch({ type: 'ADD_PLAYERS_BULK', payload: { names } })
+          }
         />
         <PlayerList
           players={tournament.players}
