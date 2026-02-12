@@ -8,6 +8,13 @@
   margin-bottom: var(--space-md);
 }
 
+.nameLabel {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-xs);
+}
+
 .nameInput {
   width: 100%;
   padding: 12px;
