@@ -128,8 +128,30 @@ export function tournamentReducer(
       );
       rawReplace.push(replaceNew);
       const replacePlayers = deduplicateNames(rawReplace);
-      const newRounds = regenerateUnscoredRounds(state, replacePlayers, state.config);
-      return { ...state, players: replacePlayers, rounds: newRounds, updatedAt: Date.now() };
+
+      // For team formats: update team references and match player IDs
+      const strategy = getStrategy(state.config.format);
+      let intermediateState = state;
+      if (strategy.hasFixedPartners && state.teams) {
+        const updatedTeams = state.teams.map(t => {
+          if (t.player1Id === oldPlayerId) return { ...t, player1Id: replaceNew.id };
+          if (t.player2Id === oldPlayerId) return { ...t, player2Id: replaceNew.id };
+          return t;
+        });
+        const updatedRounds = state.rounds.map(r => ({
+          ...r,
+          matches: r.matches.map(m => ({
+            ...m,
+            team1: m.team1.map(pid => pid === oldPlayerId ? replaceNew.id : pid) as [string, string],
+            team2: m.team2.map(pid => pid === oldPlayerId ? replaceNew.id : pid) as [string, string],
+          })),
+          sitOuts: r.sitOuts.map(pid => pid === oldPlayerId ? replaceNew.id : pid),
+        }));
+        intermediateState = { ...state, teams: updatedTeams, rounds: updatedRounds };
+      }
+
+      const newRounds = regenerateUnscoredRounds(intermediateState, replacePlayers, state.config);
+      return { ...intermediateState, players: replacePlayers, rounds: newRounds, updatedAt: Date.now() };
     }
 
     case 'ADD_PLAYER_LIVE': {

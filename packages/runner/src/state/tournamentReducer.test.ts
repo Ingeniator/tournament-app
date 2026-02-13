@@ -432,6 +432,132 @@ describe('tournamentReducer', () => {
     });
   });
 
+  describe('REPLACE_PLAYER (team-americano)', () => {
+    function makeTeamAmericanoInProgress(): Tournament {
+      const players: Player[] = Array.from({ length: 8 }, (_, i) => ({ id: `p${i + 1}`, name: `Player ${i + 1}` }));
+      const config: TournamentConfig = {
+        format: 'team-americano', pointsPerMatch: 21, maxRounds: 3,
+        courts: [{ id: 'c1', name: 'C1' }, { id: 'c2', name: 'C2' }],
+      };
+      const setup: Tournament = { id: 't1', name: 'Test', config, phase: 'setup', players, rounds: [], createdAt: 0, updatedAt: 0 };
+      const withTeams = tournamentReducer(setup, { type: 'SET_TEAMS' })!;
+      return tournamentReducer(withTeams, { type: 'GENERATE_SCHEDULE' })!;
+    }
+
+    it('updates team references when replacing a player', () => {
+      const state = makeTeamAmericanoInProgress();
+      const oldPlayer = state.players[0];
+      const team = state.teams!.find(t => t.player1Id === oldPlayer.id || t.player2Id === oldPlayer.id)!;
+
+      const result = tournamentReducer(state, {
+        type: 'REPLACE_PLAYER',
+        payload: { oldPlayerId: oldPlayer.id, newPlayerName: 'Replacement' },
+      });
+
+      const newPlayer = result!.players.find(p => p.name === 'Replacement')!;
+      const updatedTeam = result!.teams!.find(t => t.id === team.id)!;
+
+      // Team should reference new player, not old
+      expect(updatedTeam.player1Id === newPlayer.id || updatedTeam.player2Id === newPlayer.id).toBe(true);
+      expect(updatedTeam.player1Id !== oldPlayer.id && updatedTeam.player2Id !== oldPlayer.id).toBe(true);
+    });
+
+    it('updates match player IDs in scored rounds', () => {
+      let state = makeTeamAmericanoInProgress();
+      const oldPlayer = state.players[0];
+
+      // Score first round
+      const round = state.rounds[0];
+      for (const match of round.matches) {
+        state = tournamentReducer(state, {
+          type: 'SET_MATCH_SCORE',
+          payload: { roundId: round.id, matchId: match.id, score: { team1Points: 11, team2Points: 10 } },
+        })!;
+      }
+
+      const result = tournamentReducer(state, {
+        type: 'REPLACE_PLAYER',
+        payload: { oldPlayerId: oldPlayer.id, newPlayerName: 'Replacement' },
+      });
+
+      const newPlayer = result!.players.find(p => p.name === 'Replacement')!;
+
+      // Old player ID should not appear in any match
+      for (const r of result!.rounds) {
+        for (const m of r.matches) {
+          expect(m.team1).not.toContain(oldPlayer.id);
+          expect(m.team2).not.toContain(oldPlayer.id);
+        }
+      }
+
+      // New player ID should appear in the scored round
+      const scoredRound = result!.rounds[0];
+      const hasNewPlayer = scoredRound.matches.some(m =>
+        m.team1.includes(newPlayer.id) || m.team2.includes(newPlayer.id)
+      );
+      expect(hasNewPlayer).toBe(true);
+    });
+
+    it('team continues to play after replacement (not excluded)', () => {
+      const state = makeTeamAmericanoInProgress();
+      const oldPlayer = state.players[0];
+      const team = state.teams!.find(t => t.player1Id === oldPlayer.id || t.player2Id === oldPlayer.id)!;
+      const otherPlayerId = team.player1Id === oldPlayer.id ? team.player2Id : team.player1Id;
+
+      const result = tournamentReducer(state, {
+        type: 'REPLACE_PLAYER',
+        payload: { oldPlayerId: oldPlayer.id, newPlayerName: 'Replacement' },
+      });
+
+      const newPlayer = result!.players.find(p => p.name === 'Replacement')!;
+
+      // The team's other player and the new player should appear in future rounds
+      const unscoredRounds = result!.rounds.filter(r => r.matches.every(m => m.score === null));
+      const teamInMatch = unscoredRounds.some(r =>
+        r.matches.some(m =>
+          (m.team1.includes(newPlayer.id) && m.team1.includes(otherPlayerId)) ||
+          (m.team2.includes(newPlayer.id) && m.team2.includes(otherPlayerId))
+        )
+      );
+      expect(teamInMatch).toBe(true);
+    });
+  });
+
+  describe('TOGGLE_PLAYER_AVAILABILITY (team-americano)', () => {
+    function makeTeamAmericanoInProgress(): Tournament {
+      const players: Player[] = Array.from({ length: 8 }, (_, i) => ({ id: `p${i + 1}`, name: `Player ${i + 1}` }));
+      const config: TournamentConfig = {
+        format: 'team-americano', pointsPerMatch: 21, maxRounds: 3,
+        courts: [{ id: 'c1', name: 'C1' }, { id: 'c2', name: 'C2' }],
+      };
+      const setup: Tournament = { id: 't1', name: 'Test', config, phase: 'setup', players, rounds: [], createdAt: 0, updatedAt: 0 };
+      const withTeams = tournamentReducer(setup, { type: 'SET_TEAMS' })!;
+      return tournamentReducer(withTeams, { type: 'GENERATE_SCHEDULE' })!;
+    }
+
+    it('excludes team from future rounds when player is unavailable', () => {
+      const state = makeTeamAmericanoInProgress();
+      const targetPlayer = state.players[0];
+      const team = state.teams!.find(t => t.player1Id === targetPlayer.id || t.player2Id === targetPlayer.id)!;
+
+      const result = tournamentReducer(state, {
+        type: 'TOGGLE_PLAYER_AVAILABILITY',
+        payload: { playerId: targetPlayer.id },
+      });
+
+      // The team's players should not appear in any unscored round
+      const unscoredRounds = result!.rounds.filter(r => r.matches.every(m => m.score === null));
+      for (const round of unscoredRounds) {
+        for (const match of round.matches) {
+          expect(match.team1).not.toContain(team.player1Id);
+          expect(match.team2).not.toContain(team.player1Id);
+          expect(match.team1).not.toContain(team.player2Id);
+          expect(match.team2).not.toContain(team.player2Id);
+        }
+      }
+    });
+  });
+
   describe('SET_FUTURE_ROUNDS', () => {
     it('replaces unscored rounds with provided rounds', () => {
       const state = makeInProgressTournament();
