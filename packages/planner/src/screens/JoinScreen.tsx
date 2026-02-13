@@ -14,6 +14,7 @@ export function JoinScreen() {
   const [nameDraft, setNameDraft] = useState('');
   const [showCalendarPrompt, setShowCalendarPrompt] = useState(false);
   const { toastMessage, showToast } = useToast();
+  const registeringRef = useRef(false);
 
   // Pre-fill name from profile or Telegram when it loads
   useEffect(() => {
@@ -44,7 +45,6 @@ export function JoinScreen() {
   const reserveCount = [...statuses.values()].filter(s => s === 'reserve').length;
   const isConfirmed = myRegistration?.confirmed !== false;
 
-  const registeringRef = useRef(false);
   const handleRegister = async () => {
     const trimmed = name.trim();
     if (!trimmed || registeringRef.current) return;
