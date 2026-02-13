@@ -285,12 +285,13 @@ export function useNominations(
       });
     }
 
-    // 6. CONSISTENCY CHAMPION - Smallest score variance
+    // 6. CONSISTENCY CHAMPION - Smallest score variance (only among non-negative avg margin)
     let bestConsistency: { id: string; stdDev: number } | null = null;
     for (const [cid, matches] of competitorMatches) {
       if (matches.length < 3) continue;
       const margins = matches.map(m => m.margin);
       const mean = margins.reduce((a, b) => a + b, 0) / margins.length;
+      if (mean < 0) continue; // skip competitors with negative avg margin
       const variance = margins.reduce((sum, m) => sum + (m - mean) ** 2, 0) / margins.length;
       const stdDev = Math.sqrt(variance);
       if (!bestConsistency || stdDev < bestConsistency.stdDev) {
