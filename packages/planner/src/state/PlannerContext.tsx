@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import { ref, get } from 'firebase/database';
-import type { PlannerTournament, PlannerRegistration, TournamentSummary } from '@padel/common';
+import type { PlannerTournament } from '@padel/common';
 import { useAuth } from '../hooks/useAuth';
 import { usePlannerTournament } from '../hooks/usePlannerTournament';
 import { db } from '../firebase';
@@ -8,48 +8,9 @@ import { usePlayers } from '../hooks/usePlayers';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { useMyTournaments } from '../hooks/useMyTournaments';
 import { useRegisteredTournaments } from '../hooks/useRegisteredTournaments';
-import { useTelegram, type TelegramUser } from '../hooks/useTelegram';
+import { useTelegram } from '../hooks/useTelegram';
 import { useTelegramSync } from '../hooks/useTelegramSync';
-
-export type Screen = 'loading' | 'home' | 'organizer' | 'join' | 'supporters';
-
-interface PlannerContextValue {
-  uid: string | null;
-  authLoading: boolean;
-  authError: string | null;
-  tournament: PlannerTournament | null;
-  tournamentLoading: boolean;
-  players: PlannerRegistration[];
-  screen: Screen;
-  setScreen: (screen: Screen) => void;
-  createTournament: (name: string) => Promise<void>;
-  loadByCode: (code: string) => Promise<boolean>;
-  updateTournament: (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'pointsPerMatch' | 'courts' | 'maxRounds' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description'>>) => Promise<void>;
-  registerPlayer: (name: string) => Promise<void>;
-  removePlayer: (playerId: string) => Promise<void>;
-  updateConfirmed: (confirmed: boolean) => Promise<void>;
-  addPlayer: (name: string) => Promise<void>;
-  bulkAddPlayers: (names: string[]) => Promise<void>;
-  toggleConfirmed: (playerId: string, currentConfirmed: boolean) => Promise<void>;
-  updatePlayerName: (playerId: string, name: string) => Promise<void>;
-  isRegistered: boolean;
-  organizerName: string | null;
-  userName: string | null;
-  userNameLoading: boolean;
-  updateUserName: (name: string) => Promise<void>;
-  myTournaments: TournamentSummary[];
-  registeredTournaments: TournamentSummary[];
-  listingsLoading: boolean;
-  openTournament: (id: string, screen: 'organizer' | 'join') => void;
-  deleteTournament: () => Promise<void>;
-  telegramUser: TelegramUser | null;
-}
-
-const PlannerCtx = createContext<PlannerContextValue>(null!);
-
-export function usePlanner() {
-  return useContext(PlannerCtx);
-}
+import { PlannerCtx, type Screen } from './plannerContext';
 
 export function PlannerProvider({ children }: { children: ReactNode }) {
   const { uid, loading: authLoading, authError } = useAuth();
@@ -92,13 +53,10 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
   // Fetch organizer name for active tournament
   const [organizerName, setOrganizerName] = useState<string | null>(null);
   useEffect(() => {
-    if (!tournament || !db) {
-      setOrganizerName(null);
-      return;
-    }
+    if (!tournament || !db) return;
     // If current user is organizer, use their profile name
     if (tournament.organizerId === uid && userName) {
-      setOrganizerName(userName);
+      queueMicrotask(() => setOrganizerName(userName));
       return;
     }
     let cancelled = false;
@@ -108,7 +66,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       }
     });
     return () => { cancelled = true; };
-  }, [tournament?.organizerId, uid, userName]);
+  }, [tournament, uid, userName]);
 
   const createTournament = useCallback(async (name: string) => {
     if (!uid) return;

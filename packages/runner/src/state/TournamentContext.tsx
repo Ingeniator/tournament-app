@@ -1,20 +1,7 @@
-import { createContext, useReducer, useEffect, useState, type ReactNode } from 'react';
-import type { Tournament } from '@padel/common';
-import type { TournamentAction } from './actions';
+import { useReducer, useEffect, useState, type ReactNode } from 'react';
+import { TournamentContext } from './tournamentContext';
 import { tournamentReducer } from './tournamentReducer';
 import { saveTournament, loadTournament } from './persistence';
-
-interface TournamentContextValue {
-  tournament: Tournament | null;
-  dispatch: React.Dispatch<TournamentAction>;
-  saveError: boolean;
-}
-
-export const TournamentContext = createContext<TournamentContextValue>({
-  tournament: null,
-  dispatch: () => {},
-  saveError: false,
-});
 
 export function TournamentProvider({ children }: { children: ReactNode }) {
   const [tournament, dispatch] = useReducer(tournamentReducer, null, () => loadTournament());
@@ -22,7 +9,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const ok = saveTournament(tournament);
-    setSaveError(!ok);
+    queueMicrotask(() => setSaveError(!ok));
   }, [tournament]);
 
   return (

@@ -4,14 +4,11 @@ import { auth, signIn, firebaseConfigured } from '../firebase';
 
 export function useAuth() {
   const [uid, setUid] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(firebaseConfigured && !!auth);
   const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!firebaseConfigured || !auth) {
-      setLoading(false);
-      return;
-    }
+    if (!firebaseConfigured || !auth) return;
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUid(user.uid);

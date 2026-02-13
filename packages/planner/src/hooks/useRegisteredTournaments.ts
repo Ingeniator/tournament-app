@@ -23,12 +23,8 @@ export function useRegisteredTournaments(uid: string | null) {
   const versionRef = useRef(0);
 
   useEffect(() => {
-    if (!uid || !db) {
-      setTournaments([]);
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
+    if (!uid || !db) return;
+    queueMicrotask(() => setLoading(true));
     const unsubscribe = onValue(ref(db, `users/${uid}/registrations`), async (snapshot) => {
       const version = ++versionRef.current;
       const data = snapshot.val() as Record<string, boolean> | null;

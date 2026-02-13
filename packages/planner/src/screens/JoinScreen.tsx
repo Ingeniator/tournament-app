@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Button, Card, Toast, useToast } from '@padel/common';
-import { usePlanner } from '../state/PlannerContext';
+import { usePlanner } from '../state/plannerContext';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import { downloadICS } from '../utils/icsExport';
 import styles from './JoinScreen.module.css';
@@ -14,12 +14,13 @@ export function JoinScreen() {
   const [nameDraft, setNameDraft] = useState('');
   const [showCalendarPrompt, setShowCalendarPrompt] = useState(false);
   const { toastMessage, showToast } = useToast();
+  const registeringRef = useRef(false);
 
   // Pre-fill name from profile or Telegram when it loads
   useEffect(() => {
     if (!name) {
       const prefill = userName ?? telegramUser?.displayName;
-      if (prefill) setName(prefill);
+      if (prefill) queueMicrotask(() => setName(prefill));
     }
   }, [userName, telegramUser]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -44,7 +45,6 @@ export function JoinScreen() {
   const reserveCount = [...statuses.values()].filter(s => s === 'reserve').length;
   const isConfirmed = myRegistration?.confirmed !== false;
 
-  const registeringRef = useRef(false);
   const handleRegister = async () => {
     const trimmed = name.trim();
     if (!trimmed || registeringRef.current) return;

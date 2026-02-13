@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, type ClipboardEvent } from 'react';
 import { Button, Card, Toast, useToast } from '@padel/common';
 import type { TournamentFormat, Court } from '@padel/common';
 import { generateId, parsePlayerList } from '@padel/common';
-import { usePlanner } from '../state/PlannerContext';
+import { usePlanner } from '../state/plannerContext';
 import { launchInRunner, buildRunnerTournament } from '../utils/exportToRunner';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import styles from './OrganizerScreen.module.css';
