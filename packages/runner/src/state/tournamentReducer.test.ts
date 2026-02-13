@@ -410,6 +410,220 @@ describe('tournamentReducer', () => {
     });
   });
 
+  describe('REPLACE_PLAYER', () => {
+    it('marks old player unavailable and adds new player', () => {
+      const state = makeInProgressTournament();
+      const result = tournamentReducer(state, {
+        type: 'REPLACE_PLAYER',
+        payload: { oldPlayerId: 'p1', newPlayerName: 'Replacement' },
+      });
+      expect(result!.players.find(p => p.id === 'p1')!.unavailable).toBe(true);
+      expect(result!.players.some(p => p.name === 'Replacement')).toBe(true);
+      expect(result!.players.length).toBe(state.players.length + 1);
+    });
+
+    it('ignores in setup phase', () => {
+      const state = makeSetupTournament();
+      const result = tournamentReducer(state, {
+        type: 'REPLACE_PLAYER',
+        payload: { oldPlayerId: 'p1', newPlayerName: 'X' },
+      });
+      expect(result).toBe(state);
+    });
+  });
+
+  describe('SET_FUTURE_ROUNDS', () => {
+    it('replaces unscored rounds with provided rounds', () => {
+      const state = makeInProgressTournament();
+      const fakeRound = { ...state.rounds[0], id: 'custom-round' };
+      const result = tournamentReducer(state, {
+        type: 'SET_FUTURE_ROUNDS',
+        payload: { rounds: [fakeRound] },
+      });
+      // All original rounds were unscored, so scored = 0, then 1 custom round
+      expect(result!.rounds.length).toBe(1);
+      expect(result!.rounds[0].id).toBe('custom-round');
+    });
+
+    it('ignores in setup phase', () => {
+      const state = makeSetupTournament();
+      const result = tournamentReducer(state, {
+        type: 'SET_FUTURE_ROUNDS',
+        payload: { rounds: [] },
+      });
+      expect(result).toBe(state);
+    });
+  });
+
+  describe('REGENERATE_FUTURE_ROUNDS', () => {
+    it('regenerates unscored rounds', () => {
+      let state = makeInProgressTournament();
+      // Score first round so there are both scored and unscored
+      const round = state.rounds[0];
+      for (const match of round.matches) {
+        state = tournamentReducer(state, {
+          type: 'SET_MATCH_SCORE',
+          payload: { roundId: round.id, matchId: match.id, score: { team1Points: 12, team2Points: 12 } },
+        })!;
+      }
+      const result = tournamentReducer(state, {
+        type: 'REGENERATE_FUTURE_ROUNDS',
+      });
+      // First round (scored) should stay, rest regenerated
+      expect(result!.rounds[0].id).toBe(state.rounds[0].id);
+    });
+
+    it('returns same state when no unscored rounds exist', () => {
+      let state = makeInProgressTournament();
+      // Score all rounds
+      for (const round of state.rounds) {
+        for (const match of round.matches) {
+          state = tournamentReducer(state, {
+            type: 'SET_MATCH_SCORE',
+            payload: { roundId: round.id, matchId: match.id, score: { team1Points: 12, team2Points: 12 } },
+          })!;
+        }
+      }
+      const result = tournamentReducer(state, { type: 'REGENERATE_FUTURE_ROUNDS' });
+      expect(result).toBe(state);
+    });
+
+    it('ignores in setup phase', () => {
+      const state = makeSetupTournament();
+      const result = tournamentReducer(state, { type: 'REGENERATE_FUTURE_ROUNDS' });
+      expect(result).toBe(state);
+    });
+  });
+
+  describe('ADD_ROUNDS', () => {
+    it('appends additional rounds to existing ones', () => {
+      const state = makeInProgressTournament();
+      const original = state.rounds.length;
+      const result = tournamentReducer(state, {
+        type: 'ADD_ROUNDS',
+        payload: { count: 2 },
+      });
+      expect(result!.rounds.length).toBe(original + 2);
+      // Original rounds preserved at beginning
+      expect(result!.rounds[0].id).toBe(state.rounds[0].id);
+    });
+
+    it('ignores in setup phase', () => {
+      const state = makeSetupTournament();
+      const result = tournamentReducer(state, {
+        type: 'ADD_ROUNDS',
+        payload: { count: 1 },
+      });
+      expect(result).toBe(state);
+    });
+  });
+
+  describe('ADD_COURT_LIVE', () => {
+    it('adds a court when capacity allows', () => {
+      // 12 players, 2 courts → can fit 3 courts (12/4 = 3)
+      const players: Player[] = Array.from({ length: 12 }, (_, i) => ({ id: `p${i + 1}`, name: `P${i + 1}` }));
+      const config: TournamentConfig = {
+        format: 'americano', pointsPerMatch: 24, maxRounds: 3,
+        courts: [{ id: 'c1', name: 'C1' }, { id: 'c2', name: 'C2' }],
+      };
+      const setup: Tournament = { id: 't1', name: 'Test', config, phase: 'setup', players, rounds: [], createdAt: 0, updatedAt: 0 };
+      const inProgress = tournamentReducer(setup, { type: 'GENERATE_SCHEDULE' })!;
+      const result = tournamentReducer(inProgress, { type: 'ADD_COURT_LIVE' });
+      expect(result!.config.courts.length).toBe(3);
+    });
+
+    it('does not add court when at max capacity', () => {
+      // 8 players, 2 courts → max 2 courts (8/4 = 2), already at max
+      const state = makeInProgressTournament();
+      const result = tournamentReducer(state, { type: 'ADD_COURT_LIVE' });
+      expect(result).toBe(state);
+    });
+
+    it('ignores in setup phase', () => {
+      const state = makeSetupTournament();
+      const result = tournamentReducer(state, { type: 'ADD_COURT_LIVE' });
+      expect(result).toBe(state);
+    });
+  });
+
+  describe('REPLACE_COURT', () => {
+    it('marks old court unavailable and adds new one', () => {
+      const state = makeInProgressTournament();
+      const oldCourtId = state.config.courts[0].id;
+      const result = tournamentReducer(state, {
+        type: 'REPLACE_COURT',
+        payload: { oldCourtId, newCourtName: 'New Court' },
+      });
+      expect(result!.config.courts.find(c => c.id === oldCourtId)!.unavailable).toBe(true);
+      expect(result!.config.courts.some(c => c.name === 'New Court')).toBe(true);
+      expect(result!.config.courts.length).toBe(state.config.courts.length + 1);
+    });
+
+    it('ignores in setup phase', () => {
+      const state = makeSetupTournament();
+      const result = tournamentReducer(state, {
+        type: 'REPLACE_COURT',
+        payload: { oldCourtId: 'c1', newCourtName: 'X' },
+      });
+      expect(result).toBe(state);
+    });
+  });
+
+  describe('SET_MATCH_SCORE (dynamic auto-advance)', () => {
+    it('auto-generates next round for mexicano when all scored and under target', () => {
+      // Create a mexicano tournament with enough players
+      const players: Player[] = Array.from({ length: 8 }, (_, i) => ({ id: `p${i + 1}`, name: `P${i + 1}` }));
+      const config: TournamentConfig = {
+        format: 'mexicano', pointsPerMatch: 24, maxRounds: 7,
+        courts: [{ id: 'c1', name: 'C1' }, { id: 'c2', name: 'C2' }],
+      };
+      const setup: Tournament = { id: 't1', name: 'Test', config, phase: 'setup', players, rounds: [], createdAt: 0, updatedAt: 0 };
+      let state = tournamentReducer(setup, { type: 'GENERATE_SCHEDULE' })!;
+      expect(state.rounds.length).toBe(1); // mexicano starts with 1 round
+
+      // Score all matches in round 1
+      for (const match of state.rounds[0].matches) {
+        state = tournamentReducer(state, {
+          type: 'SET_MATCH_SCORE',
+          payload: { roundId: state.rounds[0].id, matchId: match.id, score: { team1Points: 14, team2Points: 10 } },
+        })!;
+      }
+      // Should auto-generate round 2
+      expect(state.rounds.length).toBe(2);
+    });
+  });
+
+  describe('TOGGLE_PLAYER_AVAILABILITY (setup phase)', () => {
+    it('toggles availability without regenerating rounds in setup', () => {
+      const state = makeSetupTournament();
+      const result = tournamentReducer(state, {
+        type: 'TOGGLE_PLAYER_AVAILABILITY',
+        payload: { playerId: 'p1' },
+      });
+      expect(result!.players.find(p => p.id === 'p1')!.unavailable).toBe(true);
+      expect(result!.rounds).toEqual([]);
+    });
+  });
+
+  describe('TOGGLE_COURT_AVAILABILITY (success)', () => {
+    it('toggles court and regenerates rounds', () => {
+      // 12 players, 3 courts
+      const players: Player[] = Array.from({ length: 12 }, (_, i) => ({ id: `p${i + 1}`, name: `P${i + 1}` }));
+      const config: TournamentConfig = {
+        format: 'americano', pointsPerMatch: 24, maxRounds: 3,
+        courts: [{ id: 'c1', name: 'C1' }, { id: 'c2', name: 'C2' }, { id: 'c3', name: 'C3' }],
+      };
+      const setup: Tournament = { id: 't1', name: 'Test', config, phase: 'setup', players, rounds: [], createdAt: 0, updatedAt: 0 };
+      const inProgress = tournamentReducer(setup, { type: 'GENERATE_SCHEDULE' })!;
+      const result = tournamentReducer(inProgress, {
+        type: 'TOGGLE_COURT_AVAILABILITY',
+        payload: { courtId: 'c3' },
+      });
+      // Court c3 should be unavailable
+      expect(result!.config.courts.find(c => c.id === 'c3')!.unavailable).toBe(true);
+    });
+  });
+
   describe('default case', () => {
     it('returns state unchanged for unknown action', () => {
       const state = makeSetupTournament();

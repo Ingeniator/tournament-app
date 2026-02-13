@@ -100,5 +100,21 @@ describe('resolveConfigDefaults', () => {
       const resolved = resolveConfigDefaults(config, 8);
       expect(resolved.maxRounds).toBeGreaterThan(0);
     });
+
+    it('handles 0 players (playersPerRound = 0)', () => {
+      const config = makeConfig({ pointsPerMatch: 0, maxRounds: null });
+      const resolved = resolveConfigDefaults(config, 0);
+      // Should not crash, should return valid config
+      expect(resolved.maxRounds).toBeGreaterThanOrEqual(1);
+      expect(resolved.pointsPerMatch).toBeGreaterThanOrEqual(16);
+    });
+
+    it('handles explicit maxRounds of 0 (effectiveRounds = 0)', () => {
+      const config = makeConfig({ pointsPerMatch: 0, maxRounds: 0 });
+      const resolved = resolveConfigDefaults(config, 8);
+      expect(resolved.maxRounds).toBe(0);
+      // defaultPoints path where effectiveRounds = 0 → PREFERRED_POINTS
+      expect(resolved.pointsPerMatch).toBe(24);
+    });
   });
 });

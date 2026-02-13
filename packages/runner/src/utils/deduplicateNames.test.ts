@@ -76,4 +76,20 @@ describe('deduplicateNames', () => {
     const result = deduplicateNames([]);
     expect(result).toEqual([]);
   });
+
+  it('falls back to numeric suffix when all named suffixes are used', () => {
+    // Create players where one already has each named suffix, exhausting the pool
+    // The DEDUP_SUFFIXES array has 24 entries. We need >24 duplicates with same base.
+    const players: Player[] = [];
+    // Add 26 players with the same name to exhaust all 24 suffixes
+    for (let i = 0; i < 26; i++) {
+      players.push(p(`id${i}`, 'Alex'));
+    }
+    const result = deduplicateNames(players);
+    const names = result.map(r => r.name);
+    // All should be unique
+    expect(new Set(names).size).toBe(26);
+    // At least one should have a # numeric suffix (since 24 named suffixes < 25 needed)
+    expect(names.some(n => n.match(/#\d+$/))).toBe(true);
+  });
 });
