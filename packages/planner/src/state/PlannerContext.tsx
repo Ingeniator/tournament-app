@@ -9,6 +9,7 @@ import { useUserProfile } from '../hooks/useUserProfile';
 import { useMyTournaments } from '../hooks/useMyTournaments';
 import { useRegisteredTournaments } from '../hooks/useRegisteredTournaments';
 import { useTelegram } from '../hooks/useTelegram';
+import { useTelegramSync } from '../hooks/useTelegramSync';
 import { PlannerCtx, type Screen } from './plannerContext';
 
 export function PlannerProvider({ children }: { children: ReactNode }) {
@@ -45,6 +46,9 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       updateTelegramUsername(telegramUser.username);
     }
   }, [uid, telegramUser, userName, userNameLoading, updateUserName, updateTelegramId, updateTelegramUsername]);
+
+  // Cross-device sync: claim registrations from previous device UID
+  useTelegramSync(uid, telegramUser?.username);
 
   // Fetch organizer name for active tournament
   const [organizerName, setOrganizerName] = useState<string | null>(null);
