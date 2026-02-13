@@ -83,7 +83,7 @@ export function TeamPairingScreen() {
             <input
               className={styles.teamNameInput}
               value={team.name ?? ''}
-              placeholder={`Team ${i + 1}`}
+              placeholder={`${nameOf(team.player1Id)} & ${nameOf(team.player2Id)}`}
               onChange={e => dispatch({ type: 'RENAME_TEAM', payload: { teamId: team.id, name: e.target.value } })}
             />
             <div className={styles.teamPlayers}>

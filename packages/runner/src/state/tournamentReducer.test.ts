@@ -558,6 +558,100 @@ describe('tournamentReducer', () => {
     });
   });
 
+  describe('SWAP_PLAYERS (team name preservation)', () => {
+    function makeTeamPairingState(): Tournament {
+      const players: Player[] = Array.from({ length: 4 }, (_, i) => ({ id: `p${i + 1}`, name: `Player ${i + 1}` }));
+      const config: TournamentConfig = {
+        format: 'team-americano', pointsPerMatch: 21, maxRounds: 3,
+        courts: [{ id: 'c1', name: 'C1' }],
+      };
+      const setup: Tournament = { id: 't1', name: 'Test', config, phase: 'setup', players, rounds: [], createdAt: 0, updatedAt: 0 };
+      return tournamentReducer(setup, { type: 'SET_TEAMS' })!;
+    }
+
+    it('preserves custom team name after swap', () => {
+      let state = makeTeamPairingState();
+      const team = state.teams![0];
+      // Set a custom name
+      state = tournamentReducer(state, {
+        type: 'RENAME_TEAM',
+        payload: { teamId: team.id, name: 'The Aces' },
+      })!;
+
+      // Swap a player between teams
+      const playerFromTeam0 = team.player1Id;
+      const playerFromTeam1 = state.teams![1].player1Id;
+      const result = tournamentReducer(state, {
+        type: 'SWAP_PLAYERS',
+        payload: { playerA: playerFromTeam0, playerB: playerFromTeam1 },
+      });
+
+      // Custom name should be preserved
+      const updatedTeam = result!.teams!.find(t => t.id === team.id)!;
+      expect(updatedTeam.name).toBe('The Aces');
+    });
+
+    it('teams without custom names have no stored name after swap', () => {
+      const state = makeTeamPairingState();
+      const team0 = state.teams![0];
+      const team1 = state.teams![1];
+
+      const result = tournamentReducer(state, {
+        type: 'SWAP_PLAYERS',
+        payload: { playerA: team0.player1Id, playerB: team1.player1Id },
+      });
+
+      // No custom name was set, so name should remain undefined
+      expect(result!.teams![0].name).toBeUndefined();
+      expect(result!.teams![1].name).toBeUndefined();
+    });
+  });
+
+  describe('REPLACE_PLAYER (team name preservation)', () => {
+    function makeTeamAmericanoInProgress(): Tournament {
+      const players: Player[] = Array.from({ length: 4 }, (_, i) => ({ id: `p${i + 1}`, name: `Player ${i + 1}` }));
+      const config: TournamentConfig = {
+        format: 'team-americano', pointsPerMatch: 21, maxRounds: 3,
+        courts: [{ id: 'c1', name: 'C1' }],
+      };
+      const setup: Tournament = { id: 't1', name: 'Test', config, phase: 'setup', players, rounds: [], createdAt: 0, updatedAt: 0 };
+      const withTeams = tournamentReducer(setup, { type: 'SET_TEAMS' })!;
+      return tournamentReducer(withTeams, { type: 'GENERATE_SCHEDULE' })!;
+    }
+
+    it('preserves old team name when player is replaced (no custom name)', () => {
+      const state = makeTeamAmericanoInProgress();
+      const team = state.teams![0];
+      const oldPlayer1Name = state.players.find(p => p.id === team.player1Id)!.name;
+      const oldPlayer2Name = state.players.find(p => p.id === team.player2Id)!.name;
+      const expectedName = `${oldPlayer1Name} & ${oldPlayer2Name}`;
+
+      const result = tournamentReducer(state, {
+        type: 'REPLACE_PLAYER',
+        payload: { oldPlayerId: team.player1Id, newPlayerName: 'Newcomer' },
+      });
+
+      const updatedTeam = result!.teams!.find(t => t.id === team.id)!;
+      // Team name should be locked to the old auto-generated name
+      expect(updatedTeam.name).toBe(expectedName);
+    });
+
+    it('preserves custom team name when player is replaced', () => {
+      let state = makeTeamAmericanoInProgress();
+      // We can't rename teams during in-progress, so simulate by directly modifying
+      const team = state.teams![0];
+      state = { ...state, teams: state.teams!.map(t => t.id === team.id ? { ...t, name: 'Dream Team' } : t) };
+
+      const result = tournamentReducer(state, {
+        type: 'REPLACE_PLAYER',
+        payload: { oldPlayerId: team.player1Id, newPlayerName: 'Newcomer' },
+      });
+
+      const updatedTeam = result!.teams!.find(t => t.id === team.id)!;
+      expect(updatedTeam.name).toBe('Dream Team');
+    });
+  });
+
   describe('SET_FUTURE_ROUNDS', () => {
     it('replaces unscored rounds with provided rounds', () => {
       const state = makeInProgressTournament();

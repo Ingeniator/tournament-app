@@ -133,9 +133,18 @@ export function tournamentReducer(
       const strategy = getStrategy(state.config.format);
       let intermediateState = state;
       if (strategy.hasFixedPartners && state.teams) {
+        const nameOf = (id: string) => state.players.find(p => p.id === id)?.name ?? '?';
         const updatedTeams = state.teams.map(t => {
-          if (t.player1Id === oldPlayerId) return { ...t, player1Id: replaceNew.id };
-          if (t.player2Id === oldPlayerId) return { ...t, player2Id: replaceNew.id };
+          if (t.player1Id === oldPlayerId || t.player2Id === oldPlayerId) {
+            // Preserve old team name: lock in auto-generated name if no custom name set
+            const preservedName = t.name ?? `${nameOf(t.player1Id)} & ${nameOf(t.player2Id)}`;
+            return {
+              ...t,
+              name: preservedName,
+              player1Id: t.player1Id === oldPlayerId ? replaceNew.id : t.player1Id,
+              player2Id: t.player2Id === oldPlayerId ? replaceNew.id : t.player2Id,
+            };
+          }
           return t;
         });
         const updatedRounds = state.rounds.map(r => ({
@@ -289,9 +298,6 @@ export function tournamentReducer(
       const tB = newTeams[teamBIdx];
       if (tA.player1Id === playerA) tA.player1Id = playerB; else tA.player2Id = playerB;
       if (tB.player1Id === playerB) tB.player1Id = playerA; else tB.player2Id = playerA;
-      // Clear custom names on affected teams (composition changed)
-      tA.name = undefined;
-      tB.name = undefined;
 
       return {
         ...state,
