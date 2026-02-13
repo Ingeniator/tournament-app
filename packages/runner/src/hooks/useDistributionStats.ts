@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import type { Tournament } from '@padel/common';
+import { getStrategy } from '../strategies';
 
 export interface DistributionData {
   restBalance: {
@@ -88,9 +89,20 @@ export function useDistributionStats(tournament: Tournament | null): Distributio
     }
 
     // Repeat partners (count > 1, both players still active)
+    // For fixed-partner formats, exclude fixed pair repeats — those are expected
+    const strategy = getStrategy(tournament.config.format);
+    const fixedPairKeys = new Set<string>();
+    if (strategy.hasFixedPartners) {
+      for (const comp of strategy.getCompetitors(tournament)) {
+        if (comp.playerIds.length === 2) {
+          fixedPairKeys.add(pairKey(comp.playerIds[0], comp.playerIds[1]));
+        }
+      }
+    }
     const repeatPartners: DistributionData['repeatPartners'] = [];
     for (const [key, count] of partnerCounts) {
       if (count <= 1) continue;
+      if (strategy.hasFixedPartners && fixedPairKeys.has(key)) continue; // expected for fixed partners
       const [a, b] = key.split(':');
       if (!activeIds.has(a) || !activeIds.has(b)) continue;
       repeatPartners.push({ names: [nameMap.get(a)!, nameMap.get(b)!], count });
@@ -185,8 +197,11 @@ export function useDistributionStats(tournament: Tournament | null): Distributio
     });
 
     // Ideal partner repeats: each match creates 2 partner pairs
+    // For fixed-partner formats, fixed partners are expected and already filtered out above
     const totalPartnerSlots = totalMatches * 2;
-    const idealRepeatPartners = Math.max(0, Math.min(totalPairs, totalPartnerSlots - totalPairs));
+    const idealRepeatPartners = strategy.hasFixedPartners
+      ? 0 // In fixed-partner format, only non-fixed repeats count, and ideally there are none
+      : Math.max(0, Math.min(totalPairs, totalPartnerSlots - totalPairs));
 
     // Ideal never-played: each match creates C(4,2)=6 unique court-mate pair slots
     const maxCoveredPairs = totalRounds * numCourts * 6;

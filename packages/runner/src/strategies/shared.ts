@@ -1,4 +1,4 @@
-import type { Player, Round, TournamentConfig, Tournament, StandingsEntry, MatchScore } from '@padel/common';
+import type { Player, Round, TournamentConfig, Tournament, StandingsEntry, MatchScore, Competitor } from '@padel/common';
 
 export function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -179,6 +179,138 @@ export function calculateIndividualStandings(tournament: Tournament): StandingsE
     return {
       playerId: p.id,
       playerName: nameMap.get(p.id) ?? '',
+      totalPoints: s.totalPoints,
+      matchesPlayed: s.matchesPlayed,
+      matchesWon: s.matchesWon,
+      matchesLost: s.matchesLost,
+      matchesDraw: s.matchesDraw,
+      pointDiff: s.pointsFor - s.pointsAgainst,
+      rank: 0,
+    };
+  });
+
+  entries.sort((a, b) => {
+    if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+    if (b.pointDiff !== a.pointDiff) return b.pointDiff - a.pointDiff;
+    if (b.matchesWon !== a.matchesWon) return b.matchesWon - a.matchesWon;
+    return a.playerName.localeCompare(b.playerName);
+  });
+
+  entries.forEach((entry, i) => {
+    if (i === 0) {
+      entry.rank = 1;
+    } else {
+      const prev = entries[i - 1];
+      if (
+        entry.totalPoints === prev.totalPoints &&
+        entry.pointDiff === prev.pointDiff &&
+        entry.matchesWon === prev.matchesWon
+      ) {
+        entry.rank = prev.rank;
+      } else {
+        entry.rank = i + 1;
+      }
+    }
+  });
+
+  return entries;
+}
+
+/**
+ * Unified standings calculation for any competitor type (individual or team).
+ * `mapSideToCompetitors` maps a match side ([playerId, playerId]) to the Competitor(s) on that side.
+ * For individual formats, returns 2 competitors (one per player).
+ * For team formats, returns 1 competitor (the team).
+ */
+export function calculateCompetitorStandings(
+  tournament: Tournament,
+  competitors: Competitor[],
+  mapSideToCompetitors: (side: [string, string]) => Competitor[],
+): StandingsEntry[] {
+  const stats = new Map<string, {
+    totalPoints: number;
+    matchesPlayed: number;
+    matchesWon: number;
+    matchesLost: number;
+    matchesDraw: number;
+    pointsFor: number;
+    pointsAgainst: number;
+  }>();
+
+  for (const c of competitors) {
+    stats.set(c.id, {
+      totalPoints: 0, matchesPlayed: 0, matchesWon: 0,
+      matchesLost: 0, matchesDraw: 0, pointsFor: 0, pointsAgainst: 0,
+    });
+  }
+
+  // Build a set of all competitor playerIds for sit-out detection
+  const competitorByPlayerId = new Map<string, Competitor>();
+  for (const c of competitors) {
+    for (const pid of c.playerIds) {
+      competitorByPlayerId.set(pid, c);
+    }
+  }
+
+  for (const round of tournament.rounds) {
+    const scoredMatches = round.matches.filter(m => m.score !== null);
+    let roundTotalPoints = 0;
+    let roundCompetitorsScored = 0;
+
+    for (const match of scoredMatches) {
+      const score = match.score!;
+      const side1Competitors = mapSideToCompetitors(match.team1);
+      const side2Competitors = mapSideToCompetitors(match.team2);
+
+      for (const c of side1Competitors) {
+        const s = stats.get(c.id);
+        if (!s) continue;
+        s.totalPoints += score.team1Points;
+        s.pointsFor += score.team1Points;
+        s.pointsAgainst += score.team2Points;
+        s.matchesPlayed += 1;
+        if (score.team1Points > score.team2Points) s.matchesWon += 1;
+        else if (score.team1Points < score.team2Points) s.matchesLost += 1;
+        else s.matchesDraw += 1;
+      }
+      for (const c of side2Competitors) {
+        const s = stats.get(c.id);
+        if (!s) continue;
+        s.totalPoints += score.team2Points;
+        s.pointsFor += score.team2Points;
+        s.pointsAgainst += score.team1Points;
+        s.matchesPlayed += 1;
+        if (score.team2Points > score.team1Points) s.matchesWon += 1;
+        else if (score.team2Points < score.team1Points) s.matchesLost += 1;
+        else s.matchesDraw += 1;
+      }
+
+      roundTotalPoints += score.team1Points + score.team2Points;
+      roundCompetitorsScored += side1Competitors.length + side2Competitors.length;
+    }
+
+    // Sit-out compensation
+    if (roundCompetitorsScored > 0 && round.sitOuts.length > 0) {
+      const avgPoints = roundTotalPoints / roundCompetitorsScored;
+      const compensated = new Set<string>();
+      for (const pid of round.sitOuts) {
+        const c = competitorByPlayerId.get(pid);
+        if (c && !compensated.has(c.id)) {
+          const s = stats.get(c.id);
+          if (s) {
+            s.totalPoints += Math.round(avgPoints);
+            compensated.add(c.id);
+          }
+        }
+      }
+    }
+  }
+
+  const entries: StandingsEntry[] = competitors.map(c => {
+    const s = stats.get(c.id)!;
+    return {
+      playerId: c.id,
+      playerName: c.name,
       totalPoints: s.totalPoints,
       matchesPlayed: s.matchesPlayed,
       matchesWon: s.matchesWon,

@@ -16,7 +16,7 @@ export function StandingsTable({ standings, plannedGames }: StandingsTableProps)
       <thead>
         <tr>
           <th className={styles.rank}>#</th>
-          <th>Player</th>
+          <th>Name</th>
           <th className={`${styles.right} ${styles.numCol}`}>Pts</th>
           {plannedGames && <th className={`${styles.right} ${styles.numCol}`}>GP</th>}
           <th className={`${styles.right} ${styles.wtlCol}`}>W-T-L</th>

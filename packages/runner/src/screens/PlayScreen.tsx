@@ -62,7 +62,7 @@ export function PlayScreen() {
       // Active round advanced — previous round was just completed
       const completedRound = tournament?.rounds.find(r => r.id === prevId);
       if (completedRound) {
-        queueMicrotask(() => setRoundCompleteNum(completedRound.roundNumber));
+        setRoundCompleteNum(completedRound.roundNumber);
       }
     }
 
@@ -81,16 +81,14 @@ export function PlayScreen() {
   useLayoutEffect(() => {
     if (nominations.length === 0) return;
     // Reset height to measure natural sizes
-    queueMicrotask(() => {
-      setNomMinHeight(0);
-      requestAnimationFrame(() => {
-        const heights = nomCardRefs.current
-          .filter((el): el is HTMLDivElement => el !== null)
-          .map(el => el.scrollHeight);
-        if (heights.length > 0) {
-          setNomMinHeight(Math.max(...heights));
-        }
-      });
+    setNomMinHeight(0);
+    requestAnimationFrame(() => {
+      const heights = nomCardRefs.current
+        .filter((el): el is HTMLDivElement => el !== null)
+        .map(el => el.scrollHeight);
+      if (heights.length > 0) {
+        setNomMinHeight(Math.max(...heights));
+      }
     });
   }, [nominations]);
 

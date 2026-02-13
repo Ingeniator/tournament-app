@@ -76,6 +76,7 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
           onChange={e => onUpdate({ format: e.target.value as TournamentFormat })}
         >
           <option value="americano">Americano</option>
+          <option value="team-americano">Team Americano</option>
           <option value="mexicano">Mexicano</option>
         </select>
       </div>

@@ -21,9 +21,15 @@ export function SetupScreen() {
 
   if (!tournament) return null;
 
+  const strategy = getStrategy(tournament.config.format);
+
   const handleGenerate = () => {
     if (errors.length > 0) return;
-    dispatch({ type: 'GENERATE_SCHEDULE' });
+    if (strategy.hasFixedPartners) {
+      dispatch({ type: 'SET_TEAMS' });
+    } else {
+      dispatch({ type: 'GENERATE_SCHEDULE' });
+    }
   };
 
   const handleBack = () => {
@@ -94,7 +100,7 @@ export function SetupScreen() {
           {tournament.players.length} player(s) added
         </div>
         <Button fullWidth onClick={handleGenerate} disabled={errors.length > 0}>
-          Generate Schedule
+          {strategy.hasFixedPartners ? 'Set up Teams' : 'Generate Schedule'}
         </Button>
       </div>
     </AppShell>

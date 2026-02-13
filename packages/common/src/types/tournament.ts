@@ -2,7 +2,20 @@ import type { Player } from './player';
 
 export type TournamentFormat = 'americano' | 'mexicano' | 'team-americano' | 'round-robin';
 
-export type TournamentPhase = 'setup' | 'in-progress' | 'completed';
+export type TournamentPhase = 'setup' | 'team-pairing' | 'in-progress' | 'completed';
+
+export interface Team {
+  id: string;
+  player1Id: string;
+  player2Id: string;
+  name?: string;
+}
+
+export interface Competitor {
+  id: string;
+  name: string;
+  playerIds: string[];
+}
 
 export interface Court {
   id: string;
@@ -44,6 +57,7 @@ export interface Tournament {
   phase: TournamentPhase;
   players: Player[];
   rounds: Round[];
+  teams?: Team[];
   createdAt: number;
   updatedAt: number;
 }

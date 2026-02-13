@@ -1,9 +1,27 @@
-import type { Tournament, Player, Court, TournamentConfig, Round } from '@padel/common';
+import type { Tournament, Player, Court, TournamentConfig, Round, Team } from '@padel/common';
 import type { TournamentAction } from './actions';
 import { generateId } from '@padel/common';
 import { getStrategy } from '../strategies';
 import { deduplicateNames } from '../utils/deduplicateNames';
 import { resolveConfigDefaults } from '../utils/resolveConfigDefaults';
+
+function createTeams(players: Player[]): Team[] {
+  // Shuffle and pair sequentially
+  const shuffled = [...players];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  const teams: Team[] = [];
+  for (let i = 0; i < shuffled.length - 1; i += 2) {
+    teams.push({
+      id: generateId(),
+      player1Id: shuffled[i].id,
+      player2Id: shuffled[i + 1].id,
+    });
+  }
+  return teams;
+}
 
 function regenerateUnscoredRounds(
   state: Tournament, players: Player[], config: TournamentConfig, timeBudgetMs?: number
@@ -14,7 +32,7 @@ function regenerateUnscoredRounds(
   const strategy = getStrategy(config.format);
   const active = players.filter(p => !p.unavailable);
   const excludeIds = players.filter(p => p.unavailable).map(p => p.id);
-  const { rounds: regen } = strategy.generateAdditionalRounds(active, config, scored, dropped, excludeIds, timeBudgetMs);
+  const { rounds: regen } = strategy.generateAdditionalRounds(active, config, scored, dropped, excludeIds, timeBudgetMs, state);
   return [...scored, ...regen];
 }
 
@@ -214,12 +232,81 @@ export function tournamentReducer(
       };
     }
 
-    case 'GENERATE_SCHEDULE': {
+    case 'SET_TEAMS': {
       if (!state || state.phase !== 'setup') return state;
+      if (!getStrategy(state.config.format).hasFixedPartners) return state;
+      const teams = createTeams(state.players);
+      return {
+        ...state,
+        teams,
+        phase: 'team-pairing',
+        updatedAt: Date.now(),
+      };
+    }
+
+    case 'SHUFFLE_TEAMS': {
+      if (!state || state.phase !== 'team-pairing') return state;
+      const teams = createTeams(state.players);
+      return {
+        ...state,
+        teams,
+        updatedAt: Date.now(),
+      };
+    }
+
+    case 'SWAP_PLAYERS': {
+      if (!state || state.phase !== 'team-pairing' || !state.teams) return state;
+      const { playerA, playerB } = action.payload;
+      const teamAIdx = state.teams.findIndex(t => t.player1Id === playerA || t.player2Id === playerA);
+      const teamBIdx = state.teams.findIndex(t => t.player1Id === playerB || t.player2Id === playerB);
+      if (teamAIdx === -1 || teamBIdx === -1 || teamAIdx === teamBIdx) return state;
+
+      const newTeams = state.teams.map(t => ({ ...t }));
+      // Swap playerA and playerB between their teams
+      const tA = newTeams[teamAIdx];
+      const tB = newTeams[teamBIdx];
+      if (tA.player1Id === playerA) tA.player1Id = playerB; else tA.player2Id = playerB;
+      if (tB.player1Id === playerB) tB.player1Id = playerA; else tB.player2Id = playerA;
+      // Clear custom names on affected teams (composition changed)
+      tA.name = undefined;
+      tB.name = undefined;
+
+      return {
+        ...state,
+        teams: newTeams,
+        updatedAt: Date.now(),
+      };
+    }
+
+    case 'RENAME_TEAM': {
+      if (!state || state.phase !== 'team-pairing' || !state.teams) return state;
+      const { teamId, name } = action.payload;
+      const newTeams = state.teams.map(t =>
+        t.id === teamId ? { ...t, name: name.trim() || undefined } : t
+      );
+      return {
+        ...state,
+        teams: newTeams,
+        updatedAt: Date.now(),
+      };
+    }
+
+    case 'SET_TEAMS_BACK': {
+      if (!state || state.phase !== 'team-pairing') return state;
+      return {
+        ...state,
+        phase: 'setup',
+        teams: undefined,
+        updatedAt: Date.now(),
+      };
+    }
+
+    case 'GENERATE_SCHEDULE': {
+      if (!state || (state.phase !== 'setup' && state.phase !== 'team-pairing')) return state;
       const players = deduplicateNames(state.players);
       const resolvedConfig = resolveConfigDefaults(state.config, players.length);
       const strategy = getStrategy(resolvedConfig.format);
-      const { rounds } = strategy.generateSchedule(players, resolvedConfig);
+      const { rounds } = strategy.generateSchedule(players, resolvedConfig, state);
       return {
         ...state,
         players,
@@ -237,7 +324,10 @@ export function tournamentReducer(
         state.players,
         state.config,
         state.rounds,
-        action.payload.count
+        action.payload.count,
+        undefined,
+        undefined,
+        state
       );
       return {
         ...state,
@@ -267,7 +357,7 @@ export function tournamentReducer(
         if (allScored && updatedRounds.length < totalTarget) {
           const active = state.players.filter(p => !p.unavailable);
           const excl = state.players.filter(p => p.unavailable).map(p => p.id);
-          const { rounds: next } = strategy.generateAdditionalRounds(active, state.config, updatedRounds, 1, excl);
+          const { rounds: next } = strategy.generateAdditionalRounds(active, state.config, updatedRounds, 1, excl, undefined, state);
           return { ...state, rounds: [...updatedRounds, ...next], updatedAt: Date.now() };
         }
       }
@@ -329,7 +419,7 @@ export function tournamentReducer(
       const strat = getStrategy(state.config.format);
       const excl = state.players.filter(p => p.unavailable).map(p => p.id);
       const actv = state.players.filter(p => !p.unavailable);
-      const { rounds: extra } = strat.generateAdditionalRounds(actv, state.config, state.rounds, addCount, excl);
+      const { rounds: extra } = strat.generateAdditionalRounds(actv, state.config, state.rounds, addCount, excl, undefined, state);
       return { ...state, rounds: [...state.rounds, ...extra], updatedAt: Date.now() };
     }
 

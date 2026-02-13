@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import type { Tournament, StandingsEntry } from '@padel/common';
+import type { Tournament, StandingsEntry, Competitor } from '@padel/common';
+import { getStrategy } from '../strategies';
 
 export interface Nomination {
   id: string;
@@ -86,8 +87,69 @@ export function useNominations(
 
     if (allScored.length < 2) return [];
 
-    const playerCount = tournament.players.filter(p => !p.unavailable).length;
-    const MAX_AWARDS = Math.min(7, Math.max(3, Math.floor(playerCount / 2)));
+    const strategy = getStrategy(tournament.config.format);
+    const competitors = strategy.getCompetitors(tournament);
+    const competitorCount = competitors.length;
+    const MAX_AWARDS = Math.min(7, Math.max(3, Math.floor(competitorCount / 2)));
+
+    // Build competitor match data
+    // Map player IDs to their competitor
+    const playerToCompetitor = new Map<string, Competitor>();
+    for (const c of competitors) {
+      for (const pid of c.playerIds) {
+        playerToCompetitor.set(pid, c);
+      }
+    }
+
+    interface CompetitorMatchInfo {
+      roundNumber: number;
+      pointsScored: number;
+      pointsConceded: number;
+      won: boolean;
+      lost: boolean;
+      margin: number;
+    }
+    const competitorMatches = new Map<string, CompetitorMatchInfo[]>();
+    for (const c of competitors) {
+      competitorMatches.set(c.id, []);
+    }
+
+    for (const match of allScored) {
+      // Determine unique competitor IDs per side (avoids double-counting for teams)
+      const side1Competitors = new Set<string>();
+      const side2Competitors = new Set<string>();
+      for (const pid of match.team1) {
+        const c = playerToCompetitor.get(pid);
+        if (c) side1Competitors.add(c.id);
+      }
+      for (const pid of match.team2) {
+        const c = playerToCompetitor.get(pid);
+        if (c) side2Competitors.add(c.id);
+      }
+
+      for (const cid of side1Competitors) {
+        competitorMatches.get(cid)?.push({
+          roundNumber: match.roundNumber,
+          pointsScored: match.t1,
+          pointsConceded: match.t2,
+          won: match.t1 > match.t2,
+          lost: match.t1 < match.t2,
+          margin: match.t1 - match.t2,
+        });
+      }
+      for (const cid of side2Competitors) {
+        competitorMatches.get(cid)?.push({
+          roundNumber: match.roundNumber,
+          pointsScored: match.t2,
+          pointsConceded: match.t1,
+          won: match.t2 > match.t1,
+          lost: match.t2 < match.t1,
+          margin: match.t2 - match.t1,
+        });
+      }
+    }
+
+    const competitorNameOf = (id: string) => competitors.find(c => c.id === id)?.name ?? '?';
     const podium: Nomination[] = [];
     const awards: Nomination[] = [];
     const rankOf = (id: string) => standings.find(s => s.playerId === id)?.rank ?? 999;
@@ -114,6 +176,7 @@ export function useNominations(
       });
     }
 
+    // Competitor awards — work for both individual and team formats
     // 1. UNDEFEATED - Won every match
     for (const entry of standings) {
       if (entry.matchesPlayed >= 2 && entry.matchesWon === entry.matchesPlayed) {
@@ -129,23 +192,24 @@ export function useNominations(
       }
     }
 
-    // 2. GIANT SLAYER - Lowest-ranked player who beat #1
+    // 2. GIANT SLAYER - Lowest-ranked competitor who beat #1
     const topPlayer = standings[0];
-    const topMatches = playerMatches.get(topPlayer.playerId) ?? [];
-    const topLosses = topMatches.filter(m => m.lost);
+    const topCompMatches = competitorMatches.get(topPlayer.playerId) ?? [];
+    const topLosses = topCompMatches.filter(m => m.lost);
     if (topLosses.length > 0) {
       const slayerIds = new Set<string>();
-      for (const round of tournament.rounds) {
-        for (const match of round.matches) {
-          if (!match.score) continue;
-          const { team1Points: t1, team2Points: t2 } = match.score;
-          const topInTeam1 = match.team1.includes(topPlayer.playerId);
-          const topInTeam2 = match.team2.includes(topPlayer.playerId);
-          if (topInTeam1 && t2 > t1) {
-            match.team2.forEach(id => slayerIds.add(id));
-          } else if (topInTeam2 && t1 > t2) {
-            match.team1.forEach(id => slayerIds.add(id));
-          }
+      for (const match of allScored) {
+        const side1Comps = new Set<string>();
+        const side2Comps = new Set<string>();
+        for (const pid of match.team1) { const c = playerToCompetitor.get(pid); if (c) side1Comps.add(c.id); }
+        for (const pid of match.team2) { const c = playerToCompetitor.get(pid); if (c) side2Comps.add(c.id); }
+
+        const topInSide1 = side1Comps.has(topPlayer.playerId);
+        const topInSide2 = side2Comps.has(topPlayer.playerId);
+        if (topInSide1 && match.t2 > match.t1) {
+          side2Comps.forEach(id => slayerIds.add(id));
+        } else if (topInSide2 && match.t1 > match.t2) {
+          side1Comps.forEach(id => slayerIds.add(id));
         }
       }
       const slayers = [...slayerIds].sort((a, b) => rankOf(b) - rankOf(a));
@@ -156,40 +220,40 @@ export function useNominations(
           title: 'Giant Slayer',
           emoji: '⚔️',
           description: `Took down #1 ${topPlayer.playerName}`,
-          playerNames: [nameOf(bestSlayer)],
+          playerNames: [competitorNameOf(bestSlayer)],
           stat: `Ranked #${rankOf(bestSlayer)}`,
         });
       }
     }
 
     // 3. POINT MACHINE - Most total points scored (only if != rank 1)
-    let bestPointsPlayer: { id: string; total: number } | null = null;
-    for (const [pid, matches] of playerMatches) {
+    let bestPointsCompetitor: { id: string; total: number } | null = null;
+    for (const [cid, matches] of competitorMatches) {
       if (matches.length === 0) continue;
       const total = matches.reduce((sum, m) => sum + m.pointsScored, 0);
-      if (!bestPointsPlayer || total > bestPointsPlayer.total) {
-        bestPointsPlayer = { id: pid, total };
+      if (!bestPointsCompetitor || total > bestPointsCompetitor.total) {
+        bestPointsCompetitor = { id: cid, total };
       }
     }
-    if (bestPointsPlayer && bestPointsPlayer.id !== topPlayer.playerId) {
+    if (bestPointsCompetitor && bestPointsCompetitor.id !== topPlayer.playerId) {
       awards.push({
         id: 'point-machine',
         title: 'Point Machine',
         emoji: '💥',
         description: 'Racked up the most points overall',
-        playerNames: [nameOf(bestPointsPlayer.id)],
-        stat: `${bestPointsPlayer.total} total points`,
+        playerNames: [competitorNameOf(bestPointsCompetitor.id)],
+        stat: `${bestPointsCompetitor.total} total points`,
       });
     }
 
     // 4. IRON WALL - Lowest avg points conceded
     let bestWall: { id: string; avg: number; total: number; games: number } | null = null;
-    for (const [pid, matches] of playerMatches) {
+    for (const [cid, matches] of competitorMatches) {
       if (matches.length < 2) continue;
       const totalConceded = matches.reduce((sum, m) => sum + m.pointsConceded, 0);
       const avg = totalConceded / matches.length;
       if (!bestWall || avg < bestWall.avg) {
-        bestWall = { id: pid, avg, total: totalConceded, games: matches.length };
+        bestWall = { id: cid, avg, total: totalConceded, games: matches.length };
       }
     }
     if (bestWall) {
@@ -198,7 +262,7 @@ export function useNominations(
         title: 'Iron Wall',
         emoji: '🛡️',
         description: 'Fewest points conceded per game',
-        playerNames: [nameOf(bestWall.id)],
+        playerNames: [competitorNameOf(bestWall.id)],
         stat: `${bestWall.avg.toFixed(1)} avg per game`,
       });
     }
@@ -206,7 +270,9 @@ export function useNominations(
     // 5. QUICK STRIKE - Largest single-game victory margin
     const biggestWin = [...allScored].sort((a, b) => b.margin - a.margin)[0];
     if (biggestWin && biggestWin.margin > 0) {
-      const winners = biggestWin.t1 > biggestWin.t2 ? biggestWin.team1 : biggestWin.team2;
+      const winningSide = biggestWin.t1 > biggestWin.t2 ? biggestWin.team1 : biggestWin.team2;
+      const winnerComps = new Set<string>();
+      for (const pid of winningSide) { const c = playerToCompetitor.get(pid); if (c) winnerComps.add(c.id); }
       const winScore = Math.max(biggestWin.t1, biggestWin.t2);
       const loseScore = Math.min(biggestWin.t1, biggestWin.t2);
       awards.push({
@@ -214,32 +280,32 @@ export function useNominations(
         title: 'Quick Strike',
         emoji: '⚡',
         description: 'Most dominant victory',
-        playerNames: winners.map(nameOf),
+        playerNames: [...winnerComps].map(competitorNameOf),
         stat: `${winScore}–${loseScore}`,
       });
     }
 
     // 6. CONSISTENCY CHAMPION - Smallest score variance
     let bestConsistency: { id: string; stdDev: number } | null = null;
-    for (const [pid, matches] of playerMatches) {
+    for (const [cid, matches] of competitorMatches) {
       if (matches.length < 3) continue;
       const margins = matches.map(m => m.margin);
       const mean = margins.reduce((a, b) => a + b, 0) / margins.length;
       const variance = margins.reduce((sum, m) => sum + (m - mean) ** 2, 0) / margins.length;
       const stdDev = Math.sqrt(variance);
       if (!bestConsistency || stdDev < bestConsistency.stdDev) {
-        bestConsistency = { id: pid, stdDev };
+        bestConsistency = { id: cid, stdDev };
       }
     }
     if (bestConsistency) {
-      const matches = playerMatches.get(bestConsistency.id)!;
+      const matches = competitorMatches.get(bestConsistency.id)!;
       const avgMargin = matches.reduce((s, m) => s + m.margin, 0) / matches.length;
       awards.push({
         id: 'consistency-champion',
         title: 'Consistency Champion',
         emoji: '🎯',
         description: 'Most steady performance all tournament',
-        playerNames: [nameOf(bestConsistency.id)],
+        playerNames: [competitorNameOf(bestConsistency.id)],
         stat: `${avgMargin >= 0 ? '+' : ''}${avgMargin.toFixed(1)} avg margin`,
       });
     }
@@ -247,7 +313,7 @@ export function useNominations(
     // 7. COMEBACK KING - Biggest improvement first half → second half
     let bestComeback: { id: string; firstW: number; firstL: number; secondW: number; secondL: number } | null = null;
     let bestImprov = 0;
-    for (const [pid, matches] of playerMatches) {
+    for (const [cid, matches] of competitorMatches) {
       if (matches.length < 4) continue;
       const sorted = [...matches].sort((a, b) => a.roundNumber - b.roundNumber);
       const half = Math.floor(sorted.length / 2);
@@ -259,7 +325,7 @@ export function useNominations(
       if (improv > 0.3 && firstWR < 0.5 && secondWR > 0.5 && improv > bestImprov) {
         bestImprov = improv;
         bestComeback = {
-          id: pid,
+          id: cid,
           firstW: first.filter(m => m.won).length,
           firstL: first.filter(m => m.lost).length,
           secondW: second.filter(m => m.won).length,
@@ -273,21 +339,21 @@ export function useNominations(
         title: 'Comeback King',
         emoji: '👑',
         description: 'Strongest finish after a rough start',
-        playerNames: [nameOf(bestComeback.id)],
+        playerNames: [competitorNameOf(bestComeback.id)],
         stat: `${bestComeback.firstW}W/${bestComeback.firstL}L → ${bestComeback.secondW}W/${bestComeback.secondL}L`,
       });
     }
 
     // 8. CLUTCH PLAYER - Best win rate in close games (margin <= closeThreshold)
     let bestClutch: { id: string; won: number; total: number } | null = null;
-    for (const [pid, matches] of playerMatches) {
+    for (const [cid, matches] of competitorMatches) {
       const closeGames = matches.filter(m => Math.abs(m.margin) <= closeThreshold);
       if (closeGames.length < 2) continue;
       const closeWins = closeGames.filter(m => m.won).length;
       const winRate = closeWins / closeGames.length;
       if (!bestClutch || winRate > bestClutch.won / bestClutch.total ||
           (winRate === bestClutch.won / bestClutch.total && closeGames.length > bestClutch.total)) {
-        bestClutch = { id: pid, won: closeWins, total: closeGames.length };
+        bestClutch = { id: cid, won: closeWins, total: closeGames.length };
       }
     }
     if (bestClutch && bestClutch.won > 0) {
@@ -296,17 +362,17 @@ export function useNominations(
         title: 'Clutch Player',
         emoji: '🧊',
         description: 'Wins when it matters most',
-        playerNames: [nameOf(bestClutch.id)],
+        playerNames: [competitorNameOf(bestClutch.id)],
         stat: `${bestClutch.won}/${bestClutch.total} close games won`,
       });
     }
 
     // 9. SEE-SAW SPECIALIST - Most close games played
     let bestSeeSaw: { id: string; count: number } | null = null;
-    for (const [pid, matches] of playerMatches) {
+    for (const [cid, matches] of competitorMatches) {
       const closeCount = matches.filter(m => Math.abs(m.margin) <= closeThreshold).length;
       if (closeCount >= 2 && (!bestSeeSaw || closeCount > bestSeeSaw.count)) {
-        bestSeeSaw = { id: pid, count: closeCount };
+        bestSeeSaw = { id: cid, count: closeCount };
       }
     }
     if (bestSeeSaw) {
@@ -315,26 +381,25 @@ export function useNominations(
         title: 'See-Saw Specialist',
         emoji: '⚖️',
         description: 'Thrives in nail-biting matches',
-        playerNames: [nameOf(bestSeeSaw.id)],
+        playerNames: [competitorNameOf(bestSeeSaw.id)],
         stat: `${bestSeeSaw.count} close games`,
       });
     }
 
-    // 10. MARATHON MATCH - Game with the highest total points
-    // Only interesting if there's variance (some matches score above pointsPerMatch due to draws/bonus)
-    // Actually in this system total always = pointsPerMatch, so skip this...
-    // BUT we can find the closest game instead.
-
     // 10. MOST COMPETITIVE GAME - Closest match score
     const closestGame = [...allScored].sort((a, b) => a.margin - b.margin)[0];
     if (closestGame && closestGame.margin <= closeThreshold) {
-      const allPlayers = [...closestGame.team1, ...closestGame.team2];
+      const allCompIds = new Set<string>();
+      for (const pid of [...closestGame.team1, ...closestGame.team2]) {
+        const c = playerToCompetitor.get(pid);
+        if (c) allCompIds.add(c.id);
+      }
       awards.push({
         id: 'competitive-game',
         title: 'Instant Classic',
         emoji: '🔥',
         description: `Closest game of the tournament (Round ${closestGame.roundNumber})`,
-        playerNames: allPlayers.map(nameOf),
+        playerNames: [...allCompIds].map(competitorNameOf),
         stat: `${closestGame.t1}–${closestGame.t2}`,
       });
     }
@@ -358,10 +423,10 @@ export function useNominations(
 
     // 12. BATTLE TESTED - Most close games lost (reframed positively)
     let bestBattle: { id: string; count: number } | null = null;
-    for (const [pid, matches] of playerMatches) {
+    for (const [cid, matches] of competitorMatches) {
       const closeLosses = matches.filter(m => m.lost && Math.abs(m.margin) <= closeThreshold).length;
       if (closeLosses >= 2 && (!bestBattle || closeLosses > bestBattle.count)) {
-        bestBattle = { id: pid, count: closeLosses };
+        bestBattle = { id: cid, count: closeLosses };
       }
     }
     if (bestBattle) {
@@ -370,7 +435,7 @@ export function useNominations(
         title: 'Battle Tested',
         emoji: '🫡',
         description: 'Every game was a fight to the finish',
-        playerNames: [nameOf(bestBattle.id)],
+        playerNames: [competitorNameOf(bestBattle.id)],
         stat: `${bestBattle.count} games decided by ≤${closeThreshold} pts`,
       });
     }
@@ -395,7 +460,7 @@ export function useNominations(
 
     // 14. DOMINATOR - Longest winning streak
     let bestStreak: { id: string; streak: number } | null = null;
-    for (const [pid, matches] of playerMatches) {
+    for (const [cid, matches] of competitorMatches) {
       if (matches.length < 3) continue;
       const sorted = [...matches].sort((a, b) => a.roundNumber - b.roundNumber);
       let streak = 0;
@@ -409,7 +474,7 @@ export function useNominations(
         }
       }
       if (maxStreak >= 3 && (!bestStreak || maxStreak > bestStreak.streak)) {
-        bestStreak = { id: pid, streak: maxStreak };
+        bestStreak = { id: cid, streak: maxStreak };
       }
     }
     if (bestStreak) {
@@ -418,18 +483,18 @@ export function useNominations(
         title: 'Dominator',
         emoji: '🔥',
         description: 'Longest winning streak',
-        playerNames: [nameOf(bestStreak.id)],
+        playerNames: [competitorNameOf(bestStreak.id)],
         stat: `${bestStreak.streak} wins in a row`,
       });
     }
 
     // 15. OFFENSIVE POWERHOUSE - Highest avg points scored per game (if != #1 and != Iron Wall)
     let bestOffense: { id: string; avg: number; games: number } | null = null;
-    for (const [pid, matches] of playerMatches) {
+    for (const [cid, matches] of competitorMatches) {
       if (matches.length < 2) continue;
       const avg = matches.reduce((sum, m) => sum + m.pointsScored, 0) / matches.length;
       if (!bestOffense || avg > bestOffense.avg) {
-        bestOffense = { id: pid, avg, games: matches.length };
+        bestOffense = { id: cid, avg, games: matches.length };
       }
     }
     if (bestOffense && bestOffense.id !== topPlayer.playerId && bestOffense.id !== bestWall?.id) {
@@ -438,11 +503,13 @@ export function useNominations(
         title: 'Offensive Powerhouse',
         emoji: '💣',
         description: 'Highest scoring average per game',
-        playerNames: [nameOf(bestOffense.id)],
+        playerNames: [competitorNameOf(bestOffense.id)],
         stat: `${bestOffense.avg.toFixed(1)} avg per game`,
       });
     }
 
+    // Pair/duo awards — only make sense when partners rotate
+    if (!strategy.hasFixedPartners) {
     // 16. TEAM STATS - Build pair data for team awards
     const pairStats = new Map<string, {
       ids: [string, string]; wins: number; losses: number; total: number;
@@ -546,7 +613,6 @@ export function useNominations(
         stat: `${bestStreakDuo.streak} wins in a row`,
       });
     }
-
 
     // 17. NEMESIS - Player who beat the same opponent the most times
     const vsRecord = new Map<string, Map<string, { wins: number; losses: number }>>();
@@ -675,43 +741,27 @@ export function useNominations(
         break;
       }
     }
+    } // end if (!strategy.hasFixedPartners) for pair/duo/nemesis/rubber/gatekeeper
 
-    // LUCKY ONE - Random player or pair, seeded by tournament ID for consistency
+    // LUCKY ONE - Random competitor, seeded by tournament ID for consistency
     const lucky: Nomination[] = [];
     const seed = tournament.rounds.reduce((h, r) => {
       for (const m of r.matches) {
-        for (const c of m.id) h = ((h << 5) - h + c.charCodeAt(0)) | 0;
+        for (const ch of m.id) h = ((h << 5) - h + ch.charCodeAt(0)) | 0;
       }
       return h;
     }, 0);
 
-    const isTeamFormat = tournament.config.format === 'team-americano';
-    if (isTeamFormat && pairStats.size > 0) {
-      const pairs = [...pairStats.values()].filter(p => p.total >= 1);
-      if (pairs.length > 0) {
-        const pick = pairs[Math.abs(seed) % pairs.length];
-        lucky.push({
-          id: 'lucky',
-          title: 'Lucky Ones',
-          emoji: '🍀',
-          description: 'Randomly chosen — fortune favors the bold!',
-          playerNames: pick.ids.map(nameOf),
-          stat: 'Lucky pair of the tournament',
-        });
-      }
-    } else {
-      const activePlayers = tournament.players.filter(p => !p.unavailable);
-      if (activePlayers.length > 0) {
-        const pick = activePlayers[Math.abs(seed) % activePlayers.length];
-        lucky.push({
-          id: 'lucky',
-          title: 'Lucky One',
-          emoji: '🍀',
-          description: 'Randomly chosen — fortune favors the bold!',
-          playerNames: [pick.name],
-          stat: 'Lucky player of the tournament',
-        });
-      }
+    if (competitors.length > 0) {
+      const pick = competitors[Math.abs(seed) % competitors.length];
+      lucky.push({
+        id: 'lucky',
+        title: strategy.hasFixedPartners ? 'Lucky Ones' : 'Lucky One',
+        emoji: '🍀',
+        description: 'Randomly chosen — fortune favors the bold!',
+        playerNames: [pick.name],
+        stat: strategy.hasFixedPartners ? 'Lucky team of the tournament' : 'Lucky player of the tournament',
+      });
     }
 
     // Combine: podium (always) + capped awards + lucky (always)

@@ -6,7 +6,7 @@ import {
   addFourPlayers,
   generateSchedule,
   navigateToTab,
-  scoreMatch,
+  scoreAllMatches,
 } from './helpers';
 
 test.describe('Tournament Flow', () => {
@@ -55,23 +55,7 @@ test.describe('Tournament Flow', () => {
     await expect(page.getByRole('heading', { name: 'Round 1' })).toBeVisible();
 
     // Score all matches across all rounds
-    let safetyCounter = 0;
-    const maxIterations = 100;
-
-    while (safetyCounter < maxIterations) {
-      safetyCounter++;
-
-      // Check if "All rounds scored!" is visible — means we can finish
-      const allScoredVisible = await page.getByText('All rounds scored!').isVisible().catch(() => false);
-      if (allScoredVisible) break;
-
-      // scoreMatch handles dismissing interstitials before scoring
-      const dashBtn = page.getByRole('button', { name: '–' }).first();
-      const hasDash = await dashBtn.isVisible().catch(() => false);
-      if (hasDash) {
-        await scoreMatch(page, 15);
-      }
-    }
+    await scoreAllMatches(page);
 
     // All rounds should be scored — "Finish Tournament" should be visible
     await expect(page.getByRole('button', { name: 'Finish Tournament' })).toBeVisible();
@@ -80,8 +64,8 @@ test.describe('Tournament Flow', () => {
     page.on('dialog', dialog => dialog.accept());
     await page.getByRole('button', { name: 'Finish Tournament' }).click();
 
-    // Should see tournament complete
-    await expect(page.getByText('Tournament Complete')).toBeVisible();
+    // Should see completed state with share button
+    await expect(page.getByRole('button', { name: 'Share Results as Text' })).toBeVisible();
   });
 
   test('persists tournament across reload', async ({ page }) => {
