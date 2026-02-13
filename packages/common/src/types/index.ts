@@ -3,6 +3,7 @@ export type {
   TournamentFormat,
   TournamentPhase,
   Team,
+  Competitor,
   Court,
   TournamentConfig,
   MatchScore,

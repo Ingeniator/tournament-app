@@ -4,10 +4,9 @@ import styles from './StandingsTable.module.css';
 interface StandingsTableProps {
   standings: StandingsEntry[];
   plannedGames?: Map<string, number>;
-  teamMode?: boolean;
 }
 
-export function StandingsTable({ standings, plannedGames, teamMode }: StandingsTableProps) {
+export function StandingsTable({ standings, plannedGames }: StandingsTableProps) {
   if (standings.length === 0) {
     return <div className={styles.empty}>No scores entered yet</div>;
   }
@@ -17,7 +16,7 @@ export function StandingsTable({ standings, plannedGames, teamMode }: StandingsT
       <thead>
         <tr>
           <th className={styles.rank}>#</th>
-          <th>{teamMode ? 'Team' : 'Player'}</th>
+          <th>Name</th>
           <th className={`${styles.right} ${styles.numCol}`}>Pts</th>
           {plannedGames && <th className={`${styles.right} ${styles.numCol}`}>GP</th>}
           <th className={`${styles.right} ${styles.wtlCol}`}>W-T-L</th>

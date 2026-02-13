@@ -37,6 +37,29 @@
   font-weight: 600;
 }
 
+.teamNameInput {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  padding: 0 0 var(--space-xs) 0;
+  margin-bottom: var(--space-sm);
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.teamNameInput:focus {
+  border-bottom-color: var(--color-primary);
+}
+
+.teamNameInput::placeholder {
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
 .teamPlayers {
   display: flex;
   gap: var(--space-sm);

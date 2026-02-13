@@ -1,4 +1,4 @@
-.PHONY: dev build deploy-build clean test e2e e2e-ui
+.PHONY: dev build deploy-build clean test e2e e2e-ui coverage coverage-unit coverage-e2e
 
 dev:
 	@lsof -ti :5190,:5191 2>/dev/null | xargs kill -9 2>/dev/null || true
@@ -32,3 +32,11 @@ e2e:
 
 e2e-ui:
 	npx playwright test --ui
+
+coverage-unit:
+	npx vitest run --coverage
+
+coverage-e2e:
+	npx playwright test --reporter=html
+
+coverage: coverage-unit coverage-e2e

@@ -21,11 +21,11 @@ export function SetupScreen() {
 
   if (!tournament) return null;
 
-  const isTeamAmericano = tournament.config.format === 'team-americano';
+  const strategy = getStrategy(tournament.config.format);
 
   const handleGenerate = () => {
     if (errors.length > 0) return;
-    if (isTeamAmericano) {
+    if (strategy.hasFixedPartners) {
       dispatch({ type: 'SET_TEAMS' });
     } else {
       dispatch({ type: 'GENERATE_SCHEDULE' });
@@ -100,7 +100,7 @@ export function SetupScreen() {
           {tournament.players.length} player(s) added
         </div>
         <Button fullWidth onClick={handleGenerate} disabled={errors.length > 0}>
-          {isTeamAmericano ? 'Set up Teams' : 'Generate Schedule'}
+          {strategy.hasFixedPartners ? 'Set up Teams' : 'Generate Schedule'}
         </Button>
       </div>
     </AppShell>

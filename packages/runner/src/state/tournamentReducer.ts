@@ -234,7 +234,7 @@ export function tournamentReducer(
 
     case 'SET_TEAMS': {
       if (!state || state.phase !== 'setup') return state;
-      if (state.config.format !== 'team-americano') return state;
+      if (!getStrategy(state.config.format).hasFixedPartners) return state;
       const teams = createTeams(state.players);
       return {
         ...state,
@@ -267,7 +267,23 @@ export function tournamentReducer(
       const tB = newTeams[teamBIdx];
       if (tA.player1Id === playerA) tA.player1Id = playerB; else tA.player2Id = playerB;
       if (tB.player1Id === playerB) tB.player1Id = playerA; else tB.player2Id = playerA;
+      // Clear custom names on affected teams (composition changed)
+      tA.name = undefined;
+      tB.name = undefined;
 
+      return {
+        ...state,
+        teams: newTeams,
+        updatedAt: Date.now(),
+      };
+    }
+
+    case 'RENAME_TEAM': {
+      if (!state || state.phase !== 'team-pairing' || !state.teams) return state;
+      const { teamId, name } = action.payload;
+      const newTeams = state.teams.map(t =>
+        t.id === teamId ? { ...t, name: name.trim() || undefined } : t
+      );
       return {
         ...state,
         teams: newTeams,

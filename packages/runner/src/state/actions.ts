@@ -27,6 +27,7 @@ export type TournamentAction =
   | { type: 'SET_TEAMS' }
   | { type: 'SHUFFLE_TEAMS' }
   | { type: 'SWAP_PLAYERS'; payload: { playerA: string; playerB: string } }
+  | { type: 'RENAME_TEAM'; payload: { teamId: string; name: string } }
   | { type: 'SET_TEAMS_BACK' }
   | { type: 'COMPLETE_TOURNAMENT' }
   | { type: 'RESET_TOURNAMENT' };

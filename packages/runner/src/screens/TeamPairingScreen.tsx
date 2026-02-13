@@ -80,7 +80,12 @@ export function TeamPairingScreen() {
       <div className={styles.teamList}>
         {tournament.teams.map((team, i) => (
           <div key={team.id} className={styles.teamCard}>
-            <div className={styles.teamLabel}>Team {i + 1}</div>
+            <input
+              className={styles.teamNameInput}
+              value={team.name ?? ''}
+              placeholder={`Team ${i + 1}`}
+              onChange={e => dispatch({ type: 'RENAME_TEAM', payload: { teamId: team.id, name: e.target.value } })}
+            />
             <div className={styles.teamPlayers}>
               <button
                 className={`${styles.playerChip} ${selectedPlayerId === team.player1Id ? styles.playerChipSelected : ''}`}

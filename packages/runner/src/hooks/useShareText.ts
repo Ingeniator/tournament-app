@@ -1,6 +1,7 @@
 import { useMemo, useCallback } from 'react';
 import type { Tournament, StandingsEntry } from '@padel/common';
 import type { Nomination } from './useNominations';
+import { getStrategy } from '../strategies';
 
 export function useShareText(
   tournament: Tournament | null,
@@ -170,7 +171,7 @@ export function useShareText(
     }
 
     lines.push('');
-    const entityLabel = tournament.config.format === 'team-americano' ? 'teams' : 'players';
+    const entityLabel = getStrategy(tournament.config.format).hasFixedPartners ? 'teams' : 'players';
     lines.push(`${tournament.rounds.length} rounds · ${tournament.config.pointsPerMatch} pts/match · ${standings.length} ${entityLabel}`);
 
     return lines.join('\n');

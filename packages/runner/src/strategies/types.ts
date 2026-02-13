@@ -1,4 +1,4 @@
-import type { Player, TournamentConfig, Round, Tournament, StandingsEntry, MatchScore } from '@padel/common';
+import type { Player, TournamentConfig, Round, Tournament, StandingsEntry, MatchScore, Competitor } from '@padel/common';
 
 export interface ScheduleResult {
   rounds: Round[];
@@ -7,6 +7,8 @@ export interface ScheduleResult {
 
 export interface TournamentStrategy {
   isDynamic: boolean;
+  hasFixedPartners: boolean;
+  getCompetitors(tournament: Tournament): Competitor[];
   generateSchedule(players: Player[], config: TournamentConfig, tournament?: Tournament): ScheduleResult;
   generateAdditionalRounds(players: Player[], config: TournamentConfig, existingRounds: Round[], count: number, excludePlayerIds?: string[], timeBudgetMs?: number, tournament?: Tournament): ScheduleResult;
   calculateStandings(tournament: Tournament): StandingsEntry[];

@@ -1,7 +1,7 @@
 import type { TournamentStrategy, ScheduleResult } from './types';
-import type { Player, TournamentConfig, Round, Match } from '@padel/common';
+import type { Player, TournamentConfig, Round, Match, Tournament } from '@padel/common';
 import { generateId } from '@padel/common';
-import { shuffle, partnerKey, commonValidateSetup, commonValidateScore, calculateIndividualStandings, seedFromRounds, selectSitOuts } from './shared';
+import { shuffle, partnerKey, commonValidateSetup, commonValidateScore, calculateIndividualStandings, calculateCompetitorStandings, seedFromRounds, selectSitOuts } from './shared';
 
 /**
  * Generate rounds using Mexicano rules:
@@ -138,9 +138,21 @@ function generateMexicanoRounds(
 
 export const mexicanoStrategy: TournamentStrategy = {
   isDynamic: true,
+  hasFixedPartners: false,
   validateSetup: commonValidateSetup,
   validateScore: commonValidateScore,
-  calculateStandings: calculateIndividualStandings,
+  calculateStandings(tournament: Tournament) {
+    const competitors = mexicanoStrategy.getCompetitors(tournament);
+    return calculateCompetitorStandings(tournament, competitors, (side) =>
+      side.map(pid => competitors.find(c => c.id === pid)!).filter(Boolean)
+    );
+  },
+
+  getCompetitors(tournament: Tournament) {
+    return tournament.players
+      .filter(p => !p.unavailable)
+      .map(p => ({ id: p.id, name: p.name, playerIds: [p.id] }));
+  },
 
   generateSchedule(players: Player[], config: TournamentConfig): ScheduleResult {
     // Mexicano: only generate 1 round initially (random)

@@ -8,6 +8,13 @@ export interface Team {
   id: string;
   player1Id: string;
   player2Id: string;
+  name?: string;
+}
+
+export interface Competitor {
+  id: string;
+  name: string;
+  playerIds: string[];
 }
 
 export interface Court {

@@ -1,7 +1,7 @@
 import type { TournamentStrategy, ScheduleResult } from './types';
-import type { Player, TournamentConfig, Round, Match } from '@padel/common';
+import type { Player, TournamentConfig, Round, Match, Tournament } from '@padel/common';
 import { generateId } from '@padel/common';
-import { shuffle, partnerKey, commonValidateSetup, commonValidateScore, calculateIndividualStandings, seedFromRounds, selectSitOuts } from './shared';
+import { shuffle, partnerKey, commonValidateSetup, commonValidateScore, calculateCompetitorStandings, seedFromRounds, selectSitOuts } from './shared';
 
 type Pairing = [[string, string], [string, string]];
 
@@ -433,9 +433,21 @@ function generateRoundsWithRetry(
 
 export const americanoStrategy: TournamentStrategy = {
   isDynamic: false,
+  hasFixedPartners: false,
   validateSetup: commonValidateSetup,
   validateScore: commonValidateScore,
-  calculateStandings: calculateIndividualStandings,
+  calculateStandings(tournament: Tournament) {
+    const competitors = americanoStrategy.getCompetitors(tournament);
+    return calculateCompetitorStandings(tournament, competitors, (side) =>
+      side.map(pid => competitors.find(c => c.id === pid)!).filter(Boolean)
+    );
+  },
+
+  getCompetitors(tournament: Tournament) {
+    return tournament.players
+      .filter(p => !p.unavailable)
+      .map(p => ({ id: p.id, name: p.name, playerIds: [p.id] }));
+  },
 
   generateSchedule(players: Player[], config: TournamentConfig): ScheduleResult {
     const playersPerRound = Math.min(config.courts.length * 4, players.length);

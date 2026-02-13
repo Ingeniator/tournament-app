@@ -62,7 +62,7 @@ export function PlayScreen() {
       // Active round advanced — previous round was just completed
       const completedRound = tournament?.rounds.find(r => r.id === prevId);
       if (completedRound) {
-        queueMicrotask(() => setRoundCompleteNum(completedRound.roundNumber));
+        setRoundCompleteNum(completedRound.roundNumber);
       }
     }
 
@@ -81,16 +81,14 @@ export function PlayScreen() {
   useLayoutEffect(() => {
     if (nominations.length === 0) return;
     // Reset height to measure natural sizes
-    queueMicrotask(() => {
-      setNomMinHeight(0);
-      requestAnimationFrame(() => {
-        const heights = nomCardRefs.current
-          .filter((el): el is HTMLDivElement => el !== null)
-          .map(el => el.scrollHeight);
-        if (heights.length > 0) {
-          setNomMinHeight(Math.max(...heights));
-        }
-      });
+    setNomMinHeight(0);
+    requestAnimationFrame(() => {
+      const heights = nomCardRefs.current
+        .filter((el): el is HTMLDivElement => el !== null)
+        .map(el => el.scrollHeight);
+      if (heights.length > 0) {
+        setNomMinHeight(Math.max(...heights));
+      }
     });
   }, [nominations]);
 
@@ -117,7 +115,7 @@ export function PlayScreen() {
         <Carousel>
           {[
             <div key="standings" className={styles.completedStandings}>
-              <StandingsTable standings={standings} teamMode={tournament.config.format === 'team-americano'} />
+              <StandingsTable standings={standings} />
             </div>,
             ...nominations.map((nom, i) => (
               <NominationCard key={nom.id} nomination={nom} cardRef={setNomRef(i)} minHeight={nomMinHeight || undefined} />
@@ -315,7 +313,7 @@ export function PlayScreen() {
 
       {/* Standings overlay */}
       <Modal open={showStandings} title="Standings" onClose={() => setShowStandings(false)}>
-        <StandingsTable standings={standings} plannedGames={plannedGames} teamMode={tournament.config.format === 'team-americano'} />
+        <StandingsTable standings={standings} plannedGames={plannedGames} />
       </Modal>
 
       <Toast message={toastMessage} />
