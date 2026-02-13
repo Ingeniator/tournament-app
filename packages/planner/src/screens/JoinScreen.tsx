@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Button, Card, Toast, useToast } from '@padel/common';
-import { usePlanner } from '../state/PlannerContext';
+import { usePlanner } from '../state/plannerContext';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import { downloadICS } from '../utils/icsExport';
 import styles from './JoinScreen.module.css';
@@ -20,7 +20,7 @@ export function JoinScreen() {
   useEffect(() => {
     if (!name) {
       const prefill = userName ?? telegramUser?.displayName;
-      if (prefill) setName(prefill);
+      if (prefill) queueMicrotask(() => setName(prefill));
     }
   }, [userName, telegramUser]); // eslint-disable-line react-hooks/exhaustive-deps
 

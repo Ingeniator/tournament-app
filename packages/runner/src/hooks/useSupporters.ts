@@ -73,7 +73,7 @@ export function useSupporters() {
   }, []);
 
   useEffect(() => {
-    fetchSupporters();
+    queueMicrotask(() => fetchSupporters());
   }, [fetchSupporters]);
 
   const grouped = useMemo(() => groupSupporters(supporters), [supporters]);

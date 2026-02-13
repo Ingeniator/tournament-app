@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Card } from '@padel/common';
-import { usePlanner } from '../state/PlannerContext';
+import { usePlanner } from '../state/plannerContext';
 import { useSupporters } from '../hooks/useSupporters';
 import styles from './SupportersScreen.module.css';
 

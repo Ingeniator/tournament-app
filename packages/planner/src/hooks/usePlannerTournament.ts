@@ -39,11 +39,8 @@ export function usePlannerTournament(tournamentId: string | null) {
 
   // Real-time subscription
   useEffect(() => {
-    if (!tournamentId || !db) {
-      setTournament(null);
-      return;
-    }
-    setLoading(true);
+    if (!tournamentId || !db) return;
+    queueMicrotask(() => setLoading(true));
     const unsubscribe = onValue(ref(db, `tournaments/${tournamentId}`), (snapshot) => {
       const data = snapshot.val();
       if (data) {

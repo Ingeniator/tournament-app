@@ -1,6 +1,7 @@
 {
   "name": "padel-tournament",
   "private": true,
+  "type": "module",
   "workspaces": [
     "packages/*"
   ],

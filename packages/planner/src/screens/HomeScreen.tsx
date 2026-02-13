@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button, Card } from '@padel/common';
 import type { TournamentSummary } from '@padel/common';
-import { usePlanner } from '../state/PlannerContext';
+import { usePlanner } from '../state/plannerContext';
 import { randomTournamentName } from '../utils/tournamentNames';
 import styles from './HomeScreen.module.css';
 
