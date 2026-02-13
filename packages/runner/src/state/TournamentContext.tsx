@@ -1,5 +1,5 @@
 import { useReducer, useEffect, useState, type ReactNode } from 'react';
-import { TournamentContext } from './tournamentContext';
+import { TournamentContext } from './tournamentContextDef';
 import { tournamentReducer } from './tournamentReducer';
 import { saveTournament, loadTournament } from './persistence';
 

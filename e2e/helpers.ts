@@ -114,3 +114,73 @@ export async function getPlayerCount(page: Page): Promise<string> {
 export async function expectVisible(page: Page, text: string) {
   await expect(page.getByText(text, { exact: false })).toBeVisible();
 }
+
+/** Add N players by name. */
+export async function addPlayers(page: Page, names: string[]) {
+  for (const name of names) {
+    await addPlayer(page, name);
+  }
+}
+
+/** Select a tournament format from the config dropdown. */
+export async function selectFormat(page: Page, format: 'americano' | 'team-americano' | 'mexicano') {
+  await page.locator('select#config-format').selectOption(format);
+}
+
+/**
+ * Create a team-americano setup: clear state → create tournament → add 6 players
+ * → select team-americano format → click "Set up Teams".
+ * Lands on the team-pairing screen.
+ */
+export async function createTeamAmericanoSetup(page: Page) {
+  await clearState(page);
+  await createTournament(page);
+  await addPlayers(page, ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank']);
+  await selectFormat(page, 'team-americano');
+  await page.getByRole('button', { name: 'Set up Teams' }).click();
+  // Wait for team pairing screen
+  await page.getByRole('heading', { name: 'Teams' }).waitFor();
+}
+
+/**
+ * Score all matches across all rounds until "All rounds scored!" is visible.
+ * Must be on the Play tab. Handles interstitials between rounds.
+ */
+export async function scoreAllMatches(page: Page, team1Score = 15) {
+  let safetyCounter = 0;
+  const maxIterations = 100;
+
+  while (safetyCounter < maxIterations) {
+    safetyCounter++;
+
+    const allScoredVisible = await page.getByText('All rounds scored!').isVisible().catch(() => false);
+    if (allScoredVisible) break;
+
+    // Dismiss any interstitial that may be blocking
+    await dismissInterstitial(page);
+
+    const hasDash = await page.getByRole('button', { name: '–' }).first().isVisible().catch(() => false);
+    if (hasDash) {
+      await scoreMatch(page, team1Score);
+    } else {
+      // Brief wait to avoid tight-looping when UI is transitioning
+      await page.waitForTimeout(200);
+    }
+  }
+}
+
+/**
+ * Create a completed tournament: in-progress → score all matches → finish.
+ * Ends on the Play tab in completed state.
+ */
+export async function createCompletedTournament(page: Page) {
+  await createInProgressTournament(page);
+  await navigateToTab(page, 'Play');
+  await scoreAllMatches(page);
+
+  // Finish the tournament
+  page.on('dialog', dialog => dialog.accept());
+  await page.getByRole('button', { name: 'Finish Tournament' }).click();
+  // Completed view shows "Share Results as Text" button
+  await page.getByRole('button', { name: 'Share Results as Text' }).waitFor();
+}
