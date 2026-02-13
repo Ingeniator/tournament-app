@@ -21,9 +21,15 @@ export function SetupScreen() {
     [tournament.players, resolvedConfig, strategy]
   );
 
+  const isTeamAmericano = tournament.config.format === 'team-americano';
+
   const handleGenerate = () => {
     if (errors.length > 0) return;
-    dispatch({ type: 'GENERATE_SCHEDULE' });
+    if (isTeamAmericano) {
+      dispatch({ type: 'SET_TEAMS' });
+    } else {
+      dispatch({ type: 'GENERATE_SCHEDULE' });
+    }
   };
 
   const handleBack = () => {
@@ -93,7 +99,7 @@ export function SetupScreen() {
           {tournament.players.length} player(s) added
         </div>
         <Button fullWidth onClick={handleGenerate} disabled={errors.length > 0}>
-          Generate Schedule
+          {isTeamAmericano ? 'Set up Teams' : 'Generate Schedule'}
         </Button>
       </div>
     </AppShell>

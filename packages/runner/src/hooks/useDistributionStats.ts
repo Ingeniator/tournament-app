@@ -88,9 +88,18 @@ export function useDistributionStats(tournament: Tournament | null): Distributio
     }
 
     // Repeat partners (count > 1, both players still active)
+    // For team formats, exclude fixed team pairs — those repeats are expected
+    const isTeamFmt = tournament.config.format === 'team-americano';
+    const teamKeys = new Set<string>();
+    if (isTeamFmt && tournament.teams) {
+      for (const team of tournament.teams) {
+        teamKeys.add(pairKey(team.player1Id, team.player2Id));
+      }
+    }
     const repeatPartners: DistributionData['repeatPartners'] = [];
     for (const [key, count] of partnerCounts) {
       if (count <= 1) continue;
+      if (isTeamFmt && teamKeys.has(key)) continue; // expected for fixed teams
       const [a, b] = key.split(':');
       if (!activeIds.has(a) || !activeIds.has(b)) continue;
       repeatPartners.push({ names: [nameMap.get(a)!, nameMap.get(b)!], count });
@@ -185,8 +194,11 @@ export function useDistributionStats(tournament: Tournament | null): Distributio
     });
 
     // Ideal partner repeats: each match creates 2 partner pairs
+    // For team formats, fixed partners are expected and already filtered out above
     const totalPartnerSlots = totalMatches * 2;
-    const idealRepeatPartners = Math.max(0, Math.min(totalPairs, totalPartnerSlots - totalPairs));
+    const idealRepeatPartners = isTeamFmt
+      ? 0 // In team format, only non-team repeats count, and ideally there are none
+      : Math.max(0, Math.min(totalPairs, totalPartnerSlots - totalPairs));
 
     // Ideal never-played: each match creates C(4,2)=6 unique court-mate pair slots
     const maxCoveredPairs = totalRounds * numCourts * 6;

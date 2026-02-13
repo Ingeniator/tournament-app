@@ -291,11 +291,13 @@ export function OrganizerScreen() {
             onChange={e => handleFormatChange(e.target.value as TournamentFormat)}
           >
             <option value="americano">Americano</option>
+            <option value="team-americano">Team Americano</option>
             <option value="mexicano">Mexicano</option>
           </select>
           {showFormatInfo && (
             <div className={styles.formatInfo}>
               <p><strong>Americano</strong> — Random partner rotation each round. Individual standings.</p>
+              <p><strong>Team Americano</strong> — Fixed teams for the entire tournament. Team standings.</p>
               <p><strong>Mexicano</strong> — After round 1, pairings based on standings — top player pairs with bottom, keeping matches competitive.</p>
             </div>
           )}

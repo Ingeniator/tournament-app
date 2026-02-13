@@ -115,7 +115,7 @@ export function PlayScreen() {
         <Carousel>
           {[
             <div key="standings" className={styles.completedStandings}>
-              <StandingsTable standings={standings} />
+              <StandingsTable standings={standings} teamMode={tournament.config.format === 'team-americano'} />
             </div>,
             ...nominations.map((nom, i) => (
               <NominationCard key={nom.id} nomination={nom} cardRef={setNomRef(i)} minHeight={nomMinHeight || undefined} />
@@ -313,7 +313,7 @@ export function PlayScreen() {
 
       {/* Standings overlay */}
       <Modal open={showStandings} title="Standings" onClose={() => setShowStandings(false)}>
-        <StandingsTable standings={standings} plannedGames={plannedGames} />
+        <StandingsTable standings={standings} plannedGames={plannedGames} teamMode={tournament.config.format === 'team-americano'} />
       </Modal>
 
       <Toast message={toastMessage} />

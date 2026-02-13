@@ -86,6 +86,7 @@ export function useNominations(
 
     if (allScored.length < 2) return [];
 
+    const isTeamFormat = tournament.config.format === 'team-americano';
     const playerCount = tournament.players.filter(p => !p.unavailable).length;
     const MAX_AWARDS = Math.min(7, Math.max(3, Math.floor(playerCount / 2)));
     const podium: Nomination[] = [];
@@ -113,6 +114,9 @@ export function useNominations(
         stat: `${entry.totalPoints} pts · ${wtl} · ${diff}`,
       });
     }
+
+    // Individual awards — skip for team formats where standings are per-team
+    if (!isTeamFormat) {
 
     // 1. UNDEFEATED - Won every match
     for (const entry of standings) {
@@ -443,6 +447,8 @@ export function useNominations(
       });
     }
 
+    } // end if (!isTeamFormat)
+
     // 16. TEAM STATS - Build pair data for team awards
     const pairStats = new Map<string, {
       ids: [string, string]; wins: number; losses: number; total: number;
@@ -548,6 +554,7 @@ export function useNominations(
     }
 
 
+    if (!isTeamFormat) {
     // 17. NEMESIS - Player who beat the same opponent the most times
     const vsRecord = new Map<string, Map<string, { wins: number; losses: number }>>();
     for (const match of allScored) {
@@ -675,6 +682,7 @@ export function useNominations(
         break;
       }
     }
+    } // end if (!isTeamFormat) for nemesis/rubber/gatekeeper
 
     // LUCKY ONE - Random player or pair, seeded by tournament ID for consistency
     const lucky: Nomination[] = [];
@@ -685,7 +693,6 @@ export function useNominations(
       return h;
     }, 0);
 
-    const isTeamFormat = tournament.config.format === 'team-americano';
     if (isTeamFormat && pairStats.size > 0) {
       const pairs = [...pairStats.values()].filter(p => p.total >= 1);
       if (pairs.length > 0) {

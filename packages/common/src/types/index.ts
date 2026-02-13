@@ -2,6 +2,7 @@ export type { Player } from './player';
 export type {
   TournamentFormat,
   TournamentPhase,
+  Team,
   Court,
   TournamentConfig,
   MatchScore,

@@ -170,7 +170,8 @@ export function useShareText(
     }
 
     lines.push('');
-    lines.push(`${tournament.rounds.length} rounds · ${tournament.config.pointsPerMatch} pts/match · ${standings.length} players`);
+    const entityLabel = tournament.config.format === 'team-americano' ? 'teams' : 'players';
+    lines.push(`${tournament.rounds.length} rounds · ${tournament.config.pointsPerMatch} pts/match · ${standings.length} ${entityLabel}`);
 
     return lines.join('\n');
   }, [tournament, standings, nominations]);

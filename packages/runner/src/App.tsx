@@ -5,6 +5,7 @@ import { AppShell } from './components/layout/AppShell';
 import { BottomNav, type TabId } from './components/layout/BottomNav';
 import { HomeScreen } from './screens/HomeScreen';
 import { SetupScreen } from './screens/SetupScreen';
+import { TeamPairingScreen } from './screens/TeamPairingScreen';
 import { PlayScreen } from './screens/PlayScreen';
 import { LogScreen } from './screens/LogScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
@@ -31,9 +32,11 @@ function AppContent() {
     ? 'home'
     : tournament.phase === 'setup'
       ? 'setup'
-      : tournament.phase === 'completed'
-        ? 'completed'
-        : activeTab;
+      : tournament.phase === 'team-pairing'
+        ? 'team-pairing'
+        : tournament.phase === 'completed'
+          ? 'completed'
+          : activeTab;
 
   useEffect(() => {
     history.replaceState(null, '', `#${currentScreen}`);
@@ -44,7 +47,7 @@ function AppContent() {
     const curPhase = tournament?.phase;
     prevPhaseRef.current = curPhase;
 
-    if (prevPhase === 'setup' && curPhase === 'in-progress') {
+    if ((prevPhase === 'setup' || prevPhase === 'team-pairing') && curPhase === 'in-progress') {
       setActiveTab('log');
       setShowStatsOnMount(true);
     }
@@ -58,6 +61,11 @@ function AppContent() {
   // Setup phase
   if (tournament.phase === 'setup') {
     return <SetupScreen />;
+  }
+
+  // Team pairing phase
+  if (tournament.phase === 'team-pairing') {
+    return <TeamPairingScreen />;
   }
 
   // In-progress or completed — show tab view

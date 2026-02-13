@@ -24,5 +24,9 @@ export type TournamentAction =
   | { type: 'CLEAR_MATCH_SCORE'; payload: { roundId: string; matchId: string } }
   | { type: 'UPDATE_POINTS'; payload: { pointsPerMatch: number } }
   | { type: 'SET_ROUND_COUNT'; payload: { count: number } }
+  | { type: 'SET_TEAMS' }
+  | { type: 'SHUFFLE_TEAMS' }
+  | { type: 'SWAP_PLAYERS'; payload: { playerA: string; playerB: string } }
+  | { type: 'SET_TEAMS_BACK' }
   | { type: 'COMPLETE_TOURNAMENT' }
   | { type: 'RESET_TOURNAMENT' };
