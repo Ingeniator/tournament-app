@@ -1,9 +1,37 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ref, set, get, onValue, update as firebaseUpdate } from 'firebase/database';
-import type { PlannerTournament, Court } from '@padel/common';
+import type { PlannerTournament, Court, TournamentFormat } from '@padel/common';
 import { generateId } from '@padel/common';
 import { db } from '../firebase';
 import { generateUniqueCode } from '../utils/shortCode';
+
+function toTournament(id: string, data: Record<string, unknown>): PlannerTournament {
+  // Firebase returns the entire node including nested children like `players`.
+  // Extract only the known PlannerTournament fields to avoid passing opaque
+  // objects into React state (which causes "Objects are not valid as a React
+  // child" errors when accidentally rendered).
+  const courts = data.courts;
+  return {
+    id,
+    name: data.name as string,
+    format: data.format as TournamentFormat,
+    pointsPerMatch: data.pointsPerMatch as number,
+    courts: Array.isArray(courts)
+      ? courts
+      : typeof courts === 'object' && courts !== null
+        ? Object.values(courts)
+        : [{ id: generateId(), name: 'Court 1' }],
+    maxRounds: (data.maxRounds as number | null) ?? null,
+    organizerId: data.organizerId as string,
+    code: data.code as string,
+    createdAt: data.createdAt as number,
+    date: data.date as string | undefined,
+    place: data.place as string | undefined,
+    extraSpots: data.extraSpots as number | undefined,
+    chatLink: data.chatLink as string | undefined,
+    description: data.description as string | undefined,
+  };
+}
 
 export function usePlannerTournament(tournamentId: string | null) {
   const [tournament, setTournament] = useState<PlannerTournament | null>(null);
@@ -19,7 +47,7 @@ export function usePlannerTournament(tournamentId: string | null) {
     const unsubscribe = onValue(ref(db, `tournaments/${tournamentId}`), (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        setTournament({ ...data, id: tournamentId });
+        setTournament(toTournament(tournamentId, data));
       } else {
         setTournament(null);
       }
