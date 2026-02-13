@@ -78,7 +78,7 @@ export function TeamPairingScreen() {
       </div>
 
       <div className={styles.teamList}>
-        {tournament.teams.map((team, i) => (
+        {tournament.teams.map((team) => (
           <div key={team.id} className={styles.teamCard}>
             <input
               className={styles.teamNameInput}
