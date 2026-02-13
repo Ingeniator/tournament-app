@@ -28,8 +28,10 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
 
   useEffect(() => {
     if (autoShowStats) {
-      setShowStats(true);
-      onStatsShown?.();
+      queueMicrotask(() => {
+        setShowStats(true);
+        onStatsShown?.();
+      });
     }
   }, [autoShowStats, onStatsShown]);
 

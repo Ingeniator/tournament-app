@@ -10,7 +10,7 @@ export function usePlayers(tournamentId: string | null) {
 
   useEffect(() => {
     if (!tournamentId || !db) return;
-    setLoading(true);
+    queueMicrotask(() => setLoading(true));
     const unsubscribe = onValue(ref(db, `tournaments/${tournamentId}/players`), (snapshot) => {
       const data = snapshot.val();
       if (data) {
