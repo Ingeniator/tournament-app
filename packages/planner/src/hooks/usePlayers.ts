@@ -9,10 +9,7 @@ export function usePlayers(tournamentId: string | null) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!tournamentId || !db) {
-      setPlayers([]);
-      return;
-    }
+    if (!tournamentId || !db) return;
     setLoading(true);
     const unsubscribe = onValue(ref(db, `tournaments/${tournamentId}/players`), (snapshot) => {
       const data = snapshot.val();

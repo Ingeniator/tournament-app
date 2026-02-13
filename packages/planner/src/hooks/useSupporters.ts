@@ -6,13 +6,10 @@ import { db } from '../firebase';
 
 export function useSupporters() {
   const [supporters, setSupporters] = useState<Supporter[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!!db);
 
   useEffect(() => {
-    if (!db) {
-      setLoading(false);
-      return;
-    }
+    if (!db) return;
 
     const unsubscribe = onValue(ref(db, 'supporters'), (snapshot) => {
       const data = snapshot.val() as Record<string, Omit<Supporter, 'id'>> | null;

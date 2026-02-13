@@ -23,11 +23,7 @@ export function useRegisteredTournaments(uid: string | null) {
   const versionRef = useRef(0);
 
   useEffect(() => {
-    if (!uid || !db) {
-      setTournaments([]);
-      setLoading(false);
-      return;
-    }
+    if (!uid || !db) return;
     setLoading(true);
     const unsubscribe = onValue(ref(db, `users/${uid}/registrations`), async (snapshot) => {
       const version = ++versionRef.current;

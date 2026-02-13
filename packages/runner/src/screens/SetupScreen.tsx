@@ -12,14 +12,14 @@ import styles from './SetupScreen.module.css';
 export function SetupScreen() {
   const { tournament, dispatch } = useTournament();
 
-  if (!tournament) return null;
-
-  const strategy = getStrategy(tournament.config.format);
-  const resolvedConfig = resolveConfigDefaults(tournament.config, tournament.players.length);
+  const strategy = tournament ? getStrategy(tournament.config.format) : null;
+  const resolvedConfig = tournament ? resolveConfigDefaults(tournament.config, tournament.players.length) : null;
   const errors = useMemo(
-    () => strategy.validateSetup(tournament.players, resolvedConfig),
-    [tournament.players, resolvedConfig, strategy]
+    () => strategy && tournament && resolvedConfig ? strategy.validateSetup(tournament.players, resolvedConfig) : [],
+    [tournament?.players, resolvedConfig, strategy]
   );
+
+  if (!tournament) return null;
 
   const handleGenerate = () => {
     if (errors.length > 0) return;
