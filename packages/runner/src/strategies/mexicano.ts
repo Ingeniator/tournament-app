@@ -147,7 +147,7 @@ export const mexicanoStrategy: TournamentStrategy = {
     return generateMexicanoRounds(players, config, [], 1);
   },
 
-  generateAdditionalRounds(players: Player[], config: TournamentConfig, existingRounds: Round[], count: number, excludePlayerIds?: string[], _timeBudgetMs?: number): ScheduleResult {
+  generateAdditionalRounds(players: Player[], config: TournamentConfig, existingRounds: Round[], count: number, excludePlayerIds?: string[]): ScheduleResult {
     return generateMexicanoRounds(players, config, existingRounds, count, excludePlayerIds);
   },
 };

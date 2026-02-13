@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ref, set, update, remove, onValue } from 'firebase/database';
+import { ref, get, set, update, onValue } from 'firebase/database';
 import type { PlannerRegistration } from '@padel/common';
 import { generateId } from '@padel/common';
 import { db } from '../firebase';
@@ -9,11 +9,8 @@ export function usePlayers(tournamentId: string | null) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!tournamentId || !db) {
-      setPlayers([]);
-      return;
-    }
-    setLoading(true);
+    if (!tournamentId || !db) return;
+    queueMicrotask(() => setLoading(true));
     const unsubscribe = onValue(ref(db, `tournaments/${tournamentId}/players`), (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -33,6 +30,15 @@ export function usePlayers(tournamentId: string | null) {
 
   const registerPlayer = useCallback(async (name: string, uid: string, telegramUsername?: string) => {
     if (!tournamentId || !db) return;
+
+    // Prevent duplicate: skip if this UID is already registered
+    const existing = await get(ref(db, `tournaments/${tournamentId}/players/${uid}`));
+    if (existing.exists()) return;
+
+    // Prevent duplicate: skip if same Telegram user registered under a
+    // different UID (happens when WebView storage is cleared between sessions)
+    if (telegramUsername && players.some(p => p.telegramUsername === telegramUsername)) return;
+
     // Rules require $playerId === auth.uid, so use uid as key
     await set(ref(db, `tournaments/${tournamentId}/players/${uid}`), {
       name,
@@ -41,12 +47,16 @@ export function usePlayers(tournamentId: string | null) {
     });
     // Index in user's registrations for listing
     await set(ref(db, `users/${uid}/registrations/${tournamentId}`), true);
-  }, [tournamentId]);
+  }, [tournamentId, players]);
 
   const removePlayer = useCallback(async (playerId: string) => {
     if (!tournamentId || !db) return;
-    // Only organizer can remove (via parent tournament write rule)
-    await remove(ref(db, `tournaments/${tournamentId}/players/${playerId}`));
+    // Atomically remove both the player entry and their registration index
+    // so the player's client doesn't see a stale registration
+    await update(ref(db), {
+      [`tournaments/${tournamentId}/players/${playerId}`]: null,
+      [`users/${playerId}/registrations/${tournamentId}`]: null,
+    });
   }, [tournamentId]);
 
   const updateConfirmed = useCallback(async (uid: string, confirmed: boolean) => {

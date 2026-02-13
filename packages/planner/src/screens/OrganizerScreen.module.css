@@ -22,10 +22,35 @@
   padding: var(--space-sm);
 }
 
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex: 1;
+  min-width: 0;
+}
+
 .name {
   font-size: var(--text-xl);
   font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editNameBtn {
+  flex-shrink: 0;
+  padding: var(--space-xs);
+  font-size: var(--text-base);
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
   cursor: pointer;
+  line-height: 1;
+}
+
+.editNameBtn:active {
+  color: var(--color-primary);
 }
 
 .nameInput {

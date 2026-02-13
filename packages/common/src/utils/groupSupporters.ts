@@ -25,5 +25,5 @@ export function groupSupporters(supporters: Supporter[]): GroupedSupporter[] {
   }
   return [...map.values()]
     .sort((a, b) => b.totalAmount - a.totalAmount)
-    .map(({ latestTs: _, ...rest }) => rest);
+    .map((v): GroupedSupporter => ({ name: v.name, totalAmount: v.totalAmount, message: v.message, count: v.count }));
 }

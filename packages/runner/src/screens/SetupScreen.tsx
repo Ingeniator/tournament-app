@@ -12,14 +12,14 @@ import styles from './SetupScreen.module.css';
 export function SetupScreen() {
   const { tournament, dispatch } = useTournament();
 
-  if (!tournament) return null;
+  const errors = useMemo(() => {
+    if (!tournament) return [];
+    const strategy = getStrategy(tournament.config.format);
+    const resolvedConfig = resolveConfigDefaults(tournament.config, tournament.players.length);
+    return strategy.validateSetup(tournament.players, resolvedConfig);
+  }, [tournament]);
 
-  const strategy = getStrategy(tournament.config.format);
-  const resolvedConfig = resolveConfigDefaults(tournament.config, tournament.players.length);
-  const errors = useMemo(
-    () => strategy.validateSetup(tournament.players, resolvedConfig),
-    [tournament.players, resolvedConfig, strategy]
-  );
+  if (!tournament) return null;
 
   const isTeamAmericano = tournament.config.format === 'team-americano';
 
@@ -48,7 +48,9 @@ export function SetupScreen() {
       }
     >
       <div className={styles.section}>
+        <label className={styles.nameLabel} htmlFor="tournament-name">Tournament name</label>
         <input
+          id="tournament-name"
           className={styles.nameInput}
           type="text"
           value={tournament.name}
@@ -56,7 +58,6 @@ export function SetupScreen() {
             dispatch({ type: 'UPDATE_NAME', payload: { name: e.target.value } })
           }
           placeholder="Tournament name"
-          aria-label="Tournament name"
         />
       </div>
 

@@ -48,8 +48,10 @@ function AppContent() {
     prevPhaseRef.current = curPhase;
 
     if ((prevPhase === 'setup' || prevPhase === 'team-pairing') && curPhase === 'in-progress') {
-      setActiveTab('log');
-      setShowStatsOnMount(true);
+      queueMicrotask(() => {
+        setActiveTab('log');
+        setShowStatsOnMount(true);
+      });
     }
   }, [tournament?.phase]);
 

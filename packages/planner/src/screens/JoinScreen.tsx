@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Button, Card } from '@padel/common';
-import { usePlanner } from '../state/PlannerContext';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { Button, Card, Toast, useToast } from '@padel/common';
+import { usePlanner } from '../state/plannerContext';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import { downloadICS } from '../utils/icsExport';
 import styles from './JoinScreen.module.css';
@@ -12,21 +12,17 @@ export function JoinScreen() {
   const [updating, setUpdating] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
+  const [showCalendarPrompt, setShowCalendarPrompt] = useState(false);
+  const { toastMessage, showToast } = useToast();
+  const registeringRef = useRef(false);
 
   // Pre-fill name from profile or Telegram when it loads
   useEffect(() => {
     if (!name) {
       const prefill = userName ?? telegramUser?.displayName;
-      if (prefill) setName(prefill);
+      if (prefill) queueMicrotask(() => setName(prefill));
     }
   }, [userName, telegramUser]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Auto-register Telegram users
-  useEffect(() => {
-    if (!telegramUser || isRegistered || !uid || !tournament) return;
-    const regName = userName || telegramUser.displayName;
-    registerPlayer(regName);
-  }, [telegramUser, isRegistered, uid, tournament]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const capacity = tournament ? tournament.courts.length * 4 + (tournament.extraSpots ?? 0) : 0;
   const statuses = useMemo(() => getPlayerStatuses(players, capacity), [players, capacity]);
@@ -51,14 +47,35 @@ export function JoinScreen() {
 
   const handleRegister = async () => {
     const trimmed = name.trim();
-    if (!trimmed) return;
+    if (!trimmed || registeringRef.current) return;
+
+    // Warn if someone with the same name is already registered (likely
+    // the same person on a different device with a different anonymous UID)
+    const duplicate = players.find(p => p.name.trim().toLowerCase() === trimmed.toLowerCase());
+    if (duplicate) {
+      if (!window.confirm(`"${duplicate.name}" is already registered. Is that a different person?`)) {
+        return;
+      }
+    }
+
+    registeringRef.current = true;
     setRegistering(true);
     try {
+      const willBeReserve = confirmedCount >= capacity;
       await registerPlayer(trimmed);
+      if (willBeReserve) {
+        showToast('You\'re on the reserve list — we\'ll bump you up if a spot opens');
+      } else if (tournament.date) {
+        showToast('You\'re in! Add it to your calendar so you don\'t forget');
+        setShowCalendarPrompt(true);
+      } else {
+        showToast('You\'re in! See you on the court');
+      }
     } catch {
-      // handled silently
+      showToast('Could not register, please try again');
     }
     setRegistering(false);
+    registeringRef.current = false;
     setName('');
   };
 
@@ -76,8 +93,17 @@ export function JoinScreen() {
     setUpdating(true);
     try {
       await updateConfirmed(!isConfirmed);
+      if (isConfirmed) {
+        showToast('Participation cancelled');
+        setShowCalendarPrompt(false);
+      } else if (tournament.date) {
+        showToast('Welcome back! Add it to your calendar so you don\'t forget');
+        setShowCalendarPrompt(true);
+      } else {
+        showToast('Welcome back! You\'re confirmed');
+      }
     } catch {
-      // handled silently
+      showToast('Could not update, please try again');
     }
     setUpdating(false);
   };
@@ -209,8 +235,8 @@ export function JoinScreen() {
 
             {isConfirmed && tournament.date && (
               <button
-                className={styles.calendarBtn}
-                onClick={() => downloadICS(tournament)}
+                className={showCalendarPrompt ? styles.calendarBtnHighlight : styles.calendarBtn}
+                onClick={() => { downloadICS(tournament); setShowCalendarPrompt(false); }}
               >
                 &#128197; Add to Calendar
               </button>
@@ -284,6 +310,8 @@ export function JoinScreen() {
         )}
       </Card>
       </main>
+
+      <Toast message={toastMessage} className={styles.toast} />
     </div>
   );
 }
