@@ -327,6 +327,25 @@ export async function shareStandingsImage(
       }
     }
 
+    const tg = window.Telegram?.WebApp;
+
+    if (tg) {
+      // Telegram WebApp blocks blob downloads and programmatic <a>.click().
+      // Try the Web Share API directly without the canShare gate — Telegram's
+      // WebView may support sharing files even when canShare reports false.
+      if (navigator.share) {
+        try {
+          await navigator.share({ files });
+          return 'shared';
+        } catch (e) {
+          if (e instanceof DOMException && e.name === 'AbortError') return 'failed';
+          // Share not supported for files in this Telegram WebView
+        }
+      }
+      // No working fallback inside Telegram — blob downloads are blocked.
+      return 'failed';
+    }
+
     // Try Web Share API (mobile)
     if (navigator.share && navigator.canShare) {
       const shareData = { files };
@@ -336,7 +355,7 @@ export async function shareStandingsImage(
       }
     }
 
-    // Fallback: download all files
+    // Fallback: download all files (works in regular browsers, not in Telegram)
     for (const file of files) {
       const url = URL.createObjectURL(file);
       const a = document.createElement('a');
