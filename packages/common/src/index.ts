@@ -24,3 +24,6 @@ export { Toast } from './components/Toast';
 export { ErrorBoundary } from './components/ErrorBoundary';
 export { FeedbackModal } from './components/FeedbackModal';
 export { useToast } from './hooks/useToast';
+export type { Locale, Translations, TranslationMap } from './i18n/types';
+export { I18nProvider, useTranslation } from './i18n/context';
+export { LanguageSelector } from './components/LanguageSelector';

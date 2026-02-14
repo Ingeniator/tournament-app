@@ -1,5 +1,5 @@
 import { useState, type FormEvent, type ClipboardEvent } from 'react';
-import { Button } from '@padel/common';
+import { Button, useTranslation } from '@padel/common';
 import { parsePlayerList } from '@padel/common';
 import styles from './PlayerInput.module.css';
 
@@ -10,6 +10,7 @@ interface PlayerInputProps {
 
 export function PlayerInput({ onAdd, onBulkAdd }: PlayerInputProps) {
   const [name, setName] = useState('');
+  const { t } = useTranslation();
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -35,15 +36,15 @@ export function PlayerInput({ onAdd, onBulkAdd }: PlayerInputProps) {
       <input
         className={styles.input}
         type="text"
-        placeholder="Player name or paste a list"
+        placeholder={t('playerInput.placeholder')}
         value={name}
         onChange={e => setName(e.target.value)}
         onPaste={handlePaste}
         autoComplete="off"
-        aria-label="Player name"
+        aria-label={t('playerInput.placeholder')}
       />
       <Button type="submit" disabled={!name.trim()}>
-        Add
+        {t('playerInput.add')}
       </Button>
     </form>
   );

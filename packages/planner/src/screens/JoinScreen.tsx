@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Button, Card, Toast, useToast } from '@padel/common';
+import { Button, Card, Toast, useToast, useTranslation } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import { downloadICS } from '../utils/icsExport';
@@ -7,6 +7,7 @@ import styles from './JoinScreen.module.css';
 
 export function JoinScreen() {
   const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, isRegistered, setScreen, organizerName, userName, telegramUser } = usePlanner();
+  const { t } = useTranslation();
   const [name, setName] = useState(userName ?? telegramUser?.displayName ?? '');
   const [registering, setRegistering] = useState(false);
   const [updating, setUpdating] = useState(false);
@@ -49,11 +50,10 @@ export function JoinScreen() {
     const trimmed = name.trim();
     if (!trimmed || registeringRef.current) return;
 
-    // Warn if someone with the same name is already registered (likely
-    // the same person on a different device with a different anonymous UID)
+    // Warn if someone with the same name is already registered
     const duplicate = players.find(p => p.name.trim().toLowerCase() === trimmed.toLowerCase());
     if (duplicate) {
-      if (!window.confirm(`"${duplicate.name}" is already registered. Is that a different person?`)) {
+      if (!window.confirm(t('join.duplicateConfirm', { name: duplicate.name }))) {
         return;
       }
     }
@@ -64,15 +64,15 @@ export function JoinScreen() {
       const willBeReserve = confirmedCount >= capacity;
       await registerPlayer(trimmed);
       if (willBeReserve) {
-        showToast('You\'re on the reserve list — we\'ll bump you up if a spot opens');
+        showToast(t('join.reserveToast'));
       } else if (tournament.date) {
-        showToast('You\'re in! Add it to your calendar so you don\'t forget');
+        showToast(t('join.inWithCalendar'));
         setShowCalendarPrompt(true);
       } else {
-        showToast('You\'re in! See you on the court');
+        showToast(t('join.inSimple'));
       }
     } catch {
-      showToast('Could not register, please try again');
+      showToast(t('join.registerFailed'));
     }
     setRegistering(false);
     registeringRef.current = false;
@@ -94,16 +94,16 @@ export function JoinScreen() {
     try {
       await updateConfirmed(!isConfirmed);
       if (isConfirmed) {
-        showToast('Participation cancelled');
+        showToast(t('join.participationCancelled'));
         setShowCalendarPrompt(false);
       } else if (tournament.date) {
-        showToast('Welcome back! Add it to your calendar so you don\'t forget');
+        showToast(t('join.welcomeBackCalendar'));
         setShowCalendarPrompt(true);
       } else {
-        showToast('Welcome back! You\'re confirmed');
+        showToast(t('join.welcomeBack'));
       }
     } catch {
-      showToast('Could not update, please try again');
+      showToast(t('join.updateFailed'));
     }
     setUpdating(false);
   };
@@ -115,7 +115,7 @@ export function JoinScreen() {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <button className={styles.backBtn} onClick={handleBack} aria-label="Back">&larr;</button>
+        <button className={styles.backBtn} onClick={handleBack} aria-label={t('join.back')}>&larr;</button>
         <h1 className={styles.title}>{tournament.name}</h1>
       </header>
 
@@ -126,33 +126,33 @@ export function JoinScreen() {
           <div className={styles.detailsList}>
             {tournament.date && (
               <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Date</span>
+                <span className={styles.detailLabel}>{t('join.date')}</span>
                 <span>{new Date(tournament.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
               </div>
             )}
             {tournament.place && (
               <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Place</span>
+                <span className={styles.detailLabel}>{t('join.place')}</span>
                 <span>{tournament.place}</span>
               </div>
             )}
             {organizerName && (
               <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Organizer</span>
+                <span className={styles.detailLabel}>{t('join.organizer')}</span>
                 <span>{organizerName}</span>
               </div>
             )}
             {tournament.chatLink && (
               <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Group chat</span>
+                <span className={styles.detailLabel}>{t('join.groupChat')}</span>
                 <a href={tournament.chatLink.match(/^https?:\/\//) ? tournament.chatLink : `https://${tournament.chatLink}`} target="_blank" rel="noopener noreferrer" className={styles.chatLink}>
-                  Join group chat
+                  {t('join.joinGroupChat')}
                 </a>
               </div>
             )}
             {tournament.description && (
               <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Description</span>
+                <span className={styles.detailLabel}>{t('join.description')}</span>
                 <p className={styles.description}>{tournament.description}</p>
               </div>
             )}
@@ -166,30 +166,30 @@ export function JoinScreen() {
             {isConfirmed && myStatus === 'reserve' ? (
               <>
                 <div className={styles.reserveIcon}>&#9888;</div>
-                <h3>You're on the reserve list</h3>
-                <p className={styles.hint}>Reserve #{myReservePosition} — you'll move up if someone cancels</p>
+                <h3>{t('join.onReserveList')}</h3>
+                <p className={styles.hint}>{t('join.reservePosition', { position: myReservePosition })}</p>
               </>
             ) : isConfirmed ? (
               <>
                 <div className={styles.checkmark}>&#10003;</div>
-                <h3>You're confirmed!</h3>
-                <p className={styles.hint}>You'll appear in the player list below</p>
+                <h3>{t('join.confirmed')}</h3>
+                <p className={styles.hint}>{t('join.confirmedHint')}</p>
               </>
             ) : (
               <>
                 <div className={styles.cancelled}>&#10007;</div>
-                <h3>You've cancelled</h3>
-                <p className={styles.hint}>You can confirm again at any time</p>
+                <h3>{t('join.cancelled')}</h3>
+                <p className={styles.hint}>{t('join.cancelledHint')}</p>
               </>
             )}
 
             {myRegistration && !editingName && (
               <div className={styles.registeredName}>
-                <span className={styles.registeredAs}>Registered as <strong>{myRegistration.name}</strong></span>
+                <span className={styles.registeredAs}>{t('join.registeredAs')} <strong>{myRegistration.name}</strong></span>
                 <button
                   className={styles.editBtn}
                   onClick={() => { setNameDraft(myRegistration.name); setEditingName(true); }}
-                  aria-label="Edit name"
+                  aria-label={t('join.editName')}
                 >
                   &#x270E;
                 </button>
@@ -209,7 +209,7 @@ export function JoinScreen() {
                   autoFocus
                 />
                 <Button size="small" onClick={handleSaveName} disabled={!nameDraft.trim()}>
-                  Save
+                  {t('join.save')}
                 </Button>
               </div>
             )}
@@ -221,7 +221,7 @@ export function JoinScreen() {
                 onClick={handleToggleConfirmed}
                 disabled={updating}
               >
-                {updating ? 'Updating...' : 'Cancel participation'}
+                {updating ? t('join.updating') : t('join.cancelParticipation')}
               </Button>
             ) : (
               <Button
@@ -229,7 +229,7 @@ export function JoinScreen() {
                 onClick={handleToggleConfirmed}
                 disabled={updating}
               >
-                {updating ? 'Updating...' : 'Confirm participation'}
+                {updating ? t('join.updating') : t('join.confirmParticipation')}
               </Button>
             )}
 
@@ -238,19 +238,19 @@ export function JoinScreen() {
                 className={showCalendarPrompt ? styles.calendarBtnHighlight : styles.calendarBtn}
                 onClick={() => { downloadICS(tournament); setShowCalendarPrompt(false); }}
               >
-                &#128197; Add to Calendar
+                &#128197; {t('join.addToCalendar')}
               </button>
             )}
           </div>
         ) : (
           <div className={styles.registerForm}>
-            <h3 className={styles.formTitle}>Join this tournament as</h3>
+            <h3 className={styles.formTitle}>{t('join.joinAs')}</h3>
             <input
               className={styles.nameInput}
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
-              placeholder="Enter your name"
+              placeholder={t('join.enterName')}
               onKeyDown={e => e.key === 'Enter' && handleRegister()}
               autoFocus
             />
@@ -259,7 +259,7 @@ export function JoinScreen() {
               onClick={handleRegister}
               disabled={registering || !name.trim()}
             >
-              {registering ? 'Registering...' : 'Register'}
+              {registering ? t('join.registering') : t('join.register')}
             </Button>
           </div>
         )}
@@ -267,18 +267,22 @@ export function JoinScreen() {
 
       <Card>
         <h3 className={styles.sectionTitle}>
-          Players ({confirmedCount} / {capacity})
+          {t('join.players', { confirmed: confirmedCount, capacity })}
         </h3>
         <p className={styles.capacityHint}>
           {spotsLeft > 0
-            ? `${spotsLeft} spot${spotsLeft === 1 ? '' : 's'} left`
+            ? t('join.spotsLeft', { count: spotsLeft, s: spotsLeft === 1 ? '' : 's' })
             : reserveCount > 0
-              ? `Full \u00b7 ${reserveCount} on reserve list`
-              : 'Full'}
-          {` \u00b7 ${tournament.courts.length} court${tournament.courts.length !== 1 ? 's' : ''} \u00d7 4${(tournament.extraSpots ?? 0) > 0 ? ` + ${tournament.extraSpots}` : ''}`}
+              ? t('join.fullReserve', { count: reserveCount })
+              : t('join.full')}
+          {` \u00b7 ${t('join.courtInfo', {
+            courts: tournament.courts.length,
+            s: tournament.courts.length !== 1 ? 's' : '',
+            extra: (tournament.extraSpots ?? 0) > 0 ? ` + ${tournament.extraSpots}` : '',
+          })}`}
         </p>
         {players.length === 0 ? (
-          <p className={styles.empty}>No players yet. Be the first!</p>
+          <p className={styles.empty}>{t('join.noPlayersYet')}</p>
         ) : (
           <div className={styles.playerList}>
             {players.map((player, i) => (
@@ -298,7 +302,7 @@ export function JoinScreen() {
                     player.name
                   )}
                   {statuses.get(player.id) === 'reserve' && (
-                    <span className={styles.reserveBadge}>reserve</span>
+                    <span className={styles.reserveBadge}>{t('join.reserve')}</span>
                   )}
                 </span>
                 <span className={player.confirmed !== false ? styles.statusConfirmed : styles.statusCancelled}>

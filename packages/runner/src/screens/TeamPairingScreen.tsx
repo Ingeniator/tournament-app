@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useTournament } from '../hooks/useTournament';
 import { AppShell } from '../components/layout/AppShell';
-import { Button } from '@padel/common';
+import { Button, useTranslation } from '@padel/common';
 import styles from './TeamPairingScreen.module.css';
 
 export function TeamPairingScreen() {
   const { tournament, dispatch } = useTournament();
+  const { t } = useTranslation();
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   if (!tournament || !tournament.teams) return null;
@@ -60,21 +61,21 @@ export function TeamPairingScreen() {
 
   return (
     <AppShell
-      title="Teams"
+      title={t('teams.title')}
       headerRight={
         <Button variant="ghost" size="small" onClick={handleBack}>
-          Back
+          {t('teams.back')}
         </Button>
       }
     >
       <div className={styles.header}>
         <div className={styles.subtitle}>
-          {playerCount} players &rarr; {teamCount} teams
+          {t('teams.subtitle', { playerCount, teamCount })}
         </div>
       </div>
 
       <div className={styles.hint}>
-        Tap two players to swap them between teams
+        {t('teams.hint')}
       </div>
 
       <div className={styles.teamList}>
@@ -106,10 +107,10 @@ export function TeamPairingScreen() {
 
       <div className={styles.actions}>
         <Button variant="secondary" fullWidth onClick={handleShuffle}>
-          Shuffle Teams
+          {t('teams.shuffle')}
         </Button>
         <Button fullWidth onClick={handleStart}>
-          Start Tournament
+          {t('teams.start')}
         </Button>
       </div>
     </AppShell>

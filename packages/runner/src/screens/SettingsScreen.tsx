@@ -7,11 +7,12 @@ import { copyToClipboard } from '../utils/clipboard';
 import { exportTournament, validateImport } from '../utils/importExport';
 import { db, firebaseConfigured } from '../firebase';
 import { computeSitOutInfo } from '../utils/resolveConfigDefaults';
-import { Button, Card, FeedbackModal, Toast, useToast } from '@padel/common';
+import { Button, Card, FeedbackModal, Toast, useToast, useTranslation } from '@padel/common';
 import styles from './SettingsScreen.module.css';
 
 export function SettingsScreen() {
   const { tournament, dispatch } = useTournament();
+  const { t } = useTranslation();
   const { toastMessage, showToast } = useToast();
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [editPlayerName, setEditPlayerName] = useState('');
@@ -45,7 +46,7 @@ export function SettingsScreen() {
     dispatch({ type: 'REPLACE_PLAYER', payload: { oldPlayerId, newPlayerName: trimmed } });
     setReplacingPlayerId(null);
     setReplacePlayerName('');
-    showToast('Player replaced');
+    showToast(t('settings.playerReplaced'));
   };
 
   const handleAddPlayer = () => {
@@ -58,7 +59,7 @@ export function SettingsScreen() {
     }
     setAddPlayerName('');
     setShowAddPlayer(false);
-    showToast('Player added');
+    showToast(t('settings.playerAdded'));
   };
 
   const handleCourtSave = (courtId: string) => {
@@ -75,13 +76,13 @@ export function SettingsScreen() {
     dispatch({ type: 'REPLACE_COURT', payload: { oldCourtId, newCourtName: trimmed } });
     setReplacingCourtId(null);
     setReplaceCourtName('');
-    showToast('Court replaced');
+    showToast(t('settings.courtReplaced'));
   };
 
   const handleCopy = async () => {
     const text = exportTournament(tournament);
     const ok = await copyToClipboard(text);
-    showToast(ok ? 'Tournament copied!' : 'Failed to copy');
+    showToast(ok ? t('settings.tournamentCopied') : t('settings.failedCopy'));
   };
 
   const handleImport = () => {
@@ -90,14 +91,14 @@ export function SettingsScreen() {
       setImportError(result.error ?? 'Unknown error');
       return;
     }
-    if (!confirm('Replace current tournament with imported data? This cannot be undone.')) {
+    if (!confirm(t('settings.replaceImportConfirm'))) {
       return;
     }
     dispatch({ type: 'LOAD_TOURNAMENT', payload: result.tournament });
     setImportMode(false);
     setImportText('');
     setImportError(null);
-    showToast('Tournament imported!');
+    showToast(t('settings.tournamentImported'));
   };
 
   const handleFeedback = async (message: string) => {
@@ -107,7 +108,7 @@ export function SettingsScreen() {
   };
 
   const handleReset = () => {
-    if (confirm('Delete this tournament? This cannot be undone.')) {
+    if (confirm(t('settings.deleteConfirm'))) {
       dispatch({ type: 'RESET_TOURNAMENT' });
     }
   };
@@ -116,9 +117,9 @@ export function SettingsScreen() {
     <div className={styles.container}>
       {/* Tournament info */}
       <Card>
-        <h3 className={styles.sectionTitle}>Tournament</h3>
+        <h3 className={styles.sectionTitle}>{t('settings.tournament')}</h3>
         <EditableField
-          label="Name"
+          label={t('settings.name')}
           value={tournament.name}
           onSave={val => {
             const trimmed = val.trim();
@@ -129,13 +130,13 @@ export function SettingsScreen() {
         />
         <div className={styles.chipList}>
           <span className={styles.chip}>{tournament.config.format}</span>
-          <span className={styles.chip}>{tournament.config.courts.filter(c => !c.unavailable).length} court(s)</span>
+          <span className={styles.chip}>{t('settings.courtCount', { count: tournament.config.courts.filter(c => !c.unavailable).length })}</span>
         </div>
 
         {tournament.phase === 'in-progress' ? (
           <>
             <EditableField
-              label="Points per match"
+              label={t('settings.pointsPerMatch')}
               value={String(tournament.config.pointsPerMatch)}
               type="number"
               min={1}
@@ -148,11 +149,11 @@ export function SettingsScreen() {
             />
 
             <EditableField
-              label="Rounds"
+              label={t('settings.rounds')}
               value={String(tournament.rounds.length)}
               type="number"
               min={tournament.rounds.filter(r => r.matches.some(m => m.score !== null)).length}
-              hint={`(min ${tournament.rounds.filter(r => r.matches.some(m => m.score !== null)).length} scored)`}
+              hint={t('settings.roundsHint', { min: tournament.rounds.filter(r => r.matches.some(m => m.score !== null)).length })}
               onSave={val => {
                 const num = parseInt(val, 10);
                 const scoredCount = tournament.rounds.filter(r => r.matches.some(m => m.score !== null)).length;
@@ -171,9 +172,9 @@ export function SettingsScreen() {
                   .filter((v, i, a) => a.indexOf(v) === i);
                 return (
                   <div className={styles.sitOutWarning}>
-                    Sit-outs are not equal with {tournament.rounds.length} rounds.
+                    {t('settings.sitOutWarning', { rounds: tournament.rounds.length })}
                     {suggestions.length > 0 && (
-                      <> Try {suggestions.join(' or ')} rounds for equal sit-outs.</>
+                      <> {t('settings.trySitOut', { suggestions: suggestions.join(' or ') })}</>
                     )}
                   </div>
                 );
@@ -183,9 +184,9 @@ export function SettingsScreen() {
           </>
         ) : (
           <div className={styles.chipList}>
-            <span className={styles.chip}>{tournament.config.pointsPerMatch} pts</span>
+            <span className={styles.chip}>{t('settings.pts', { count: tournament.config.pointsPerMatch })}</span>
             {tournament.rounds.length > 0 && (
-              <span className={styles.chip}>{tournament.rounds.length} rounds</span>
+              <span className={styles.chip}>{t('settings.roundCount', { count: tournament.rounds.length })}</span>
             )}
           </div>
         )}
@@ -193,7 +194,7 @@ export function SettingsScreen() {
 
       {/* Courts */}
       <Card>
-        <h3 className={styles.sectionTitle}>Courts</h3>
+        <h3 className={styles.sectionTitle}>{t('settings.courts')}</h3>
         <div className={styles.courtList}>
           {tournament.config.courts.map(court => {
             const isEditingCourt = editingCourtId === court.id;
@@ -225,7 +226,7 @@ export function SettingsScreen() {
                             payload: { courtId: court.id },
                           })}
                         >
-                          {court.unavailable ? 'Unavailable' : 'Available'}
+                          {court.unavailable ? t('settings.unavailable') : t('settings.available')}
                         </button>
                         <button
                           className={styles.replaceBtn}
@@ -236,7 +237,7 @@ export function SettingsScreen() {
                             setReplaceCourtName('');
                           }}
                         >
-                          Replace with...
+                          {t('settings.replaceWith')}
                         </button>
                       </>
                     )}
@@ -244,13 +245,13 @@ export function SettingsScreen() {
                 ) : isReplacingCourt ? (
                   <div className={styles.playerEditPanel}>
                     <div className={styles.replaceLabel}>
-                      Replace {court.name} with:
+                      {t('settings.replaceLabel', { name: court.name })}
                     </div>
                     <input
                       className={styles.editInput}
                       type="text"
                       value={replaceCourtName}
-                      placeholder="New court name"
+                      placeholder={t('settings.newCourtPlaceholder')}
                       onChange={e => setReplaceCourtName(e.target.value)}
                       onKeyDown={e => {
                         if (e.key === 'Enter') handleReplaceCourt(court.id);
@@ -260,10 +261,10 @@ export function SettingsScreen() {
                     />
                     <div className={styles.replaceActions}>
                       <Button size="small" onClick={() => handleReplaceCourt(court.id)} disabled={!replaceCourtName.trim()}>
-                        Replace
+                        {t('settings.replace')}
                       </Button>
                       <Button size="small" variant="ghost" onClick={() => setReplacingCourtId(null)}>
-                        Cancel
+                        {t('settings.cancel')}
                       </Button>
                     </div>
                   </div>
@@ -279,7 +280,7 @@ export function SettingsScreen() {
                       {court.name}
                     </span>
                     {court.unavailable && (
-                      <span className={styles.statusBadge}>out</span>
+                      <span className={styles.statusBadge}>{t('settings.out')}</span>
                     )}
                   </div>
                 )}
@@ -296,14 +297,14 @@ export function SettingsScreen() {
             onClick={() => dispatch({ type: 'ADD_COURT_LIVE' })}
             style={{ marginTop: 'var(--space-sm)' }}
           >
-            + Add Court
+            {t('settings.addCourt')}
           </Button>
         )}
       </Card>
 
       {/* Players */}
       <Card>
-        <h3 className={styles.sectionTitle}>Players ({tournament.players.length})</h3>
+        <h3 className={styles.sectionTitle}>{t('settings.playersTitle', { count: tournament.players.length })}</h3>
         <div className={styles.playerList}>
           {tournament.players.map((player, i) => {
             const isEditing = editingPlayerId === player.id;
@@ -337,7 +338,7 @@ export function SettingsScreen() {
                         });
                       }}
                     >
-                      {player.unavailable ? 'Unavailable' : 'Available'}
+                      {player.unavailable ? t('settings.unavailable') : t('settings.available')}
                     </button>
                     {tournament.phase === 'in-progress' && (
                       <button
@@ -349,20 +350,20 @@ export function SettingsScreen() {
                           setReplacePlayerName('');
                         }}
                       >
-                        Replace with...
+                        {t('settings.replaceWith')}
                       </button>
                     )}
                   </div>
                 ) : isReplacing ? (
                   <div className={styles.playerEditPanel}>
                     <div className={styles.replaceLabel}>
-                      Replace {player.name} with:
+                      {t('settings.replaceLabel', { name: player.name })}
                     </div>
                     <input
                       className={styles.editInput}
                       type="text"
                       value={replacePlayerName}
-                      placeholder="New player name"
+                      placeholder={t('settings.newPlayerNamePlaceholder')}
                       onChange={e => setReplacePlayerName(e.target.value)}
                       onKeyDown={e => {
                         if (e.key === 'Enter') handleReplacePlayer(player.id);
@@ -372,10 +373,10 @@ export function SettingsScreen() {
                     />
                     <div className={styles.replaceActions}>
                       <Button size="small" onClick={() => handleReplacePlayer(player.id)} disabled={!replacePlayerName.trim()}>
-                        Replace
+                        {t('settings.replace')}
                       </Button>
                       <Button size="small" variant="ghost" onClick={() => setReplacingPlayerId(null)}>
-                        Cancel
+                        {t('settings.cancel')}
                       </Button>
                     </div>
                   </div>
@@ -391,7 +392,7 @@ export function SettingsScreen() {
                       {player.name}
                     </span>
                     {player.unavailable && (
-                      <span className={styles.statusBadge}>out</span>
+                      <span className={styles.statusBadge}>{t('settings.out')}</span>
                     )}
                   </div>
                 )}
@@ -405,7 +406,7 @@ export function SettingsScreen() {
             <input
               className={styles.editInput}
               type="text"
-              placeholder="Player name"
+              placeholder={t('settings.newPlayerPlaceholder')}
               value={addPlayerName}
               onChange={e => setAddPlayerName(e.target.value)}
               onKeyDown={e => {
@@ -416,10 +417,10 @@ export function SettingsScreen() {
             />
             <div className={styles.addPlayerActions}>
               <Button size="small" onClick={handleAddPlayer} disabled={!addPlayerName.trim()}>
-                Add
+                {t('settings.add')}
               </Button>
               <Button size="small" variant="ghost" onClick={() => setShowAddPlayer(false)}>
-                Cancel
+                {t('settings.cancel')}
               </Button>
             </div>
           </div>
@@ -431,17 +432,17 @@ export function SettingsScreen() {
             onClick={() => setShowAddPlayer(true)}
             style={{ marginTop: 'var(--space-sm)' }}
           >
-            + Add Player
+            {t('settings.addPlayer')}
           </Button>
         )}
       </Card>
 
       {/* Export / Import */}
       <Card>
-        <h3 className={styles.sectionTitle}>Export / Import</h3>
+        <h3 className={styles.sectionTitle}>{t('settings.exportImport')}</h3>
         <div className={styles.actions}>
           <Button variant="secondary" fullWidth onClick={handleCopy}>
-            Copy Tournament Data
+            {t('settings.copyData')}
           </Button>
           <Button
             variant="secondary"
@@ -452,13 +453,13 @@ export function SettingsScreen() {
               setImportText('');
             }}
           >
-            {importMode ? 'Cancel Import' : 'Import from Clipboard'}
+            {importMode ? t('settings.cancelImport') : t('settings.importFromClipboard')}
           </Button>
         </div>
 
         {importMode && (
           <div className={styles.importSection}>
-            <p className={styles.hint}>Paste exported tournament data below:</p>
+            <p className={styles.hint}>{t('settings.importHint')}</p>
             <textarea
               className={styles.importArea}
               value={importText}
@@ -466,7 +467,7 @@ export function SettingsScreen() {
                 setImportText(e.target.value);
                 setImportError(null);
               }}
-              placeholder='{"_format": "padel-tournament-v1", ...}'
+              placeholder={t('settings.importPlaceholder')}
               rows={6}
             />
             {importError && <div className={styles.error}>{importError}</div>}
@@ -475,7 +476,7 @@ export function SettingsScreen() {
               onClick={handleImport}
               disabled={!importText.trim()}
             >
-              Validate & Import
+              {t('settings.validateImport')}
             </Button>
           </div>
         )}
@@ -483,22 +484,22 @@ export function SettingsScreen() {
 
       {/* Danger zone */}
       <div className={styles.danger}>
-        <h3 className={styles.sectionTitle}>Danger Zone</h3>
+        <h3 className={styles.sectionTitle}>{t('settings.dangerZone')}</h3>
         <Button variant="danger" fullWidth onClick={handleReset}>
-          Delete Tournament
+          {t('settings.deleteTournament')}
         </Button>
       </div>
 
       <div className={styles.attribution}>
-        Made with care &middot;{' '}
+        {t('settings.madeWithCare')} &middot;{' '}
         <button className={styles.attributionLink} onClick={() => setShowSupporters(true)}>
-          Support us
+          {t('settings.supportUs')}
         </button>
         {firebaseConfigured && (
           <>
             {' '}&middot;{' '}
             <button className={styles.attributionLink} onClick={() => setFeedbackOpen(true)}>
-              Send feedback
+              {t('settings.sendFeedback')}
             </button>
           </>
         )}

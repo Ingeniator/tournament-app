@@ -1,5 +1,5 @@
 import type { TournamentConfig, TournamentFormat, Court } from '@padel/common';
-import { Button, generateId } from '@padel/common';
+import { Button, generateId, useTranslation } from '@padel/common';
 import { resolveConfigDefaults, computeSitOutInfo } from '../../utils/resolveConfigDefaults';
 import styles from './TournamentConfigForm.module.css';
 
@@ -22,6 +22,7 @@ interface TournamentConfigFormProps {
 }
 
 export function TournamentConfigForm({ config, playerCount, onUpdate }: TournamentConfigFormProps) {
+  const { t } = useTranslation();
   const maxCourts = Math.max(1, Math.floor(playerCount / 4));
 
   // Resolve: what values will actually be used (fills in defaults for empty fields)
@@ -72,21 +73,21 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
   return (
     <div className={styles.form}>
       <div className={styles.field}>
-        <label className={styles.label} htmlFor="config-format">Format</label>
+        <label className={styles.label} htmlFor="config-format">{t('config.format')}</label>
         <select
           id="config-format"
           className={styles.input}
           value={config.format}
           onChange={e => onUpdate({ format: e.target.value as TournamentFormat })}
         >
-          <option value="americano">Americano</option>
-          <option value="team-americano">Team Americano</option>
-          <option value="mexicano">Mexicano</option>
+          <option value="americano">{t('config.formatAmericano')}</option>
+          <option value="team-americano">{t('config.formatTeamAmericano')}</option>
+          <option value="mexicano">{t('config.formatMexicano')}</option>
         </select>
       </div>
 
       <div className={styles.field}>
-        <label className={styles.label} id="courts-label">Courts</label>
+        <label className={styles.label} id="courts-label">{t('config.courts')}</label>
         <div className={styles.courtList} role="group" aria-labelledby="courts-label">
           {config.courts.map(court => (
             <div key={court.id} className={styles.courtRow}>
@@ -101,7 +102,7 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
                 <button
                   className={styles.removeCourt}
                   onClick={() => removeCourt(court.id)}
-                  aria-label="Remove court"
+                  aria-label={t('config.removeCourt')}
                 >
                   ✕
                 </button>
@@ -111,16 +112,16 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
         </div>
         {config.courts.length < maxCourts && (
           <Button variant="ghost" size="small" onClick={addCourt}>
-            + Add court
+            {t('config.addCourt')}
           </Button>
         )}
         <span className={styles.hint}>
-          Max {maxCourts} court(s) for {playerCount} players
+          {t('config.maxCourts', { max: maxCourts, players: playerCount })}
         </span>
       </div>
 
       <div className={styles.field}>
-        <label className={styles.label} htmlFor="config-rounds">Number of rounds</label>
+        <label className={styles.label} htmlFor="config-rounds">{t('config.numberOfRounds')}</label>
         <input
           id="config-rounds"
           className={styles.input}
@@ -133,11 +134,11 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
             onUpdate({ maxRounds: val && val > 0 ? val : null });
           }}
         />
-        <span className={styles.hint}>Recommended: {suggestedRounds} rounds for {playerCount} players on {config.courts.length} court(s)</span>
+        <span className={styles.hint}>{t('config.recommendedRounds', { rounds: suggestedRounds, players: playerCount, courts: config.courts.length })}</span>
       </div>
 
       <div className={styles.field}>
-        <label className={styles.label} htmlFor="config-points">Points per match</label>
+        <label className={styles.label} htmlFor="config-points">{t('config.pointsPerMatch')}</label>
         <input
           id="config-points"
           className={styles.input}
@@ -150,51 +151,49 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
             onUpdate({ pointsPerMatch: isNaN(v) ? 0 : Math.max(0, v) });
           }}
         />
-        <span className={styles.hint}>Recommended: {suggestedPoints} points to fit in {formatDuration(durationLimit)}</span>
+        <span className={styles.hint}>{t('config.recommendedPoints', { points: suggestedPoints, duration: formatDuration(durationLimit) })}</span>
       </div>
 
       <div className={styles.estimate}>
-        Estimated duration: <strong>{formatDuration(estimatedMinutes)}</strong>
+        {t('config.estimatedDuration')}<strong>{formatDuration(estimatedMinutes)}</strong>
         <span className={styles.estimateBreakdown}>
-          ({effectiveRounds} rounds × {roundDuration} min per round)
+          {t('config.estimateBreakdown', { rounds: effectiveRounds, minutes: roundDuration })}
         </span>
       </div>
 
       {somePlayersExcluded && (
         <div className={styles.warning}>
-          <div className={styles.warningTitle}>Some players won't play</div>
+          <div className={styles.warningTitle}>{t('config.somePlayersWontPlay')}</div>
           <div className={styles.warningBody}>
-            Only {playersPerRound} of {playerCount} players play each round.
-            Need at least <strong>{minRoundsForAll} rounds</strong> for everyone to participate.
+            {t('config.playersPerRound', { playing: playersPerRound, total: playerCount, minRounds: minRoundsForAll })}
           </div>
         </div>
       )}
 
       {exceedsLimit && (
         <div className={styles.warning}>
-          <div className={styles.warningTitle}>May exceed {formatDuration(durationLimit)}</div>
+          <div className={styles.warningTitle}>{t('config.mayExceed', { duration: formatDuration(durationLimit) })}</div>
           <div className={styles.warningBody}>
-            To fit within {formatDuration(durationLimit)}, try{' '}
+            {t('config.fitWithin', { duration: formatDuration(durationLimit) })}{' '}
             {suggestedPoints !== effectivePoints && (
-              <><strong>{suggestedPoints} points</strong> per match or </>
+              <><strong>{t('config.pointsSuggestion', { points: suggestedPoints })}</strong></>
             )}
-            <strong>{suggestedRounds} rounds</strong>.
+            <strong>{t('config.roundsSuggestion', { rounds: suggestedRounds })}</strong>.
           </div>
         </div>
       )}
 
       {!sitOutInfo.isEqual && sitOutInfo.sitOutsPerRound > 0 && (
         <div className={styles.warning}>
-          <div className={styles.warningTitle}>Unequal sit-outs</div>
+          <div className={styles.warningTitle}>{t('config.unequalSitOuts')}</div>
           <div className={styles.warningBody}>
-            With {effectiveRounds} rounds, {sitOutInfo.sitOutsPerRound} player(s) sit out each round
-            — sit-outs cannot be split equally across {playerCount} players.
+            {t('config.sitOutBody', { rounds: effectiveRounds, sitOuts: sitOutInfo.sitOutsPerRound, players: playerCount })}
             {sitOutInfo.nearestFairBelow && sitOutInfo.nearestFairAbove && sitOutInfo.nearestFairBelow !== sitOutInfo.nearestFairAbove ? (
-              <> Try <strong>{sitOutInfo.nearestFairBelow}</strong> or <strong>{sitOutInfo.nearestFairAbove} rounds</strong> for equal sit-outs.</>
+              <> {t('config.trySitOut', { below: sitOutInfo.nearestFairBelow, above: sitOutInfo.nearestFairAbove })}</>
             ) : sitOutInfo.nearestFairAbove ? (
-              <> Try <strong>{sitOutInfo.nearestFairAbove} rounds</strong> for equal sit-outs.</>
+              <> {t('config.trySitOutSingle', { rounds: sitOutInfo.nearestFairAbove })}</>
             ) : sitOutInfo.nearestFairBelow ? (
-              <> Try <strong>{sitOutInfo.nearestFairBelow} rounds</strong> for equal sit-outs.</>
+              <> {t('config.trySitOutSingle', { rounds: sitOutInfo.nearestFairBelow })}</>
             ) : null}
           </div>
         </div>

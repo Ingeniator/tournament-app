@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Card } from '@padel/common';
+import { Button, Card, useTranslation } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { useSupporters } from '../hooks/useSupporters';
 import styles from './SupportersScreen.module.css';
@@ -13,6 +13,7 @@ const AMOUNTS = [
 
 export function SupportersScreen() {
   const { setScreen, userName } = usePlanner();
+  const { t } = useTranslation();
   const { supporters, grouped, loading, sayThanks } = useSupporters();
   const [amount, setAmount] = useState(0);
   const [message, setMessage] = useState('');
@@ -36,23 +37,23 @@ export function SupportersScreen() {
     <div className={styles.container}>
       <div className={styles.header}>
         <button className={styles.backBtn} onClick={() => setScreen('home')}>&larr;</button>
-        <h1 className={styles.title}>Support Us</h1>
+        <h1 className={styles.title}>{t('supporters.title')}</h1>
       </div>
 
       <div className={styles.hero}>
         <div className={styles.heroEmoji}>&#x2764;&#xFE0F;</div>
-        <h2 className={styles.heroTitle}>Help keep it free</h2>
+        <h2 className={styles.heroTitle}>{t('supporters.helpKeepFree')}</h2>
         <p className={styles.heroSub}>
-          Tournament Manager is free and open source. Your support helps us keep it that way.
+          {t('supporters.description')}
         </p>
       </div>
 
       {confirmed ? (
         <div className={styles.confirmation}>
           <div className={styles.confirmEmoji}>&#x1F389;</div>
-          <p className={styles.confirmTitle}>Thank you, {userName}!</p>
+          <p className={styles.confirmTitle}>{t('supporters.thankYou', { name: userName ?? '' })}</p>
           <p className={styles.confirmSub}>
-            We're testing this support flow. Real payment options coming soon!
+            {t('supporters.testingFlow')}
           </p>
         </div>
       ) : (
@@ -73,23 +74,23 @@ export function SupportersScreen() {
             type="text"
             value={message}
             onChange={e => setMessage(e.target.value.slice(0, 50))}
-            placeholder="Leave a message (optional)"
+            placeholder={t('supporters.leaveMessage')}
             maxLength={50}
           />
           <Button fullWidth onClick={handleSupport} disabled={!userName || sending}>
-            {sending ? 'Sending...' : 'Support'}
+            {sending ? t('supporters.sending') : t('supporters.support')}
           </Button>
         </div>
       )}
 
       <Card>
         <h3 className={styles.wallTitle}>
-          Supporters{grouped.length > 0 && (totalAmount > 0 || heartCount > 0) ? ` \u00B7 ${[totalAmount > 0 ? `${totalAmount}\u20AC` : '', heartCount > 0 ? `${heartCount} \u2764\uFE0F` : ''].filter(Boolean).join(' and ')} raised` : ''}
+          {t('supporters.supporters')}{grouped.length > 0 && (totalAmount > 0 || heartCount > 0) ? ` \u00B7 ${[totalAmount > 0 ? `${totalAmount}\u20AC` : '', heartCount > 0 ? `${heartCount} \u2764\uFE0F` : ''].filter(Boolean).join(' and ')} raised` : ''}
         </h3>
         {loading ? (
-          <p className={styles.empty}>Loading...</p>
+          <p className={styles.empty}>{t('supporters.loading')}</p>
         ) : grouped.length === 0 ? (
-          <p className={styles.empty}>Be the first!</p>
+          <p className={styles.empty}>{t('supporters.beFirst')}</p>
         ) : (
           <div className={styles.supporterList}>
             {grouped.map(s => (

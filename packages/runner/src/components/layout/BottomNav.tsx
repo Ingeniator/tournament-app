@@ -1,3 +1,4 @@
+import { useTranslation } from '@padel/common';
 import styles from './BottomNav.module.css';
 
 export type TabId = 'play' | 'log' | 'settings';
@@ -7,23 +8,31 @@ interface BottomNavProps {
   onTabChange: (tab: TabId) => void;
 }
 
-const tabs: { id: TabId; label: string; icon: string }[] = [
-  { id: 'play', label: 'Play', icon: '▶' },
-  { id: 'log', label: 'Log', icon: '☰' },
-  { id: 'settings', label: 'Settings', icon: '⚙' },
-];
+const tabIcons: Record<TabId, string> = {
+  play: '\u25B6',
+  log: '\u2630',
+  settings: '\u2699',
+};
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
+  const { t } = useTranslation();
+
+  const tabKeys: Record<TabId, string> = {
+    play: 'nav.play',
+    log: 'nav.log',
+    settings: 'nav.settings',
+  };
+
   return (
     <nav className={styles.nav}>
-      {tabs.map(tab => (
+      {(['play', 'log', 'settings'] as TabId[]).map(id => (
         <button
-          key={tab.id}
-          className={`${styles.tab} ${activeTab === tab.id ? styles.active : ''}`}
-          onClick={() => onTabChange(tab.id)}
+          key={id}
+          className={`${styles.tab} ${activeTab === id ? styles.active : ''}`}
+          onClick={() => onTabChange(id)}
         >
-          <span className={styles.icon}>{tab.icon}</span>
-          <span>{tab.label}</span>
+          <span className={styles.icon}>{tabIcons[id]}</span>
+          <span>{t(tabKeys[id])}</span>
         </button>
       ))}
     </nav>

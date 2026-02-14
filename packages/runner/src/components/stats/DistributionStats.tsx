@@ -1,6 +1,6 @@
 import { useState, useTransition } from 'react';
 import type { DistributionData } from '../../hooks/useDistributionStats';
-import { Button } from '@padel/common';
+import { Button, useTranslation } from '@padel/common';
 import styles from './DistributionStats.module.css';
 
 interface Props {
@@ -15,16 +15,9 @@ interface Props {
   onPlay?: () => void;
 }
 
-const hints: Record<string, string> = {
-  rest: 'Shows how evenly games and sit-outs are distributed. Ideal is ±1.',
-  partners: 'Shows pairs who are scheduled as teammates more than once. The ideal depends on the number of players, courts, and rounds — some repeats may be unavoidable.',
-  opponents: 'How many times each pair faces each other as opponents. The "ideal" shows the best mathematically possible range for your player count, courts, and rounds. A green check means your schedule matches the ideal.',
-  courtBalance: 'Shows how evenly players are distributed across courts.',
-  court: 'Lists pairs of players who never appear in the same match — neither as partners nor as opponents. Fewer gaps means better coverage.',
-};
-
-function InfoButton({ hintKey }: { hintKey: string }) {
+function InfoButton({ hint }: { hint: string }) {
   const [open, setOpen] = useState(false);
+  const { t } = useTranslation();
 
   return (
     <>
@@ -38,9 +31,9 @@ function InfoButton({ hintKey }: { hintKey: string }) {
       {open && (
         <div className={styles.tooltipOverlay} onClick={() => setOpen(false)}>
           <div className={styles.tooltip} onClick={e => e.stopPropagation()}>
-            <p>{hints[hintKey]}</p>
+            <p>{hint}</p>
             <button className={styles.tooltipClose} onClick={() => setOpen(false)}>
-              Got it
+              {t('distribution.gotIt')}
             </button>
           </div>
         </div>
@@ -50,10 +43,11 @@ function InfoButton({ hintKey }: { hintKey: string }) {
 }
 
 function formatRange(min: number, max: number): string {
-  return min === max ? `${min}` : `${min}–${max}`;
+  return min === max ? `${min}` : `${min}\u2013${max}`;
 }
 
 export function DistributionStats({ data, canReshuffle, onReshuffle, onOptimize, onCancelOptimize, optimizeElapsed, hasOptimalBackup, onRevertOptimal, onPlay }: Props) {
+  const { t } = useTranslation();
   const [isPending, startTransition] = useTransition();
   const isOptimizing = optimizeElapsed !== null;
   const repeatPartnersOk = data.repeatPartners.length <= data.idealRepeatPartners;
@@ -88,24 +82,24 @@ export function DistributionStats({ data, canReshuffle, onReshuffle, onOptimize,
     <div className={styles.section}>
       {/* Priority 1: Partner Repeats (weight 3) */}
       <div className={styles.row}>
-        <span className={styles.indicator}>{repeatPartnersOk ? '✅' : '⚠️'}</span>
+        <span className={styles.indicator}>{repeatPartnersOk ? '\u2705' : '\u26A0\uFE0F'}</span>
         <div className={styles.content}>
           <div className={styles.labelRow}>
-            <span className={styles.label}>Partner Repeats</span>
-            <InfoButton hintKey="partners" />
+            <span className={styles.label}>{t('distribution.partnerRepeats')}</span>
+            <InfoButton hint={t('distribution.hintPartners')} />
           </div>
           <div className={styles.detail}>
-            {data.repeatPartners.length} pair{data.repeatPartners.length !== 1 ? 's' : ''}
+            {t('distribution.pairs', { count: data.repeatPartners.length, s: data.repeatPartners.length !== 1 ? 's' : '' })}
             {' '}
             <span className={styles.ideal}>
-              (ideal: {data.idealRepeatPartners === 0 ? '0' : `≤${data.idealRepeatPartners}`})
+              {data.idealRepeatPartners === 0 ? t('distribution.idealZero') : t('distribution.idealMax', { max: data.idealRepeatPartners })}
             </span>
           </div>
           {data.repeatPartners.length > 0 && (
             <div className={styles.pairList}>
               {data.repeatPartners.map((p, i) => (
                 <span key={i} className={styles.pair}>
-                  {p.names[0]} & {p.names[1]} ×{p.count}
+                  {p.names[0]} & {p.names[1]} \u00d7{p.count}
                 </span>
               ))}
             </div>
@@ -115,43 +109,45 @@ export function DistributionStats({ data, canReshuffle, onReshuffle, onOptimize,
 
       {/* Priority 2: Opponent Balance (weight 2) */}
       <div className={styles.row}>
-        <span className={styles.indicator}>{isBalanced ? '✅' : '⚠️'}</span>
+        <span className={styles.indicator}>{isBalanced ? '\u2705' : '\u26A0\uFE0F'}</span>
         <div className={styles.content}>
           <div className={styles.labelRow}>
-            <span className={styles.label}>Opponent Balance</span>
-            <InfoButton hintKey="opponents" />
+            <span className={styles.label}>{t('distribution.opponentBalance')}</span>
+            <InfoButton hint={t('distribution.hintOpponents')} />
           </div>
           <div className={styles.detail}>
             {data.opponentSpread
               ? <>
-                  Min {data.opponentSpread.min}, Max {data.opponentSpread.max}
+                  {t('distribution.minMax', { min: data.opponentSpread.min, max: data.opponentSpread.max })}
                   {' '}
                   <span className={styles.ideal}>
-                    (ideal: {data.idealOpponentSpread.min === data.idealOpponentSpread.max
-                      ? data.idealOpponentSpread.min
-                      : `${data.idealOpponentSpread.min}–${data.idealOpponentSpread.max}`})
+                    {t('distribution.idealRange', {
+                      range: data.idealOpponentSpread.min === data.idealOpponentSpread.max
+                        ? String(data.idealOpponentSpread.min)
+                        : `${data.idealOpponentSpread.min}\u2013${data.idealOpponentSpread.max}`
+                    })}
                   </span>
                 </>
-              : 'No data yet'}
+              : t('distribution.noData')}
           </div>
         </div>
       </div>
 
       {/* Priority 3: Never Shared Court (weight 1) */}
       <div className={styles.row}>
-        <span className={styles.indicator}>{neverPlayedOk ? '✅' : '⚠️'}</span>
+        <span className={styles.indicator}>{neverPlayedOk ? '\u2705' : '\u26A0\uFE0F'}</span>
         <div className={styles.content}>
           <div className={styles.labelRow}>
-            <span className={styles.label}>Never Shared Court</span>
-            <InfoButton hintKey="court" />
+            <span className={styles.label}>{t('distribution.neverSharedCourt')}</span>
+            <InfoButton hint={t('distribution.hintCourt')} />
           </div>
           {hasNeverPlayed ? (
             <>
               <div className={styles.detail}>
-                {data.neverPlayed.length} pair{data.neverPlayed.length !== 1 ? 's' : ''}
+                {t('distribution.pairs', { count: data.neverPlayed.length, s: data.neverPlayed.length !== 1 ? 's' : '' })}
                 {' '}
                 <span className={styles.ideal}>
-                  (ideal: {data.idealNeverPlayed === 0 ? '0' : `≤${data.idealNeverPlayed}`})
+                  {data.idealNeverPlayed === 0 ? t('distribution.idealZero') : t('distribution.idealMax', { max: data.idealNeverPlayed })}
                 </span>
               </div>
               <div className={styles.pairList}>
@@ -163,30 +159,30 @@ export function DistributionStats({ data, canReshuffle, onReshuffle, onOptimize,
               </div>
             </>
           ) : (
-            <div className={styles.detail}>All players met</div>
+            <div className={styles.detail}>{t('distribution.allPlayersMet')}</div>
           )}
         </div>
       </div>
 
       {/* Informational: Rest Balance */}
       <div className={styles.row}>
-        <span className={styles.indicator}>{restOk ? '✅' : '⚠️'}</span>
+        <span className={styles.indicator}>{restOk ? '\u2705' : '\u26A0\uFE0F'}</span>
         <div className={styles.content}>
           <div className={styles.labelRow}>
-            <span className={styles.label}>Rest Balance</span>
-            <InfoButton hintKey="rest" />
+            <span className={styles.label}>{t('distribution.restBalance')}</span>
+            <InfoButton hint={t('distribution.hintRest')} />
           </div>
           <div className={styles.detail}>
-            Games: {formatRange(data.restBalance.games.min, data.restBalance.games.max)}
+            {t('distribution.games', { range: formatRange(data.restBalance.games.min, data.restBalance.games.max) })}
             {' '}
             <span className={styles.ideal}>
-              (ideal: {formatRange(data.restBalance.games.idealMin, data.restBalance.games.idealMax)})
+              {t('distribution.idealRange', { range: formatRange(data.restBalance.games.idealMin, data.restBalance.games.idealMax) })}
             </span>
-            {' • '}
-            Sit-outs: {formatRange(data.restBalance.sitOuts.min, data.restBalance.sitOuts.max)}
+            {' \u2022 '}
+            {t('distribution.sitOuts', { range: formatRange(data.restBalance.sitOuts.min, data.restBalance.sitOuts.max) })}
             {' '}
             <span className={styles.ideal}>
-              (ideal: {formatRange(data.restBalance.sitOuts.idealMin, data.restBalance.sitOuts.idealMax)})
+              {t('distribution.idealRange', { range: formatRange(data.restBalance.sitOuts.idealMin, data.restBalance.sitOuts.idealMax) })}
             </span>
           </div>
         </div>
@@ -195,14 +191,14 @@ export function DistributionStats({ data, canReshuffle, onReshuffle, onOptimize,
       {/* Informational: Court Balance */}
       {data.courtBalance.length > 1 && (
         <div className={styles.row}>
-          <span className={styles.indicator}>{courtBalanceOk ? '✅' : '⚠️'}</span>
+          <span className={styles.indicator}>{courtBalanceOk ? '\u2705' : '\u26A0\uFE0F'}</span>
           <div className={styles.content}>
             <div className={styles.labelRow}>
-              <span className={styles.label}>Court Balance</span>
-              <InfoButton hintKey="courtBalance" />
+              <span className={styles.label}>{t('distribution.courtBalance')}</span>
+              <InfoButton hint={t('distribution.hintCourtBalance')} />
             </div>
             {courtBalanceOk ? (
-              <div className={styles.detail}>All courts balanced</div>
+              <div className={styles.detail}>{t('distribution.allCourtsBalanced')}</div>
             ) : (
               <div className={styles.pairList}>
                 {skewedCourts.map((c, i) => (
@@ -219,7 +215,7 @@ export function DistributionStats({ data, canReshuffle, onReshuffle, onOptimize,
       {onPlay && (
         <div className={styles.reshuffleBtn}>
           <Button fullWidth onClick={onPlay}>
-            Play
+            {t('distribution.play')}
           </Button>
         </div>
       )}
@@ -227,20 +223,20 @@ export function DistributionStats({ data, canReshuffle, onReshuffle, onOptimize,
       {canReshuffle && (
         <div className={styles.reshuffleBtn}>
           <Button variant="secondary" fullWidth onClick={handleReshuffle} disabled={busy}>
-            {isPending ? 'Reshuffling...' : 'Reshuffle Unscored Rounds'}
+            {isPending ? t('distribution.reshuffling') : t('distribution.reshuffleUnscored')}
           </Button>
           {isOptimizing ? (
             <Button variant="secondary" fullWidth onClick={onCancelOptimize}>
-              Stop Optimization ({optimizeElapsed}s)
+              {t('distribution.stopOptimization', { seconds: optimizeElapsed })}
             </Button>
           ) : !allGreen ? (
             <Button variant="secondary" fullWidth onClick={onOptimize} disabled={isPending}>
-              Find Optimal Distribution
+              {t('distribution.findOptimal')}
             </Button>
           ) : null}
           {hasOptimalBackup && !isOptimizing && (
             <Button variant="secondary" fullWidth onClick={onRevertOptimal} disabled={isPending}>
-              Revert to Saved Optimal
+              {t('distribution.revertOptimal')}
             </Button>
           )}
         </div>

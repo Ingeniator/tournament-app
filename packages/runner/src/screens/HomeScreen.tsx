@@ -4,11 +4,12 @@ import { useTournament } from '../hooks/useTournament';
 import { validateImport } from '../utils/importExport';
 import { randomTournamentName } from '../utils/tournamentNames';
 import { db, firebaseConfigured } from '../firebase';
-import { Button, FeedbackModal, generateId } from '@padel/common';
+import { Button, FeedbackModal, LanguageSelector, generateId, useTranslation } from '@padel/common';
 import styles from './HomeScreen.module.css';
 
 export function HomeScreen() {
   const { tournament, dispatch } = useTournament();
+  const { t } = useTranslation();
   const [importMode, setImportMode] = useState(false);
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
@@ -34,7 +35,7 @@ export function HomeScreen() {
   };
 
   const handleDelete = () => {
-    if (confirm('Delete this tournament? This cannot be undone.')) {
+    if (confirm(t('home.deleteConfirm'))) {
       dispatch({ type: 'RESET_TOURNAMENT' });
     }
   };
@@ -77,22 +78,22 @@ export function HomeScreen() {
           </g>
         </svg>
       </div>
-      <h1 className={styles.title}>Tournament Manager</h1>
-      <p className={styles.subtitle}>Organize tournaments at the court</p>
+      <h1 className={styles.title}>{t('home.title')}</h1>
+      <p className={styles.subtitle}>{t('home.subtitle')}</p>
 
       <div className={styles.actions}>
         {hasSaved && (
           <div className={styles.resumeCard}>
             <div className={styles.resumeTitle}>{tournament.name}</div>
             <div className={styles.resumeMeta}>
-              {tournament.players.length} players · {tournament.phase}
+              {t('home.playersMeta', { count: tournament.players.length, phase: tournament.phase })}
             </div>
             <div className={styles.resumeActions}>
               <Button onClick={handleResume} fullWidth>
-                Continue
+                {t('home.continue')}
               </Button>
               <Button variant="danger" onClick={handleDelete} size="small">
-                Delete
+                {t('home.delete')}
               </Button>
             </div>
           </div>
@@ -101,11 +102,11 @@ export function HomeScreen() {
         {!hasSaved && (
           <>
             <Button onClick={handleNew} fullWidth>
-              New Play
+              {t('home.newPlay')}
             </Button>
             <a href="/plan" className={styles.planLink}>
               <Button variant="secondary" fullWidth>
-                Plan & Share New Tournament
+                {t('home.planShare')}
               </Button>
             </a>
             <Button
@@ -117,7 +118,7 @@ export function HomeScreen() {
                 setImportText('');
               }}
             >
-              {importMode ? 'Cancel' : 'Import from Clipboard'}
+              {importMode ? t('home.cancel') : t('home.importFromClipboard')}
             </Button>
 
             {importMode && (
@@ -129,7 +130,7 @@ export function HomeScreen() {
                     setImportText(e.target.value);
                     setImportError(null);
                   }}
-                  placeholder="Paste tournament JSON here..."
+                  placeholder={t('home.importPlaceholder')}
                   rows={6}
                   autoFocus
                 />
@@ -139,7 +140,7 @@ export function HomeScreen() {
                   onClick={handleImport}
                   disabled={!importText.trim()}
                 >
-                  Import
+                  {t('home.import')}
                 </Button>
               </div>
             )}
@@ -147,13 +148,14 @@ export function HomeScreen() {
         )}
       </div>
 
-      {firebaseConfigured && (
-        <footer className={styles.footer}>
+      <footer className={styles.footer}>
+        {firebaseConfigured && (
           <button className={styles.footerLink} onClick={() => setFeedbackOpen(true)}>
-            Send feedback
+            {t('home.sendFeedback')}
           </button>
-        </footer>
-      )}
+        )}
+        <LanguageSelector />
+      </footer>
 
       <FeedbackModal
         open={feedbackOpen}

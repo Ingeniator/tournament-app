@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, type ClipboardEvent } from 'react';
 import { ref, push, set } from 'firebase/database';
-import { Button, Card, FeedbackModal, Toast, useToast } from '@padel/common';
+import { Button, Card, FeedbackModal, Toast, useToast, useTranslation } from '@padel/common';
 import type { TournamentFormat, Court } from '@padel/common';
 import { generateId, parsePlayerList } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
@@ -11,6 +11,7 @@ import styles from './OrganizerScreen.module.css';
 
 export function OrganizerScreen() {
   const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, deleteTournament } = usePlanner();
+  const { t } = useTranslation();
   const { toastMessage, showToast } = useToast();
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
@@ -50,18 +51,18 @@ export function OrganizerScreen() {
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
-      showToast('Link copied!');
+      showToast(t('organizer.linkCopied'));
     } catch {
-      showToast('Failed to copy');
+      showToast(t('organizer.failedCopy'));
     }
   };
 
   const handleCopyCode = async () => {
     try {
       await navigator.clipboard.writeText(tournament.code);
-      showToast('Code copied!');
+      showToast(t('organizer.codeCopied'));
     } catch {
-      showToast('Failed to copy');
+      showToast(t('organizer.failedCopy'));
     }
   };
 
@@ -73,9 +74,9 @@ export function OrganizerScreen() {
     const json = JSON.stringify(buildRunnerTournament(tournament, players), null, 2);
     try {
       await navigator.clipboard.writeText(json);
-      showToast('Tournament JSON copied!');
+      showToast(t('organizer.jsonCopied'));
     } catch {
-      showToast('Failed to copy');
+      showToast(t('organizer.failedCopy'));
     }
   };
 
@@ -109,7 +110,7 @@ export function OrganizerScreen() {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <button className={styles.backBtn} onClick={handleBack} aria-label="Back">&larr;</button>
+        <button className={styles.backBtn} onClick={handleBack} aria-label={t('organizer.back')}>&larr;</button>
         {editingName ? (
           <input
             className={styles.nameInput}
@@ -128,7 +129,7 @@ export function OrganizerScreen() {
             <button
               className={styles.editNameBtn}
               onClick={() => { setNameDraft(tournament.name); setEditingName(true); }}
-              aria-label="Rename tournament"
+              aria-label={t('organizer.renameTournament')}
             >
               &#x270E;
             </button>
@@ -137,28 +138,32 @@ export function OrganizerScreen() {
       </header>
       <main>
       {userName && (
-        <span className={styles.organizerLabel}>by {userName}</span>
+        <span className={styles.organizerLabel}>{t('organizer.by', { name: userName })}</span>
       )}
 
       {/* Share section */}
       <Card>
-        <h2 className={styles.sectionTitle}>Share with Players</h2>
+        <h2 className={styles.sectionTitle}>{t('organizer.shareWithPlayers')}</h2>
         <div className={styles.codeDisplay}>
           <span className={styles.code} onClick={handleCopyCode}>{tournament.code}</span>
         </div>
-        <p className={styles.hint}>Players enter this code to register</p>
+        <p className={styles.hint}>{t('organizer.playersEnterCode')}</p>
         <Button variant="secondary" fullWidth onClick={handleCopyLink}>
-          Copy Link
+          {t('organizer.copyLink')}
         </Button>
       </Card>
 
       {/* Player list */}
       <Card>
         <h2 className={styles.sectionTitle}>
-          Players ({confirmedCount} / {capacity}{reserveCount > 0 ? ` + ${reserveCount} reserve` : ''})
+          {t('organizer.players', {
+            confirmed: confirmedCount,
+            capacity,
+            reserve: reserveCount > 0 ? t('organizer.reserveSuffix', { count: reserveCount }) : '',
+          })}
         </h2>
         {players.length === 0 ? (
-          <p className={styles.empty}>No players registered yet</p>
+          <p className={styles.empty}>{t('organizer.noPlayersYet')}</p>
         ) : (
           <div className={styles.playerList}>
             {players.map((player, i) => (
@@ -178,20 +183,20 @@ export function OrganizerScreen() {
                     player.name
                   )}
                   {statuses.get(player.id) === 'reserve' && (
-                    <span className={styles.reserveBadge}>reserve</span>
+                    <span className={styles.reserveBadge}>{t('organizer.reserve')}</span>
                   )}
                 </span>
                 <button
                   className={player.confirmed !== false ? styles.statusConfirmed : styles.statusCancelled}
                   onClick={() => toggleConfirmed(player.id, player.confirmed !== false)}
-                  title={player.confirmed !== false ? 'Mark as cancelled' : 'Mark as confirmed'}
+                  title={player.confirmed !== false ? t('organizer.markCancelled') : t('organizer.markConfirmed')}
                 >
                   {player.confirmed !== false ? '\u2713' : '\u2717'}
                 </button>
                 <button
                   className={styles.removeBtn}
                   onClick={() => removePlayer(player.id)}
-                  title="Remove player"
+                  title={t('organizer.removePlayer')}
                 >
                   &times;
                 </button>
@@ -205,7 +210,7 @@ export function OrganizerScreen() {
             type="text"
             value={newPlayerName}
             onChange={e => setNewPlayerName(e.target.value)}
-            placeholder="Player name or paste a list"
+            placeholder={t('organizer.playerNamePlaceholder')}
             onKeyDown={async e => {
               if (e.key === 'Enter' && newPlayerName.trim() && !addingPlayer.current) {
                 addingPlayer.current = true;
@@ -239,16 +244,16 @@ export function OrganizerScreen() {
             }}
             disabled={!newPlayerName.trim()}
           >
-            + Add
+            {t('organizer.addPlayer')}
           </Button>
         </div>
       </Card>
 
       {/* Config section */}
       <Card>
-        <h2 className={styles.sectionTitle}>Settings</h2>
+        <h2 className={styles.sectionTitle}>{t('organizer.settings')}</h2>
         <div className={styles.configGrid}>
-          <label className={styles.configLabel}>Date & time</label>
+          <label className={styles.configLabel}>{t('organizer.dateTime')}</label>
           <input
             className={styles.configInput}
             type="datetime-local"
@@ -256,40 +261,40 @@ export function OrganizerScreen() {
             onChange={e => updateTournament({ date: e.target.value || undefined })}
           />
 
-          <label className={styles.configLabel}>Place</label>
+          <label className={styles.configLabel}>{t('organizer.place')}</label>
           <input
             className={styles.configInput}
             type="text"
             value={tournament.place ?? ''}
             onChange={e => updateTournament({ place: e.target.value || undefined })}
-            placeholder="Venue / location"
+            placeholder={t('organizer.placePlaceholder')}
           />
 
-          <label className={styles.configLabel}>Group chat</label>
+          <label className={styles.configLabel}>{t('organizer.groupChat')}</label>
           <input
             className={styles.configInput}
             type="url"
             value={tournament.chatLink ?? ''}
             onChange={e => updateTournament({ chatLink: e.target.value || undefined })}
-            placeholder="https://t.me/..."
+            placeholder={t('organizer.groupChatPlaceholder')}
           />
 
-          <label className={styles.configLabel}>Description</label>
+          <label className={styles.configLabel}>{t('organizer.description')}</label>
           <textarea
             className={styles.configTextarea}
             value={tournament.description ?? ''}
             onChange={e => updateTournament({ description: e.target.value || undefined })}
-            placeholder="Price, skill level, rules, etc."
+            placeholder={t('organizer.descriptionPlaceholder')}
             rows={3}
           />
 
           <label className={styles.configLabel}>
-            Format
+            {t('organizer.format')}
             <button
               className={styles.infoBtn}
               onClick={() => setShowFormatInfo(v => !v)}
               type="button"
-              aria-label="Format info"
+              aria-label={t('organizer.formatInfo')}
             >
               i
             </button>
@@ -299,19 +304,19 @@ export function OrganizerScreen() {
             value={tournament.format}
             onChange={e => handleFormatChange(e.target.value as TournamentFormat)}
           >
-            <option value="americano">Americano</option>
-            <option value="team-americano">Team Americano</option>
-            <option value="mexicano">Mexicano</option>
+            <option value="americano">{t('organizer.formatAmericano')}</option>
+            <option value="team-americano">{t('organizer.formatTeamAmericano')}</option>
+            <option value="mexicano">{t('organizer.formatMexicano')}</option>
           </select>
           {showFormatInfo && (
             <div className={styles.formatInfo}>
-              <p><strong>Americano</strong> — Random partner rotation each round. Individual standings.</p>
-              <p><strong>Team Americano</strong> — Fixed teams for the entire tournament. Team standings.</p>
-              <p><strong>Mexicano</strong> — After round 1, pairings based on standings — top player pairs with bottom, keeping matches competitive.</p>
+              <p><strong>{t('organizer.americanoDesc')}</strong></p>
+              <p><strong>{t('organizer.teamAmericanoDesc')}</strong></p>
+              <p><strong>{t('organizer.mexicanoDesc')}</strong></p>
             </div>
           )}
 
-          <label className={styles.configLabel}>Duration (minutes)</label>
+          <label className={styles.configLabel}>{t('organizer.duration')}</label>
           <input
             className={styles.configInput}
             type="number"
@@ -321,14 +326,14 @@ export function OrganizerScreen() {
               updateTournament({ duration: v && v > 0 ? v : undefined });
             }}
             min={1}
-            placeholder="120"
+            placeholder={t('organizer.durationPlaceholder')}
           />
         </div>
 
         <div className={styles.courtsSection}>
           <div className={styles.courtsHeader}>
-            <span>Courts ({tournament.courts.length})</span>
-            <Button variant="ghost" size="small" onClick={handleAddCourt}>+ Add</Button>
+            <span>{t('organizer.courts', { count: tournament.courts.length })}</span>
+            <Button variant="ghost" size="small" onClick={handleAddCourt}>{t('organizer.addCourt')}</Button>
           </div>
           {tournament.courts.map(court => (
             <div key={court.id} className={styles.courtItem}>
@@ -355,7 +360,7 @@ export function OrganizerScreen() {
         </div>
 
         <div className={styles.capacitySection}>
-          <label className={styles.configLabel}>Extra spots</label>
+          <label className={styles.configLabel}>{t('organizer.extraSpots')}</label>
           <input
             className={styles.configInput}
             type="number"
@@ -368,7 +373,11 @@ export function OrganizerScreen() {
             placeholder="0"
           />
           <span className={styles.capacityTotal}>
-            Total spots: {tournament.courts.length * 4 + (tournament.extraSpots ?? 0)} ({tournament.courts.length} &times; 4{(tournament.extraSpots ?? 0) > 0 ? ` + ${tournament.extraSpots}` : ''})
+            {t('organizer.totalSpots', {
+              total: tournament.courts.length * 4 + (tournament.extraSpots ?? 0),
+              courts: tournament.courts.length,
+              extra: (tournament.extraSpots ?? 0) > 0 ? t('organizer.extraSuffix', { count: tournament.extraSpots ?? 0 }) : '',
+            })}
           </span>
         </div>
       </Card>
@@ -379,46 +388,49 @@ export function OrganizerScreen() {
         const fillsCourts = confirmedCount >= courtsNeeded;
         return (
           <div className={styles.warning}>
-            Only {confirmedCount} of {capacity} spots filled.
+            {t('organizer.spotsFilled', { confirmed: confirmedCount, capacity })}
             {fillsCourts
-              ? ` Need ${capacity - confirmedCount} more to reach planned capacity, but enough to fill ${tournament.courts.length === 1 ? 'the court' : `all ${tournament.courts.length} courts`}.`
-              : ' Some courts won\'t have full games.'}
+              ? t('organizer.fillsCourts', {
+                  remaining: capacity - confirmedCount,
+                  courts: tournament.courts.length === 1 ? t('organizer.courtsSingle') : t('organizer.courtsMultiple', { count: tournament.courts.length }),
+                })
+              : t('organizer.notFullGames')}
           </div>
         );
       })()}
       {duplicateNames.length > 0 && (
         <div className={styles.warning}>
-          Duplicate names: {duplicateNames.join(', ')}. Same person registered twice?
+          {t('organizer.duplicateNames', { names: duplicateNames.join(', ') })}
         </div>
       )}
       <Button fullWidth onClick={handleLaunch} disabled={players.length === 0}>
-        Let's play
+        {t('organizer.letsPlay')}
       </Button>
       <Button variant="secondary" fullWidth onClick={handleCopyExport} disabled={players.length === 0}>
-        Copy for Another Device
+        {t('organizer.copyForDevice')}
       </Button>
 
       <button
         className={styles.deleteBtn}
         onClick={async () => {
-          if (window.confirm('Delete this tournament? This cannot be undone.')) {
+          if (window.confirm(t('organizer.deleteConfirm'))) {
             await deleteTournament();
           }
         }}
       >
-        Delete Tournament
+        {t('organizer.deleteTournament')}
       </button>
 
       </main>
 
       <footer className={styles.supportNudge}>
-        Free &amp; open source &middot;{' '}
+        {t('organizer.freeOpenSource')} &middot;{' '}
         <button className={styles.supportLink} onClick={() => setScreen('supporters')}>
-          Support us
+          {t('organizer.supportUs')}
         </button>
         {' '}&middot;{' '}
         <button className={styles.supportLink} onClick={() => setFeedbackOpen(true)}>
-          Send feedback
+          {t('organizer.sendFeedback')}
         </button>
       </footer>
 

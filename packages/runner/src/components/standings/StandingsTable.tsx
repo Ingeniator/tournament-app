@@ -1,4 +1,5 @@
 import type { StandingsEntry } from '@padel/common';
+import { useTranslation } from '@padel/common';
 import styles from './StandingsTable.module.css';
 
 interface StandingsTableProps {
@@ -7,8 +8,10 @@ interface StandingsTableProps {
 }
 
 export function StandingsTable({ standings, plannedGames }: StandingsTableProps) {
+  const { t } = useTranslation();
+
   if (standings.length === 0) {
-    return <div className={styles.empty}>No scores entered yet</div>;
+    return <div className={styles.empty}>{t('standings.empty')}</div>;
   }
 
   return (
@@ -16,11 +19,11 @@ export function StandingsTable({ standings, plannedGames }: StandingsTableProps)
       <thead>
         <tr>
           <th className={styles.rank}>#</th>
-          <th>Name</th>
-          <th className={`${styles.right} ${styles.numCol}`}>Pts</th>
-          {plannedGames && <th className={`${styles.right} ${styles.numCol}`}>GP</th>}
-          <th className={`${styles.right} ${styles.wtlCol}`}>W-T-L</th>
-          <th className={`${styles.right} ${styles.diff}`}>+/-</th>
+          <th>{t('standings.name')}</th>
+          <th className={`${styles.right} ${styles.numCol}`}>{t('standings.pts')}</th>
+          {plannedGames && <th className={`${styles.right} ${styles.numCol}`}>{t('standings.gp')}</th>}
+          <th className={`${styles.right} ${styles.wtlCol}`}>{t('standings.wtl')}</th>
+          <th className={`${styles.right} ${styles.diff}`}>{t('standings.diff')}</th>
         </tr>
       </thead>
       <tbody>

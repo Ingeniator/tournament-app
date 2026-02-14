@@ -1,3 +1,4 @@
+import { useTranslation } from '@padel/common';
 import type { PlayerStats as PlayerStatsData } from '../../hooks/usePlayerStats';
 import styles from './PlayerStats.module.css';
 
@@ -6,8 +7,10 @@ interface Props {
 }
 
 export function PlayerStats({ stats }: Props) {
+  const { t } = useTranslation();
+
   if (stats.length === 0) {
-    return <div className={styles.empty}>No scored matches yet</div>;
+    return <div className={styles.empty}>{t('playerStats.empty')}</div>;
   }
 
   return (
@@ -17,25 +20,25 @@ export function PlayerStats({ stats }: Props) {
           <div className={styles.header}>
             <span className={styles.name}>{player.playerName}</span>
             <span className={styles.summary}>
-              {player.gamesPlayed} game{player.gamesPlayed !== 1 ? 's' : ''}
+              {t('playerStats.games', { count: player.gamesPlayed, s: player.gamesPlayed !== 1 ? 's' : '' })}
               {player.sitOuts > 0 && (
-                <> · {player.sitOuts} sit-out{player.sitOuts !== 1 ? 's' : ''}</>
+                <> · {t('playerStats.sitOuts', { count: player.sitOuts, s: player.sitOuts !== 1 ? 's' : '' })}</>
               )}
             </span>
           </div>
           {player.partners.length > 0 && (
             <div className={styles.row}>
-              <span className={styles.label}>Partners</span>
+              <span className={styles.label}>{t('playerStats.partners')}</span>
               <span className={styles.values}>
-                {player.partners.map(p => `${p.name} ×${p.count}`).join(', ')}
+                {player.partners.map(p => `${p.name} \u00d7${p.count}`).join(', ')}
               </span>
             </div>
           )}
           {player.opponents.length > 0 && (
             <div className={styles.row}>
-              <span className={styles.label}>Opponents</span>
+              <span className={styles.label}>{t('playerStats.opponents')}</span>
               <span className={styles.values}>
-                {player.opponents.map(o => `${o.name} ×${o.count}`).join(', ')}
+                {player.opponents.map(o => `${o.name} \u00d7${o.count}`).join(', ')}
               </span>
             </div>
           )}

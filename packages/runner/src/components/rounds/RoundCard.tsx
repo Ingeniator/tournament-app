@@ -1,4 +1,5 @@
 import type { Round, Player, Court, MatchScore } from '@padel/common';
+import { useTranslation } from '@padel/common';
 import { MatchCard } from './MatchCard';
 import styles from './RoundCard.module.css';
 
@@ -15,6 +16,7 @@ interface RoundCardProps {
 }
 
 export function RoundCard({ round, players, courts, pointsPerMatch, readOnly, editingMatchId, onStartEdit, onScore, onClear }: RoundCardProps) {
+  const { t } = useTranslation();
   const name = (id: string) => players.find(p => p.id === id)?.name ?? '?';
   const scoredCount = round.matches.filter(m => m.score).length;
   const allScored = scoredCount === round.matches.length;
@@ -22,7 +24,7 @@ export function RoundCard({ round, players, courts, pointsPerMatch, readOnly, ed
   return (
     <div className={styles.round}>
       <div className={styles.header}>
-        <h3 className={styles.roundTitle}>Round {round.roundNumber}</h3>
+        <h3 className={styles.roundTitle}>{t('round.title', { num: round.roundNumber })}</h3>
         <span className={`${styles.badge} ${allScored ? styles.badgeComplete : ''}`}>
           {scoredCount}/{round.matches.length}
         </span>
@@ -47,7 +49,7 @@ export function RoundCard({ round, players, courts, pointsPerMatch, readOnly, ed
       </div>
       {round.sitOuts.length > 0 && (
         <div className={styles.sitOut}>
-          Sitting out: {round.sitOuts.map(name).join(', ')}
+          {t('round.sittingOut', { names: round.sitOuts.map(name).join(', ') })}
         </div>
       )}
     </div>

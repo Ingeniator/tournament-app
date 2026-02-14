@@ -9,11 +9,13 @@ import { TeamPairingScreen } from './screens/TeamPairingScreen';
 import { PlayScreen } from './screens/PlayScreen';
 import { LogScreen } from './screens/LogScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
-import { Button, ErrorBoundary } from '@padel/common';
+import { Button, ErrorBoundary, I18nProvider, useTranslation } from '@padel/common';
+import { translations } from './i18n';
 import { saveUIState, loadUIState } from './state/persistence';
 
 function AppContent() {
   const { tournament, dispatch, saveError } = useTournament();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabId>(() => {
     const saved = loadUIState();
     const tab = saved?.activeTab as TabId | undefined;
@@ -73,7 +75,7 @@ function AppContent() {
     <>
       {saveError && (
         <div style={{ background: '#d97706', color: '#fff', textAlign: 'center', padding: '6px 12px', fontSize: '13px' }}>
-          Could not save — storage may be full. Your progress may be lost if you close this page.
+          {t('settings.storageWarning')}
         </div>
       )}
       <AppShell
@@ -84,12 +86,12 @@ function AppContent() {
             variant="ghost"
             size="small"
             onClick={() => {
-              if (confirm('Start a new tournament? Current one will be deleted.')) {
+              if (confirm(t('play.newConfirm'))) {
                 dispatch({ type: 'RESET_TOURNAMENT' });
               }
             }}
           >
-            New
+            {t('play.new')}
           </Button>
         }
       >
@@ -111,9 +113,11 @@ function AppContent() {
 export function App() {
   return (
     <ErrorBoundary>
-      <TournamentProvider>
-        <AppContent />
-      </TournamentProvider>
+      <I18nProvider translations={translations}>
+        <TournamentProvider>
+          <AppContent />
+        </TournamentProvider>
+      </I18nProvider>
     </ErrorBoundary>
   );
 }

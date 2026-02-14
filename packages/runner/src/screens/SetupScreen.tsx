@@ -6,11 +6,12 @@ import { AppShell } from '../components/layout/AppShell';
 import { PlayerInput } from '../components/setup/PlayerInput';
 import { PlayerList } from '../components/setup/PlayerList';
 import { TournamentConfigForm } from '../components/setup/TournamentConfigForm';
-import { Button, Card } from '@padel/common';
+import { Button, Card, useTranslation } from '@padel/common';
 import styles from './SetupScreen.module.css';
 
 export function SetupScreen() {
   const { tournament, dispatch } = useTournament();
+  const { t } = useTranslation();
 
   const errors = useMemo(() => {
     if (!tournament) return [];
@@ -33,22 +34,22 @@ export function SetupScreen() {
   };
 
   const handleBack = () => {
-    if (confirm('Discard this tournament?')) {
+    if (confirm(t('setup.discardConfirm'))) {
       dispatch({ type: 'RESET_TOURNAMENT' });
     }
   };
 
   return (
     <AppShell
-      title="Setup"
+      title={t('setup.title')}
       headerRight={
         <Button variant="ghost" size="small" onClick={handleBack}>
-          Cancel
+          {t('setup.cancel')}
         </Button>
       }
     >
       <div className={styles.section}>
-        <label className={styles.nameLabel} htmlFor="tournament-name">Tournament name</label>
+        <label className={styles.nameLabel} htmlFor="tournament-name">{t('setup.tournamentName')}</label>
         <input
           id="tournament-name"
           className={styles.nameInput}
@@ -57,12 +58,12 @@ export function SetupScreen() {
           onChange={e =>
             dispatch({ type: 'UPDATE_NAME', payload: { name: e.target.value } })
           }
-          placeholder="Tournament name"
+          placeholder={t('setup.tournamentNamePlaceholder')}
         />
       </div>
 
       <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>Players</h2>
+        <h2 className={styles.sectionTitle}>{t('setup.players')}</h2>
         <PlayerInput
           onAdd={name => dispatch({ type: 'ADD_PLAYER', payload: { name } })}
           onBulkAdd={names =>
@@ -78,7 +79,7 @@ export function SetupScreen() {
       </div>
 
       <Card>
-        <h2 className={styles.sectionTitle}>Settings</h2>
+        <h2 className={styles.sectionTitle}>{t('setup.settings')}</h2>
         <TournamentConfigForm
           config={tournament.config}
           playerCount={tournament.players.length}
@@ -97,10 +98,10 @@ export function SetupScreen() {
           </div>
         )}
         <div className={styles.playerCount}>
-          {tournament.players.length} player(s) added
+          {t('setup.playerCount', { count: tournament.players.length })}
         </div>
         <Button fullWidth onClick={handleGenerate} disabled={errors.length > 0}>
-          {strategy.hasFixedPartners ? 'Set up Teams' : 'Generate Schedule'}
+          {strategy.hasFixedPartners ? t('setup.setUpTeams') : t('setup.generateSchedule')}
         </Button>
       </div>
     </AppShell>

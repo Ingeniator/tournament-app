@@ -1,4 +1,5 @@
 import type { Player } from '@padel/common';
+import { useTranslation } from '@padel/common';
 import styles from './PlayerList.module.css';
 
 interface PlayerListProps {
@@ -7,8 +8,10 @@ interface PlayerListProps {
 }
 
 export function PlayerList({ players, onRemove }: PlayerListProps) {
+  const { t } = useTranslation();
+
   if (players.length === 0) {
-    return <div className={styles.empty}>No players added yet</div>;
+    return <div className={styles.empty}>{t('playerList.empty')}</div>;
   }
 
   return (

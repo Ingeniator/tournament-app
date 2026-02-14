@@ -5,7 +5,7 @@ import { useDistributionStats } from '../hooks/useDistributionStats';
 import { RoundCard } from '../components/rounds/RoundCard';
 import { PlayerStats } from '../components/stats/PlayerStats';
 import { DistributionStats } from '../components/stats/DistributionStats';
-import { Button, Modal } from '@padel/common';
+import { Button, Modal, useTranslation } from '@padel/common';
 import { getStrategy, scoreSchedule } from '../strategies';
 import type { Round } from '@padel/common';
 import styles from './LogScreen.module.css';
@@ -18,6 +18,7 @@ interface LogScreenProps {
 
 export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreenProps) {
   const { tournament, dispatch } = useTournament();
+  const { t } = useTranslation();
   const stats = usePlayerStats(tournament);
   const distributionStats = useDistributionStats(tournament);
   const [editingMatch, setEditingMatch] = useState<{ roundId: string; matchId: string } | null>(null);
@@ -55,8 +56,8 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
     }
 
     const text = lines.join('\n');
-    navigator.clipboard.writeText(text).then(() => alert('Plan copied to clipboard'));
-  }, [tournament]);
+    navigator.clipboard.writeText(text).then(() => alert(t('log.planCopied')));
+  }, [tournament, t]);
 
   const handleOptimize = useCallback(async () => {
     if (!tournament) return;
@@ -173,7 +174,7 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
     const match = round?.matches.find(m => m.id === matchId);
     if (match?.score) {
       const courtName = tournament.config.courts.find(c => c.id === match.courtId)?.name ?? match.courtId;
-      if (!confirm(`Update score for Round ${round!.roundNumber}, ${courtName}?`)) {
+      if (!confirm(t('log.updateScoreConfirm', { round: round!.roundNumber, court: courtName }))) {
         setEditingMatch(null);
         return;
       }
@@ -190,7 +191,7 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
     const courtName = tournament.config.courts.find(
       c => c.id === round?.matches.find(m => m.id === matchId)?.courtId
     )?.name ?? '';
-    if (!confirm(`Clear score for Round ${round!.roundNumber}, ${courtName}?`)) {
+    if (!confirm(t('log.clearScoreConfirm', { round: round!.roundNumber, court: courtName }))) {
       return;
     }
     dispatch({
@@ -203,8 +204,8 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
   const handleComplete = () => {
     const unscoredRounds = tournament.rounds.filter(r => r.matches.some(m => !m.score));
     const msg = unscoredRounds.length > 0
-      ? `Finish tournament? ${unscoredRounds.length} round(s) with unscored matches will be trimmed.`
-      : 'Mark tournament as completed?';
+      ? t('log.finishTrimConfirm', { count: unscoredRounds.length })
+      : t('log.finishConfirm');
     if (confirm(msg)) {
       dispatch({ type: 'COMPLETE_TOURNAMENT' });
       onNavigate?.('play');
@@ -214,7 +215,7 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
   return (
     <div className={styles.container}>
       {tournament.rounds.length === 0 && (
-        <div className={styles.empty}>No rounds yet</div>
+        <div className={styles.empty}>{t('log.noRounds')}</div>
       )}
 
       {tournament.rounds.map(round => (
@@ -239,25 +240,25 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
             fullWidth
             onClick={() => dispatch({ type: 'ADD_ROUNDS', payload: { count: 1 } })}
           >
-            + Add Round
+            {t('log.addRound')}
           </Button>
           <Button
             variant="secondary"
             fullWidth
             onClick={handleComplete}
           >
-            Finish Tournament
+            {t('log.finishTournament')}
           </Button>
         </div>
       )}
 
       <div className={styles.statsBtn}>
         <Button variant="secondary" fullWidth onClick={() => setShowStats(true)}>
-          Statistics
+          {t('log.statistics')}
         </Button>
       </div>
 
-      <Modal open={showStats} title="Statistics" onClose={handleCloseStats}>
+      <Modal open={showStats} title={t('log.statisticsTitle')} onClose={handleCloseStats}>
         {distributionStats && (
           <DistributionStats
             data={distributionStats}
@@ -281,7 +282,7 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
         <PlayerStats stats={stats} />
         <div className={styles.exportBtn}>
           <Button variant="secondary" fullWidth onClick={handleExportPlan}>
-            Export Plan
+            {t('log.exportPlan')}
           </Button>
         </div>
       </Modal>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ref, push, set } from 'firebase/database';
-import { Button, Card, FeedbackModal } from '@padel/common';
+import { Button, Card, FeedbackModal, LanguageSelector, useTranslation } from '@padel/common';
 import type { TournamentSummary } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { db } from '../firebase';
@@ -28,6 +28,7 @@ export function HomeScreen() {
     myTournaments, registeredTournaments, listingsLoading,
     openTournament,
   } = usePlanner();
+  const { t } = useTranslation();
 
   const [name, setName] = useState(randomTournamentName);
   const [joinCode, setJoinCode] = useState('');
@@ -47,7 +48,7 @@ export function HomeScreen() {
     try {
       await createTournament(name.trim());
     } catch {
-      setError('Failed to create tournament');
+      setError(t('home.failedCreate'));
       setCreating(false);
     }
   };
@@ -55,7 +56,7 @@ export function HomeScreen() {
   const handleJoin = async () => {
     const code = joinCode.trim().toUpperCase();
     if (code.length !== 6) {
-      setError('Code must be 6 characters');
+      setError(t('home.codeMustBe6'));
       return;
     }
     setJoining(true);
@@ -64,7 +65,7 @@ export function HomeScreen() {
     if (found) {
       setScreen('join');
     } else {
-      setError('Tournament not found');
+      setError(t('home.tournamentNotFound'));
       setJoining(false);
     }
   };
@@ -124,17 +125,17 @@ export function HomeScreen() {
             <path d="M62 23 C74 38, 74 62, 62 77" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round"/>
           </g>
         </svg>
-        <h1 className={styles.headerTitle}>Tournament Planner</h1>
+        <h1 className={styles.headerTitle}>{t('home.title')}</h1>
       </header>
 
       <main>
       {userName && !editingUserName && (
         <div className={styles.userBadge}>
-          <span className={styles.userBadgeText}>Logged in as <strong>{userName}</strong></span>
+          <span className={styles.userBadgeText}>{t('home.loggedInAs')} <strong>{userName}</strong></span>
           <button
             className={styles.editNameBtn}
             onClick={() => { setUserNameDraft(userName); setEditingUserName(true); }}
-            aria-label="Edit name"
+            aria-label={t('home.editName')}
           >
             &#x270E;
           </button>
@@ -152,13 +153,13 @@ export function HomeScreen() {
               if (e.key === 'Escape') setEditingUserName(false);
             }}
             autoFocus
-            aria-label="Your name"
+            aria-label={t('home.namePlaceholder')}
           />
           <Button size="small" onClick={handleSaveUserName} disabled={!userNameDraft.trim()}>
-            Save
+            {t('home.save')}
           </Button>
           <Button size="small" variant="ghost" onClick={() => setEditingUserName(false)}>
-            Cancel
+            {t('home.cancel')}
           </Button>
         </div>
       )}
@@ -167,20 +168,20 @@ export function HomeScreen() {
       {!userNameLoading && !userName && (
         <Card>
           <div className={styles.namePrompt}>
-            <span className={styles.namePromptLabel}>Set your name to get started</span>
-            <span className={styles.namePromptLabel}>(will be shown as tournament owner name)</span>
+            <span className={styles.namePromptLabel}>{t('home.namePrompt')}</span>
+            <span className={styles.namePromptLabel}>{t('home.namePromptSub')}</span>
             <input
               className={styles.input}
               type="text"
               value={profileName}
               onChange={e => setProfileName(e.target.value)}
-              placeholder="Group Name / Your name"
+              placeholder={t('home.namePlaceholder')}
               onKeyDown={e => e.key === 'Enter' && handleSaveName()}
-              aria-label="Group Name / Your name"
+              aria-label={t('home.namePlaceholder')}
               autoFocus
             />
             <Button fullWidth onClick={handleSaveName} disabled={savingName || !profileName.trim()}>
-              {savingName ? 'Saving...' : 'Save'}
+              {savingName ? t('home.saving') : t('home.save')}
             </Button>
           </div>
         </Card>
@@ -189,23 +190,23 @@ export function HomeScreen() {
       {/* Actions */}
       <div className={styles.actions}>
         <div className={styles.createSection}>
-          <label className={styles.inputLabel} htmlFor="tournament-name">Tournament name</label>
+          <label className={styles.inputLabel} htmlFor="tournament-name">{t('home.tournamentName')}</label>
           <input
             id="tournament-name"
             className={styles.input}
             type="text"
             value={name}
             onChange={e => setName(e.target.value)}
-            placeholder="Tournament name"
+            placeholder={t('home.tournamentNamePlaceholder')}
             onKeyDown={e => e.key === 'Enter' && handleCreate()}
           />
           <Button fullWidth onClick={handleCreate} disabled={creating || !name.trim() || !userName}>
-            {creating ? 'Creating...' : 'Create Tournament'}
+            {creating ? t('home.creating') : t('home.createTournament')}
           </Button>
         </div>
 
         <div className={styles.divider}>
-          <span>or</span>
+          <span>{t('home.or')}</span>
         </div>
 
         {joinMode ? (
@@ -218,7 +219,7 @@ export function HomeScreen() {
                 setJoinCode(e.target.value.toUpperCase().slice(0, 6));
                 setError(null);
               }}
-              placeholder="ABCDEF"
+              placeholder={t('home.codePlaceholder')}
               maxLength={6}
               autoFocus
               onKeyDown={e => e.key === 'Enter' && handleJoin()}
@@ -226,15 +227,15 @@ export function HomeScreen() {
             />
             {error && <div className={styles.error}>{error}</div>}
             <Button fullWidth onClick={handleJoin} disabled={joining || joinCode.length !== 6}>
-              {joining ? 'Joining...' : 'Join'}
+              {joining ? t('home.joining') : t('home.join')}
             </Button>
             <Button variant="ghost" fullWidth onClick={() => { setJoinMode(false); setError(null); }}>
-              Cancel
+              {t('home.cancel')}
             </Button>
           </div>
         ) : (
           <Button variant="secondary" fullWidth onClick={() => setJoinMode(true)}>
-            Join with Code
+            {t('home.joinWithCode')}
           </Button>
         )}
       </div>
@@ -242,9 +243,9 @@ export function HomeScreen() {
       {/* My Tournaments */}
       {!listingsLoading && (
         <Card>
-          <h2 className={styles.sectionTitle}>My Tournaments</h2>
+          <h2 className={styles.sectionTitle}>{t('home.myTournaments')}</h2>
           {myTournaments.length === 0 ? (
-            <p className={styles.empty}>No tournaments created yet</p>
+            <p className={styles.empty}>{t('home.noTournamentsCreated')}</p>
           ) : (
             <div className={styles.tournamentList}>
               {myTournaments.map(t => renderTournamentItem(t, 'organizer'))}
@@ -256,9 +257,9 @@ export function HomeScreen() {
       {/* Registered Tournaments */}
       {!listingsLoading && (
         <Card>
-          <h2 className={styles.sectionTitle}>Registered Tournaments</h2>
+          <h2 className={styles.sectionTitle}>{t('home.registeredTournaments')}</h2>
           {registeredTournaments.length === 0 ? (
-            <p className={styles.empty}>No tournaments joined yet</p>
+            <p className={styles.empty}>{t('home.noTournamentsJoined')}</p>
           ) : (
             <div className={styles.tournamentList}>
               {registeredTournaments.map(t => renderTournamentItem(t, 'join'))}
@@ -269,14 +270,15 @@ export function HomeScreen() {
       </main>
 
       <footer className={styles.footer}>
-        Free &amp; open source &middot;{' '}
+        {t('home.freeOpenSource')} &middot;{' '}
         <button className={styles.footerLink} onClick={() => setScreen('supporters')}>
-          Support us
+          {t('home.supportUs')}
         </button>
         {' '}&middot;{' '}
         <button className={styles.footerLink} onClick={() => setFeedbackOpen(true)}>
-          Send feedback
+          {t('home.sendFeedback')}
         </button>
+        <LanguageSelector />
       </footer>
 
       <FeedbackModal

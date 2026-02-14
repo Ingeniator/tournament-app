@@ -12,11 +12,12 @@ import { copyToClipboard } from '../utils/clipboard';
 import { shareStandingsImage } from '../utils/standingsImage';
 import { ref, push, set } from 'firebase/database';
 import { db, firebaseConfigured } from '../firebase';
-import { Button, FeedbackModal, Modal, Toast, useToast } from '@padel/common';
+import { Button, FeedbackModal, Modal, Toast, useToast, useTranslation } from '@padel/common';
 import styles from './PlayScreen.module.css';
 
 export function PlayScreen() {
   const { tournament, dispatch } = useTournament();
+  const { t } = useTranslation();
   const standings = useStandings(tournament);
   const nominations = useNominations(tournament, standings);
   const plannedGames = useMemo(() => {
@@ -103,14 +104,14 @@ export function PlayScreen() {
   if (tournament.phase === 'completed') {
     const handleCopy = async () => {
       const ok = await copyToClipboard(buildMessengerText(roundsExpanded));
-      showToast(ok ? 'Copied!' : 'Failed to copy');
+      showToast(ok ? t('play.copied') : t('play.failedCopy'));
     };
     const handleShareImage = async () => {
       const result = await shareStandingsImage(tournament.name, standings, nominations);
-      if (result.status === 'shared') showToast('Shared!');
-      else if (result.status === 'downloaded') showToast('Image saved!');
+      if (result.status === 'shared') showToast(t('play.shared'));
+      else if (result.status === 'downloaded') showToast(t('play.imageSaved'));
       else if (result.status === 'preview') setPreviewImages(result.dataUrls);
-      else showToast('Failed to share');
+      else showToast(t('play.failedShare'));
     };
 
     return (
@@ -129,18 +130,18 @@ export function PlayScreen() {
           ]}
         </Carousel>
         <Button variant="secondary" fullWidth onClick={handleShareImage}>
-          Share Results as Image
+          {t('play.shareImage')}
         </Button>
         {tournament.rounds.some(r => r.matches.some(m => m.score)) && (
           <details className={styles.roundDetails} onToggle={e => setRoundsExpanded((e.target as HTMLDetailsElement).open)}>
-            <summary className={styles.roundDetailsSummary}>Round Results</summary>
+            <summary className={styles.roundDetailsSummary}>{t('play.roundResults')}</summary>
             <div className={styles.roundResultsList}>
               {tournament.rounds.map(round => {
                 const scoredMatches = round.matches.filter(m => m.score);
                 if (scoredMatches.length === 0) return null;
                 return (
                   <div key={round.id} className={styles.roundResultGroup}>
-                    <div className={styles.roundResultTitle}>Round {round.roundNumber}</div>
+                    <div className={styles.roundResultTitle}>{t('play.roundNum', { num: round.roundNumber })}</div>
                     {scoredMatches.map(match => {
                       const courtLabel = tournament.config.courts.find(c => c.id === match.courtId)?.name ?? match.courtId;
                       const s = match.score!;
@@ -165,7 +166,7 @@ export function PlayScreen() {
                     })}
                     {round.sitOuts.length > 0 && (
                       <div className={styles.resultSitOut}>
-                        Sat out: {round.sitOuts.map(name).join(', ')}
+                        {t('play.satOut', { names: round.sitOuts.map(name).join(', ') })}
                       </div>
                     )}
                   </div>
@@ -175,19 +176,19 @@ export function PlayScreen() {
           </details>
         )}
         <Button fullWidth onClick={handleCopy}>
-          Share Results as Text
+          {t('play.shareText')}
         </Button>
         <button className={styles.supportCta} onClick={() => setShowSupport(true)}>
           <span className={styles.supportEmoji}>&#x2764;&#xFE0F;</span>
-          <span className={styles.supportText}>Enjoyed using this? Help keep it free.</span>
+          <span className={styles.supportText}>{t('play.supportCta')}</span>
         </button>
         <div className={styles.attribution}>
-          Made with care
+          {t('play.madeWithCare')}
           {firebaseConfigured && (
             <>
               {' '}&middot;{' '}
               <button className={styles.attributionLink} onClick={() => setFeedbackOpen(true)}>
-                Send feedback
+                {t('play.sendFeedback')}
               </button>
             </>
           )}
@@ -206,7 +207,7 @@ export function PlayScreen() {
           <div className={styles.imagePreviewOverlay} onClick={() => setPreviewImages(null)}>
             <div className={styles.imagePreviewContent} onClick={e => e.stopPropagation()}>
               <div className={styles.imagePreviewHeader}>
-                <span className={styles.imagePreviewHint}>Long-press an image to save</span>
+                <span className={styles.imagePreviewHint}>{t('play.longPressHint')}</span>
                 <button className={styles.imagePreviewClose} onClick={() => setPreviewImages(null)}>&#x2715;</button>
               </div>
               <div className={styles.imagePreviewScroll}>
@@ -226,7 +227,7 @@ export function PlayScreen() {
     <div className={styles.container}>
       {/* Progress line */}
       <div className={styles.progress}>
-        Round {scoredRounds + 1}/{tournament.rounds.length} · {scoredMatches}/{totalMatches} matches
+        {t('play.progress', { current: scoredRounds + 1, total: tournament.rounds.length, scored: scoredMatches, totalMatches })}
       </div>
 
       {/* Active round */}
@@ -253,17 +254,17 @@ export function PlayScreen() {
 
       {!activeRound && (
         <div className={styles.allScored}>
-          <p>All rounds scored!</p>
+          <p>{t('play.allScored')}</p>
           <div className={styles.allScoredActions}>
             <Button variant="secondary" fullWidth onClick={() => dispatch({ type: 'ADD_ROUNDS', payload: { count: 1 } })}>
-              + Add Round
+              {t('play.addRound')}
             </Button>
             <Button fullWidth onClick={() => {
-              if (confirm('Mark tournament as completed?')) {
+              if (confirm(t('play.completeConfirm'))) {
                 dispatch({ type: 'COMPLETE_TOURNAMENT' });
               }
             }}>
-              Finish Tournament
+              {t('play.finishTournament')}
             </Button>
           </div>
         </div>
@@ -274,7 +275,7 @@ export function PlayScreen() {
         <div className={styles.roundPreviews}>
           {prevRound && (
             <div className={styles.roundPreview}>
-              <h3 className={styles.roundPreviewTitle}>Previous — Round {prevRound.roundNumber}</h3>
+              <h3 className={styles.roundPreviewTitle}>{t('play.previousRound', { num: prevRound.roundNumber })}</h3>
               {prevRound.matches.map(match => {
                 const courtName = tournament.config.courts.find(c => c.id === match.courtId)?.name ?? match.courtId;
                 return (
@@ -282,7 +283,7 @@ export function PlayScreen() {
                     <span className={styles.compactCourt}>{courtName}</span>
                     <span className={styles.compactTeams}>
                       {name(match.team1[0])} & {name(match.team1[1])}
-                      <span className={styles.previewVs}> vs </span>
+                      <span className={styles.previewVs}>{t('play.vs')}</span>
                       {name(match.team2[0])} & {name(match.team2[1])}
                     </span>
                     {match.score && (
@@ -295,14 +296,14 @@ export function PlayScreen() {
               })}
               {prevRound.sitOuts.length > 0 && (
                 <div className={styles.compactSitOut}>
-                  Sit: {prevRound.sitOuts.map(name).join(', ')}
+                  {t('play.sit', { names: prevRound.sitOuts.map(name).join(', ') })}
                 </div>
               )}
             </div>
           )}
           {nextRound && (
             <div className={styles.roundPreview}>
-              <h3 className={styles.roundPreviewTitle}>Up Next — Round {nextRound.roundNumber}</h3>
+              <h3 className={styles.roundPreviewTitle}>{t('play.upNextRound', { num: nextRound.roundNumber })}</h3>
               {nextRound.matches.map(match => {
                 const courtName = tournament.config.courts.find(c => c.id === match.courtId)?.name ?? match.courtId;
                 return (
@@ -310,7 +311,7 @@ export function PlayScreen() {
                     <span className={styles.compactCourt}>{courtName}</span>
                     <span className={styles.compactTeams}>
                       {name(match.team1[0])} & {name(match.team1[1])}
-                      <span className={styles.previewVs}> vs </span>
+                      <span className={styles.previewVs}>{t('play.vs')}</span>
                       {name(match.team2[0])} & {name(match.team2[1])}
                     </span>
                   </div>
@@ -318,7 +319,7 @@ export function PlayScreen() {
               })}
               {nextRound.sitOuts.length > 0 && (
                 <div className={styles.compactSitOut}>
-                  Sit: {nextRound.sitOuts.map(name).join(', ')}
+                  {t('play.sit', { names: nextRound.sitOuts.map(name).join(', ') })}
                 </div>
               )}
             </div>
@@ -333,7 +334,7 @@ export function PlayScreen() {
           fullWidth
           onClick={() => setShowStandings(true)}
         >
-          Standings
+          {t('play.standings')}
         </Button>
       </div>
 
@@ -342,10 +343,10 @@ export function PlayScreen() {
         <div className={styles.interstitialOverlay} onClick={() => setRoundCompleteNum(null)}>
           <div className={styles.interstitial} onClick={e => e.stopPropagation()}>
             <div className={styles.interstitialContent}>
-              <div className={styles.interstitialTitle}>Round {roundCompleteNum} complete!</div>
-              <div className={styles.interstitialSub}>Get ready for the next round</div>
+              <div className={styles.interstitialTitle}>{t('play.roundComplete', { num: roundCompleteNum })}</div>
+              <div className={styles.interstitialSub}>{t('play.getReady')}</div>
               <Button fullWidth onClick={() => setRoundCompleteNum(null)}>
-                Continue
+                {t('play.continue')}
               </Button>
             </div>
           </div>
@@ -353,7 +354,7 @@ export function PlayScreen() {
       )}
 
       {/* Standings overlay */}
-      <Modal open={showStandings} title="Standings" onClose={() => setShowStandings(false)}>
+      <Modal open={showStandings} title={t('play.standingsTitle')} onClose={() => setShowStandings(false)}>
         <StandingsTable standings={standings} plannedGames={plannedGames} />
       </Modal>
 

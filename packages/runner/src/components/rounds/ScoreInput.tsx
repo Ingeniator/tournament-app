@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import type { MatchScore } from '@padel/common';
+import { useTranslation } from '@padel/common';
 import styles from './ScoreInput.module.css';
 
 type Side = 'team1' | 'team2';
@@ -22,6 +23,7 @@ interface ScoreInputProps {
 }
 
 export function ScoreInput({ score, pointsPerMatch, onSave, onClear }: ScoreInputProps) {
+  const { t } = useTranslation();
   const [pickingSide, setPickingSide] = useState<Side | null>(null);
   const [flyAnim, setFlyAnim] = useState<FlyAnim | null>(null);
   const team1Ref = useRef<HTMLButtonElement>(null);
@@ -76,7 +78,7 @@ export function ScoreInput({ score, pointsPerMatch, onSave, onClear }: ScoreInpu
           className={`${styles.scoreBtn} ${pickingSide === 'team1' ? styles.scoreBtnActive : ''}`}
           onClick={() => setPickingSide(pickingSide === 'team1' ? null : 'team1')}
         >
-          {score ? score.team1Points : '–'}
+          {score ? score.team1Points : '\u2013'}
         </button>
         <span className={styles.separator}>:</span>
         <button
@@ -84,7 +86,7 @@ export function ScoreInput({ score, pointsPerMatch, onSave, onClear }: ScoreInpu
           className={`${styles.scoreBtn} ${pickingSide === 'team2' ? styles.scoreBtnActive : ''}`}
           onClick={() => setPickingSide(pickingSide === 'team2' ? null : 'team2')}
         >
-          {score ? score.team2Points : '–'}
+          {score ? score.team2Points : '\u2013'}
         </button>
       </div>
 
@@ -104,11 +106,11 @@ export function ScoreInput({ score, pointsPerMatch, onSave, onClear }: ScoreInpu
           <div className={styles.pickerActions}>
             {score && (
               <button className={styles.clearBtn} onClick={handleClear}>
-                Clear
+                {t('score.clear')}
               </button>
             )}
             <button className={styles.cancelBtn} onClick={() => setPickingSide(null)}>
-              Cancel
+              {t('score.cancel')}
             </button>
           </div>
         </div>
