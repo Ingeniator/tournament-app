@@ -10,11 +10,13 @@ import { TeamPairingScreen } from './screens/TeamPairingScreen';
 import { PlayScreen } from './screens/PlayScreen';
 import { LogScreen } from './screens/LogScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
-import { Button, ErrorBoundary } from '@padel/common';
+import { Button, ErrorBoundary, ThemeSwitcher } from '@padel/common';
+import { useRunnerTheme } from './state/ThemeContext';
 import { saveUIState, loadUIState } from './state/persistence';
 
 function AppContent() {
   const { tournament, dispatch, saveError } = useTournament();
+  const { skin, setSkin } = useRunnerTheme();
   const [activeTab, setActiveTab] = useState<TabId>(() => {
     const saved = loadUIState();
     const tab = saved?.activeTab as TabId | undefined;
@@ -81,17 +83,20 @@ function AppContent() {
         title={tournament.name}
         hasBottomNav
         headerRight={
-          <Button
-            variant="ghost"
-            size="small"
-            onClick={() => {
-              if (confirm('Start a new tournament? Current one will be deleted.')) {
-                dispatch({ type: 'RESET_TOURNAMENT' });
-              }
-            }}
-          >
-            New
-          </Button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ThemeSwitcher skin={skin} onSelect={setSkin} />
+            <Button
+              variant="ghost"
+              size="small"
+              onClick={() => {
+                if (confirm('Start a new tournament? Current one will be deleted.')) {
+                  dispatch({ type: 'RESET_TOURNAMENT' });
+                }
+              }}
+            >
+              New
+            </Button>
+          </div>
         }
       >
         {activeTab === 'play' && <PlayScreen />}
