@@ -130,6 +130,12 @@ export function JoinScreen() {
                 <span>{new Date(tournament.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
               </div>
             )}
+            {tournament.duration && (
+              <div className={styles.detailRow}>
+                <span className={styles.detailLabel}>Duration</span>
+                <span>{tournament.duration >= 60 ? `${Math.floor(tournament.duration / 60)}h${tournament.duration % 60 ? ` ${tournament.duration % 60}min` : ''}` : `${tournament.duration}min`}</span>
+              </div>
+            )}
             {tournament.place && (
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>Place</span>

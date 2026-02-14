@@ -130,6 +130,9 @@ export function SettingsScreen() {
         <div className={styles.chipList}>
           <span className={styles.chip}>{tournament.config.format}</span>
           <span className={styles.chip}>{tournament.config.courts.filter(c => !c.unavailable).length} court(s)</span>
+          {tournament.config.targetDuration && (
+            <span className={styles.chip}>{tournament.config.targetDuration >= 60 ? `${Math.floor(tournament.config.targetDuration / 60)}h${tournament.config.targetDuration % 60 ? ` ${tournament.config.targetDuration % 60}min` : ''}` : `${tournament.config.targetDuration}min`}</span>
+          )}
         </div>
 
         {tournament.phase === 'in-progress' ? (

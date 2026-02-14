@@ -21,8 +21,8 @@ export function generateICS(tournament: PlannerTournament): string {
   if (!tournament.date) return '';
 
   const start = new Date(tournament.date);
-  // Default duration: 2 hours
-  const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+  const durationMs = (tournament.duration ?? 120) * 60 * 1000;
+  const end = new Date(start.getTime() + durationMs);
   const now = new Date();
 
   const lines = [
@@ -56,7 +56,8 @@ function formatGCalDate(date: Date): string {
 
 function buildGoogleCalendarUrl(tournament: PlannerTournament): string {
   const start = new Date(tournament.date!);
-  const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+  const durationMs = (tournament.duration ?? 120) * 60 * 1000;
+  const end = new Date(start.getTime() + durationMs);
   const params = new URLSearchParams({
     action: 'TEMPLATE',
     text: tournament.name,
