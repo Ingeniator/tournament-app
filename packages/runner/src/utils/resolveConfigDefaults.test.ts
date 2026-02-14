@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { resolveConfigDefaults } from './resolveConfigDefaults';
+import { resolveConfigDefaults, computeSitOutInfo } from './resolveConfigDefaults';
 import type { TournamentConfig } from '@padel/common';
 
 function makeConfig(overrides: Partial<TournamentConfig> = {}): TournamentConfig {
@@ -116,5 +116,123 @@ describe('resolveConfigDefaults', () => {
       // defaultPoints path where effectiveRounds = 0 → PREFERRED_POINTS
       expect(resolved.pointsPerMatch).toBe(24);
     });
+  });
+
+  describe('default rounds prefer equal sit-outs', () => {
+    it('nudges default towards fair round count for 5 players on 1 court', () => {
+      // 5 players, 1 court → 1 sits out per round → fair at multiples of 5
+      const config = makeConfig({ maxRounds: null });
+      const resolved = resolveConfigDefaults(config, 5);
+      const info = computeSitOutInfo(5, 1, resolved.maxRounds!);
+      expect(info.isEqual).toBe(true);
+    });
+
+    it('nudges default towards fair round count for 6 players on 1 court', () => {
+      // 6 players, 1 court → 2 sit out per round → fair at multiples of 3
+      const config = makeConfig({ maxRounds: null });
+      const resolved = resolveConfigDefaults(config, 6);
+      const info = computeSitOutInfo(6, 1, resolved.maxRounds!);
+      expect(info.isEqual).toBe(true);
+    });
+
+    it('does not nudge when no sit-outs (4 players, 1 court)', () => {
+      const config = makeConfig({ maxRounds: null });
+      const resolved = resolveConfigDefaults(config, 4);
+      const info = computeSitOutInfo(4, 1, resolved.maxRounds!);
+      expect(info.isEqual).toBe(true);
+      expect(info.sitOutsPerRound).toBe(0);
+    });
+
+    it('does not nudge when explicit maxRounds is set', () => {
+      const config = makeConfig({ maxRounds: 7 });
+      const resolved = resolveConfigDefaults(config, 5);
+      expect(resolved.maxRounds).toBe(7);
+    });
+  });
+});
+
+describe('computeSitOutInfo', () => {
+  it('returns equal when no sit-outs needed', () => {
+    // 4 players, 1 court → 4 play, 0 sit out
+    const info = computeSitOutInfo(4, 1, 5);
+    expect(info.isEqual).toBe(true);
+    expect(info.sitOutsPerRound).toBe(0);
+  });
+
+  it('returns equal when all players fit on courts', () => {
+    // 8 players, 2 courts → 8 play, 0 sit out
+    const info = computeSitOutInfo(8, 2, 3);
+    expect(info.isEqual).toBe(true);
+    expect(info.sitOutsPerRound).toBe(0);
+  });
+
+  it('detects unequal sit-outs: 5 players, 1 court, 3 rounds', () => {
+    // 1 sits out per round, 3 total sit-outs across 5 players → unequal
+    const info = computeSitOutInfo(5, 1, 3);
+    expect(info.isEqual).toBe(false);
+    expect(info.sitOutsPerRound).toBe(1);
+  });
+
+  it('detects equal sit-outs: 5 players, 1 court, 5 rounds', () => {
+    // 1 sits out per round, 5 total sit-outs across 5 players → equal (1 each)
+    const info = computeSitOutInfo(5, 1, 5);
+    expect(info.isEqual).toBe(true);
+    expect(info.sitOutsPerRound).toBe(1);
+  });
+
+  it('detects equal sit-outs: 5 players, 1 court, 10 rounds', () => {
+    // 1 sits out per round, 10 total sit-outs across 5 players → equal (2 each)
+    const info = computeSitOutInfo(5, 1, 10);
+    expect(info.isEqual).toBe(true);
+  });
+
+  it('suggests nearest fair values: 5 players, 1 court, 7 rounds', () => {
+    const info = computeSitOutInfo(5, 1, 7);
+    expect(info.isEqual).toBe(false);
+    expect(info.nearestFairBelow).toBe(5);
+    expect(info.nearestFairAbove).toBe(10);
+  });
+
+  it('suggests nearest fair values: 6 players, 1 court, 4 rounds', () => {
+    // 2 sit out per round, fair step = 6/gcd(2,6) = 6/2 = 3
+    const info = computeSitOutInfo(6, 1, 4);
+    expect(info.isEqual).toBe(false);
+    expect(info.nearestFairBelow).toBe(3);
+    expect(info.nearestFairAbove).toBe(6);
+  });
+
+  it('handles 7 players, 1 court, 3 rounds', () => {
+    // 3 sit out per round, fair step = 7/gcd(3,7) = 7/1 = 7
+    const info = computeSitOutInfo(7, 1, 3);
+    expect(info.isEqual).toBe(false);
+    expect(info.nearestFairBelow).toBe(null); // floor(3/7)*7 = 0 → null
+    expect(info.nearestFairAbove).toBe(7);
+  });
+
+  it('handles when current rounds is already a fair value', () => {
+    const info = computeSitOutInfo(6, 1, 3);
+    expect(info.isEqual).toBe(true);
+    expect(info.nearestFairBelow).toBe(3);
+    expect(info.nearestFairAbove).toBe(3);
+  });
+
+  it('handles 0 players', () => {
+    const info = computeSitOutInfo(0, 1, 5);
+    expect(info.isEqual).toBe(true);
+    expect(info.sitOutsPerRound).toBe(0);
+  });
+
+  it('handles multiple courts: 9 players, 2 courts, 4 rounds', () => {
+    // 8 play per round, 1 sits out → fair step = 9/gcd(1,9) = 9
+    const info = computeSitOutInfo(9, 2, 4);
+    expect(info.isEqual).toBe(false);
+    expect(info.sitOutsPerRound).toBe(1);
+    expect(info.nearestFairAbove).toBe(9);
+  });
+
+  it('handles multiple courts: 9 players, 2 courts, 9 rounds', () => {
+    const info = computeSitOutInfo(9, 2, 9);
+    expect(info.isEqual).toBe(true);
+    expect(info.sitOutsPerRound).toBe(1);
   });
 });

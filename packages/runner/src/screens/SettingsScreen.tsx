@@ -4,6 +4,7 @@ import { SupportOverlay } from '../components/support/SupportOverlay';
 import { EditableField } from '../components/settings/EditableField';
 import { copyToClipboard } from '../utils/clipboard';
 import { exportTournament, validateImport } from '../utils/importExport';
+import { computeSitOutInfo } from '../utils/resolveConfigDefaults';
 import { Button, Card, Toast, useToast } from '@padel/common';
 import styles from './SettingsScreen.module.css';
 
@@ -151,6 +152,25 @@ export function SettingsScreen() {
                 }
               }}
             />
+            {(() => {
+              const activePlayers = tournament.players.filter(p => !p.unavailable).length;
+              const activeCourts = tournament.config.courts.filter(c => !c.unavailable).length;
+              const info = computeSitOutInfo(activePlayers, activeCourts, tournament.rounds.length);
+              if (!info.isEqual && info.sitOutsPerRound > 0) {
+                const suggestions = [info.nearestFairBelow, info.nearestFairAbove]
+                  .filter((v): v is number => v !== null && v >= 1)
+                  .filter((v, i, a) => a.indexOf(v) === i);
+                return (
+                  <div className={styles.sitOutWarning}>
+                    Sit-outs are not equal with {tournament.rounds.length} rounds.
+                    {suggestions.length > 0 && (
+                      <> Try {suggestions.join(' or ')} rounds for equal sit-outs.</>
+                    )}
+                  </div>
+                );
+              }
+              return null;
+            })()}
           </>
         ) : (
           <div className={styles.chipList}>
