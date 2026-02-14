@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { TournamentProvider } from './state/TournamentContext';
+import { ThemeProvider } from './state/ThemeContext';
 import { useTournament } from './hooks/useTournament';
 import { AppShell } from './components/layout/AppShell';
 import { BottomNav, type TabId } from './components/layout/BottomNav';
@@ -111,9 +112,11 @@ function AppContent() {
 export function App() {
   return (
     <ErrorBoundary>
-      <TournamentProvider>
-        <AppContent />
-      </TournamentProvider>
+      <ThemeProvider>
+        <TournamentProvider>
+          <AppContent />
+        </TournamentProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

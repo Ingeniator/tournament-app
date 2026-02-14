@@ -22,4 +22,7 @@ export { Card } from './components/Card';
 export { Modal } from './components/Modal';
 export { Toast } from './components/Toast';
 export { ErrorBoundary } from './components/ErrorBoundary';
+export { ThemeToggle } from './components/ThemeToggle';
 export { useToast } from './hooks/useToast';
+export { useTheme } from './hooks/useTheme';
+export type { Theme } from './hooks/useTheme';

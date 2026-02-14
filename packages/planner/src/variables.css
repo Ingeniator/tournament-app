@@ -1,5 +1,5 @@
 :root {
-  /* Colors */
+  /* Colors (dark theme default) */
   --color-bg: #0f0f1a;
   --color-surface: #1a1a2e;
   --color-surface-raised: #22223a;
@@ -37,4 +37,22 @@
   --text-xl: 1.25rem;
   --text-2xl: 1.5rem;
   --text-3xl: 2rem;
+}
+
+/* Light theme overrides */
+[data-theme="light"] {
+  --color-bg: #f4f4f8;
+  --color-surface: #ffffff;
+  --color-surface-raised: #eeeef3;
+  --color-primary: #d63851;
+  --color-primary-hover: #c02e45;
+  --color-secondary: #e4e8f0;
+  --color-accent: #0fa87f;
+  --color-text: #1a1a2e;
+  --color-text-secondary: #52526a;
+  --color-text-muted: #7e7e96;
+  --color-border: #d8d8e2;
+  --color-danger: #d63851;
+  --color-warning: #c98800;
+  --color-success: #0fa87f;
 }

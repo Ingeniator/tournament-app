@@ -1,8 +1,9 @@
-import type { Tournament } from '@padel/common';
+import type { Tournament, Theme } from '@padel/common';
 import { deduplicateNames } from '../utils/deduplicateNames';
 
 const STORAGE_KEY = 'padel-tournament-v1';
 const UI_STATE_KEY = 'padel-ui-state-v1';
+const THEME_KEY = 'padel-theme';
 
 export function saveTournament(tournament: Tournament | null): boolean {
   try {
@@ -48,5 +49,22 @@ export function loadUIState(): UIState | null {
     return JSON.parse(data) as UIState;
   } catch {
     return null;
+  }
+}
+
+export function saveTheme(theme: Theme): void {
+  try {
+    localStorage.setItem(THEME_KEY, theme);
+  } catch {
+    // silently fail
+  }
+}
+
+export function loadTheme(): Theme {
+  try {
+    const data = localStorage.getItem(THEME_KEY);
+    return data === 'light' ? 'light' : 'dark';
+  } catch {
+    return 'dark';
   }
 }

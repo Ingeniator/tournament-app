@@ -11,6 +11,18 @@
   margin-bottom: var(--space-sm);
 }
 
+.themeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.themeLabel {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
 .chipList {
   display: flex;
   flex-wrap: wrap;

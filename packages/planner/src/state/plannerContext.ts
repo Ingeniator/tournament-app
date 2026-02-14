@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { PlannerTournament, PlannerRegistration, TournamentSummary } from '@padel/common';
+import type { PlannerTournament, PlannerRegistration, TournamentSummary, Theme } from '@padel/common';
 import type { TelegramUser } from '../hooks/useTelegram';
 
 export type Screen = 'loading' | 'home' | 'organizer' | 'join' | 'supporters';
@@ -34,6 +34,8 @@ export interface PlannerContextValue {
   openTournament: (id: string, screen: 'organizer' | 'join') => void;
   deleteTournament: () => Promise<void>;
   telegramUser: TelegramUser | null;
+  theme: Theme;
+  toggleTheme: () => void;
 }
 
 export const PlannerCtx = createContext<PlannerContextValue>(null!);

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import { ref, get } from 'firebase/database';
 import type { PlannerTournament } from '@padel/common';
+import { useTheme } from '@padel/common';
 import { useAuth } from '../hooks/useAuth';
 import { usePlannerTournament } from '../hooks/usePlannerTournament';
 import { db } from '../firebase';
@@ -28,7 +29,15 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
 
   const { players, registerPlayer: registerInDb, removePlayer: removeInDb, updateConfirmed: updateConfirmedInDb, addPlayer: addPlayerInDb, bulkAddPlayers: bulkAddPlayersInDb, toggleConfirmed: toggleConfirmedInDb, updatePlayerName: updatePlayerNameInDb, isRegistered: checkRegistered } = usePlayers(tournamentId);
 
-  const { name: userName, loading: userNameLoading, updateName: updateUserName, updateTelegramId, updateTelegramUsername } = useUserProfile(uid);
+  const { name: userName, theme: userTheme, loading: userNameLoading, updateName: updateUserName, updateTheme: updateUserTheme, updateTelegramId, updateTelegramUsername } = useUserProfile(uid);
+
+  const { theme, toggleTheme: rawToggle } = useTheme(userTheme ?? undefined);
+
+  const toggleTheme = useCallback(() => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    rawToggle();
+    updateUserTheme(next);
+  }, [theme, rawToggle, updateUserTheme]);
   const telegramUser = useTelegram();
   const { tournaments: myTournaments, loading: myLoading } = useMyTournaments(uid);
   const { tournaments: registeredTournaments, loading: regLoading } = useRegisteredTournaments(uid);
@@ -167,6 +176,8 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       openTournament,
       deleteTournament,
       telegramUser,
+      theme,
+      toggleTheme,
     }}>
       {children}
     </PlannerCtx.Provider>

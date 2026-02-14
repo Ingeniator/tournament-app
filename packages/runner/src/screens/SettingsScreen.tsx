@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { useTournament } from '../hooks/useTournament';
+import { useRunnerTheme } from '../state/ThemeContext';
 import { SupportOverlay } from '../components/support/SupportOverlay';
 import { EditableField } from '../components/settings/EditableField';
 import { copyToClipboard } from '../utils/clipboard';
 import { exportTournament, validateImport } from '../utils/importExport';
-import { Button, Card, Toast, useToast } from '@padel/common';
+import { Button, Card, Toast, useToast, ThemeToggle } from '@padel/common';
 import styles from './SettingsScreen.module.css';
 
 export function SettingsScreen() {
   const { tournament, dispatch } = useTournament();
+  const { theme, toggleTheme } = useRunnerTheme();
   const { toastMessage, showToast } = useToast();
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [editPlayerName, setEditPlayerName] = useState('');
@@ -104,6 +106,17 @@ export function SettingsScreen() {
 
   return (
     <div className={styles.container}>
+      {/* Appearance */}
+      <Card>
+        <div className={styles.themeRow}>
+          <div>
+            <h3 className={styles.sectionTitle} style={{ marginBottom: 0 }}>Appearance</h3>
+            <span className={styles.themeLabel}>{theme === 'dark' ? 'Dark' : 'Light'} theme</span>
+          </div>
+          <ThemeToggle theme={theme} onToggle={toggleTheme} />
+        </div>
+      </Card>
+
       {/* Tournament info */}
       <Card>
         <h3 className={styles.sectionTitle}>Tournament</h3>
