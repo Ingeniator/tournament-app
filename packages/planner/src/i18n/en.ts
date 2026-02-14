@@ -135,6 +135,10 @@ const en: Translations = {
   'join.welcomeBackCalendar': 'Welcome back! Add it to your calendar so you don\'t forget',
   'join.welcomeBack': 'Welcome back! You\'re confirmed',
   'join.updateFailed': 'Could not update, please try again',
+  'join.letsPlay': 'Let\'s play',
+  'join.copyForDevice': 'Copy for Another Device',
+  'join.jsonCopied': 'Tournament JSON copied!',
+  'join.failedCopy': 'Failed to copy',
 
   // SupportOverlay
   'support.title': 'Support Us',

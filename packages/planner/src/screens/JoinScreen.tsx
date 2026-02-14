@@ -3,6 +3,7 @@ import { Button, Card, Toast, useToast, useTranslation } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import { downloadICS } from '../utils/icsExport';
+import { launchInRunner, buildRunnerTournament } from '../utils/exportToRunner';
 import styles from './JoinScreen.module.css';
 
 export function JoinScreen() {
@@ -106,6 +107,20 @@ export function JoinScreen() {
       showToast(t('join.updateFailed'));
     }
     setUpdating(false);
+  };
+
+  const handleLaunch = () => {
+    launchInRunner(tournament!, players);
+  };
+
+  const handleCopyExport = async () => {
+    const json = JSON.stringify(buildRunnerTournament(tournament!, players), null, 2);
+    try {
+      await navigator.clipboard.writeText(json);
+      showToast(t('join.jsonCopied'));
+    } catch {
+      showToast(t('join.failedCopy'));
+    }
   };
 
   const handleBack = () => {
@@ -319,6 +334,13 @@ export function JoinScreen() {
           </div>
         )}
       </Card>
+
+      <Button fullWidth onClick={handleLaunch} disabled={players.length === 0}>
+        {t('join.letsPlay')}
+      </Button>
+      <Button variant="secondary" fullWidth onClick={handleCopyExport} disabled={players.length === 0}>
+        {t('join.copyForDevice')}
+      </Button>
       </main>
 
       <Toast message={toastMessage} className={styles.toast} />

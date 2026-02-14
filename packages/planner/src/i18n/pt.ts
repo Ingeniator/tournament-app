@@ -135,6 +135,10 @@ const pt: Translations = {
   'join.welcomeBackCalendar': 'Bem-vindo de volta! Adiciona ao calendário para não te esqueceres',
   'join.welcomeBack': 'Bem-vindo de volta! Estás confirmado',
   'join.updateFailed': 'Não foi possível atualizar, tenta novamente',
+  'join.letsPlay': 'Vamos jogar',
+  'join.copyForDevice': 'Copiar para Outro Dispositivo',
+  'join.jsonCopied': 'JSON do torneio copiado!',
+  'join.failedCopy': 'Falha ao copiar',
 
   // SupportOverlay
   'support.title': 'Apoie-nos',
