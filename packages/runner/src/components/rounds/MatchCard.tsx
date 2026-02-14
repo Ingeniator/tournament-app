@@ -23,9 +23,26 @@ export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, on
     <div className={`${styles.match} ${match.score ? styles.scored : ''}`}>
       <div className={styles.courtLabel}>{courtName}</div>
       <div className={styles.court}>
-        <div className={`${styles.playerCell} ${styles.topLeft} ${team1Won ? styles.winner : ''}`} title={name(match.team1[0])}><span className={styles.playerName}>{name(match.team1[0])}</span></div>
-        <div className={`${styles.playerCell} ${styles.topRight} ${team2Won ? styles.winner : ''}`} title={name(match.team2[0])}><span className={styles.playerName}>{name(match.team2[0])}</span></div>
+        {/* Row 1: first players with & */}
+        <div className={`${styles.playerCell} ${styles.topLeft} ${team1Won ? styles.winner : ''}`} title={name(match.team1[0])}>
+          <span className={styles.playerName}>{name(match.team1[0])}</span>
+          <span className={styles.ampersand}>&amp;</span>
+        </div>
+        <span className={styles.vsLabel}>vs</span>
+        <div className={`${styles.playerCell} ${styles.topRight} ${team2Won ? styles.winner : ''}`} title={name(match.team2[0])}>
+          <span className={styles.playerName}>{name(match.team2[0])}</span>
+          <span className={styles.ampersand}>&amp;</span>
+        </div>
 
+        {/* Row 2: second players */}
+        <div className={`${styles.playerCell} ${styles.bottomLeft} ${team1Won ? styles.winner : ''}`} title={name(match.team1[1])}>
+          <span className={styles.playerName}>{name(match.team1[1])}</span>
+        </div>
+        <div className={`${styles.playerCell} ${styles.bottomRight} ${team2Won ? styles.winner : ''}`} title={name(match.team2[1])}>
+          <span className={styles.playerName}>{name(match.team2[1])}</span>
+        </div>
+
+        {/* Row 3: Score */}
         {readOnly && match.score ? (
           <div
             className={`${styles.scoreCenter} ${onTapScore ? styles.tappable : ''}`}
@@ -54,9 +71,6 @@ export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, on
             onClear={onClear}
           />
         )}
-
-        <div className={`${styles.playerCell} ${styles.bottomLeft} ${team1Won ? styles.winner : ''}`} title={name(match.team1[1])}><span className={styles.playerName}>{name(match.team1[1])}</span></div>
-        <div className={`${styles.playerCell} ${styles.bottomRight} ${team2Won ? styles.winner : ''}`} title={name(match.team2[1])}><span className={styles.playerName}>{name(match.team2[1])}</span></div>
       </div>
     </div>
   );
