@@ -37,7 +37,11 @@ export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, on
             <span className={styles.scoreValue}>{match.score.team2Points}</span>
           </div>
         ) : readOnly ? (
-          <div className={styles.scoreCenter}>
+          <div
+            className={`${styles.scoreCenter} ${onTapScore ? styles.tappable : ''}`}
+            onClick={onTapScore}
+            {...(onTapScore ? { role: 'button', tabIndex: 0, onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTapScore(); } }, 'aria-label': 'Enter score' } : {})}
+          >
             <span className={styles.noScore}>–</span>
             <span className={styles.scoreSeparator}>:</span>
             <span className={styles.noScore}>–</span>

@@ -11,11 +11,12 @@ interface RoundCardProps {
   readOnly?: boolean;
   editingMatchId?: string;
   onStartEdit?: (matchId: string) => void;
+  onTapUnscored?: (matchId: string) => void;
   onScore: (matchId: string, score: MatchScore) => void;
   onClear: (matchId: string) => void;
 }
 
-export function RoundCard({ round, players, courts, pointsPerMatch, readOnly, editingMatchId, onStartEdit, onScore, onClear }: RoundCardProps) {
+export function RoundCard({ round, players, courts, pointsPerMatch, readOnly, editingMatchId, onStartEdit, onTapUnscored, onScore, onClear }: RoundCardProps) {
   const { t } = useTranslation();
   const name = (id: string) => players.find(p => p.id === id)?.name ?? '?';
   const scoredCount = round.matches.filter(m => m.score).length;
@@ -42,7 +43,13 @@ export function RoundCard({ round, players, courts, pointsPerMatch, readOnly, ed
               readOnly={readOnly && !isEditing}
               onScore={score => onScore(match.id, score)}
               onClear={() => onClear(match.id)}
-              onTapScore={readOnly && onStartEdit && match.score ? () => onStartEdit(match.id) : undefined}
+              onTapScore={
+                readOnly && match.score && onStartEdit
+                  ? () => onStartEdit(match.id)
+                  : readOnly && !match.score && onTapUnscored
+                    ? () => onTapUnscored(match.id)
+                    : undefined
+              }
             />
           );
         })}

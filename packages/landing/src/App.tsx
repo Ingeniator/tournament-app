@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ref, push, set } from 'firebase/database';
-import { ErrorBoundary, I18nProvider, AppFooter, FeedbackModal, useTranslation } from '@padel/common';
+import { ErrorBoundary, I18nProvider, SkinPicker, AppFooter, FeedbackModal, useTranslation, useTheme, isValidSkin, DEFAULT_SKIN } from '@padel/common';
+import type { SkinId } from '@padel/common';
 import { translations } from './i18n';
 import { db } from './firebase';
 import styles from './App.module.css';
@@ -21,8 +22,28 @@ declare global {
   }
 }
 
+const SKIN_KEY = 'padel-skin';
+
+function loadSkin(): SkinId {
+  try {
+    const data = localStorage.getItem(SKIN_KEY);
+    if (data && isValidSkin(data)) return data;
+    return DEFAULT_SKIN;
+  } catch {
+    return DEFAULT_SKIN;
+  }
+}
+
+function saveSkin(skin: SkinId): void {
+  try { localStorage.setItem(SKIN_KEY, skin); } catch { /* ignore */ }
+}
+
+const initialSkin = loadSkin();
+
 function LandingContent() {
   const { t } = useTranslation();
+  const { skin, setSkin: rawSetSkin } = useTheme(initialSkin);
+  const setSkin = useCallback((s: SkinId) => { rawSetSkin(s); saveSkin(s); }, [rawSetSkin]);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [telegramName, setTelegramName] = useState<string | null>(null);
 
@@ -54,6 +75,9 @@ function LandingContent() {
 
   return (
     <main className={styles.container}>
+      <div className={styles.skinPicker}>
+        <SkinPicker skin={skin} onSelect={setSkin} />
+      </div>
       <div className={styles.logo}>
         <svg viewBox="0 0 100 100" width="48" height="48" aria-hidden="true">
           <defs>
