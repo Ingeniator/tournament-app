@@ -180,3 +180,51 @@
   --color-border: var(--mauve-6);
   --color-separator: var(--mauve-a4);
 }
+
+/* ── Catppuccin Mocha  (dark · mauve accent) ── */
+.skin-mocha {
+  --color-bg: #1e1e2e;
+  --color-surface: #313244;
+  --color-surface-raised: #45475a;
+  --color-secondary: #45475a;
+  --color-primary: #cba6f7;
+  --color-primary-hover: #b490e0;
+  --color-primary-tint: rgba(203, 166, 247, 0.15);
+  --color-text: #cdd6f4;
+  --color-text-secondary: #bac2de;
+  --color-text-muted: #a6adc8;
+  --color-border: #585b70;
+  --color-separator: rgba(88, 91, 112, 0.4);
+}
+
+/* ── Catppuccin Frappé  (dark · peach accent · sporty) ── */
+.skin-frappe {
+  --color-bg: #303446;
+  --color-surface: #414559;
+  --color-surface-raised: #51576d;
+  --color-secondary: #51576d;
+  --color-primary: #ef9f76;
+  --color-primary-hover: #e68a5a;
+  --color-primary-tint: rgba(239, 159, 118, 0.15);
+  --color-text: #c6d0f5;
+  --color-text-secondary: #b5bfe2;
+  --color-text-muted: #a5adce;
+  --color-border: #626880;
+  --color-separator: rgba(98, 104, 128, 0.4);
+}
+
+/* ── Catppuccin Latte  (light · mauve accent) ── */
+.skin-latte {
+  --color-bg: #eff1f5;
+  --color-surface: #e6e9ef;
+  --color-surface-raised: #dce0e8;
+  --color-secondary: #ccd0da;
+  --color-primary: #8839ef;
+  --color-primary-hover: #7528d4;
+  --color-primary-tint: rgba(136, 57, 239, 0.10);
+  --color-text: #4c4f69;
+  --color-text-secondary: #5c5f77;
+  --color-text-muted: #6c6f85;
+  --color-border: #acb0be;
+  --color-separator: rgba(172, 176, 190, 0.4);
+}

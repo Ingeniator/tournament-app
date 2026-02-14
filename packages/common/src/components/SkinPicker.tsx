@@ -32,9 +32,12 @@ function SkinCard({ skin, active, onSelect }: { skin: ThemeSkin; active: boolean
   );
 }
 
+const CATPPUCCIN_IDS = new Set(['mocha', 'frappe', 'latte']);
+
 export function SkinPicker({ skin, onSelect }: SkinPickerProps) {
-  const darkSkins = THEME_SKINS.filter(s => s.mode === 'dark');
-  const lightSkins = THEME_SKINS.filter(s => s.mode === 'light');
+  const darkSkins = THEME_SKINS.filter(s => s.mode === 'dark' && !CATPPUCCIN_IDS.has(s.id));
+  const lightSkins = THEME_SKINS.filter(s => s.mode === 'light' && !CATPPUCCIN_IDS.has(s.id));
+  const catppuccinSkins = THEME_SKINS.filter(s => CATPPUCCIN_IDS.has(s.id));
 
   return (
     <div className={styles.picker}>
@@ -50,6 +53,14 @@ export function SkinPicker({ skin, onSelect }: SkinPickerProps) {
         <span className={styles.groupLabel}>Light</span>
         <div className={styles.grid}>
           {lightSkins.map(s => (
+            <SkinCard key={s.id} skin={s} active={skin === s.id} onSelect={onSelect} />
+          ))}
+        </div>
+      </div>
+      <div className={styles.group}>
+        <span className={styles.groupLabel}>Catppuccin</span>
+        <div className={styles.grid}>
+          {catppuccinSkins.map(s => (
             <SkinCard key={s.id} skin={s} active={skin === s.id} onSelect={onSelect} />
           ))}
         </div>

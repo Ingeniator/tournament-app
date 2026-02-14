@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 
 /* ── Skin definitions ──
-   Each skin is a curated combo of Radix neutral scale + accent scale + dark/light mode.
-   Skins sharing the same neutral+accent differ only in mode (Radix CSS handles the
-   actual color values via .dark-theme / .light-theme scoping). */
+   Each skin is a curated combo of neutral + accent + dark/light mode.
+   Radix skins use Radix CSS variable references; Catppuccin skins use
+   hardcoded hex values from the Catppuccin palette. */
 
 export type SkinId =
   | 'midnight' | 'crimson' | 'ember' | 'forest' | 'amethyst'
-  | 'arctic' | 'rose' | 'dawn' | 'mint' | 'lavender';
+  | 'arctic' | 'rose' | 'dawn' | 'mint' | 'lavender'
+  | 'mocha' | 'latte' | 'frappe';
 
 export interface ThemeSkin {
   id: SkinId;
@@ -29,6 +30,10 @@ export const THEME_SKINS: ThemeSkin[] = [
   { id: 'dawn',      name: 'Dawn',      mode: 'light', preview: { bg: '#fdfdfc', surface: '#f9f9f8', accent: '#f76b15' } },
   { id: 'mint',      name: 'Mint',      mode: 'light', preview: { bg: '#fbfdfc', surface: '#f7f9f8', accent: '#12a594' } },
   { id: 'lavender',  name: 'Lavender',  mode: 'light', preview: { bg: '#fdfcfd', surface: '#faf9fb', accent: '#8e4ec6' } },
+  // Catppuccin
+  { id: 'mocha',     name: 'Mocha',     mode: 'dark',  preview: { bg: '#1e1e2e', surface: '#313244', accent: '#cba6f7' } },
+  { id: 'frappe',    name: 'Frappé',    mode: 'dark',  preview: { bg: '#303446', surface: '#414559', accent: '#ef9f76' } },
+  { id: 'latte',     name: 'Latte',     mode: 'light', preview: { bg: '#eff1f5', surface: '#e6e9ef', accent: '#8839ef' } },
 ];
 
 export const DEFAULT_SKIN: SkinId = 'midnight';
