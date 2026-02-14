@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback } from 'react';
    hardcoded hex values from the Catppuccin palette. */
 
 export type SkinId =
-  | 'midnight' | 'crimson' | 'ember' | 'forest' | 'amethyst'
+  | 'midnight' | 'crimson' | 'ember' | 'forest' | 'amethyst' | 'navy'
   | 'arctic' | 'rose' | 'dawn' | 'mint' | 'lavender'
   | 'mocha' | 'latte' | 'frappe';
 
@@ -24,6 +24,7 @@ export const THEME_SKINS: ThemeSkin[] = [
   { id: 'ember',     name: 'Ember',     mode: 'dark',  preview: { bg: '#111110', surface: '#191918', accent: '#f76b15' } },
   { id: 'forest',    name: 'Forest',    mode: 'dark',  preview: { bg: '#101211', surface: '#171918', accent: '#12a594' } },
   { id: 'amethyst',  name: 'Amethyst',  mode: 'dark',  preview: { bg: '#121113', surface: '#1a191b', accent: '#8e4ec6' } },
+  { id: 'navy',      name: 'Navy',      mode: 'dark',  preview: { bg: '#0f0f1a', surface: '#1a1a2e', accent: '#e94560' } },
   // Light
   { id: 'arctic',    name: 'Arctic',    mode: 'light', preview: { bg: '#fcfcfd', surface: '#f9f9fb', accent: '#3e63dd' } },
   { id: 'rose',      name: 'Rose',      mode: 'light', preview: { bg: '#fdfcfd', surface: '#faf9fb', accent: '#e93d82' } },

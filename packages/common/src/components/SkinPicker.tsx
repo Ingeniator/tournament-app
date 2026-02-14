@@ -7,29 +7,12 @@ interface SkinPickerProps {
   onSelect: (skin: SkinId) => void;
 }
 
-function SkinCard({ skin, active, onSelect }: { skin: ThemeSkin; active: boolean; onSelect: (id: SkinId) => void }) {
+function Swatch({ skin }: { skin: ThemeSkin }) {
   return (
-    <button
-      className={`${styles.card} ${active ? styles.active : ''}`}
-      onClick={() => onSelect(skin.id)}
-      title={skin.name}
-      aria-label={`${skin.name} theme`}
-    >
-      <div
-        className={styles.preview}
-        style={{ backgroundColor: skin.preview.bg }}
-      >
-        <div
-          className={styles.previewSurface}
-          style={{ backgroundColor: skin.preview.surface }}
-        />
-        <div
-          className={styles.previewAccent}
-          style={{ backgroundColor: skin.preview.accent }}
-        />
-      </div>
-      <span className={styles.name}>{skin.name}</span>
-    </button>
+    <span className={styles.swatch}>
+      <span className={styles.swatchLeft} style={{ backgroundColor: skin.preview.bg }} />
+      <span className={styles.swatchRight} style={{ backgroundColor: skin.preview.accent }} />
+    </span>
   );
 }
 
@@ -59,6 +42,12 @@ export function SkinPicker({ skin, onSelect }: SkinPickerProps) {
     setOpen(false);
   };
 
+  const groups: { label: string; skins: ThemeSkin[] }[] = [
+    { label: 'Dark', skins: darkSkins },
+    { label: 'Light', skins: lightSkins },
+    { label: 'Catppuccin', skins: catppuccinSkins },
+  ];
+
   return (
     <div className={styles.wrapper} ref={wrapperRef}>
       <button
@@ -77,30 +66,21 @@ export function SkinPicker({ skin, onSelect }: SkinPickerProps) {
 
       {open && (
         <div className={styles.dropdown}>
-          <div className={styles.group}>
-            <span className={styles.groupLabel}>Dark</span>
-            <div className={styles.grid}>
-              {darkSkins.map(s => (
-                <SkinCard key={s.id} skin={s} active={skin === s.id} onSelect={handleSelect} />
+          {groups.map(g => (
+            <div key={g.label}>
+              <div className={styles.groupLabel}>{g.label}</div>
+              {g.skins.map(s => (
+                <button
+                  key={s.id}
+                  className={`${styles.item} ${skin === s.id ? styles.active : ''}`}
+                  onClick={() => handleSelect(s.id)}
+                >
+                  <Swatch skin={s} />
+                  {s.name}
+                </button>
               ))}
             </div>
-          </div>
-          <div className={styles.group}>
-            <span className={styles.groupLabel}>Light</span>
-            <div className={styles.grid}>
-              {lightSkins.map(s => (
-                <SkinCard key={s.id} skin={s} active={skin === s.id} onSelect={handleSelect} />
-              ))}
-            </div>
-          </div>
-          <div className={styles.group}>
-            <span className={styles.groupLabel}>Catppuccin</span>
-            <div className={styles.grid}>
-              {catppuccinSkins.map(s => (
-                <SkinCard key={s.id} skin={s} active={skin === s.id} onSelect={handleSelect} />
-              ))}
-            </div>
-          </div>
+          ))}
         </div>
       )}
     </div>

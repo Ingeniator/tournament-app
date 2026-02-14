@@ -233,6 +233,23 @@
   --color-rank-silver: #a5adce;
 }
 
+/* ── Skin: Navy  (original theme · deep navy + crimson) ── */
+.skin-navy {
+  --color-bg: #0f0f1a;
+  --color-surface: #1a1a2e;
+  --color-surface-raised: #22223a;
+  --color-secondary: #0f3460;
+  --color-primary: #e94560;
+  --color-primary-hover: #d63851;
+  --color-primary-tint: rgba(233, 69, 96, 0.15);
+  --color-text: #f0f0f0;
+  --color-text-secondary: #a0a0b8;
+  --color-text-muted: #8e8ea3;
+  --color-border: #2a2a44;
+  --color-separator: rgba(42, 42, 68, 0.4);
+  --color-rank-silver: #8e8ea3;
+}
+
 /* ── Catppuccin Latte  (light · mauve accent) ── */
 .skin-latte {
   --color-bg: #eff1f5;
