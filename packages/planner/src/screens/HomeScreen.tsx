@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ref, push, set } from 'firebase/database';
-import { Button, Card, SkinPicker, FeedbackModal } from '@padel/common';
+import { Button, Card, ThemeSwitcher, FeedbackModal } from '@padel/common';
 import type { TournamentSummary } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { db } from '../firebase';
@@ -125,6 +125,7 @@ export function HomeScreen() {
           </g>
         </svg>
         <h1 className={styles.headerTitle}>Tournament Planner</h1>
+        <ThemeSwitcher skin={skin} onSelect={setSkin} />
       </header>
 
       <main>
@@ -268,11 +269,6 @@ export function HomeScreen() {
         </Card>
       )}
 
-      {/* Theme */}
-      <Card>
-        <h2 className={styles.sectionTitle}>Theme</h2>
-        <SkinPicker skin={skin} onSelect={setSkin} />
-      </Card>
       </main>
 
       <footer className={styles.footer}>

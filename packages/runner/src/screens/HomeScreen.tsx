@@ -5,7 +5,7 @@ import { useRunnerTheme } from '../state/ThemeContext';
 import { validateImport } from '../utils/importExport';
 import { randomTournamentName } from '../utils/tournamentNames';
 import { db, firebaseConfigured } from '../firebase';
-import { Button, FeedbackModal, generateId, SkinPicker } from '@padel/common';
+import { Button, FeedbackModal, generateId, ThemeSwitcher } from '@padel/common';
 import styles from './HomeScreen.module.css';
 
 export function HomeScreen() {
@@ -64,7 +64,7 @@ export function HomeScreen() {
   return (
     <main className={styles.container}>
       <div className={styles.themeToggleWrap}>
-        <SkinPicker skin={skin} onSelect={setSkin} />
+        <ThemeSwitcher skin={skin} onSelect={setSkin} />
       </div>
       <div className={styles.logo}>
         <svg viewBox="0 0 100 100" width="48" height="48" aria-hidden="true">

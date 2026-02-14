@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useTournament } from '../hooks/useTournament';
+import { useRunnerTheme } from '../state/ThemeContext';
 import { AppShell } from '../components/layout/AppShell';
-import { Button } from '@padel/common';
+import { Button, ThemeSwitcher } from '@padel/common';
 import styles from './TeamPairingScreen.module.css';
 
 export function TeamPairingScreen() {
   const { tournament, dispatch } = useTournament();
+  const { skin, setSkin } = useRunnerTheme();
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   if (!tournament || !tournament.teams) return null;
@@ -62,9 +64,12 @@ export function TeamPairingScreen() {
     <AppShell
       title="Teams"
       headerRight={
-        <Button variant="ghost" size="small" onClick={handleBack}>
-          Back
-        </Button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ThemeSwitcher skin={skin} onSelect={setSkin} />
+          <Button variant="ghost" size="small" onClick={handleBack}>
+            Back
+          </Button>
+        </div>
       }
     >
       <div className={styles.header}>
