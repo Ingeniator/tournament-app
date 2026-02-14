@@ -8,12 +8,12 @@ import { copyToClipboard } from '../utils/clipboard';
 import { exportTournament, validateImport } from '../utils/importExport';
 import { db, firebaseConfigured } from '../firebase';
 import { computeSitOutInfo } from '../utils/resolveConfigDefaults';
-import { Button, Card, FeedbackModal, Toast, useToast, ThemeToggle, AccentPicker } from '@padel/common';
+import { Button, Card, FeedbackModal, Toast, useToast, SkinPicker } from '@padel/common';
 import styles from './SettingsScreen.module.css';
 
 export function SettingsScreen() {
   const { tournament, dispatch } = useTournament();
-  const { theme, toggleTheme, accent, setAccent } = useRunnerTheme();
+  const { skin, setSkin } = useRunnerTheme();
   const { toastMessage, showToast } = useToast();
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [editPlayerName, setEditPlayerName] = useState('');
@@ -118,17 +118,8 @@ export function SettingsScreen() {
     <div className={styles.container}>
       {/* Appearance */}
       <Card>
-        <div className={styles.themeRow}>
-          <div>
-            <h3 className={styles.sectionTitle} style={{ marginBottom: 0 }}>Appearance</h3>
-            <span className={styles.themeLabel}>{theme === 'dark' ? 'Dark' : 'Light'} theme</span>
-          </div>
-          <ThemeToggle theme={theme} onToggle={toggleTheme} />
-        </div>
-        <div className={styles.accentRow}>
-          <span className={styles.accentLabel}>Accent color</span>
-          <AccentPicker accent={accent} onSelect={setAccent} />
-        </div>
+        <h3 className={styles.sectionTitle}>Theme</h3>
+        <SkinPicker skin={skin} onSelect={setSkin} />
       </Card>
 
       {/* Tournament info */}

@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, type ClipboardEvent } from 'react';
 import { ref, push, set } from 'firebase/database';
-import { Button, Card, FeedbackModal, Toast, useToast, ThemeToggle } from '@padel/common';
+import { Button, Card, FeedbackModal, Toast, useToast } from '@padel/common';
 import type { TournamentFormat, Court } from '@padel/common';
 import { generateId, parsePlayerList } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
@@ -10,7 +10,7 @@ import { getPlayerStatuses } from '../utils/playerStatus';
 import styles from './OrganizerScreen.module.css';
 
 export function OrganizerScreen() {
-  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, deleteTournament, theme, toggleTheme } = usePlanner();
+  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, deleteTournament } = usePlanner();
   const { toastMessage, showToast } = useToast();
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
@@ -139,7 +139,6 @@ export function OrganizerScreen() {
             </button>
           </div>
         )}
-        <ThemeToggle theme={theme} onToggle={toggleTheme} />
       </header>
       <main>
       {userName && (

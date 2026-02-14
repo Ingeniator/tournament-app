@@ -1,11 +1,10 @@
-import type { Tournament, Theme, AccentColor } from '@padel/common';
-import { ACCENT_COLORS } from '@padel/common';
+import type { Tournament, SkinId } from '@padel/common';
+import { isValidSkin, DEFAULT_SKIN } from '@padel/common';
 import { deduplicateNames } from '../utils/deduplicateNames';
 
 const STORAGE_KEY = 'padel-tournament-v1';
 const UI_STATE_KEY = 'padel-ui-state-v1';
-const THEME_KEY = 'padel-theme';
-const ACCENT_KEY = 'padel-accent';
+const SKIN_KEY = 'padel-skin';
 
 export function saveTournament(tournament: Tournament | null): boolean {
   try {
@@ -54,39 +53,22 @@ export function loadUIState(): UIState | null {
   }
 }
 
-export function saveTheme(theme: Theme): void {
+export function saveSkin(skin: SkinId): void {
   try {
-    localStorage.setItem(THEME_KEY, theme);
+    localStorage.setItem(SKIN_KEY, skin);
   } catch {
     // silently fail
   }
 }
 
-export function loadTheme(): Theme {
+export function loadSkin(): SkinId {
   try {
-    const data = localStorage.getItem(THEME_KEY);
-    return data === 'light' ? 'light' : 'dark';
-  } catch {
-    return 'dark';
-  }
-}
-
-export function saveAccent(accent: AccentColor): void {
-  try {
-    localStorage.setItem(ACCENT_KEY, accent);
-  } catch {
-    // silently fail
-  }
-}
-
-export function loadAccent(): AccentColor {
-  try {
-    const data = localStorage.getItem(ACCENT_KEY);
-    if (data && (ACCENT_COLORS as readonly string[]).includes(data)) {
-      return data as AccentColor;
+    const data = localStorage.getItem(SKIN_KEY);
+    if (data && isValidSkin(data)) {
+      return data;
     }
-    return 'crimson';
+    return DEFAULT_SKIN;
   } catch {
-    return 'crimson';
+    return DEFAULT_SKIN;
   }
 }

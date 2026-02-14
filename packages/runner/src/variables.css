@@ -1,28 +1,62 @@
 /* ── Radix Colors ── */
+
+/* Neutral scales */
+@import "@radix-ui/colors/slate.css";
+@import "@radix-ui/colors/slate-dark.css";
+@import "@radix-ui/colors/slate-alpha.css";
+@import "@radix-ui/colors/slate-dark-alpha.css";
+
+@import "@radix-ui/colors/mauve.css";
+@import "@radix-ui/colors/mauve-dark.css";
+@import "@radix-ui/colors/mauve-alpha.css";
+@import "@radix-ui/colors/mauve-dark-alpha.css";
+
+@import "@radix-ui/colors/sage.css";
+@import "@radix-ui/colors/sage-dark.css";
+@import "@radix-ui/colors/sage-alpha.css";
+@import "@radix-ui/colors/sage-dark-alpha.css";
+
+@import "@radix-ui/colors/sand.css";
+@import "@radix-ui/colors/sand-dark.css";
+@import "@radix-ui/colors/sand-alpha.css";
+@import "@radix-ui/colors/sand-dark-alpha.css";
+
+/* Accent scales */
+@import "@radix-ui/colors/indigo.css";
+@import "@radix-ui/colors/indigo-dark.css";
+@import "@radix-ui/colors/indigo-alpha.css";
+@import "@radix-ui/colors/indigo-dark-alpha.css";
+
 @import "@radix-ui/colors/crimson.css";
 @import "@radix-ui/colors/crimson-dark.css";
 @import "@radix-ui/colors/crimson-alpha.css";
 @import "@radix-ui/colors/crimson-dark-alpha.css";
-
-@import "@radix-ui/colors/red.css";
-@import "@radix-ui/colors/red-dark.css";
-@import "@radix-ui/colors/red-alpha.css";
-@import "@radix-ui/colors/red-dark-alpha.css";
 
 @import "@radix-ui/colors/teal.css";
 @import "@radix-ui/colors/teal-dark.css";
 @import "@radix-ui/colors/teal-alpha.css";
 @import "@radix-ui/colors/teal-dark-alpha.css";
 
+@import "@radix-ui/colors/orange.css";
+@import "@radix-ui/colors/orange-dark.css";
+@import "@radix-ui/colors/orange-alpha.css";
+@import "@radix-ui/colors/orange-dark-alpha.css";
+
+@import "@radix-ui/colors/violet.css";
+@import "@radix-ui/colors/violet-dark.css";
+@import "@radix-ui/colors/violet-alpha.css";
+@import "@radix-ui/colors/violet-dark-alpha.css";
+
+/* Functional scales */
+@import "@radix-ui/colors/red.css";
+@import "@radix-ui/colors/red-dark.css";
+@import "@radix-ui/colors/red-alpha.css";
+@import "@radix-ui/colors/red-dark-alpha.css";
+
 @import "@radix-ui/colors/amber.css";
 @import "@radix-ui/colors/amber-dark.css";
 @import "@radix-ui/colors/amber-alpha.css";
 @import "@radix-ui/colors/amber-dark-alpha.css";
-
-@import "@radix-ui/colors/mauve.css";
-@import "@radix-ui/colors/mauve-dark.css";
-@import "@radix-ui/colors/mauve-alpha.css";
-@import "@radix-ui/colors/mauve-dark-alpha.css";
 
 @import "@radix-ui/colors/gold.css";
 @import "@radix-ui/colors/gold-dark.css";
@@ -30,74 +64,29 @@
 @import "@radix-ui/colors/bronze.css";
 @import "@radix-ui/colors/bronze-dark.css";
 
-@import "@radix-ui/colors/indigo.css";
-@import "@radix-ui/colors/indigo-dark.css";
-@import "@radix-ui/colors/indigo-alpha.css";
-@import "@radix-ui/colors/indigo-dark-alpha.css";
-
-@import "@radix-ui/colors/violet.css";
-@import "@radix-ui/colors/violet-dark.css";
-@import "@radix-ui/colors/violet-alpha.css";
-@import "@radix-ui/colors/violet-dark-alpha.css";
-
-@import "@radix-ui/colors/orange.css";
-@import "@radix-ui/colors/orange-dark.css";
-@import "@radix-ui/colors/orange-alpha.css";
-@import "@radix-ui/colors/orange-dark-alpha.css";
-
 @import "@radix-ui/colors/black-alpha.css";
 @import "@radix-ui/colors/white-alpha.css";
 
 /* ── Semantic aliases ──
    Components use ONLY these --color-* tokens.
-   Radix handles light ↔ dark automatically via .dark-theme class. */
+   Default skin: midnight (slate + indigo).
+   Radix handles light ↔ dark via .dark-theme / .light-theme class. */
 
 :root {
-  /* Surfaces */
-  --color-bg: var(--mauve-1);
-  --color-surface: var(--mauve-2);
-  --color-surface-raised: var(--mauve-3);
-
-  /* Primary (crimson) */
-  --color-primary: var(--crimson-9);
-  --color-primary-hover: var(--crimson-10);
-  --color-primary-tint: var(--crimson-a3);
-
-  /* Secondary */
-  --color-secondary: var(--mauve-4);
-
-  /* Accent / Success (teal) */
+  /* ── Functional colors (shared across all skins) ── */
   --color-accent: var(--teal-9);
   --color-success: var(--teal-9);
   --color-success-tint: var(--teal-a3);
-
-  /* Danger (red) */
   --color-danger: var(--red-9);
   --color-danger-tint: var(--red-a3);
-
-  /* Warning (amber) */
   --color-warning: var(--amber-11);
   --color-warning-tint: var(--amber-a3);
-
-  /* Text */
-  --color-text: var(--mauve-12);
-  --color-text-secondary: var(--mauve-11);
-  --color-text-muted: var(--mauve-9);
-
-  /* Borders & Separators */
-  --color-border: var(--mauve-6);
-  --color-separator: var(--mauve-a4);
-
-  /* Overlays */
   --color-overlay: var(--black-a8);
   --color-overlay-heavy: var(--black-a11);
-
-  /* Rank medals */
   --color-rank-gold: var(--gold-9);
-  --color-rank-silver: var(--mauve-9);
   --color-rank-bronze: var(--bronze-9);
 
-  /* Spacing */
+  /* ── Spacing ── */
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
@@ -105,13 +94,13 @@
   --space-xl: 32px;
   --space-2xl: 48px;
 
-  /* Radius */
+  /* ── Radius ── */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
   --radius-full: 999px;
 
-  /* Font sizes */
+  /* ── Font sizes ── */
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-base: 1rem;
@@ -120,35 +109,92 @@
   --text-2xl: 1.5rem;
   --text-3xl: 2rem;
 
-  /* Layout */
+  /* ── Layout ── */
   --bottom-nav-height: 64px;
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* ── Accent color presets ──
-   Applied via class on <html>, e.g. class="dark-theme accent-indigo"
-   Default (no accent class) = crimson */
-
-.accent-indigo {
+/* ── Skin: Midnight / Arctic  (slate + indigo) ── default ── */
+:root, .skin-midnight, .skin-arctic {
+  --color-bg: var(--slate-1);
+  --color-surface: var(--slate-2);
+  --color-surface-raised: var(--slate-3);
+  --color-secondary: var(--slate-4);
   --color-primary: var(--indigo-9);
   --color-primary-hover: var(--indigo-10);
   --color-primary-tint: var(--indigo-a3);
+  --color-text: var(--slate-12);
+  --color-text-secondary: var(--slate-11);
+  --color-text-muted: var(--slate-9);
+  --color-border: var(--slate-6);
+  --color-separator: var(--slate-a4);
+  --color-rank-silver: var(--slate-9);
 }
 
-.accent-teal {
-  --color-primary: var(--teal-9);
-  --color-primary-hover: var(--teal-10);
-  --color-primary-tint: var(--teal-a3);
+/* ── Skin: Crimson / Rose  (mauve + crimson) ── */
+.skin-crimson, .skin-rose {
+  --color-bg: var(--mauve-1);
+  --color-surface: var(--mauve-2);
+  --color-surface-raised: var(--mauve-3);
+  --color-secondary: var(--mauve-4);
+  --color-primary: var(--crimson-9);
+  --color-primary-hover: var(--crimson-10);
+  --color-primary-tint: var(--crimson-a3);
+  --color-text: var(--mauve-12);
+  --color-text-secondary: var(--mauve-11);
+  --color-text-muted: var(--mauve-9);
+  --color-border: var(--mauve-6);
+  --color-separator: var(--mauve-a4);
+  --color-rank-silver: var(--mauve-9);
 }
 
-.accent-orange {
+/* ── Skin: Ember / Dawn  (sand + orange) ── */
+.skin-ember, .skin-dawn {
+  --color-bg: var(--sand-1);
+  --color-surface: var(--sand-2);
+  --color-surface-raised: var(--sand-3);
+  --color-secondary: var(--sand-4);
   --color-primary: var(--orange-9);
   --color-primary-hover: var(--orange-10);
   --color-primary-tint: var(--orange-a3);
+  --color-text: var(--sand-12);
+  --color-text-secondary: var(--sand-11);
+  --color-text-muted: var(--sand-9);
+  --color-border: var(--sand-6);
+  --color-separator: var(--sand-a4);
+  --color-rank-silver: var(--sand-9);
 }
 
-.accent-violet {
+/* ── Skin: Forest / Mint  (sage + teal) ── */
+.skin-forest, .skin-mint {
+  --color-bg: var(--sage-1);
+  --color-surface: var(--sage-2);
+  --color-surface-raised: var(--sage-3);
+  --color-secondary: var(--sage-4);
+  --color-primary: var(--teal-9);
+  --color-primary-hover: var(--teal-10);
+  --color-primary-tint: var(--teal-a3);
+  --color-text: var(--sage-12);
+  --color-text-secondary: var(--sage-11);
+  --color-text-muted: var(--sage-9);
+  --color-border: var(--sage-6);
+  --color-separator: var(--sage-a4);
+  --color-rank-silver: var(--sage-9);
+}
+
+/* ── Skin: Amethyst / Lavender  (mauve + violet) ── */
+.skin-amethyst, .skin-lavender {
+  --color-bg: var(--mauve-1);
+  --color-surface: var(--mauve-2);
+  --color-surface-raised: var(--mauve-3);
+  --color-secondary: var(--mauve-4);
   --color-primary: var(--violet-9);
   --color-primary-hover: var(--violet-10);
   --color-primary-tint: var(--violet-a3);
+  --color-text: var(--mauve-12);
+  --color-text-secondary: var(--mauve-11);
+  --color-text-muted: var(--mauve-9);
+  --color-border: var(--mauve-6);
+  --color-separator: var(--mauve-a4);
+  --color-rank-silver: var(--mauve-9);
 }

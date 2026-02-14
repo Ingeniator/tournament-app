@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ref, push, set } from 'firebase/database';
-import { Button, Card, ThemeToggle, AccentPicker, FeedbackModal } from '@padel/common';
+import { Button, Card, SkinPicker, FeedbackModal } from '@padel/common';
 import type { TournamentSummary } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { db } from '../firebase';
@@ -26,7 +26,7 @@ export function HomeScreen() {
     createTournament, loadByCode, setScreen,
     userName, userNameLoading, updateUserName,
     myTournaments, registeredTournaments, listingsLoading,
-    openTournament, theme, toggleTheme, accent, setAccent,
+    openTournament, skin, setSkin,
   } = usePlanner();
 
   const [name, setName] = useState(randomTournamentName);
@@ -125,8 +125,6 @@ export function HomeScreen() {
           </g>
         </svg>
         <h1 className={styles.headerTitle}>Tournament Planner</h1>
-        <AccentPicker accent={accent} onSelect={setAccent} />
-        <ThemeToggle theme={theme} onToggle={toggleTheme} />
       </header>
 
       <main>
@@ -259,6 +257,7 @@ export function HomeScreen() {
       {!listingsLoading && (
         <Card>
           <h2 className={styles.sectionTitle}>Registered Tournaments</h2>
+
           {registeredTournaments.length === 0 ? (
             <p className={styles.empty}>No tournaments joined yet</p>
           ) : (
@@ -268,6 +267,12 @@ export function HomeScreen() {
           )}
         </Card>
       )}
+
+      {/* Theme */}
+      <Card>
+        <h2 className={styles.sectionTitle}>Theme</h2>
+        <SkinPicker skin={skin} onSelect={setSkin} />
+      </Card>
       </main>
 
       <footer className={styles.footer}>

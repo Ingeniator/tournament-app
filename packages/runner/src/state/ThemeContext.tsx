@@ -1,39 +1,28 @@
 import { createContext, useContext, useCallback, type ReactNode } from 'react';
-import { useTheme, type Theme, type AccentColor } from '@padel/common';
-import { saveTheme, loadTheme, saveAccent, loadAccent } from './persistence';
+import { useTheme, type SkinId } from '@padel/common';
+import { saveSkin, loadSkin } from './persistence';
 
 interface ThemeContextValue {
-  theme: Theme;
-  toggleTheme: () => void;
-  accent: AccentColor;
-  setAccent: (accent: AccentColor) => void;
+  skin: SkinId;
+  setSkin: (skin: SkinId) => void;
 }
 
 const ThemeCtx = createContext<ThemeContextValue>({
-  theme: 'dark',
-  toggleTheme: () => {},
-  accent: 'crimson',
-  setAccent: () => {},
+  skin: 'midnight',
+  setSkin: () => {},
 });
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const initialTheme = loadTheme();
-  const initialAccent = loadAccent();
-  const { theme, toggleTheme: rawToggle, accent, setAccent: rawSetAccent } = useTheme(initialTheme, initialAccent);
+  const initialSkin = loadSkin();
+  const { skin, setSkin: rawSetSkin } = useTheme(initialSkin);
 
-  const toggleTheme = useCallback(() => {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    rawToggle();
-    saveTheme(next);
-  }, [theme, rawToggle]);
-
-  const setAccent = useCallback((a: AccentColor) => {
-    rawSetAccent(a);
-    saveAccent(a);
-  }, [rawSetAccent]);
+  const setSkin = useCallback((s: SkinId) => {
+    rawSetSkin(s);
+    saveSkin(s);
+  }, [rawSetSkin]);
 
   return (
-    <ThemeCtx.Provider value={{ theme, toggleTheme, accent, setAccent }}>
+    <ThemeCtx.Provider value={{ skin, setSkin }}>
       {children}
     </ThemeCtx.Provider>
   );
