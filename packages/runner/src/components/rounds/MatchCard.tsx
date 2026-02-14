@@ -23,12 +23,27 @@ export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, on
     <div className={`${styles.match} ${match.score ? styles.scored : ''}`}>
       <div className={styles.courtLabel}>{courtName}</div>
       <div className={styles.court}>
-        {/* Team 1 — top row */}
-        <div className={`${styles.playerCell} ${styles.team1Left} ${team1Won ? styles.winner : ''}`} title={name(match.team1[0])}><span className={styles.playerName}>{name(match.team1[0])}</span></div>
-        <span className={`${styles.teamConnector} ${styles.connectorTop}`}>&amp;</span>
-        <div className={`${styles.playerCell} ${styles.team1Right} ${team1Won ? styles.winner : ''}`} title={name(match.team1[1])}><span className={styles.playerName}>{name(match.team1[1])}</span></div>
+        {/* Row 1: first players with & */}
+        <div className={`${styles.playerCell} ${styles.topLeft} ${team1Won ? styles.winner : ''}`} title={name(match.team1[0])}>
+          <span className={styles.playerName}>{name(match.team1[0])}</span>
+          <span className={styles.ampersand}>&amp;</span>
+        </div>
+        <div className={styles.netSegment} />
+        <div className={`${styles.playerCell} ${styles.topRight} ${team2Won ? styles.winner : ''}`} title={name(match.team2[0])}>
+          <span className={styles.ampersand}>&amp;</span>
+          <span className={styles.playerName}>{name(match.team2[0])}</span>
+        </div>
 
-        {/* Score / Net — row 2 */}
+        {/* Row 2: second players */}
+        <div className={`${styles.playerCell} ${styles.bottomLeft} ${team1Won ? styles.winner : ''}`} title={name(match.team1[1])}>
+          <span className={styles.playerName}>{name(match.team1[1])}</span>
+        </div>
+        <span className={styles.vsLabel}>vs</span>
+        <div className={`${styles.playerCell} ${styles.bottomRight} ${team2Won ? styles.winner : ''}`} title={name(match.team2[1])}>
+          <span className={styles.playerName}>{name(match.team2[1])}</span>
+        </div>
+
+        {/* Row 3: Score */}
         {readOnly && match.score ? (
           <div
             className={`${styles.scoreCenter} ${onTapScore ? styles.tappable : ''}`}
@@ -57,11 +72,6 @@ export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, on
             onClear={onClear}
           />
         )}
-
-        {/* Team 2 — bottom row */}
-        <div className={`${styles.playerCell} ${styles.team2Left} ${team2Won ? styles.winner : ''}`} title={name(match.team2[0])}><span className={styles.playerName}>{name(match.team2[0])}</span></div>
-        <span className={`${styles.teamConnector} ${styles.connectorBottom}`}>&amp;</span>
-        <div className={`${styles.playerCell} ${styles.team2Right} ${team2Won ? styles.winner : ''}`} title={name(match.team2[1])}><span className={styles.playerName}>{name(match.team2[1])}</span></div>
       </div>
     </div>
   );

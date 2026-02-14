@@ -3,17 +3,15 @@
   display: contents;
 }
 
-/* Score display — spans full width as the net */
+/* Score display — below both teams, row 3 */
 .display {
   grid-column: 1 / -1;
-  grid-row: 2;
+  grid-row: 3;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-sm);
-  padding: var(--space-xs) 0;
-  border-top: 1px dashed var(--color-separator);
-  border-bottom: 1px dashed var(--color-separator);
+  padding: var(--space-sm) 0 var(--space-xs);
 }
 
 .scoreBtn {
