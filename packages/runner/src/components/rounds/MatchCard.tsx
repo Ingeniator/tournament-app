@@ -28,6 +28,7 @@ export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, on
           <span className={styles.playerName}>{name(match.team1[0])}</span>
           <span className={styles.ampersand}>&amp;</span>
         </div>
+        <span className={styles.vsLabel}>vs</span>
         <div className={`${styles.playerCell} ${styles.topRight} ${team2Won ? styles.winner : ''}`} title={name(match.team2[0])}>
           <span className={styles.playerName}>{name(match.team2[0])}</span>
           <span className={styles.ampersand}>&amp;</span>
@@ -37,7 +38,6 @@ export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, on
         <div className={`${styles.playerCell} ${styles.bottomLeft} ${team1Won ? styles.winner : ''}`} title={name(match.team1[1])}>
           <span className={styles.playerName}>{name(match.team1[1])}</span>
         </div>
-        <span className={styles.vsLabel}>vs</span>
         <div className={`${styles.playerCell} ${styles.bottomRight} ${team2Won ? styles.winner : ''}`} title={name(match.team2[1])}>
           <span className={styles.playerName}>{name(match.team2[1])}</span>
         </div>
