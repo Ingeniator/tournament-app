@@ -4,19 +4,19 @@
   display: inline-flex;
 }
 
-/* ── Trigger icon button ── */
+/* ── Trigger button ── */
 .trigger {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
+  gap: 8px;
+  padding: 6px 12px 6px 8px;
   border-radius: var(--radius-full);
   border: 1px solid var(--color-border);
   background-color: var(--color-surface);
   color: var(--color-text-secondary);
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
+  font-size: var(--text-sm);
 }
 
 .trigger:hover {
@@ -26,6 +26,16 @@
 
 .trigger:active {
   opacity: 0.8;
+}
+
+.triggerName {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.chevron {
+  opacity: 0.5;
+  flex-shrink: 0;
 }
 
 /* ── Dropdown panel ── */
