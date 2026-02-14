@@ -1,0 +1,9 @@
+.section {
+  margin-bottom: var(--space-md);
+}
+
+.sectionLabel {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-sm);
+}

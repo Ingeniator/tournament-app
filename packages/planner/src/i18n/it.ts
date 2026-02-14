@@ -27,9 +27,15 @@ const it: Translations = {
   'home.noTournamentsJoined': 'Nessuna iscrizione a tornei',
   'home.tournamentNotFound': 'Torneo non trovato',
   'home.failedCreate': 'Impossibile creare il torneo',
-  'home.freeOpenSource': 'Gratuito e open source',
-  'home.supportUs': 'Supportaci',
-  'home.sendFeedback': 'Invia feedback',
+
+  // Footer & Options
+  'footer.freeOpenSource': 'Gratuito e open source',
+  'footer.madeWithCare': 'Fatto con cura',
+  'footer.supportUs': 'Supportaci',
+  'footer.sendFeedback': 'Invia feedback',
+  'footer.options': 'Personalizza',
+  'options.title': 'Personalizza',
+  'options.language': 'Lingua',
 
   // OrganizerScreen
   'organizer.back': 'Indietro',
@@ -84,9 +90,6 @@ const it: Translations = {
   'organizer.jsonCopied': 'JSON del torneo copiato!',
   'organizer.deleteTournament': 'Elimina Torneo',
   'organizer.deleteConfirm': 'Eliminare questo torneo? L\'azione non può essere annullata.',
-  'organizer.freeOpenSource': 'Gratuito e open source',
-  'organizer.supportUs': 'Supportaci',
-  'organizer.sendFeedback': 'Invia feedback',
 
   // JoinScreen
   'join.back': 'Indietro',
@@ -130,19 +133,18 @@ const it: Translations = {
   'join.welcomeBack': 'Bentornato! Sei confermato',
   'join.updateFailed': 'Aggiornamento fallito, riprova',
 
-  // SupportersScreen
-  'supporters.back': 'Indietro',
-  'supporters.title': 'Supportaci',
-  'supporters.helpKeepFree': 'Aiutaci a mantenerlo gratuito',
-  'supporters.description': 'Tournament Manager è gratuito e open source. Il tuo supporto ci aiuta a mantenerlo tale.',
-  'supporters.leaveMessage': 'Lascia un messaggio (opzionale)',
-  'supporters.sending': 'Invio...',
-  'supporters.support': 'Supporta',
-  'supporters.thankYou': 'Grazie, {name}!',
-  'supporters.testingFlow': 'Stiamo testando questo flusso di supporto. Le opzioni di pagamento reali arriveranno presto!',
-  'supporters.supporters': 'Sostenitori',
-  'supporters.loading': 'Caricamento...',
-  'supporters.beFirst': 'Sii il primo!',
+  // SupportOverlay
+  'support.title': 'Supportaci',
+  'support.helpKeepFree': 'Aiutaci a mantenerlo gratuito',
+  'support.description': 'Gestione Tornei è gratuito e open source. Il tuo supporto ci aiuta a mantenerlo così.',
+  'support.yourName': 'Il tuo nome',
+  'support.leaveMessage': 'Lascia un messaggio (facoltativo)',
+  'support.support': 'Supporta',
+  'support.thankYou': 'Grazie!',
+  'support.testingFlow': 'Stiamo testando questo flusso di supporto. Opzioni di pagamento reali in arrivo!',
+  'support.supporters': 'Sostenitori',
+  'support.raised': '{amount} raccolti',
+  'support.beFirst': 'Sii il primo!',
 
   // Common (shared component strings)
   'feedback.title': 'Invia Feedback',

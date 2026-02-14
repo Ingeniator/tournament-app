@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ref, push, set } from 'firebase/database';
-import { Button, Card, FeedbackModal, LanguageSelector, useTranslation } from '@padel/common';
+import { Button, Card, FeedbackModal, AppFooter, useTranslation } from '@padel/common';
 import type { TournamentSummary } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { db } from '../firebase';
@@ -269,17 +269,9 @@ export function HomeScreen() {
       )}
       </main>
 
-      <footer className={styles.footer}>
-        {t('home.freeOpenSource')} &middot;{' '}
-        <button className={styles.footerLink} onClick={() => setScreen('supporters')}>
-          {t('home.supportUs')}
-        </button>
-        {' '}&middot;{' '}
-        <button className={styles.footerLink} onClick={() => setFeedbackOpen(true)}>
-          {t('home.sendFeedback')}
-        </button>
-        <LanguageSelector />
-      </footer>
+      <AppFooter
+        onFeedbackClick={() => setFeedbackOpen(true)}
+      />
 
       <FeedbackModal
         open={feedbackOpen}

@@ -6,13 +6,12 @@ import { RoundCard } from '../components/rounds/RoundCard';
 import { StandingsTable } from '../components/standings/StandingsTable';
 import { NominationCard } from '../components/nominations/NominationCard';
 import { Carousel } from '../components/carousel/Carousel';
-import { SupportOverlay } from '../components/support/SupportOverlay';
 import { useShareText } from '../hooks/useShareText';
 import { copyToClipboard } from '../utils/clipboard';
 import { shareStandingsImage } from '../utils/standingsImage';
 import { ref, push, set } from 'firebase/database';
 import { db, firebaseConfigured } from '../firebase';
-import { Button, FeedbackModal, Modal, Toast, useToast, useTranslation } from '@padel/common';
+import { Button, FeedbackModal, Modal, SupportOverlay, Toast, useToast, useTranslation } from '@padel/common';
 import styles from './PlayScreen.module.css';
 
 export function PlayScreen() {

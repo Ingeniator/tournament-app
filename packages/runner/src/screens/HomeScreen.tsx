@@ -3,8 +3,8 @@ import { ref, push, set } from 'firebase/database';
 import { useTournament } from '../hooks/useTournament';
 import { validateImport } from '../utils/importExport';
 import { randomTournamentName } from '../utils/tournamentNames';
-import { db, firebaseConfigured } from '../firebase';
-import { Button, FeedbackModal, LanguageSelector, generateId, useTranslation } from '@padel/common';
+import { db } from '../firebase';
+import { Button, FeedbackModal, AppFooter, generateId, useTranslation } from '@padel/common';
 import styles from './HomeScreen.module.css';
 
 export function HomeScreen() {
@@ -148,14 +148,9 @@ export function HomeScreen() {
         )}
       </div>
 
-      <footer className={styles.footer}>
-        {firebaseConfigured && (
-          <button className={styles.footerLink} onClick={() => setFeedbackOpen(true)}>
-            {t('home.sendFeedback')}
-          </button>
-        )}
-        <LanguageSelector />
-      </footer>
+      <AppFooter
+        onFeedbackClick={() => setFeedbackOpen(true)}
+      />
 
       <FeedbackModal
         open={feedbackOpen}

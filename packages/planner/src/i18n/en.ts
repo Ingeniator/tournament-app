@@ -27,9 +27,15 @@ const en: Translations = {
   'home.noTournamentsJoined': 'No tournaments joined yet',
   'home.tournamentNotFound': 'Tournament not found',
   'home.failedCreate': 'Failed to create tournament',
-  'home.freeOpenSource': 'Free & open source',
-  'home.supportUs': 'Support us',
-  'home.sendFeedback': 'Send feedback',
+
+  // Footer & Options
+  'footer.freeOpenSource': 'Free & open source',
+  'footer.madeWithCare': 'Made with care',
+  'footer.supportUs': 'Support us',
+  'footer.sendFeedback': 'Send feedback',
+  'footer.options': 'Personalize',
+  'options.title': 'Personalize',
+  'options.language': 'Language',
 
   // OrganizerScreen
   'organizer.back': 'Back',
@@ -84,9 +90,6 @@ const en: Translations = {
   'organizer.jsonCopied': 'Tournament JSON copied!',
   'organizer.deleteTournament': 'Delete Tournament',
   'organizer.deleteConfirm': 'Delete this tournament? This cannot be undone.',
-  'organizer.freeOpenSource': 'Free & open source',
-  'organizer.supportUs': 'Support us',
-  'organizer.sendFeedback': 'Send feedback',
 
   // JoinScreen
   'join.back': 'Back',
@@ -130,19 +133,18 @@ const en: Translations = {
   'join.welcomeBack': 'Welcome back! You\'re confirmed',
   'join.updateFailed': 'Could not update, please try again',
 
-  // SupportersScreen
-  'supporters.back': 'Back',
-  'supporters.title': 'Support Us',
-  'supporters.helpKeepFree': 'Help keep it free',
-  'supporters.description': 'Tournament Manager is free and open source. Your support helps us keep it that way.',
-  'supporters.leaveMessage': 'Leave a message (optional)',
-  'supporters.sending': 'Sending...',
-  'supporters.support': 'Support',
-  'supporters.thankYou': 'Thank you, {name}!',
-  'supporters.testingFlow': 'We\'re testing this support flow. Real payment options coming soon!',
-  'supporters.supporters': 'Supporters',
-  'supporters.loading': 'Loading...',
-  'supporters.beFirst': 'Be the first!',
+  // SupportOverlay
+  'support.title': 'Support Us',
+  'support.helpKeepFree': 'Help keep it free',
+  'support.description': 'Tournament Manager is free and open source. Your support helps us keep it that way.',
+  'support.yourName': 'Your name',
+  'support.leaveMessage': 'Leave a message (optional)',
+  'support.support': 'Support',
+  'support.thankYou': 'Thank you!',
+  'support.testingFlow': 'We\'re testing this support flow. Real payment options coming soon!',
+  'support.supporters': 'Supporters',
+  'support.raised': '{amount} raised',
+  'support.beFirst': 'Be the first!',
 
   // Common (shared component strings)
   'feedback.title': 'Send Feedback',

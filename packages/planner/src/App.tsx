@@ -6,7 +6,6 @@ import { usePlanner } from './state/PlannerContext';
 import { HomeScreen } from './screens/HomeScreen';
 import { OrganizerScreen } from './screens/OrganizerScreen';
 import { JoinScreen } from './screens/JoinScreen';
-import { SupportersScreen } from './screens/SupportersScreen';
 import { translations } from './i18n';
 import styles from './App.module.css';
 
@@ -31,13 +30,10 @@ function AppContent() {
     const code = params.get('code')
       ?? window.Telegram?.WebApp?.initDataUnsafe?.start_param
       ?? null;
-    const screenParam = params.get('screen');
     if (code && code.length === 6) {
       loadByCode(code).then(found => {
         setScreen(found ? 'join' : 'home');
       });
-    } else if (screenParam === 'supporters') {
-      setScreen('supporters');
     } else {
       setScreen('home');
     }
@@ -75,8 +71,6 @@ function AppContent() {
       return <OrganizerScreen />;
     case 'join':
       return <JoinScreen />;
-    case 'supporters':
-      return <SupportersScreen />;
     default:
       return <HomeScreen />;
   }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { Supporter } from '@padel/common';
-import { generateId, groupSupporters } from '@padel/common';
+import type { Supporter } from '../types/supporter';
+import { generateId } from '../utils/id';
+import { groupSupporters } from '../utils/groupSupporters';
 
 const dbUrl = (import.meta.env.VITE_FIREBASE_DATABASE_URL as string | undefined)?.replace(/\/$/, '');
 const apiKey = import.meta.env.VITE_FIREBASE_API_KEY as string | undefined;

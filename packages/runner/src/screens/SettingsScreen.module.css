@@ -239,19 +239,6 @@
   border-top: 1px solid var(--color-border);
 }
 
-.attribution {
-  text-align: center;
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-  padding: var(--space-md) 0;
-}
-
-.attributionLink {
-  color: var(--color-text-secondary);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
 /* Supporters overlay */
 .overlay {
   position: fixed;

@@ -16,6 +16,15 @@ const pt: Translations = {
   'home.deleteConfirm': 'Eliminar este torneio? Esta ação não pode ser revertida.',
   'home.sendFeedback': 'Enviar feedback',
 
+  // Footer & Options
+  'footer.freeOpenSource': 'Gratuito e open source',
+  'footer.madeWithCare': 'Feito com cuidado',
+  'footer.supportUs': 'Apoie-nos',
+  'footer.sendFeedback': 'Enviar feedback',
+  'footer.options': 'Personalizar',
+  'options.title': 'Personalizar',
+  'options.language': 'Idioma',
+
   // SetupScreen
   'setup.title': 'Configuração',
   'setup.cancel': 'Cancelar',
@@ -117,9 +126,6 @@ const pt: Translations = {
   'settings.deleteTournament': 'Eliminar Torneio',
   'settings.deleteConfirm': 'Eliminar este torneio? Esta ação não pode ser revertida.',
   'settings.replaceImportConfirm': 'Substituir o torneio atual pelos dados importados? Esta ação não pode ser revertida.',
-  'settings.madeWithCare': 'Feito com cuidado',
-  'settings.supportUs': 'Apoie-nos',
-  'settings.sendFeedback': 'Enviar feedback',
   'settings.playerReplaced': 'Jogador substituído',
   'settings.playerAdded': 'Jogador adicionado',
   'settings.courtReplaced': 'Campo substituído',

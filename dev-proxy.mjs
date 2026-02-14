@@ -1,14 +1,9 @@
 import http from 'node:http';
-import fs from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const indexHtml = fs.readFileSync(join(__dirname, 'index.html'), 'utf-8');
 
 const PREFERRED_PORT = 3000;
 const RUNNER_PORT = 5190;
 const PLANNER_PORT = 5191;
+const LANDING_PORT = 5192;
 
 function proxy(req, res, targetPort) {
   const options = {
@@ -34,18 +29,21 @@ const server = http.createServer((req, res) => {
     proxy(req, res, PLANNER_PORT);
   } else if (req.url.startsWith('/play')) {
     proxy(req, res, RUNNER_PORT);
-  } else if (req.url === '/' || req.url === '/index.html') {
-    res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.end(indexHtml);
   } else {
-    res.writeHead(404);
-    res.end('Not found');
+    proxy(req, res, LANDING_PORT);
   }
 });
 
 // WebSocket upgrade (for Vite HMR)
 server.on('upgrade', (req, socket, head) => {
-  const targetPort = req.url.startsWith('/plan') ? PLANNER_PORT : RUNNER_PORT;
+  let targetPort;
+  if (req.url.startsWith('/plan')) {
+    targetPort = PLANNER_PORT;
+  } else if (req.url.startsWith('/play')) {
+    targetPort = RUNNER_PORT;
+  } else {
+    targetPort = LANDING_PORT;
+  }
   const options = {
     hostname: 'localhost',
     port: targetPort,
@@ -91,6 +89,7 @@ findFreePort(PREFERRED_PORT).then((port) => {
   server.listen(port, () => {
     console.log(`\n  Dev proxy running at http://localhost:${port}`);
     console.log(`    /play → runner (port ${RUNNER_PORT})`);
-    console.log(`    /plan → planner (port ${PLANNER_PORT})\n`);
+    console.log(`    /plan → planner (port ${PLANNER_PORT})`);
+    console.log(`    /    → landing (port ${LANDING_PORT})\n`);
   });
 });

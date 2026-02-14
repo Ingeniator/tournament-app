@@ -1,7 +1,7 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-lg);
   padding: var(--space-md);
   max-width: 480px;
   margin: 0 auto;
@@ -73,6 +73,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
+  margin-bottom: var(--space-md);
 }
 
 .createSection {
@@ -207,15 +208,3 @@
   padding: var(--space-md);
 }
 
-.footer {
-  text-align: center;
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-  padding: var(--space-md) 0;
-}
-
-.footerLink {
-  color: var(--color-text-secondary);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}

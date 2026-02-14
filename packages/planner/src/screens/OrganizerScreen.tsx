@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, type ClipboardEvent } from 'react';
 import { ref, push, set } from 'firebase/database';
-import { Button, Card, FeedbackModal, Toast, useToast, useTranslation } from '@padel/common';
+import { Button, Card, FeedbackModal, AppFooter, Toast, useToast, useTranslation } from '@padel/common';
 import type { TournamentFormat, Court } from '@padel/common';
 import { generateId, parsePlayerList } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
@@ -423,16 +423,9 @@ export function OrganizerScreen() {
 
       </main>
 
-      <footer className={styles.supportNudge}>
-        {t('organizer.freeOpenSource')} &middot;{' '}
-        <button className={styles.supportLink} onClick={() => setScreen('supporters')}>
-          {t('organizer.supportUs')}
-        </button>
-        {' '}&middot;{' '}
-        <button className={styles.supportLink} onClick={() => setFeedbackOpen(true)}>
-          {t('organizer.sendFeedback')}
-        </button>
-      </footer>
+      <AppFooter
+        onFeedbackClick={() => setFeedbackOpen(true)}
+      />
 
       <FeedbackModal
         open={feedbackOpen}

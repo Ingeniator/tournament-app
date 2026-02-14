@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { ref, push, set } from 'firebase/database';
 import { useTournament } from '../hooks/useTournament';
-import { SupportOverlay } from '../components/support/SupportOverlay';
 import { EditableField } from '../components/settings/EditableField';
 import { copyToClipboard } from '../utils/clipboard';
 import { exportTournament, validateImport } from '../utils/importExport';
-import { db, firebaseConfigured } from '../firebase';
+import { db } from '../firebase';
 import { computeSitOutInfo } from '../utils/resolveConfigDefaults';
-import { Button, Card, FeedbackModal, Toast, useToast, useTranslation } from '@padel/common';
+import { Button, Card, FeedbackModal, AppFooter, Toast, useToast, useTranslation } from '@padel/common';
 import styles from './SettingsScreen.module.css';
 
 export function SettingsScreen() {
@@ -27,7 +26,6 @@ export function SettingsScreen() {
   const [importMode, setImportMode] = useState(false);
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
-  const [showSupporters, setShowSupporters] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   if (!tournament) return null;
@@ -490,22 +488,9 @@ export function SettingsScreen() {
         </Button>
       </div>
 
-      <div className={styles.attribution}>
-        {t('settings.madeWithCare')} &middot;{' '}
-        <button className={styles.attributionLink} onClick={() => setShowSupporters(true)}>
-          {t('settings.supportUs')}
-        </button>
-        {firebaseConfigured && (
-          <>
-            {' '}&middot;{' '}
-            <button className={styles.attributionLink} onClick={() => setFeedbackOpen(true)}>
-              {t('settings.sendFeedback')}
-            </button>
-          </>
-        )}
-      </div>
-
-      <SupportOverlay open={showSupporters} onClose={() => setShowSupporters(false)} />
+      <AppFooter
+        onFeedbackClick={() => setFeedbackOpen(true)}
+      />
 
       <FeedbackModal
         open={feedbackOpen}

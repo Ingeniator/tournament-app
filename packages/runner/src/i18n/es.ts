@@ -14,7 +14,14 @@ const es: Translations = {
   'home.importPlaceholder': 'Pega el JSON del torneo aqu\u00ed...',
   'home.import': 'Importar',
   'home.deleteConfirm': '\u00bfEliminar este torneo? Esta acci\u00f3n no se puede deshacer.',
-  'home.sendFeedback': 'Enviar comentarios',
+  // Footer & Options
+  'footer.freeOpenSource': 'Gratuito y de c\u00f3digo abierto',
+  'footer.madeWithCare': 'Hecho con cari\u00f1o',
+  'footer.supportUs': 'Ap\u00f3yanos',
+  'footer.sendFeedback': 'Enviar comentarios',
+  'footer.options': 'Personalizar',
+  'options.title': 'Personalizar',
+  'options.language': 'Idioma',
 
   // SetupScreen
   'setup.title': 'Configuraci\u00f3n',
@@ -117,9 +124,6 @@ const es: Translations = {
   'settings.deleteTournament': 'Eliminar Torneo',
   'settings.deleteConfirm': '\u00bfEliminar este torneo? Esta acci\u00f3n no se puede deshacer.',
   'settings.replaceImportConfirm': '\u00bfReemplazar el torneo actual con los datos importados? Esta acci\u00f3n no se puede deshacer.',
-  'settings.madeWithCare': 'Hecho con cari\u00f1o',
-  'settings.supportUs': 'Ap\u00f3yanos',
-  'settings.sendFeedback': 'Enviar comentarios',
   'settings.playerReplaced': 'Jugador reemplazado',
   'settings.playerAdded': 'Jugador a\u00f1adido',
   'settings.courtReplaced': 'Pista reemplazada',

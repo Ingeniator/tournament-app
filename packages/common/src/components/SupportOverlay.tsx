@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { useSupporters, getSavedName } from '../../hooks/useSupporters';
-import { Button, useTranslation } from '@padel/common';
+import { useSupporters, getSavedName } from '../hooks/useSupporters';
+import { Button } from './Button';
+import { useTranslation } from '../i18n/context';
 import styles from './SupportOverlay.module.css';
 
 const AMOUNTS = [

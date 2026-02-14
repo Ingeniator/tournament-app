@@ -16,6 +16,15 @@ const it: Translations = {
   'home.deleteConfirm': 'Eliminare questo torneo? Non si pu\u00f2 annullare.',
   'home.sendFeedback': 'Invia feedback',
 
+  // Footer & Options
+  'footer.freeOpenSource': 'Gratuito e open source',
+  'footer.madeWithCare': 'Fatto con cura',
+  'footer.supportUs': 'Supportaci',
+  'footer.sendFeedback': 'Invia feedback',
+  'footer.options': 'Personalizza',
+  'options.title': 'Personalizza',
+  'options.language': 'Lingua',
+
   // SetupScreen
   'setup.title': 'Configurazione',
   'setup.cancel': 'Annulla',
@@ -117,9 +126,6 @@ const it: Translations = {
   'settings.deleteTournament': 'Elimina Torneo',
   'settings.deleteConfirm': 'Eliminare questo torneo? Non si pu\u00f2 annullare.',
   'settings.replaceImportConfirm': 'Sostituire il torneo attuale con i dati importati? Non si pu\u00f2 annullare.',
-  'settings.madeWithCare': 'Fatto con cura',
-  'settings.supportUs': 'Supportaci',
-  'settings.sendFeedback': 'Invia feedback',
   'settings.playerReplaced': 'Giocatore sostituito',
   'settings.playerAdded': 'Giocatore aggiunto',
   'settings.courtReplaced': 'Campo sostituito',

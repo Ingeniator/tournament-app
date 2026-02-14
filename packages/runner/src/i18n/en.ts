@@ -14,7 +14,14 @@ const en: Translations = {
   'home.importPlaceholder': 'Paste tournament JSON here...',
   'home.import': 'Import',
   'home.deleteConfirm': 'Delete this tournament? This cannot be undone.',
-  'home.sendFeedback': 'Send feedback',
+  // Footer & Options
+  'footer.freeOpenSource': 'Free & open source',
+  'footer.madeWithCare': 'Made with care',
+  'footer.supportUs': 'Support us',
+  'footer.sendFeedback': 'Send feedback',
+  'footer.options': 'Personalize',
+  'options.title': 'Personalize',
+  'options.language': 'Language',
 
   // SetupScreen
   'setup.title': 'Setup',
@@ -117,9 +124,6 @@ const en: Translations = {
   'settings.deleteTournament': 'Delete Tournament',
   'settings.deleteConfirm': 'Delete this tournament? This cannot be undone.',
   'settings.replaceImportConfirm': 'Replace current tournament with imported data? This cannot be undone.',
-  'settings.madeWithCare': 'Made with care',
-  'settings.supportUs': 'Support us',
-  'settings.sendFeedback': 'Send feedback',
   'settings.playerReplaced': 'Player replaced',
   'settings.playerAdded': 'Player added',
   'settings.courtReplaced': 'Court replaced',

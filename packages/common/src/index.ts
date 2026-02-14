@@ -27,3 +27,6 @@ export { useToast } from './hooks/useToast';
 export type { Locale, Translations, TranslationMap } from './i18n/types';
 export { I18nProvider, useTranslation } from './i18n/context';
 export { LanguageSelector } from './components/LanguageSelector';
+export { AppFooter } from './components/AppFooter';
+export { SupportOverlay } from './components/SupportOverlay';
+export { useSupporters, getSavedName } from './hooks/useSupporters';
