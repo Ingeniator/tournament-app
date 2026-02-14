@@ -9,7 +9,7 @@
 /* Court — 3-col grid: team1 left, vs, team2 right, score below */
 .court {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   grid-template-rows: auto auto auto;
   padding-bottom: 6px;
 }
@@ -23,6 +23,8 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .topLeft, .topRight {
@@ -128,12 +130,12 @@
 
 /* Court name label — above the court grid */
 .courtLabel {
-  padding: 6px 12px 4px;
-  font-size: 0.65rem;
+  padding: 8px 16px 4px;
+  font-size: var(--text-sm);
   font-weight: 700;
-  color: var(--color-text-muted);
+  color: var(--color-text);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
 }
 
 .winner {
