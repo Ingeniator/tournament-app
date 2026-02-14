@@ -16,15 +16,9 @@ function Swatch({ skin }: { skin: ThemeSkin }) {
   );
 }
 
-const CATPPUCCIN_IDS = new Set(['mocha', 'frappe', 'latte']);
-const DARK_SKINS = THEME_SKINS.filter(s => s.mode === 'dark' && !CATPPUCCIN_IDS.has(s.id));
-const LIGHT_SKINS = THEME_SKINS.filter(s => s.mode === 'light' && !CATPPUCCIN_IDS.has(s.id));
-const CATPPUCCIN_SKINS = THEME_SKINS.filter(s => CATPPUCCIN_IDS.has(s.id));
-
 const GROUPS: { label: string; skins: ThemeSkin[] }[] = [
-  { label: 'Dark', skins: DARK_SKINS },
-  { label: 'Light', skins: LIGHT_SKINS },
-  { label: 'Catppuccin', skins: CATPPUCCIN_SKINS },
+  { label: 'Dark', skins: THEME_SKINS.filter(s => s.mode === 'dark') },
+  { label: 'Light', skins: THEME_SKINS.filter(s => s.mode === 'light') },
 ];
 
 export function SkinPicker({ skin, onSelect }: SkinPickerProps) {

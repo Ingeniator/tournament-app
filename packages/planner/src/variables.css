@@ -174,23 +174,6 @@
   --color-rank-silver: var(--sage-9);
 }
 
-/* ── Skin: Amethyst / Lavender  (mauve + violet) ── */
-.skin-amethyst, .skin-lavender {
-  --color-bg: var(--mauve-1);
-  --color-surface: var(--mauve-2);
-  --color-surface-raised: var(--mauve-3);
-  --color-secondary: var(--mauve-4);
-  --color-primary: var(--violet-9);
-  --color-primary-hover: var(--violet-10);
-  --color-primary-tint: var(--violet-a3);
-  --color-text: var(--mauve-12);
-  --color-text-secondary: var(--mauve-11);
-  --color-text-muted: var(--mauve-9);
-  --color-border: var(--mauve-6);
-  --color-separator: var(--mauve-a4);
-  --color-rank-silver: var(--mauve-9);
-}
-
 /* ── Catppuccin Mocha  (dark · mauve accent) ── */
 .skin-mocha {
   --color-bg: #1e1e2e;
@@ -257,4 +240,140 @@
   --color-border: #acb0be;
   --color-separator: rgba(172, 176, 190, 0.4);
   --color-rank-silver: #7c7f93;
+}
+
+/* ── Cyberpunk  (deep purple + neon pink · tweakcn) ── */
+.skin-cyberpunk {
+  --color-bg: #0c0c1d;
+  --color-surface: #151530;
+  --color-surface-raised: #1e1e3f;
+  --color-secondary: #2a2a55;
+  --color-primary: #ff00c8;
+  --color-primary-hover: #e600b4;
+  --color-primary-tint: rgba(255, 0, 200, 0.15);
+  --color-text: #eceff4;
+  --color-text-secondary: #b6b9c9;
+  --color-text-muted: #8085a6;
+  --color-border: #2e2e5e;
+  --color-separator: rgba(46, 46, 94, 0.4);
+  --color-rank-silver: #8085a6;
+}
+
+/* ── Ocean Breeze  (navy + emerald · tweakcn) ── */
+.skin-ocean-breeze {
+  --color-bg: #0f172a;
+  --color-surface: #19212e;
+  --color-surface-raised: #1e293b;
+  --color-secondary: #2d3748;
+  --color-primary: #34d399;
+  --color-primary-hover: #2bb882;
+  --color-primary-tint: rgba(52, 211, 153, 0.15);
+  --color-text: #d1d5db;
+  --color-text-secondary: #9ea3ad;
+  --color-text-muted: #6b7280;
+  --color-border: #4b5563;
+  --color-separator: rgba(75, 85, 99, 0.4);
+  --color-rank-silver: #6b7280;
+}
+
+/* ── Northern Lights  (charcoal + green · tweakcn) ── */
+.skin-northern-lights {
+  --color-bg: #1a1d23;
+  --color-surface: #2f3436;
+  --color-surface-raised: #3a3d42;
+  --color-secondary: #454849;
+  --color-primary: #34a85a;
+  --color-primary-hover: #2d914d;
+  --color-primary-tint: rgba(52, 168, 90, 0.15);
+  --color-text: #e5e5e5;
+  --color-text-secondary: #c4c4c4;
+  --color-text-muted: #a3a3a3;
+  --color-border: #4a4d50;
+  --color-separator: rgba(68, 68, 68, 0.4);
+  --color-rank-silver: #a3a3a3;
+}
+
+/* ── Starry Night  (deep blue + steel blue · tweakcn) ── */
+.skin-starry-night {
+  --color-bg: #181a24;
+  --color-surface: #1d1e2f;
+  --color-surface-raised: #23243a;
+  --color-secondary: #2d2e42;
+  --color-primary: #3a5ba0;
+  --color-primary-hover: #324d88;
+  --color-primary-tint: rgba(58, 91, 160, 0.15);
+  --color-text: #e6eaf3;
+  --color-text-secondary: #b0b4ca;
+  --color-text-muted: #7a88a1;
+  --color-border: #2d2e3e;
+  --color-separator: rgba(45, 46, 62, 0.4);
+  --color-rank-silver: #7a88a1;
+}
+
+/* ── Bold Tech  (deep indigo + violet · tweakcn) ── */
+.skin-bold-tech {
+  --color-bg: #0f172a;
+  --color-surface: #171447;
+  --color-surface-raised: #1e1b4b;
+  --color-secondary: #252260;
+  --color-primary: #8b5cf6;
+  --color-primary-hover: #7c3aed;
+  --color-primary-tint: rgba(139, 92, 246, 0.15);
+  --color-text: #e0e7ff;
+  --color-text-secondary: #c4b5fd;
+  --color-text-muted: #9b8ec4;
+  --color-border: #2e1065;
+  --color-separator: rgba(46, 16, 101, 0.4);
+  --color-rank-silver: #9b8ec4;
+}
+
+/* ── Sunset  (warm dark + coral · tweakcn) ── */
+.skin-sunset {
+  --color-bg: #2a2024;
+  --color-surface: #30272c;
+  --color-surface-raised: #392f35;
+  --color-secondary: #463a41;
+  --color-primary: #ff7e5f;
+  --color-primary-hover: #e66e52;
+  --color-primary-tint: rgba(255, 126, 95, 0.15);
+  --color-text: #f2e9e4;
+  --color-text-secondary: #d7c6bc;
+  --color-text-muted: #a89890;
+  --color-border: #463a41;
+  --color-separator: rgba(70, 58, 65, 0.4);
+  --color-rank-silver: #a89890;
+}
+
+/* ── Claude  (warm cream + terracotta · tweakcn) ── */
+.skin-claude {
+  --color-bg: #faf9f5;
+  --color-surface: #f4f1ea;
+  --color-surface-raised: #ede9de;
+  --color-secondary: #e9e6dc;
+  --color-primary: #c96442;
+  --color-primary-hover: #b55838;
+  --color-primary-tint: rgba(201, 100, 66, 0.12);
+  --color-text: #3d3929;
+  --color-text-secondary: #605c4e;
+  --color-text-muted: #83827d;
+  --color-border: #dad9d4;
+  --color-separator: rgba(218, 217, 212, 0.5);
+  --color-rank-silver: #83827d;
+}
+
+/* ── Nature  (warm paper + forest green · tweakcn) ── */
+.skin-nature {
+  --color-bg: #f8f5f0;
+  --color-surface: #f2ede6;
+  --color-surface-raised: #ebe4da;
+  --color-secondary: #e8f5e9;
+  --color-primary: #2e7d32;
+  --color-primary-hover: #266b29;
+  --color-primary-tint: rgba(46, 125, 50, 0.12);
+  --color-text: #3e2723;
+  --color-text-secondary: #5d4037;
+  --color-text-muted: #6d4c41;
+  --color-border: #e0d6c9;
+  --color-separator: rgba(224, 214, 201, 0.5);
+  --color-rank-silver: #6d4c41;
 }
