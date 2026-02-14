@@ -1,18 +1,16 @@
 import { useMemo } from 'react';
 import { useTournament } from '../hooks/useTournament';
-import { useRunnerTheme } from '../state/ThemeContext';
 import { getStrategy } from '../strategies';
 import { resolveConfigDefaults } from '../utils/resolveConfigDefaults';
 import { AppShell } from '../components/layout/AppShell';
 import { PlayerInput } from '../components/setup/PlayerInput';
 import { PlayerList } from '../components/setup/PlayerList';
 import { TournamentConfigForm } from '../components/setup/TournamentConfigForm';
-import { Button, Card, SkinPicker } from '@padel/common';
+import { Button, Card } from '@padel/common';
 import styles from './SetupScreen.module.css';
 
 export function SetupScreen() {
   const { tournament, dispatch } = useTournament();
-  const { skin, setSkin } = useRunnerTheme();
 
   const errors = useMemo(() => {
     if (!tournament) return [];
@@ -44,12 +42,9 @@ export function SetupScreen() {
     <AppShell
       title="Setup"
       headerRight={
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <SkinPicker skin={skin} onSelect={setSkin} />
-          <Button variant="ghost" size="small" onClick={handleBack}>
-            Cancel
-          </Button>
-        </div>
+        <Button variant="ghost" size="small" onClick={handleBack}>
+          Cancel
+        </Button>
       }
     >
       <div className={styles.section}>

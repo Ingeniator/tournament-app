@@ -76,7 +76,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
 
   const setSkin = useCallback((s: SkinId) => {
     rawSetSkin(s);
-    updateUserSkin(s);
+    updateUserSkin(s).catch(() => {});
     try { localStorage.setItem('padel-skin', s); } catch {}
   }, [rawSetSkin, updateUserSkin]);
 

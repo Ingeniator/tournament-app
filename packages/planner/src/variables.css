@@ -120,6 +120,7 @@
   --color-text-muted: var(--slate-9);
   --color-border: var(--slate-6);
   --color-separator: var(--slate-a4);
+  --color-rank-silver: var(--slate-9);
 }
 
 /* ── Skin: Crimson / Rose  (mauve + crimson) ── */
@@ -136,6 +137,7 @@
   --color-text-muted: var(--mauve-9);
   --color-border: var(--mauve-6);
   --color-separator: var(--mauve-a4);
+  --color-rank-silver: var(--mauve-9);
 }
 
 /* ── Skin: Ember / Dawn  (sand + orange) ── */
@@ -152,6 +154,7 @@
   --color-text-muted: var(--sand-9);
   --color-border: var(--sand-6);
   --color-separator: var(--sand-a4);
+  --color-rank-silver: var(--sand-9);
 }
 
 /* ── Skin: Forest / Mint  (sage + teal) ── */
@@ -168,6 +171,7 @@
   --color-text-muted: var(--sage-9);
   --color-border: var(--sage-6);
   --color-separator: var(--sage-a4);
+  --color-rank-silver: var(--sage-9);
 }
 
 /* ── Skin: Amethyst / Lavender  (mauve + violet) ── */
@@ -184,6 +188,7 @@
   --color-text-muted: var(--mauve-9);
   --color-border: var(--mauve-6);
   --color-separator: var(--mauve-a4);
+  --color-rank-silver: var(--mauve-9);
 }
 
 /* ── Catppuccin Mocha  (dark · mauve accent) ── */
@@ -200,6 +205,7 @@
   --color-text-muted: #a6adc8;
   --color-border: #585b70;
   --color-separator: rgba(88, 91, 112, 0.4);
+  --color-rank-silver: #a6adc8;
 }
 
 /* ── Catppuccin Frappé  (dark · peach accent · sporty) ── */
@@ -216,6 +222,7 @@
   --color-text-muted: #a5adce;
   --color-border: #626880;
   --color-separator: rgba(98, 104, 128, 0.4);
+  --color-rank-silver: #a5adce;
 }
 
 /* ── Skin: Navy  (original theme · deep navy + crimson) ── */
@@ -232,6 +239,7 @@
   --color-text-muted: #8e8ea3;
   --color-border: #2a2a44;
   --color-separator: rgba(42, 42, 68, 0.4);
+  --color-rank-silver: #8e8ea3;
 }
 
 /* ── Catppuccin Latte  (light · mauve accent) ── */
@@ -248,4 +256,5 @@
   --color-text-muted: #6c6f85;
   --color-border: #acb0be;
   --color-separator: rgba(172, 176, 190, 0.4);
+  --color-rank-silver: #7c7f93;
 }

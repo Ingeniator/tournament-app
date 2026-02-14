@@ -17,6 +17,15 @@ function Swatch({ skin }: { skin: ThemeSkin }) {
 }
 
 const CATPPUCCIN_IDS = new Set(['mocha', 'frappe', 'latte']);
+const DARK_SKINS = THEME_SKINS.filter(s => s.mode === 'dark' && !CATPPUCCIN_IDS.has(s.id));
+const LIGHT_SKINS = THEME_SKINS.filter(s => s.mode === 'light' && !CATPPUCCIN_IDS.has(s.id));
+const CATPPUCCIN_SKINS = THEME_SKINS.filter(s => CATPPUCCIN_IDS.has(s.id));
+
+const GROUPS: { label: string; skins: ThemeSkin[] }[] = [
+  { label: 'Dark', skins: DARK_SKINS },
+  { label: 'Light', skins: LIGHT_SKINS },
+  { label: 'Catppuccin', skins: CATPPUCCIN_SKINS },
+];
 
 export function SkinPicker({ skin, onSelect }: SkinPickerProps) {
   const [open, setOpen] = useState(false);
@@ -33,20 +42,10 @@ export function SkinPicker({ skin, onSelect }: SkinPickerProps) {
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
 
-  const darkSkins = THEME_SKINS.filter(s => s.mode === 'dark' && !CATPPUCCIN_IDS.has(s.id));
-  const lightSkins = THEME_SKINS.filter(s => s.mode === 'light' && !CATPPUCCIN_IDS.has(s.id));
-  const catppuccinSkins = THEME_SKINS.filter(s => CATPPUCCIN_IDS.has(s.id));
-
   const handleSelect = (id: SkinId) => {
     onSelect(id);
     setOpen(false);
   };
-
-  const groups: { label: string; skins: ThemeSkin[] }[] = [
-    { label: 'Dark', skins: darkSkins },
-    { label: 'Light', skins: lightSkins },
-    { label: 'Catppuccin', skins: catppuccinSkins },
-  ];
 
   return (
     <div className={styles.wrapper} ref={wrapperRef}>
@@ -66,7 +65,7 @@ export function SkinPicker({ skin, onSelect }: SkinPickerProps) {
 
       {open && (
         <div className={styles.dropdown}>
-          {groups.map(g => (
+          {GROUPS.map(g => (
             <div key={g.label}>
               <div className={styles.groupLabel}>{g.label}</div>
               {g.skins.map(s => (

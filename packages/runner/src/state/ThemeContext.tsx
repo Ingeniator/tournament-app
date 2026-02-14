@@ -12,8 +12,9 @@ const ThemeCtx = createContext<ThemeContextValue>({
   setSkin: () => {},
 });
 
+const initialSkin = loadSkin();
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const initialSkin = loadSkin();
   const { skin, setSkin: rawSetSkin } = useTheme(initialSkin);
 
   const setSkin = useCallback((s: SkinId) => {
