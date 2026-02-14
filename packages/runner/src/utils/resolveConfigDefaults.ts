@@ -81,7 +81,9 @@ export function resolveConfigDefaults(config: TournamentConfig, playerCount: num
   };
 }
 
-/** Nudge a round count towards the nearest value with equal sit-outs, staying within duration limits. */
+/** Nudge a round count towards the nearest fair value that does NOT exceed the duration limit.
+ *  Courts are booked for a fixed time, so going over is not acceptable.
+ *  Only fall back to a value above maxRounds if no fair value exists at or below. */
 function nudgeToFairRounds(rawRounds: number, playerCount: number, courtCount: number, maxRounds: number): number {
   const info = computeSitOutInfo(playerCount, courtCount, rawRounds);
   if (info.isEqual || info.sitOutsPerRound === 0) return rawRounds;
@@ -89,19 +91,11 @@ function nudgeToFairRounds(rawRounds: number, playerCount: number, courtCount: n
   const below = info.nearestFairBelow;
   const above = info.nearestFairAbove;
 
-  // Prefer the closest fair value that stays within the duration limit and is at least 1
-  const candidates: number[] = [];
-  if (below !== null && below >= 1) candidates.push(below);
-  if (above !== null && above >= 1 && above <= maxRounds) candidates.push(above);
+  // Strongly prefer fair values that stay within the duration limit
+  if (below !== null && below >= 1 && below <= maxRounds) return below;
+  // Only go above if nothing fair fits within the limit
+  if (above !== null && above >= 1 && above <= maxRounds) return above;
 
-  if (candidates.length === 0) return rawRounds;
-
-  // Pick the one closest to rawRounds; on tie prefer the higher count (more games)
-  candidates.sort((a, b) => {
-    const da = Math.abs(a - rawRounds);
-    const db = Math.abs(b - rawRounds);
-    return da !== db ? da - db : b - a;
-  });
-
-  return candidates[0];
+  // No fair value within limit — stay with the raw value (capped to limit)
+  return Math.min(rawRounds, maxRounds);
 }
