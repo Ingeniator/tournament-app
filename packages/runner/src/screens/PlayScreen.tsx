@@ -97,6 +97,8 @@ export function PlayScreen() {
 
   if (!tournament) return null;
 
+  const [previewImages, setPreviewImages] = useState<string[] | null>(null);
+
   // Completed state — show summary
   if (tournament.phase === 'completed') {
     const handleCopy = async () => {
@@ -105,8 +107,9 @@ export function PlayScreen() {
     };
     const handleShareImage = async () => {
       const result = await shareStandingsImage(tournament.name, standings, nominations);
-      if (result === 'shared') showToast('Shared!');
-      else if (result === 'downloaded') showToast('Image saved!');
+      if (result.status === 'shared') showToast('Shared!');
+      else if (result.status === 'downloaded') showToast('Image saved!');
+      else if (result.status === 'preview') setPreviewImages(result.dataUrls);
       else showToast('Failed to share');
     };
 
@@ -199,6 +202,21 @@ export function PlayScreen() {
             await set(feedbackRef, { message, source: 'runner', createdAt: Date.now() });
           }}
         />
+        {previewImages && (
+          <div className={styles.imagePreviewOverlay} onClick={() => setPreviewImages(null)}>
+            <div className={styles.imagePreviewContent} onClick={e => e.stopPropagation()}>
+              <div className={styles.imagePreviewHeader}>
+                <span className={styles.imagePreviewHint}>Long-press an image to save</span>
+                <button className={styles.imagePreviewClose} onClick={() => setPreviewImages(null)}>&#x2715;</button>
+              </div>
+              <div className={styles.imagePreviewScroll}>
+                {previewImages.map((url, i) => (
+                  <img key={i} src={url} alt={`Result ${i + 1}`} className={styles.imagePreviewImg} />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
         <Toast message={toastMessage} />
       </div>
     );

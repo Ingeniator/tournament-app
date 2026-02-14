@@ -225,6 +225,13 @@
   margin-bottom: var(--space-sm);
 }
 
+/* Sit-out warning */
+.sitOutWarning {
+  font-size: var(--text-xs);
+  color: var(--color-warning, #f0a500);
+  padding: var(--space-xs) 0;
+}
+
 /* Danger zone */
 .danger {
   margin-top: var(--space-md);

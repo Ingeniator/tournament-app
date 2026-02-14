@@ -389,11 +389,18 @@ export function OrganizerScreen() {
       </Card>
 
       {/* Export */}
-      {confirmedCount > 0 && confirmedCount < capacity && (
-        <div className={styles.warning}>
-          Only {confirmedCount} of {capacity} spots filled. Some courts won't have full games.
-        </div>
-      )}
+      {confirmedCount > 0 && confirmedCount < capacity && (() => {
+        const courtsNeeded = tournament.courts.length * 4;
+        const fillsCourts = confirmedCount >= courtsNeeded;
+        return (
+          <div className={styles.warning}>
+            Only {confirmedCount} of {capacity} spots filled.
+            {fillsCourts
+              ? ` Need ${capacity - confirmedCount} more to reach planned capacity, but enough to fill ${tournament.courts.length === 1 ? 'the court' : `all ${tournament.courts.length} courts`}.`
+              : ' Some courts won\'t have full games.'}
+          </div>
+        );
+      })()}
       {duplicateNames.length > 0 && (
         <div className={styles.warning}>
           Duplicate names: {duplicateNames.join(', ')}. Same person registered twice?

@@ -179,16 +179,25 @@ export const teamAmericanoStrategy: TournamentStrategy = {
 
   getCompetitors(tournament: Tournament) {
     const teams = tournament.teams ?? [];
+    const unavailableIds = new Set(
+      tournament.players.filter(p => p.unavailable).map(p => p.id)
+    );
     const nameOf = (id: string) => tournament.players.find(p => p.id === id)?.name ?? '?';
-    return teams.map(t => ({
-      id: t.id,
-      name: t.name ?? `${nameOf(t.player1Id)} & ${nameOf(t.player2Id)}`,
-      playerIds: [t.player1Id, t.player2Id],
-    }));
+    return teams
+      .filter(t => !unavailableIds.has(t.player1Id) && !unavailableIds.has(t.player2Id))
+      .map(t => ({
+        id: t.id,
+        name: t.name ?? `${nameOf(t.player1Id)} & ${nameOf(t.player2Id)}`,
+        playerIds: [t.player1Id, t.player2Id],
+      }));
   },
 
   generateSchedule(_players: Player[], config: TournamentConfig, tournament?: Tournament): ScheduleResult {
-    const teams = tournament?.teams ?? [];
+    const allTeams = tournament?.teams ?? [];
+    const unavailableIds = new Set(
+      (tournament?.players ?? []).filter(p => p.unavailable).map(p => p.id)
+    );
+    const teams = allTeams.filter(t => !unavailableIds.has(t.player1Id) && !unavailableIds.has(t.player2Id));
     if (teams.length < 2) {
       return { rounds: [], warnings: ['No teams configured'] };
     }
@@ -206,31 +215,36 @@ export const teamAmericanoStrategy: TournamentStrategy = {
     return generateTeamRounds(teams, config, totalRounds, 1, new Map(), gamesPlayed, lastSitOutRound);
   },
 
-  generateAdditionalRounds(_players: Player[], config: TournamentConfig, existingRounds: Round[], count: number, _excludePlayerIds?: string[], _timeBudgetMs?: number, tournament?: Tournament): ScheduleResult {
-    const teams = tournament?.teams ?? [];
-    if (teams.length < 2) {
-      return { rounds: [], warnings: ['No teams configured'] };
+  generateAdditionalRounds(_players: Player[], config: TournamentConfig, existingRounds: Round[], count: number, excludePlayerIds?: string[], _timeBudgetMs?: number, tournament?: Tournament): ScheduleResult {
+    const allTeams = tournament?.teams ?? [];
+    // Filter out teams where any player is excluded (unavailable)
+    const excludeSet = new Set(excludePlayerIds ?? []);
+    const activeTeams = excludeSet.size > 0
+      ? allTeams.filter(t => !excludeSet.has(t.player1Id) && !excludeSet.has(t.player2Id))
+      : allTeams;
+    if (activeTeams.length < 2) {
+      return { rounds: [], warnings: ['Not enough active teams for a match (need at least 2)'] };
     }
 
-    // Seed from existing rounds
+    // Seed from existing rounds using all teams for accurate history
     const opponentCounts = new Map<string, number>();
     const gamesPlayed = new Map<string, number>();
     const lastSitOutRound = new Map<string, number>();
-    teams.forEach(t => { gamesPlayed.set(t.id, 0); lastSitOutRound.set(t.id, -Infinity); });
+    activeTeams.forEach(t => { gamesPlayed.set(t.id, 0); lastSitOutRound.set(t.id, -Infinity); });
 
     for (const round of existingRounds) {
       for (const match of round.matches) {
-        const t1 = findTeamByPair(teams, match.team1);
-        const t2 = findTeamByPair(teams, match.team2);
+        const t1 = findTeamByPair(allTeams, match.team1);
+        const t2 = findTeamByPair(allTeams, match.team2);
         if (t1 && t2) {
           const ok = teamKey(t1.id, t2.id);
           opponentCounts.set(ok, (opponentCounts.get(ok) ?? 0) + 1);
-          gamesPlayed.set(t1.id, (gamesPlayed.get(t1.id) ?? 0) + 1);
-          gamesPlayed.set(t2.id, (gamesPlayed.get(t2.id) ?? 0) + 1);
+          if (gamesPlayed.has(t1.id)) gamesPlayed.set(t1.id, (gamesPlayed.get(t1.id) ?? 0) + 1);
+          if (gamesPlayed.has(t2.id)) gamesPlayed.set(t2.id, (gamesPlayed.get(t2.id) ?? 0) + 1);
         }
       }
-      // Track sit-outs by team
-      for (const team of teams) {
+      // Track sit-outs by active team
+      for (const team of activeTeams) {
         if (round.sitOuts.includes(team.player1Id) || round.sitOuts.includes(team.player2Id)) {
           lastSitOutRound.set(team.id, round.roundNumber);
         }
@@ -238,6 +252,6 @@ export const teamAmericanoStrategy: TournamentStrategy = {
     }
 
     const startRoundNumber = existingRounds.length + 1;
-    return generateTeamRounds(teams, config, count, startRoundNumber, opponentCounts, gamesPlayed, lastSitOutRound);
+    return generateTeamRounds(activeTeams, config, count, startRoundNumber, opponentCounts, gamesPlayed, lastSitOutRound);
   },
 };

@@ -635,6 +635,99 @@ describe('teamAmericano strategy', () => {
     });
   });
 
+  describe('player unavailability', () => {
+    it('excludes teams with unavailable players from getCompetitors', () => {
+      const players = makePlayers(6);
+      players[0].unavailable = true; // p1 is unavailable → team t1 (p1+p2) excluded
+      const teams = makeTeams(players);
+      const config = makeConfig(1);
+      const tournament = makeTournament(players, teams, config);
+      const competitors = teamAmericanoStrategy.getCompetitors(tournament);
+      expect(competitors).toHaveLength(2); // only t2 and t3
+      expect(competitors.every(c => !c.playerIds.includes('p1'))).toBe(true);
+    });
+
+    it('excludes teams with unavailable players from generateAdditionalRounds', () => {
+      const players = makePlayers(8);
+      const teams = makeTeams(players); // t1: p1+p2, t2: p3+p4, t3: p5+p6, t4: p7+p8
+      const config = makeConfig(2, 3);
+      const tournament = makeTournament(players, teams, config);
+      const initial = teamAmericanoStrategy.generateSchedule(players, config, tournament);
+      const scored = scoreRounds(initial.rounds, 11, 10);
+
+      // Mark p1 as unavailable → exclude team t1
+      const excludeIds = ['p1'];
+      const { rounds } = teamAmericanoStrategy.generateAdditionalRounds(
+        players.filter(p => p.id !== 'p1'), config, scored, 2, excludeIds, undefined, tournament,
+      );
+      expect(rounds.length).toBe(2);
+      // No match should contain p1 or p2 (t1's players)
+      for (const round of rounds) {
+        for (const match of round.matches) {
+          expect(match.team1).not.toContain('p1');
+          expect(match.team1).not.toContain('p2');
+          expect(match.team2).not.toContain('p1');
+          expect(match.team2).not.toContain('p2');
+        }
+      }
+    });
+
+    it('excludes teams with unavailable players from generateSchedule', () => {
+      const players = makePlayers(8);
+      players[0].unavailable = true; // p1 unavailable → t1 excluded
+      const teams = makeTeams(players);
+      const config = makeConfig(1, 3);
+      const tournament = makeTournament(players, teams, config);
+      const { rounds } = teamAmericanoStrategy.generateSchedule(players, config, tournament);
+      // t1 (p1+p2) should not appear in any match
+      for (const round of rounds) {
+        for (const match of round.matches) {
+          expect(match.team1).not.toContain('p1');
+          expect(match.team2).not.toContain('p1');
+        }
+      }
+    });
+
+    it('standings exclude teams with unavailable players', () => {
+      const players = makePlayers(4);
+      const teams = makeTeams(players);
+      const config = makeConfig(1);
+      const rounds = [{
+        id: 'r1', roundNumber: 1,
+        matches: [{
+          id: 'm1', courtId: 'c1',
+          team1: [players[0].id, players[1].id] as [string, string],
+          team2: [players[2].id, players[3].id] as [string, string],
+          score: { team1Points: 15, team2Points: 6 },
+        }],
+        sitOuts: [],
+      }];
+      // Mark p1 unavailable after the match
+      players[0].unavailable = true;
+      const tournament = makeTournament(players, teams, config, rounds);
+      const standings = teamAmericanoStrategy.calculateStandings(tournament);
+      // Only t2 should appear in standings
+      expect(standings).toHaveLength(1);
+      expect(standings[0].playerId).toBe('t2');
+    });
+
+    it('returns not enough teams warning when too many unavailable', () => {
+      const players = makePlayers(4);
+      const teams = makeTeams(players);
+      const config = makeConfig(1, 2);
+      const tournament = makeTournament(players, teams, config);
+      const initial = teamAmericanoStrategy.generateSchedule(players, config, tournament);
+      const scored = scoreRounds(initial.rounds, 11, 10);
+
+      // Exclude both teams
+      const { rounds, warnings } = teamAmericanoStrategy.generateAdditionalRounds(
+        [], config, scored, 1, ['p1', 'p3'], undefined, tournament,
+      );
+      expect(rounds).toHaveLength(0);
+      expect(warnings.some(w => w.includes('Not enough active teams'))).toBe(true);
+    });
+  });
+
   describe('distribution quality', () => {
     it('games are balanced across teams (4 teams / 2 courts / 6 rounds)', () => {
       const players = makePlayers(8);
