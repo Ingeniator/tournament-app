@@ -40,6 +40,14 @@
   background-color: var(--color-border);
   cursor: pointer;
   transition: background-color 0.2s, transform 0.2s;
+  /* Expand touch target to 44px without increasing visual size */
+  position: relative;
+}
+
+.dot::after {
+  content: '';
+  position: absolute;
+  inset: -18px;
 }
 
 .dot:active {

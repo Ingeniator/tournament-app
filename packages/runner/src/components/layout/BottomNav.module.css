@@ -36,4 +36,11 @@
 .icon {
   font-size: 20px;
   line-height: 1;
+  /* Fixed dimensions ensure consistent alignment across tabs,
+     even when icon glyphs have different natural widths */
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

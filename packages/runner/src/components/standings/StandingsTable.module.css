@@ -1,3 +1,14 @@
+/* Scroll wrapper: uses negative margins to extend past parent padding so the
+   table can scroll edge-to-edge without the rightmost column being cropped. */
+.wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-left: calc(-1 * var(--space-md));
+  margin-right: calc(-1 * var(--space-md));
+  padding-left: var(--space-md);
+  padding-right: var(--space-md);
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
