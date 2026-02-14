@@ -26,7 +26,7 @@ export function buildRunnerTournament(
       format: plannerTournament.format,
       pointsPerMatch: 0,
       courts: plannerTournament.courts,
-      maxRounds: 1,
+      maxRounds: null,
       targetDuration: plannerTournament.duration,
     },
     phase: 'setup',
