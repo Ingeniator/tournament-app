@@ -77,6 +77,10 @@ export async function scoreMatch(page: Page, team1Score = 15) {
 
   // The picker grid appears. Click the score value.
   await page.getByRole('button', { name: String(team1Score), exact: true }).click();
+
+  // Wait for the score animation to complete (280ms fly animation, then state commits).
+  // The picker has a data-picking attribute while open; it's removed when score is saved.
+  await page.locator('[data-picking]').waitFor({ state: 'hidden', timeout: 2000 }).catch(() => {});
 }
 
 /**
@@ -124,7 +128,21 @@ export async function addPlayers(page: Page, names: string[]) {
 
 /** Select a tournament format from the config dropdown. */
 export async function selectFormat(page: Page, format: 'americano' | 'team-americano' | 'mexicano') {
-  await page.locator('select#config-format').selectOption(format);
+  const select = page.locator('select#config-format');
+  // Use Playwright's selectOption which triggers the native browser interaction.
+  await select.selectOption(format);
+  // Additionally, trigger the React onChange by setting the native value and
+  // dispatching events that React's internal event system responds to.
+  await select.evaluate((el, f) => {
+    const tracker = (el as any)._valueTracker;
+    if (tracker) tracker.setValue('');
+    const nativeSetter = Object.getOwnPropertyDescriptor(
+      HTMLSelectElement.prototype, 'value',
+    )!.set!;
+    nativeSetter.call(el, f);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  }, format);
 }
 
 /**
@@ -163,8 +181,12 @@ export async function scoreAllMatches(page: Page, team1Score = 15) {
     if (hasDash) {
       await scoreMatch(page, team1Score);
     } else {
-      // Brief wait to avoid tight-looping when UI is transitioning
-      await page.waitForTimeout(200);
+      // Wait for a UI element to appear instead of fixed timeout
+      await Promise.race([
+        page.getByRole('button', { name: '–' }).first().waitFor({ timeout: 2000 }).catch(() => {}),
+        page.getByText('All rounds scored!').waitFor({ timeout: 2000 }).catch(() => {}),
+        page.getByRole('button', { name: 'Continue' }).waitFor({ timeout: 2000 }).catch(() => {}),
+      ]);
     }
   }
 }

@@ -6,8 +6,9 @@ import {
   seedFromRounds,
   selectSitOuts,
   calculateIndividualStandings,
+  calculateCompetitorStandings,
 } from './shared';
-import type { Player, TournamentConfig, Tournament, Round, Match } from '@padel/common';
+import type { Player, TournamentConfig, Tournament, Round, Match, Competitor } from '@padel/common';
 
 function makePlayers(n: number): Player[] {
   return Array.from({ length: n }, (_, i) => ({ id: `p${i + 1}`, name: `Player ${i + 1}` }));
@@ -393,6 +394,212 @@ describe('calculateIndividualStandings', () => {
     ]);
     const standings = calculateIndividualStandings(makeTournament([round]));
     standings.forEach(s => {
+      expect(s.totalPoints).toBe(0);
+      expect(s.matchesPlayed).toBe(0);
+    });
+  });
+});
+
+// ── calculateCompetitorStandings ────────────────────────────────────────
+
+describe('calculateCompetitorStandings', () => {
+  const config = makeConfig(1);
+
+  function makeTournament(rounds: Round[], players: Player[] = makePlayers(4)): Tournament {
+    return {
+      id: 't1', name: 'Test', config,
+      phase: 'in-progress', players, rounds,
+      createdAt: 0, updatedAt: 0,
+    };
+  }
+
+  it('accumulates points for individual-style competitors', () => {
+    const players = makePlayers(4);
+    const competitors: Competitor[] = players.map(p => ({ id: p.id, name: p.name, playerIds: [p.id] }));
+    const mapSide = (side: [string, string]) =>
+      side.map(pid => competitors.find(c => c.id === pid)!);
+
+    const round = makeRound(1, [
+      makeMatch('m1', 'c1', ['p1', 'p2'], ['p3', 'p4'], { team1Points: 14, team2Points: 10 }),
+    ]);
+    const standings = calculateCompetitorStandings(makeTournament([round], players), competitors, mapSide);
+
+    const p1 = standings.find(s => s.playerId === 'p1')!;
+    expect(p1.totalPoints).toBe(14);
+    expect(p1.matchesWon).toBe(1);
+    expect(p1.matchesLost).toBe(0);
+    expect(p1.pointDiff).toBe(4);
+
+    const p3 = standings.find(s => s.playerId === 'p3')!;
+    expect(p3.totalPoints).toBe(10);
+    expect(p3.matchesLost).toBe(1);
+    expect(p3.matchesWon).toBe(0);
+    expect(p3.pointDiff).toBe(-4);
+  });
+
+  it('accumulates points for team-style competitors', () => {
+    const players = makePlayers(4);
+    const teamA: Competitor = { id: 'tA', name: 'Team A', playerIds: ['p1', 'p2'] };
+    const teamB: Competitor = { id: 'tB', name: 'Team B', playerIds: ['p3', 'p4'] };
+    const competitors = [teamA, teamB];
+    const mapSide = (side: [string, string]) => {
+      const c = competitors.find(t => t.playerIds.includes(side[0]));
+      return c ? [c] : [];
+    };
+
+    const round = makeRound(1, [
+      makeMatch('m1', 'c1', ['p1', 'p2'], ['p3', 'p4'], { team1Points: 15, team2Points: 6 }),
+    ]);
+    const standings = calculateCompetitorStandings(makeTournament([round], players), competitors, mapSide);
+
+    const tA = standings.find(s => s.playerId === 'tA')!;
+    expect(tA.totalPoints).toBe(15);
+    expect(tA.rank).toBe(1);
+
+    const tB = standings.find(s => s.playerId === 'tB')!;
+    expect(tB.totalPoints).toBe(6);
+    expect(tB.rank).toBe(2);
+  });
+
+  it('accumulates across multiple rounds', () => {
+    const players = makePlayers(4);
+    const competitors: Competitor[] = players.map(p => ({ id: p.id, name: p.name, playerIds: [p.id] }));
+    const mapSide = (side: [string, string]) =>
+      side.map(pid => competitors.find(c => c.id === pid)!);
+
+    const rounds = [
+      makeRound(1, [
+        makeMatch('m1', 'c1', ['p1', 'p2'], ['p3', 'p4'], { team1Points: 14, team2Points: 10 }),
+      ]),
+      makeRound(2, [
+        makeMatch('m2', 'c1', ['p1', 'p3'], ['p2', 'p4'], { team1Points: 16, team2Points: 8 }),
+      ]),
+    ];
+    const standings = calculateCompetitorStandings(makeTournament(rounds, players), competitors, mapSide);
+
+    const p1 = standings.find(s => s.playerId === 'p1')!;
+    expect(p1.totalPoints).toBe(30); // 14 + 16
+    expect(p1.matchesPlayed).toBe(2);
+  });
+
+  it('deduplicates sit-out compensation for teams', () => {
+    const players = makePlayers(6);
+    const t1: Competitor = { id: 't1', name: 'Team 1', playerIds: ['p1', 'p2'] };
+    const t2: Competitor = { id: 't2', name: 'Team 2', playerIds: ['p3', 'p4'] };
+    const t3: Competitor = { id: 't3', name: 'Team 3', playerIds: ['p5', 'p6'] };
+    const competitors = [t1, t2, t3];
+    const mapSide = (side: [string, string]) => {
+      const c = competitors.find(t => t.playerIds.includes(side[0]));
+      return c ? [c] : [];
+    };
+
+    // t3 sits out (both p5 and p6 in sitOuts), should be compensated once, not twice
+    const round: Round = {
+      id: 'r1', roundNumber: 1,
+      matches: [
+        makeMatch('m1', 'c1', ['p1', 'p2'], ['p3', 'p4'], { team1Points: 18, team2Points: 24 }),
+      ],
+      sitOuts: ['p5', 'p6'],
+    };
+
+    const standings = calculateCompetitorStandings(makeTournament([round], players), competitors, mapSide);
+    const t3Standing = standings.find(s => s.playerId === 't3')!;
+    // avg = (18 + 24) / 2 competitors = 21, round(21) = 21
+    expect(t3Standing.totalPoints).toBe(21);
+  });
+
+  it('compensates individual sit-outs', () => {
+    const players = makePlayers(5);
+    const competitors: Competitor[] = players.map(p => ({ id: p.id, name: p.name, playerIds: [p.id] }));
+    const mapSide = (side: [string, string]) =>
+      side.map(pid => competitors.find(c => c.id === pid)!);
+
+    const round: Round = {
+      id: 'r1', roundNumber: 1,
+      matches: [
+        makeMatch('m1', 'c1', ['p1', 'p2'], ['p3', 'p4'], { team1Points: 14, team2Points: 10 }),
+      ],
+      sitOuts: ['p5'],
+    };
+    const standings = calculateCompetitorStandings(makeTournament([round], players), competitors, mapSide);
+    const p5 = standings.find(s => s.playerId === 'p5')!;
+    // avg = (14 + 10) / 4 competitors = 6
+    expect(p5.totalPoints).toBe(6);
+  });
+
+  it('handles draws', () => {
+    const players = makePlayers(4);
+    const competitors: Competitor[] = players.map(p => ({ id: p.id, name: p.name, playerIds: [p.id] }));
+    const mapSide = (side: [string, string]) =>
+      side.map(pid => competitors.find(c => c.id === pid)!);
+
+    const round = makeRound(1, [
+      makeMatch('m1', 'c1', ['p1', 'p2'], ['p3', 'p4'], { team1Points: 12, team2Points: 12 }),
+    ]);
+    const standings = calculateCompetitorStandings(makeTournament([round], players), competitors, mapSide);
+    const p1 = standings.find(s => s.playerId === 'p1')!;
+    expect(p1.matchesDraw).toBe(1);
+    expect(p1.matchesWon).toBe(0);
+    expect(p1.matchesLost).toBe(0);
+  });
+
+  it('applies tiebreakers: pointDiff → matchesWon → name', () => {
+    const players = makePlayers(4);
+    const competitors: Competitor[] = players.map(p => ({ id: p.id, name: p.name, playerIds: [p.id] }));
+    const mapSide = (side: [string, string]) =>
+      side.map(pid => competitors.find(c => c.id === pid)!);
+
+    // Round 1: p1+p2 beat p3+p4 (14-10)
+    // Round 2: p1+p4 beat p3+p2 (14-10)
+    // p1: 14+14=28, diff=(14-10)+(14-10)=+8, won=2
+    // p2: 14+10=24, diff=(14-10)+(10-14)=0, won=1
+    // p4: 10+14=24, diff=(10-14)+(14-10)=0, won=1
+    // p3: 10+10=20, diff=(10-14)+(10-14)=-8, won=0
+    // p2 and p4 tie on totalPoints(24), pointDiff(0), matchesWon(1) → break by name
+    const rounds = [
+      makeRound(1, [
+        makeMatch('m1', 'c1', ['p1', 'p2'], ['p3', 'p4'], { team1Points: 14, team2Points: 10 }),
+      ]),
+      makeRound(2, [
+        makeMatch('m2', 'c1', ['p1', 'p4'], ['p3', 'p2'], { team1Points: 14, team2Points: 10 }),
+      ]),
+    ];
+    const standings = calculateCompetitorStandings(makeTournament(rounds, players), competitors, mapSide);
+
+    expect(standings[0].playerId).toBe('p1'); // most points
+    // p2 ("Player 2") and p4 ("Player 4") tied, name tiebreaker → p2 first
+    expect(standings[1].playerId).toBe('p2');
+    expect(standings[2].playerId).toBe('p4');
+    expect(standings[1].rank).toBe(standings[2].rank); // tied rank
+    expect(standings[3].playerId).toBe('p3'); // least points
+  });
+
+  it('ignores unscored matches', () => {
+    const players = makePlayers(4);
+    const competitors: Competitor[] = players.map(p => ({ id: p.id, name: p.name, playerIds: [p.id] }));
+    const mapSide = (side: [string, string]) =>
+      side.map(pid => competitors.find(c => c.id === pid)!);
+
+    const round = makeRound(1, [
+      makeMatch('m1', 'c1', ['p1', 'p2'], ['p3', 'p4']), // no score
+    ]);
+    const standings = calculateCompetitorStandings(makeTournament([round], players), competitors, mapSide);
+    standings.forEach(s => {
+      expect(s.totalPoints).toBe(0);
+      expect(s.matchesPlayed).toBe(0);
+    });
+  });
+
+  it('returns zero stats for empty rounds', () => {
+    const players = makePlayers(4);
+    const competitors: Competitor[] = players.map(p => ({ id: p.id, name: p.name, playerIds: [p.id] }));
+    const mapSide = (side: [string, string]) =>
+      side.map(pid => competitors.find(c => c.id === pid)!);
+
+    const standings = calculateCompetitorStandings(makeTournament([], players), competitors, mapSide);
+    expect(standings.length).toBe(4);
+    standings.forEach(s => {
+      expect(s.rank).toBe(1); // all tied at 0
       expect(s.totalPoints).toBe(0);
       expect(s.matchesPlayed).toBe(0);
     });
