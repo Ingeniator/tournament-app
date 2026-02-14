@@ -355,9 +355,9 @@
 }
 
 .warning {
-  background-color: rgba(245, 158, 11, 0.12);
-  border: 1px solid rgba(245, 158, 11, 0.3);
-  color: #d97706;
+  background-color: var(--color-warning-tint);
+  border: 1px solid var(--color-warning);
+  color: var(--color-warning);
   border-radius: var(--radius-md);
   padding: var(--space-sm) var(--space-md);
   font-size: var(--text-sm);
@@ -368,8 +368,8 @@
   display: inline-block;
   font-size: 11px;
   font-weight: 600;
-  background-color: rgba(245, 158, 11, 0.15);
-  color: #d97706;
+  background-color: var(--color-warning-tint);
+  color: var(--color-warning);
   border-radius: var(--radius-full);
   padding: 1px 8px;
   margin-left: var(--space-sm);
@@ -388,7 +388,7 @@
 }
 
 .deleteBtn:active {
-  background-color: rgba(239, 68, 68, 0.1);
+  background-color: var(--color-danger-tint);
 }
 
 .toast {

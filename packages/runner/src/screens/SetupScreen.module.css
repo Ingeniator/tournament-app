@@ -43,7 +43,7 @@
   font-size: var(--text-sm);
   color: var(--color-danger);
   padding: var(--space-sm) var(--space-md);
-  background-color: rgba(233, 69, 96, 0.1);
+  background-color: var(--color-danger-tint);
   border-radius: var(--radius-sm);
 }
 

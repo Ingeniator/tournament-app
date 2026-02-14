@@ -23,7 +23,7 @@
 }
 
 .badgeComplete {
-  background-color: rgba(22, 199, 154, 0.15);
+  background-color: var(--color-success-tint);
   color: var(--color-success);
 }
 

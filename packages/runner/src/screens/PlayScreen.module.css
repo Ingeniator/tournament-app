@@ -103,7 +103,7 @@
 .interstitialOverlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: var(--color-overlay);
   z-index: 300;
   display: flex;
   align-items: center;
@@ -292,7 +292,7 @@
 .imagePreviewOverlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.85);
+  background-color: var(--color-overlay-heavy);
   z-index: 300;
   display: flex;
   flex-direction: column;

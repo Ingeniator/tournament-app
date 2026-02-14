@@ -22,5 +22,8 @@ export { Card } from './components/Card';
 export { Modal } from './components/Modal';
 export { Toast } from './components/Toast';
 export { ErrorBoundary } from './components/ErrorBoundary';
+export { SkinPicker } from './components/SkinPicker';
 export { FeedbackModal } from './components/FeedbackModal';
 export { useToast } from './hooks/useToast';
+export { useTheme, THEME_SKINS, DEFAULT_SKIN, isValidSkin, getSkin } from './hooks/useTheme';
+export type { SkinId, ThemeSkin } from './hooks/useTheme';

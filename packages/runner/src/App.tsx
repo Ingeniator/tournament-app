@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { TournamentProvider } from './state/TournamentContext';
+import { ThemeProvider } from './state/ThemeContext';
 import { useTournament } from './hooks/useTournament';
 import { AppShell } from './components/layout/AppShell';
 import { BottomNav, type TabId } from './components/layout/BottomNav';
@@ -9,11 +10,13 @@ import { TeamPairingScreen } from './screens/TeamPairingScreen';
 import { PlayScreen } from './screens/PlayScreen';
 import { LogScreen } from './screens/LogScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
-import { Button, ErrorBoundary } from '@padel/common';
+import { Button, ErrorBoundary, SkinPicker } from '@padel/common';
+import { useRunnerTheme } from './state/ThemeContext';
 import { saveUIState, loadUIState } from './state/persistence';
 
 function AppContent() {
   const { tournament, dispatch, saveError } = useTournament();
+  const { skin, setSkin } = useRunnerTheme();
   const [activeTab, setActiveTab] = useState<TabId>(() => {
     const saved = loadUIState();
     const tab = saved?.activeTab as TabId | undefined;
@@ -72,7 +75,7 @@ function AppContent() {
   return (
     <>
       {saveError && (
-        <div style={{ background: '#d97706', color: '#fff', textAlign: 'center', padding: '6px 12px', fontSize: '13px' }}>
+        <div style={{ background: 'var(--color-warning)', color: '#fff', textAlign: 'center', padding: '6px 12px', fontSize: '13px' }}>
           Could not save — storage may be full. Your progress may be lost if you close this page.
         </div>
       )}
@@ -80,17 +83,20 @@ function AppContent() {
         title={tournament.name}
         hasBottomNav
         headerRight={
-          <Button
-            variant="ghost"
-            size="small"
-            onClick={() => {
-              if (confirm('Start a new tournament? Current one will be deleted.')) {
-                dispatch({ type: 'RESET_TOURNAMENT' });
-              }
-            }}
-          >
-            New
-          </Button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <SkinPicker skin={skin} onSelect={setSkin} />
+            <Button
+              variant="ghost"
+              size="small"
+              onClick={() => {
+                if (confirm('Start a new tournament? Current one will be deleted.')) {
+                  dispatch({ type: 'RESET_TOURNAMENT' });
+                }
+              }}
+            >
+              New
+            </Button>
+          </div>
         }
       >
         {activeTab === 'play' && <PlayScreen />}
@@ -111,9 +117,11 @@ function AppContent() {
 export function App() {
   return (
     <ErrorBoundary>
-      <TournamentProvider>
-        <AppContent />
-      </TournamentProvider>
+      <ThemeProvider>
+        <TournamentProvider>
+          <AppContent />
+        </TournamentProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

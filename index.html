@@ -32,14 +32,39 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* Dark theme (default) — Radix slate/indigo (Midnight skin) */
+    :root {
+      --bg: #111113;
+      --text: #edeef0;
+      --muted: #b0b4ba;
+      --accent: #3e63dd;
+      --card-bg: #18191b;
+      --card-border: #363a3f;
+      --toggle-bg: #1e1f24;
+      --toggle-border: #363a3f;
+      --toggle-icon: #b0b4ba;
+    }
+    /* Light theme — Radix slate/indigo (Arctic skin) */
+    .light-theme {
+      --bg: #fcfcfd;
+      --text: #1c2024;
+      --muted: #60646c;
+      --accent: #3e63dd;
+      --card-bg: #f9f9fb;
+      --card-border: #d7d8dd;
+      --toggle-bg: #f1f2f4;
+      --toggle-border: #d7d8dd;
+      --toggle-icon: #60646c;
+    }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background-color: #1a1a2e;
-      color: #e0e0e0;
+      background-color: var(--bg);
+      color: var(--text);
       min-height: 100dvh;
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: background-color 0.2s, color 0.2s;
     }
     .container {
       display: flex;
@@ -49,31 +74,59 @@
       max-width: 400px;
       width: 100%;
       text-align: center;
+      position: relative;
     }
     .logo { margin-bottom: 16px; }
     h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
-    .subtitle { font-size: 14px; color: #8e8ea3; margin-bottom: 48px; }
-    #greeting { color: #e94560; font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+    .subtitle { font-size: 14px; color: var(--muted); margin-bottom: 48px; }
+    #greeting { color: var(--accent); font-size: 16px; font-weight: 600; margin-bottom: 8px; }
     .cards { display: flex; flex-direction: column; gap: 16px; width: 100%; }
     a.card {
       display: block;
-      background: #16213e;
-      border: 1px solid #2a2a4a;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
       border-radius: 12px;
       padding: 24px;
       text-decoration: none;
       color: inherit;
-      transition: border-color 0.15s, transform 0.15s;
+      transition: border-color 0.15s, transform 0.15s, background-color 0.2s;
     }
-    a.card:hover { border-color: #e94560; transform: translateY(-2px); }
+    a.card:hover { border-color: var(--accent); transform: translateY(-2px); }
     a.card:active { transform: translateY(0); }
     .card-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-    .card-desc { font-size: 14px; color: #8e8ea3; line-height: 1.4; }
-    .card-title .arrow { color: #e94560; margin-left: 4px; }
+    .card-desc { font-size: 14px; color: var(--muted); line-height: 1.4; }
+    .card-title .arrow { color: var(--accent); margin-left: 4px; }
+    .theme-toggle {
+      position: absolute;
+      top: 16px;
+      right: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      background-color: var(--toggle-bg);
+      border: 1px solid var(--toggle-border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s, border-color 0.2s;
+    }
+    .theme-toggle:hover { border-color: var(--muted); }
+    .theme-toggle:active { opacity: 0.8; }
+    .theme-toggle svg { width: 18px; height: 18px; color: var(--toggle-icon); }
   </style>
 </head>
 <body>
   <main class="container">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="13.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/>
+        <circle cx="17.5" cy="10.5" r="1.5" fill="currentColor" stroke="none"/>
+        <circle cx="8.5" cy="7.5" r="1.5" fill="currentColor" stroke="none"/>
+        <circle cx="6.5" cy="12.5" r="1.5" fill="currentColor" stroke="none"/>
+        <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2Z"/>
+      </svg>
+    </button>
     <div class="logo">
       <svg viewBox="0 0 100 100" width="56" height="56" aria-hidden="true">
         <defs>
@@ -127,6 +180,32 @@
           links[i].href = links[i].getAttribute('href') + hash;
         }
       }
+    })();
+  </script>
+  <script>
+    (function() {
+      var LIGHT_SKINS = ['arctic','rose','dawn','mint','lavender','latte'];
+      var saved = null;
+      try { saved = localStorage.getItem('padel-skin'); } catch(e) {}
+      var theme = saved && LIGHT_SKINS.indexOf(saved) !== -1 ? 'light' : 'dark';
+
+      function apply(t) {
+        theme = t;
+        var el = document.documentElement;
+        if (t === 'dark') {
+          el.classList.add('dark-theme');
+          el.classList.remove('light-theme');
+        } else {
+          el.classList.remove('dark-theme');
+          el.classList.add('light-theme');
+        }
+      }
+
+      apply(theme);
+
+      document.getElementById('theme-toggle').addEventListener('click', function() {
+        apply(theme === 'dark' ? 'light' : 'dark');
+      });
     })();
   </script>
 </body>
