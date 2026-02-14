@@ -23,7 +23,7 @@
 }
 
 .badgeComplete {
-  background-color: rgba(22, 199, 154, 0.15);
+  background-color: var(--color-success-tint);
   color: var(--color-success);
 }
 
@@ -40,4 +40,5 @@
   padding: var(--space-sm) var(--space-md);
   background-color: var(--color-surface-raised);
   border-radius: var(--radius-sm);
+  overflow-wrap: break-word;
 }

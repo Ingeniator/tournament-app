@@ -253,12 +253,43 @@ export function OrganizerScreen() {
       <Card>
         <h2 className={styles.sectionTitle}>{t('organizer.settings')}</h2>
         <div className={styles.configGrid}>
-          <label className={styles.configLabel}>{t('organizer.dateTime')}</label>
+          <label className={styles.configLabel}>{t('organizer.date')}</label>
           <input
             className={styles.configInput}
-            type="datetime-local"
-            value={tournament.date ?? ''}
-            onChange={e => updateTournament({ date: e.target.value || undefined })}
+            type="date"
+            value={tournament.date?.split('T')[0] ?? ''}
+            onChange={e => {
+              const date = e.target.value;
+              if (!date) { updateTournament({ date: undefined }); return; }
+              const time = tournament.date?.split('T')[1] ?? '12:00';
+              updateTournament({ date: `${date}T${time}` });
+            }}
+          />
+
+          <label className={styles.configLabel}>{t('organizer.time')}</label>
+          <input
+            className={styles.configInput}
+            type="time"
+            value={tournament.date?.split('T')[1] ?? ''}
+            onChange={e => {
+              const time = e.target.value;
+              const date = tournament.date?.split('T')[0] ?? '';
+              if (!date) return;
+              updateTournament({ date: time ? `${date}T${time}` : `${date}T12:00` });
+            }}
+          />
+
+          <label className={styles.configLabel}>{t('organizer.durationMin')}</label>
+          <input
+            className={styles.configInput}
+            type="number"
+            value={tournament.duration ?? ''}
+            onChange={e => {
+              const v = e.target.value === '' ? undefined : parseInt(e.target.value, 10);
+              updateTournament({ duration: v && v > 0 ? v : undefined });
+            }}
+            min={1}
+            placeholder={t('organizer.durationPlaceholder')}
           />
 
           <label className={styles.configLabel}>{t('organizer.place')}</label>
@@ -316,18 +347,6 @@ export function OrganizerScreen() {
             </div>
           )}
 
-          <label className={styles.configLabel}>{t('organizer.duration')}</label>
-          <input
-            className={styles.configInput}
-            type="number"
-            value={tournament.duration ?? ''}
-            onChange={e => {
-              const v = e.target.value === '' ? undefined : parseInt(e.target.value, 10);
-              updateTournament({ duration: v && v > 0 ? v : undefined });
-            }}
-            min={1}
-            placeholder={t('organizer.durationPlaceholder')}
-          />
         </div>
 
         <div className={styles.courtsSection}>

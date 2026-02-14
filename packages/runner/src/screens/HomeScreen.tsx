@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { ref, push, set } from 'firebase/database';
 import { useTournament } from '../hooks/useTournament';
+import { useRunnerTheme } from '../state/ThemeContext';
 import { validateImport } from '../utils/importExport';
 import { randomTournamentName } from '../utils/tournamentNames';
 import { db } from '../firebase';
-import { Button, FeedbackModal, AppFooter, generateId, useTranslation } from '@padel/common';
+import { Button, FeedbackModal, AppFooter, generateId, SkinPicker, useTranslation } from '@padel/common';
 import styles from './HomeScreen.module.css';
 
 export function HomeScreen() {
   const { tournament, dispatch } = useTournament();
   const { t } = useTranslation();
+  const { skin, setSkin } = useRunnerTheme();
   const [importMode, setImportMode] = useState(false);
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
@@ -24,7 +26,7 @@ export function HomeScreen() {
           format: 'americano',
           pointsPerMatch: 0,
           courts: [{ id: generateId(), name: 'Court 1' }],
-          maxRounds: null,
+          maxRounds: 1,
         },
       },
     });
@@ -62,6 +64,9 @@ export function HomeScreen() {
 
   return (
     <main className={styles.container}>
+      <div className={styles.themeToggleWrap}>
+        <SkinPicker skin={skin} onSelect={setSkin} />
+      </div>
       <div className={styles.logo}>
         <svg viewBox="0 0 100 100" width="48" height="48" aria-hidden="true">
           <defs>

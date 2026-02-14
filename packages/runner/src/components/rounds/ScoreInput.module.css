@@ -37,7 +37,7 @@
   border-style: solid;
   border-color: var(--color-primary);
   color: var(--color-text);
-  background-color: rgba(233, 69, 96, 0.12);
+  background-color: var(--color-danger-tint);
 }
 
 .separator {
@@ -82,7 +82,7 @@
 .cell:active {
   border-style: solid;
   border-color: var(--color-primary);
-  background-color: rgba(233, 69, 96, 0.12);
+  background-color: var(--color-danger-tint);
   color: var(--color-text);
 }
 
@@ -141,7 +141,7 @@
   color: var(--color-text-muted);
   font-size: var(--text-xs);
   cursor: pointer;
-  min-height: 32px;
+  min-height: 44px;
 }
 
 .clearBtn {

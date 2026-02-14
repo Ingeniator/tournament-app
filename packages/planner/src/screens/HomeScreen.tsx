@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ref, push, set } from 'firebase/database';
-import { Button, Card, FeedbackModal, AppFooter, useTranslation } from '@padel/common';
+import { Button, Card, SkinPicker, FeedbackModal, AppFooter, useTranslation } from '@padel/common';
 import type { TournamentSummary } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { db } from '../firebase';
@@ -26,7 +26,7 @@ export function HomeScreen() {
     createTournament, loadByCode, setScreen,
     userName, userNameLoading, updateUserName,
     myTournaments, registeredTournaments, listingsLoading,
-    openTournament,
+    openTournament, skin, setSkin,
   } = usePlanner();
   const { t } = useTranslation();
 
@@ -97,7 +97,14 @@ export function HomeScreen() {
   };
 
   const renderTournamentItem = (t: TournamentSummary, screen: 'organizer' | 'join') => (
-    <div key={t.id} className={styles.tournamentItem} onClick={() => openTournament(t.id, screen)}>
+    <div
+      key={t.id}
+      className={styles.tournamentItem}
+      role="button"
+      tabIndex={0}
+      onClick={() => openTournament(t.id, screen)}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTournament(t.id, screen); } }}
+    >
       <span className={styles.tournamentName}>{t.name}</span>
       <span className={styles.tournamentMeta}>
         {t.date && <span>{formatDate(t.date)}</span>}
@@ -126,6 +133,7 @@ export function HomeScreen() {
           </g>
         </svg>
         <h1 className={styles.headerTitle}>{t('home.title')}</h1>
+        <SkinPicker skin={skin} onSelect={setSkin} />
       </header>
 
       <main>
@@ -267,6 +275,7 @@ export function HomeScreen() {
           )}
         </Card>
       )}
+
       </main>
 
       <AppFooter

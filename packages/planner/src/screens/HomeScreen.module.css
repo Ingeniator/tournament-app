@@ -20,6 +20,7 @@
   font-size: var(--text-xl);
   font-weight: 800;
   margin: 0;
+  flex: 1;
 }
 
 .userBadge {
@@ -41,6 +42,11 @@
   padding: 4px;
   cursor: pointer;
   line-height: 1;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .editNameBtn:active {
@@ -156,7 +162,7 @@
   font-size: var(--text-sm);
   color: var(--color-danger);
   padding: var(--space-sm) var(--space-md);
-  background-color: rgba(233, 69, 96, 0.1);
+  background-color: var(--color-danger-tint);
   border-radius: var(--radius-sm);
 }
 

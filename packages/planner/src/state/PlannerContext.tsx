@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, createContext, useContext, type ReactNode } from 'react';
 import { ref, get } from 'firebase/database';
-import type { PlannerTournament, PlannerRegistration, TournamentSummary } from '@padel/common';
-import { useTranslation } from '@padel/common';
+import type { PlannerTournament, PlannerRegistration, TournamentSummary, SkinId } from '@padel/common';
+import { useTranslation, useTheme } from '@padel/common';
 import { useAuth } from '../hooks/useAuth';
 import { usePlannerTournament } from '../hooks/usePlannerTournament';
 import { db } from '../firebase';
@@ -44,6 +44,8 @@ export interface PlannerContextValue {
   openTournament: (id: string, screen: 'organizer' | 'join') => void;
   deleteTournament: () => Promise<void>;
   telegramUser: TelegramUser | null;
+  skin: SkinId;
+  setSkin: (skin: SkinId) => void;
 }
 
 const PlannerCtx = createContext<PlannerContextValue>(null!);
@@ -68,7 +70,16 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
 
   const { players, registerPlayer: registerInDb, removePlayer: removeInDb, updateConfirmed: updateConfirmedInDb, addPlayer: addPlayerInDb, bulkAddPlayers: bulkAddPlayersInDb, toggleConfirmed: toggleConfirmedInDb, updatePlayerName: updatePlayerNameInDb, isRegistered: checkRegistered } = usePlayers(tournamentId);
 
-  const { name: userName, loading: userNameLoading, updateName: updateUserName, updateTelegramId, updateTelegramUsername } = useUserProfile(uid);
+  const { name: userName, skin: userSkin, loading: userNameLoading, updateName: updateUserName, updateSkin: updateUserSkin, updateTelegramId, updateTelegramUsername } = useUserProfile(uid);
+
+  const { skin, setSkin: rawSetSkin } = useTheme(userSkin ?? undefined);
+
+  const setSkin = useCallback((s: SkinId) => {
+    rawSetSkin(s);
+    updateUserSkin(s).catch(() => {});
+    try { localStorage.setItem('padel-skin', s); } catch {}
+  }, [rawSetSkin, updateUserSkin]);
+
   const telegramUser = useTelegram();
   const { tournaments: myTournaments, loading: myLoading } = useMyTournaments(uid);
   const { tournaments: registeredTournaments, loading: regLoading } = useRegisteredTournaments(uid);
@@ -209,6 +220,8 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       openTournament,
       deleteTournament,
       telegramUser,
+      skin,
+      setSkin,
     }}>
       {children}
     </PlannerCtx.Provider>

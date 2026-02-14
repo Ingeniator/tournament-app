@@ -15,6 +15,7 @@ export function StandingsTable({ standings, plannedGames }: StandingsTableProps)
   }
 
   return (
+    <div className={styles.wrapper}>
     <table className={styles.table}>
       <thead>
         <tr>
@@ -65,5 +66,6 @@ export function StandingsTable({ standings, plannedGames }: StandingsTableProps)
         })}
       </tbody>
     </table>
+    </div>
   );
 }
