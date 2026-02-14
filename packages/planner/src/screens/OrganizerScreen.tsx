@@ -17,6 +17,7 @@ export function OrganizerScreen() {
   const [nameDraft, setNameDraft] = useState('');
   const [newPlayerName, setNewPlayerName] = useState('');
   const addingPlayer = useRef(false);
+  const addPlayerInputRef = useRef<HTMLInputElement>(null);
   const [showFormatInfo, setShowFormatInfo] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
@@ -206,6 +207,7 @@ export function OrganizerScreen() {
         )}
         <div className={styles.addPlayerRow}>
           <input
+            ref={addPlayerInputRef}
             className={styles.addPlayerInput}
             type="text"
             value={newPlayerName}
@@ -218,6 +220,7 @@ export function OrganizerScreen() {
                 setNewPlayerName('');
                 await addPlayer(name);
                 addingPlayer.current = false;
+                addPlayerInputRef.current?.focus();
               }
             }}
             onPaste={(e: ClipboardEvent<HTMLInputElement>) => {
@@ -240,6 +243,7 @@ export function OrganizerScreen() {
                 setNewPlayerName('');
                 await addPlayer(name);
                 addingPlayer.current = false;
+                addPlayerInputRef.current?.focus();
               }
             }}
             disabled={!newPlayerName.trim()}

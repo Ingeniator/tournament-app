@@ -33,6 +33,10 @@
 }
 
 .registered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
   text-align: center;
   padding: var(--space-lg) 0;
 }
@@ -60,7 +64,6 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-xs);
-  margin: var(--space-md) 0;
 }
 
 .registeredAs {
@@ -86,7 +89,6 @@
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  margin: var(--space-md) 0;
 }
 
 .editNameRow .nameInput {
@@ -234,7 +236,6 @@
 .calendarBtn {
   display: block;
   width: 100%;
-  margin-top: var(--space-sm);
   padding: 10px var(--space-md);
   background: none;
   border: 1px solid var(--color-border);
@@ -253,7 +254,6 @@
 .calendarBtnHighlight {
   display: block;
   width: 100%;
-  margin-top: var(--space-sm);
   padding: 12px var(--space-md);
   background-color: var(--color-primary);
   border: 1px solid var(--color-primary);
