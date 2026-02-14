@@ -346,7 +346,7 @@ export function tournamentReducer(
     }
 
     case 'ADD_ROUNDS': {
-      if (!state || state.phase !== 'in-progress') return state;
+      if (!state || (state.phase !== 'in-progress' && state.phase !== 'completed')) return state;
       const addStrategy = getStrategy(state.config.format);
       const { rounds: newRounds } = addStrategy.generateAdditionalRounds(
         state.players,
@@ -359,6 +359,7 @@ export function tournamentReducer(
       );
       return {
         ...state,
+        phase: 'in-progress',
         rounds: [...state.rounds, ...newRounds],
         updatedAt: Date.now(),
       };

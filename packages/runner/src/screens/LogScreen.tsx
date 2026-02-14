@@ -228,12 +228,13 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
           readOnly={editingMatch?.roundId !== round.id || editingMatch?.matchId === undefined}
           editingMatchId={editingMatch?.roundId === round.id ? editingMatch.matchId : undefined}
           onStartEdit={(matchId) => setEditingMatch({ roundId: round.id, matchId })}
+          onTapUnscored={(matchId) => setEditingMatch({ roundId: round.id, matchId })}
           onScore={(matchId, score) => handleScore(round.id, matchId, score)}
           onClear={matchId => handleClear(round.id, matchId)}
         />
       ))}
 
-      {tournament.phase === 'in-progress' && (
+      {(tournament.phase === 'in-progress' || tournament.phase === 'completed') && (
         <div className={styles.footerActions}>
           <Button
             variant="secondary"
@@ -242,13 +243,15 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
           >
             {t('log.addRound')}
           </Button>
-          <Button
-            variant="secondary"
-            fullWidth
-            onClick={handleComplete}
-          >
-            {t('log.finishTournament')}
-          </Button>
+          {tournament.phase === 'in-progress' && (
+            <Button
+              variant="secondary"
+              fullWidth
+              onClick={handleComplete}
+            >
+              {t('log.finishTournament')}
+            </Button>
+          )}
         </div>
       )}
 
