@@ -9,6 +9,8 @@ interface Window {
       ready(): void;
       expand(): void;
       openLink(url: string, options?: { try_instant_view?: boolean }): void;
+      /** Bot API 8.0+ — prompts user to download a file */
+      downloadFile(params: { url: string; file_name: string }): Promise<boolean>;
     };
   };
 }
