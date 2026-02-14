@@ -16,7 +16,7 @@ export function AppShell({ title, headerRight, children, hasBottomNav = false }:
         {headerRight}
       </header>
       <main className={hasBottomNav ? styles.content : styles.contentNoPad}>
-        {!hasBottomNav && <div style={{ padding: 'var(--space-md)' }}>{children}</div>}
+        {!hasBottomNav && <div className={styles.contentNoPadInner}>{children}</div>}
         {hasBottomNav && children}
       </main>
     </div>

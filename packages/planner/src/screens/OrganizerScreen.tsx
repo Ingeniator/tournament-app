@@ -91,11 +91,6 @@ export function OrganizerScreen() {
     updateTournament({ format });
   };
 
-  const handleMaxRoundsChange = (value: string) => {
-    const num = value === '' ? null : parseInt(value, 10);
-    updateTournament({ maxRounds: num && num > 0 ? num : null });
-  };
-
   const handleAddCourt = async () => {
     const courts: Court[] = [...tournament.courts, { id: generateId(), name: `Court ${tournament.courts.length + 1}` }];
     await updateTournament({ courts });
@@ -253,12 +248,43 @@ export function OrganizerScreen() {
       <Card>
         <h2 className={styles.sectionTitle}>Settings</h2>
         <div className={styles.configGrid}>
-          <label className={styles.configLabel}>Date & time</label>
+          <label className={styles.configLabel}>Date</label>
           <input
             className={styles.configInput}
-            type="datetime-local"
-            value={tournament.date ?? ''}
-            onChange={e => updateTournament({ date: e.target.value || undefined })}
+            type="date"
+            value={tournament.date?.split('T')[0] ?? ''}
+            onChange={e => {
+              const date = e.target.value;
+              if (!date) { updateTournament({ date: undefined }); return; }
+              const time = tournament.date?.split('T')[1] ?? '12:00';
+              updateTournament({ date: `${date}T${time}` });
+            }}
+          />
+
+          <label className={styles.configLabel}>Time</label>
+          <input
+            className={styles.configInput}
+            type="time"
+            value={tournament.date?.split('T')[1] ?? ''}
+            onChange={e => {
+              const time = e.target.value;
+              const date = tournament.date?.split('T')[0] ?? '';
+              if (!date) return;
+              updateTournament({ date: time ? `${date}T${time}` : `${date}T12:00` });
+            }}
+          />
+
+          <label className={styles.configLabel}>Duration (min)</label>
+          <input
+            className={styles.configInput}
+            type="number"
+            value={tournament.duration ?? ''}
+            onChange={e => {
+              const v = e.target.value === '' ? undefined : parseInt(e.target.value, 10);
+              updateTournament({ duration: v && v > 0 ? v : undefined });
+            }}
+            min={1}
+            placeholder="120"
           />
 
           <label className={styles.configLabel}>Place</label>
@@ -316,28 +342,6 @@ export function OrganizerScreen() {
             </div>
           )}
 
-          <label className={styles.configLabel}>Points per match</label>
-          <input
-            className={styles.configInput}
-            type="number"
-            value={tournament.pointsPerMatch || ''}
-            onChange={e => {
-              const v = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
-              if (!isNaN(v) && v > 0) updateTournament({ pointsPerMatch: v });
-            }}
-            min={1}
-            placeholder="1"
-          />
-
-          <label className={styles.configLabel}>Max rounds</label>
-          <input
-            className={styles.configInput}
-            type="number"
-            value={tournament.maxRounds ?? ''}
-            onChange={e => handleMaxRoundsChange(e.target.value)}
-            placeholder="Unlimited"
-            min={1}
-          />
         </div>
 
         <div className={styles.courtsSection}>

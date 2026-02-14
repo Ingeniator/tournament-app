@@ -18,10 +18,15 @@
   font-size: var(--text-lg);
   font-weight: 700;
   margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .content {
   flex: 1;
+  min-height: 0;
   padding: var(--space-md);
   padding-bottom: calc(var(--bottom-nav-height) + var(--safe-area-bottom) + var(--space-md));
   overflow-y: auto;
@@ -29,5 +34,10 @@
 
 .contentNoPad {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
+}
+
+.contentNoPadInner {
+  padding: var(--space-md);
 }

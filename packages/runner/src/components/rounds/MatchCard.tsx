@@ -30,6 +30,7 @@ export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, on
           <div
             className={`${styles.scoreCenter} ${onTapScore ? styles.tappable : ''}`}
             onClick={onTapScore}
+            {...(onTapScore ? { role: 'button', tabIndex: 0, onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTapScore(); } }, 'aria-label': 'Edit score' } : {})}
           >
             <span className={styles.scoreValue}>{match.score.team1Points}</span>
             <span className={styles.scoreSeparator}>:</span>

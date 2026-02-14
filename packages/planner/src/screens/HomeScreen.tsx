@@ -96,7 +96,14 @@ export function HomeScreen() {
   };
 
   const renderTournamentItem = (t: TournamentSummary, screen: 'organizer' | 'join') => (
-    <div key={t.id} className={styles.tournamentItem} onClick={() => openTournament(t.id, screen)}>
+    <div
+      key={t.id}
+      className={styles.tournamentItem}
+      role="button"
+      tabIndex={0}
+      onClick={() => openTournament(t.id, screen)}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTournament(t.id, screen); } }}
+    >
       <span className={styles.tournamentName}>{t.name}</span>
       <span className={styles.tournamentMeta}>
         {t.date && <span>{formatDate(t.date)}</span>}
