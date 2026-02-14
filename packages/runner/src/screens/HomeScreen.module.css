@@ -90,6 +90,18 @@
   border-color: var(--color-primary);
 }
 
+.footer {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-top: var(--space-lg);
+}
+
+.footerLink {
+  color: var(--color-text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .importError {
   font-size: var(--text-sm);
   color: var(--color-danger);

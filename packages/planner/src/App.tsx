@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { firebaseConfigured } from './firebase';
 import { ErrorBoundary } from '@padel/common';
 import { PlannerProvider } from './state/PlannerContext';
-import { usePlanner } from './state/plannerContext';
+import { usePlanner } from './state/PlannerContext';
 import { HomeScreen } from './screens/HomeScreen';
 import { OrganizerScreen } from './screens/OrganizerScreen';
 import { JoinScreen } from './screens/JoinScreen';

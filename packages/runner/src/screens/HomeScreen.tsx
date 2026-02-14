@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { ref, push, set } from 'firebase/database';
 import { useTournament } from '../hooks/useTournament';
 import { validateImport } from '../utils/importExport';
 import { randomTournamentName } from '../utils/tournamentNames';
-import { Button, generateId } from '@padel/common';
+import { db, firebaseConfigured } from '../firebase';
+import { Button, FeedbackModal, generateId } from '@padel/common';
 import styles from './HomeScreen.module.css';
 
 export function HomeScreen() {
@@ -10,6 +12,7 @@ export function HomeScreen() {
   const [importMode, setImportMode] = useState(false);
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const handleNew = () => {
     dispatch({
@@ -46,6 +49,12 @@ export function HomeScreen() {
     setImportMode(false);
     setImportText('');
     setImportError(null);
+  };
+
+  const handleFeedback = async (message: string) => {
+    if (!db) return;
+    const feedbackRef = push(ref(db, 'feedback'));
+    await set(feedbackRef, { message, source: 'runner', createdAt: Date.now() });
   };
 
   const hasSaved = tournament !== null;
@@ -137,6 +146,20 @@ export function HomeScreen() {
           </>
         )}
       </div>
+
+      {firebaseConfigured && (
+        <footer className={styles.footer}>
+          <button className={styles.footerLink} onClick={() => setFeedbackOpen(true)}>
+            Send feedback
+          </button>
+        </footer>
+      )}
+
+      <FeedbackModal
+        open={feedbackOpen}
+        onClose={() => setFeedbackOpen(false)}
+        onSubmit={handleFeedback}
+      />
     </main>
   );
 }

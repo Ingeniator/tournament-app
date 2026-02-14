@@ -1,8 +1,10 @@
 import { useState, useMemo, useRef, type ClipboardEvent } from 'react';
-import { Button, Card, Toast, useToast } from '@padel/common';
+import { ref, push, set } from 'firebase/database';
+import { Button, Card, FeedbackModal, Toast, useToast } from '@padel/common';
 import type { TournamentFormat, Court } from '@padel/common';
 import { generateId, parsePlayerList } from '@padel/common';
-import { usePlanner } from '../state/plannerContext';
+import { usePlanner } from '../state/PlannerContext';
+import { db } from '../firebase';
 import { launchInRunner, buildRunnerTournament } from '../utils/exportToRunner';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import styles from './OrganizerScreen.module.css';
@@ -15,6 +17,7 @@ export function OrganizerScreen() {
   const [newPlayerName, setNewPlayerName] = useState('');
   const addingPlayer = useRef(false);
   const [showFormatInfo, setShowFormatInfo] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const capacity = tournament ? tournament.courts.length * 4 + (tournament.extraSpots ?? 0) : 0;
   const statuses = useMemo(() => getPlayerStatuses(players, capacity), [players, capacity]);
@@ -419,9 +422,23 @@ export function OrganizerScreen() {
       <footer className={styles.supportNudge}>
         Free &amp; open source &middot;{' '}
         <button className={styles.supportLink} onClick={() => setScreen('supporters')}>
-          View supporters
+          Support us
+        </button>
+        {' '}&middot;{' '}
+        <button className={styles.supportLink} onClick={() => setFeedbackOpen(true)}>
+          Send feedback
         </button>
       </footer>
+
+      <FeedbackModal
+        open={feedbackOpen}
+        onClose={() => setFeedbackOpen(false)}
+        onSubmit={async (message) => {
+          if (!db) return;
+          const feedbackRef = push(ref(db, 'feedback'));
+          await set(feedbackRef, { message, source: 'planner', createdAt: Date.now() });
+        }}
+      />
 
       <Toast message={toastMessage} className={styles.toast} />
     </div>

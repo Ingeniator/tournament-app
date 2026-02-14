@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { ref, push, set } from 'firebase/database';
 import { useTournament } from '../hooks/useTournament';
 import { SupportOverlay } from '../components/support/SupportOverlay';
 import { EditableField } from '../components/settings/EditableField';
 import { copyToClipboard } from '../utils/clipboard';
 import { exportTournament, validateImport } from '../utils/importExport';
-import { Button, Card, Toast, useToast } from '@padel/common';
+import { db, firebaseConfigured } from '../firebase';
+import { Button, Card, FeedbackModal, Toast, useToast } from '@padel/common';
 import styles from './SettingsScreen.module.css';
 
 export function SettingsScreen() {
@@ -24,6 +26,7 @@ export function SettingsScreen() {
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
   const [showSupporters, setShowSupporters] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   if (!tournament) return null;
 
@@ -94,6 +97,12 @@ export function SettingsScreen() {
     setImportText('');
     setImportError(null);
     showToast('Tournament imported!');
+  };
+
+  const handleFeedback = async (message: string) => {
+    if (!db) return;
+    const feedbackRef = push(ref(db, 'feedback'));
+    await set(feedbackRef, { message, source: 'runner', createdAt: Date.now() });
   };
 
   const handleReset = () => {
@@ -463,11 +472,25 @@ export function SettingsScreen() {
       <div className={styles.attribution}>
         Made with care &middot;{' '}
         <button className={styles.attributionLink} onClick={() => setShowSupporters(true)}>
-          View our supporters
+          Support us
         </button>
+        {firebaseConfigured && (
+          <>
+            {' '}&middot;{' '}
+            <button className={styles.attributionLink} onClick={() => setFeedbackOpen(true)}>
+              Send feedback
+            </button>
+          </>
+        )}
       </div>
 
       <SupportOverlay open={showSupporters} onClose={() => setShowSupporters(false)} />
+
+      <FeedbackModal
+        open={feedbackOpen}
+        onClose={() => setFeedbackOpen(false)}
+        onSubmit={handleFeedback}
+      />
 
       <Toast message={toastMessage} />
     </div>

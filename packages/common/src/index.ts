@@ -22,4 +22,5 @@ export { Card } from './components/Card';
 export { Modal } from './components/Modal';
 export { Toast } from './components/Toast';
 export { ErrorBoundary } from './components/ErrorBoundary';
+export { FeedbackModal } from './components/FeedbackModal';
 export { useToast } from './hooks/useToast';
