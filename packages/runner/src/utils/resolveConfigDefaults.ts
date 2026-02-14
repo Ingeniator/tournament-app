@@ -2,7 +2,7 @@ import type { TournamentConfig } from '@padel/common';
 
 const MINUTES_PER_POINT = 0.5;
 const CHANGEOVER_MINUTES = 3;
-const MAX_DURATION_MINUTES = 120;
+const DEFAULT_DURATION_MINUTES = 120;
 const PREFERRED_POINTS = 24;
 const MIN_POINTS_PER_MATCH = 16;
 
@@ -49,6 +49,7 @@ export function computeSitOutInfo(playerCount: number, courtCount: number, round
 }
 
 export function resolveConfigDefaults(config: TournamentConfig, playerCount: number): TournamentConfig {
+  const durationMinutes = config.targetDuration ?? DEFAULT_DURATION_MINUTES;
   const playersPerRound = Math.min(config.courts.length * 4, playerCount);
 
   const baseRounds = playersPerRound > 0
@@ -59,16 +60,16 @@ export function resolveConfigDefaults(config: TournamentConfig, playerCount: num
   const assumedRoundDur = hasExplicitPoints
     ? Math.round(config.pointsPerMatch * MINUTES_PER_POINT + CHANGEOVER_MINUTES)
     : Math.round(MIN_POINTS_PER_MATCH * MINUTES_PER_POINT + CHANGEOVER_MINUTES);
-  const maxRoundsFor2h = Math.floor(MAX_DURATION_MINUTES / assumedRoundDur);
-  const rawDefault = Math.min(baseRounds, maxRoundsFor2h);
+  const maxRoundsForDuration = Math.floor(durationMinutes / assumedRoundDur);
+  const rawDefault = Math.min(baseRounds, maxRoundsForDuration);
 
   // Try to nudge the default towards a fair round count (equal sit-outs)
-  const defaultRounds = nudgeToFairRounds(rawDefault, playerCount, config.courts.length, maxRoundsFor2h);
+  const defaultRounds = nudgeToFairRounds(rawDefault, playerCount, config.courts.length, maxRoundsForDuration);
 
   const effectiveRounds = config.maxRounds ?? defaultRounds;
 
   const maxPtsForRounds = effectiveRounds > 0
-    ? Math.floor((MAX_DURATION_MINUTES / effectiveRounds - CHANGEOVER_MINUTES) / MINUTES_PER_POINT)
+    ? Math.floor((durationMinutes / effectiveRounds - CHANGEOVER_MINUTES) / MINUTES_PER_POINT)
     : PREFERRED_POINTS;
   const defaultPoints = Math.min(PREFERRED_POINTS, Math.max(MIN_POINTS_PER_MATCH, maxPtsForRounds));
   const effectivePoints = hasExplicitPoints ? config.pointsPerMatch : defaultPoints;

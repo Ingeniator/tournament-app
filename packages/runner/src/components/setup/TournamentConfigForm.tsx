@@ -5,7 +5,7 @@ import styles from './TournamentConfigForm.module.css';
 
 const MINUTES_PER_POINT = 0.5;
 const CHANGEOVER_MINUTES = 3;
-const MAX_DURATION_MINUTES = 120;
+const DEFAULT_DURATION_MINUTES = 120;
 
 function formatDuration(minutes: number): string {
   const h = Math.floor(minutes / 60);
@@ -36,9 +36,10 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
   const suggestedPoints = suggestedPointsConfig.pointsPerMatch;
 
   // Duration estimate
+  const durationLimit = config.targetDuration ?? DEFAULT_DURATION_MINUTES;
   const roundDuration = Math.round(effectivePoints * MINUTES_PER_POINT + CHANGEOVER_MINUTES);
   const estimatedMinutes = effectiveRounds * roundDuration;
-  const exceedsLimit = estimatedMinutes > MAX_DURATION_MINUTES;
+  const exceedsLimit = estimatedMinutes > durationLimit;
 
   // Check if some players will never play
   const playersPerRound = Math.min(config.courts.length * 4, playerCount);
@@ -149,7 +150,7 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
             onUpdate({ pointsPerMatch: isNaN(v) ? 0 : Math.max(0, v) });
           }}
         />
-        <span className={styles.hint}>Recommended: {suggestedPoints} points to fit in 2 hours</span>
+        <span className={styles.hint}>Recommended: {suggestedPoints} points to fit in {formatDuration(durationLimit)}</span>
       </div>
 
       <div className={styles.estimate}>
@@ -171,9 +172,9 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
 
       {exceedsLimit && (
         <div className={styles.warning}>
-          <div className={styles.warningTitle}>May exceed 2 hours</div>
+          <div className={styles.warningTitle}>May exceed {formatDuration(durationLimit)}</div>
           <div className={styles.warningBody}>
-            To fit within 2 hours, try{' '}
+            To fit within {formatDuration(durationLimit)}, try{' '}
             {suggestedPoints !== effectivePoints && (
               <><strong>{suggestedPoints} points</strong> per match or </>
             )}

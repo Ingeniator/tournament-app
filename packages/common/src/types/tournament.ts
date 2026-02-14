@@ -28,6 +28,7 @@ export interface TournamentConfig {
   pointsPerMatch: number;
   courts: Court[];
   maxRounds: number | null;
+  targetDuration?: number;
 }
 
 export interface MatchScore {

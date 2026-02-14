@@ -15,16 +15,15 @@ function toTournament(id: string, data: Record<string, unknown>): PlannerTournam
     id,
     name: data.name as string,
     format: data.format as TournamentFormat,
-    pointsPerMatch: data.pointsPerMatch as number,
     courts: Array.isArray(courts)
       ? courts
       : typeof courts === 'object' && courts !== null
         ? Object.values(courts)
         : [{ id: generateId(), name: 'Court 1' }],
-    maxRounds: (data.maxRounds as number | null) ?? null,
     organizerId: data.organizerId as string,
     code: data.code as string,
     createdAt: data.createdAt as number,
+    duration: data.duration as number | undefined,
     date: data.date as string | undefined,
     place: data.place as string | undefined,
     extraSpots: data.extraSpots as number | undefined,
@@ -61,12 +60,11 @@ export function usePlannerTournament(tournamentId: string | null) {
       id,
       name,
       format: 'americano',
-      pointsPerMatch: 24,
       courts: [{ id: generateId(), name: 'Court 1' }],
-      maxRounds: null,
       organizerId,
       code,
       createdAt: Date.now(),
+      duration: 120,
     };
     // Atomic multi-path write
     await firebaseUpdate(ref(db), {
@@ -77,7 +75,7 @@ export function usePlannerTournament(tournamentId: string | null) {
     return id;
   }, []);
 
-  const updateTournament = useCallback(async (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'pointsPerMatch' | 'courts' | 'maxRounds' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description'>>) => {
+  const updateTournament = useCallback(async (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'courts' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description'>>) => {
     if (!tournamentId || !db) return;
     // Convert undefined to null so Firebase deletes the field
     const pathUpdates: Record<string, unknown> = {};

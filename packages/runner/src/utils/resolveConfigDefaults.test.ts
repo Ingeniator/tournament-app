@@ -75,6 +75,30 @@ describe('resolveConfigDefaults', () => {
     });
   });
 
+  describe('targetDuration', () => {
+    it('uses default 120 minutes when targetDuration is not set', () => {
+      const config = makeConfig({ pointsPerMatch: 0, maxRounds: null });
+      const resolved = resolveConfigDefaults(config, 8);
+      // Same as default behavior
+      const configWithExplicit = makeConfig({ pointsPerMatch: 0, maxRounds: null, targetDuration: 120 });
+      const resolvedExplicit = resolveConfigDefaults(configWithExplicit, 8);
+      expect(resolved.maxRounds).toBe(resolvedExplicit.maxRounds);
+      expect(resolved.pointsPerMatch).toBe(resolvedExplicit.pointsPerMatch);
+    });
+
+    it('allows more rounds with longer duration', () => {
+      const short = resolveConfigDefaults(makeConfig({ targetDuration: 60 }), 8);
+      const long = resolveConfigDefaults(makeConfig({ targetDuration: 180 }), 8);
+      expect(long.maxRounds!).toBeGreaterThanOrEqual(short.maxRounds!);
+    });
+
+    it('reduces rounds for shorter duration', () => {
+      const standard = resolveConfigDefaults(makeConfig({ targetDuration: 120 }), 8);
+      const short = resolveConfigDefaults(makeConfig({ targetDuration: 60 }), 8);
+      expect(short.maxRounds!).toBeLessThanOrEqual(standard.maxRounds!);
+    });
+  });
+
   describe('edge cases', () => {
     it('handles 4 players (minimum)', () => {
       const resolved = resolveConfigDefaults(makeConfig(), 4);
