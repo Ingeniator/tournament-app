@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Button, Card, Toast, useToast } from '@padel/common';
+import { Button, Card, Toast, useToast, ThemeToggle } from '@padel/common';
 import { usePlanner } from '../state/plannerContext';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import { downloadICS } from '../utils/icsExport';
 import styles from './JoinScreen.module.css';
 
 export function JoinScreen() {
-  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, isRegistered, setScreen, organizerName, userName, telegramUser } = usePlanner();
+  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, isRegistered, setScreen, organizerName, userName, telegramUser, theme, toggleTheme } = usePlanner();
   const [name, setName] = useState(userName ?? telegramUser?.displayName ?? '');
   const [registering, setRegistering] = useState(false);
   const [updating, setUpdating] = useState(false);
@@ -117,6 +117,7 @@ export function JoinScreen() {
       <header className={styles.header}>
         <button className={styles.backBtn} onClick={handleBack} aria-label="Back">&larr;</button>
         <h1 className={styles.title}>{tournament.name}</h1>
+        <ThemeToggle theme={theme} onToggle={toggleTheme} />
       </header>
 
       <main>
