@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Button, Card, ThemeToggle, AccentPicker } from '@padel/common';
+import { ref, push, set } from 'firebase/database';
+import { Button, Card, ThemeToggle, AccentPicker, FeedbackModal } from '@padel/common';
 import type { TournamentSummary } from '@padel/common';
-import { usePlanner } from '../state/plannerContext';
+import { usePlanner } from '../state/PlannerContext';
+import { db } from '../firebase';
 import { randomTournamentName } from '../utils/tournamentNames';
 import styles from './HomeScreen.module.css';
 
@@ -37,6 +39,7 @@ export function HomeScreen() {
   const [savingName, setSavingName] = useState(false);
   const [editingUserName, setEditingUserName] = useState(false);
   const [userNameDraft, setUserNameDraft] = useState('');
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const handleCreate = async () => {
     if (!name.trim()) return;
@@ -84,6 +87,12 @@ export function HomeScreen() {
       await updateUserName(trimmed);
     }
     setEditingUserName(false);
+  };
+
+  const handleFeedback = async (message: string) => {
+    if (!db) return;
+    const feedbackRef = push(ref(db, 'feedback'));
+    await set(feedbackRef, { message, source: 'planner', createdAt: Date.now() });
   };
 
   const renderTournamentItem = (t: TournamentSummary, screen: 'organizer' | 'join') => (
@@ -170,6 +179,7 @@ export function HomeScreen() {
               placeholder="Group Name / Your name"
               onKeyDown={e => e.key === 'Enter' && handleSaveName()}
               aria-label="Group Name / Your name"
+              autoFocus
             />
             <Button fullWidth onClick={handleSaveName} disabled={savingName || !profileName.trim()}>
               {savingName ? 'Saving...' : 'Save'}
@@ -263,9 +273,19 @@ export function HomeScreen() {
       <footer className={styles.footer}>
         Free &amp; open source &middot;{' '}
         <button className={styles.footerLink} onClick={() => setScreen('supporters')}>
-          View supporters
+          Support us
+        </button>
+        {' '}&middot;{' '}
+        <button className={styles.footerLink} onClick={() => setFeedbackOpen(true)}>
+          Send feedback
         </button>
       </footer>
+
+      <FeedbackModal
+        open={feedbackOpen}
+        onClose={() => setFeedbackOpen(false)}
+        onSubmit={handleFeedback}
+      />
     </div>
   );
 }

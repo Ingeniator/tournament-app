@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test';
 import {
+  clearState,
+  createTournament,
+  addPlayers,
+  generateSchedule,
   createInProgressTournament,
   navigateToTab,
   scoreMatch,
@@ -71,6 +75,38 @@ test.describe('Play Screen', () => {
 
     // Completed state shows "Share Results as Text"
     await expect(page.getByRole('button', { name: 'Share Results as Text' })).toBeVisible();
+  });
+
+  test('clear button resets scored match', async ({ page }) => {
+    // Need multiple matches per round so a scored match stays in the active round.
+    // Create a fresh 8-player tournament with 2 courts (2 matches per round).
+    await clearState(page);
+    await createTournament(page);
+    await addPlayers(page, ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry']);
+    await page.getByRole('button', { name: '+ Add court' }).click();
+    await generateSchedule(page);
+    await navigateToTab(page, 'Play');
+
+    // Score one match — the round still has another unscored match so it stays active
+    await scoreMatch(page, 15);
+
+    // The scored match's ScoreInput shows "15" and "9" buttons (round still active)
+    // Click "15" to open the picker grid with Clear button
+    await page.getByRole('button', { name: '15' }).first().click();
+
+    // Click Clear to reset the score
+    await page.getByRole('button', { name: 'Clear' }).click();
+
+    // Verify "–" reappears — all 4 "–" buttons restored (2 per match × 2 matches)
+    await expect(page.getByRole('button', { name: '–' })).toHaveCount(4);
+  });
+
+  test('varied scores display correctly', async ({ page }) => {
+    await scoreMatch(page, 20);
+    await dismissInterstitial(page);
+
+    // After scoring, round 1 goes to compact preview showing "20:4"
+    await expect(page.getByText('20:4')).toBeVisible();
   });
 
   test('new button resets tournament', async ({ page }) => {

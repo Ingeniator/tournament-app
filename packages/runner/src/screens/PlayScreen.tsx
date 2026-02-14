@@ -10,7 +10,9 @@ import { SupportOverlay } from '../components/support/SupportOverlay';
 import { useShareText } from '../hooks/useShareText';
 import { copyToClipboard } from '../utils/clipboard';
 import { shareStandingsImage } from '../utils/standingsImage';
-import { Button, Modal, Toast, useToast } from '@padel/common';
+import { ref, push, set } from 'firebase/database';
+import { db, firebaseConfigured } from '../firebase';
+import { Button, FeedbackModal, Modal, Toast, useToast } from '@padel/common';
 import styles from './PlayScreen.module.css';
 
 export function PlayScreen() {
@@ -34,6 +36,7 @@ export function PlayScreen() {
   const { buildMessengerText } = useShareText(tournament, standings, nominations);
   const [showStandings, setShowStandings] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [roundsExpanded, setRoundsExpanded] = useState(false);
   const { toastMessage, showToast } = useToast();
   const [roundCompleteNum, setRoundCompleteNum] = useState<number | null>(null);
@@ -178,7 +181,27 @@ export function PlayScreen() {
           <span className={styles.supportEmoji}>&#x2764;&#xFE0F;</span>
           <span className={styles.supportText}>Enjoyed using this? Help keep it free.</span>
         </button>
+        <div className={styles.attribution}>
+          Made with care
+          {firebaseConfigured && (
+            <>
+              {' '}&middot;{' '}
+              <button className={styles.attributionLink} onClick={() => setFeedbackOpen(true)}>
+                Send feedback
+              </button>
+            </>
+          )}
+        </div>
         <SupportOverlay open={showSupport} onClose={() => setShowSupport(false)} />
+        <FeedbackModal
+          open={feedbackOpen}
+          onClose={() => setFeedbackOpen(false)}
+          onSubmit={async (message) => {
+            if (!db) return;
+            const feedbackRef = push(ref(db, 'feedback'));
+            await set(feedbackRef, { message, source: 'runner', createdAt: Date.now() });
+          }}
+        />
         {previewImages && (
           <div className={styles.imagePreviewOverlay} onClick={() => setPreviewImages(null)}>
             <div className={styles.imagePreviewContent} onClick={e => e.stopPropagation()}>

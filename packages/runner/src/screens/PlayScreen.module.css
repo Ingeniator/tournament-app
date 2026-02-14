@@ -274,6 +274,20 @@
   color: var(--color-text-secondary);
 }
 
+.attribution {
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-top: var(--space-lg);
+  padding: var(--space-md) 0;
+}
+
+.attributionLink {
+  color: var(--color-text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* Image preview overlay (Telegram fallback) */
 .imagePreviewOverlay {
   position: fixed;

@@ -55,6 +55,13 @@
         }
       }
     },
+    "feedback": {
+      ".read": false,
+      "$id": {
+        ".write": "!data.exists()",
+        ".validate": "newData.hasChildren(['message', 'source', 'createdAt']) && newData.child('message').isString() && newData.child('message').val().length >= 1 && newData.child('message').val().length <= 500 && newData.child('source').isString() && (newData.child('source').val() === 'runner' || newData.child('source').val() === 'planner') && newData.child('createdAt').isNumber()"
+      }
+    },
     "telegramUsers": {
       "$username": {
         ".read": "auth != null",

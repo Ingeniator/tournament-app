@@ -1,11 +1,14 @@
 import { useState } from 'react';
+import { ref, push, set } from 'firebase/database';
 import { useTournament } from '../hooks/useTournament';
 import { useRunnerTheme } from '../state/ThemeContext';
 import { SupportOverlay } from '../components/support/SupportOverlay';
 import { EditableField } from '../components/settings/EditableField';
 import { copyToClipboard } from '../utils/clipboard';
 import { exportTournament, validateImport } from '../utils/importExport';
-import { Button, Card, Toast, useToast, ThemeToggle, AccentPicker } from '@padel/common';
+import { db, firebaseConfigured } from '../firebase';
+import { computeSitOutInfo } from '../utils/resolveConfigDefaults';
+import { Button, Card, FeedbackModal, Toast, useToast, ThemeToggle, AccentPicker } from '@padel/common';
 import styles from './SettingsScreen.module.css';
 
 export function SettingsScreen() {
@@ -26,6 +29,7 @@ export function SettingsScreen() {
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
   const [showSupporters, setShowSupporters] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   if (!tournament) return null;
 
@@ -98,6 +102,12 @@ export function SettingsScreen() {
     showToast('Tournament imported!');
   };
 
+  const handleFeedback = async (message: string) => {
+    if (!db) return;
+    const feedbackRef = push(ref(db, 'feedback'));
+    await set(feedbackRef, { message, source: 'runner', createdAt: Date.now() });
+  };
+
   const handleReset = () => {
     if (confirm('Delete this tournament? This cannot be undone.')) {
       dispatch({ type: 'RESET_TOURNAMENT' });
@@ -168,6 +178,25 @@ export function SettingsScreen() {
                 }
               }}
             />
+            {(() => {
+              const activePlayers = tournament.players.filter(p => !p.unavailable).length;
+              const activeCourts = tournament.config.courts.filter(c => !c.unavailable).length;
+              const info = computeSitOutInfo(activePlayers, activeCourts, tournament.rounds.length);
+              if (!info.isEqual && info.sitOutsPerRound > 0) {
+                const suggestions = [info.nearestFairBelow, info.nearestFairAbove]
+                  .filter((v): v is number => v !== null && v >= 1)
+                  .filter((v, i, a) => a.indexOf(v) === i);
+                return (
+                  <div className={styles.sitOutWarning}>
+                    Sit-outs are not equal with {tournament.rounds.length} rounds.
+                    {suggestions.length > 0 && (
+                      <> Try {suggestions.join(' or ')} rounds for equal sit-outs.</>
+                    )}
+                  </div>
+                );
+              }
+              return null;
+            })()}
           </>
         ) : (
           <div className={styles.chipList}>
@@ -480,11 +509,25 @@ export function SettingsScreen() {
       <div className={styles.attribution}>
         Made with care &middot;{' '}
         <button className={styles.attributionLink} onClick={() => setShowSupporters(true)}>
-          View our supporters
+          Support us
         </button>
+        {firebaseConfigured && (
+          <>
+            {' '}&middot;{' '}
+            <button className={styles.attributionLink} onClick={() => setFeedbackOpen(true)}>
+              Send feedback
+            </button>
+          </>
+        )}
       </div>
 
       <SupportOverlay open={showSupporters} onClose={() => setShowSupporters(false)} />
+
+      <FeedbackModal
+        open={feedbackOpen}
+        onClose={() => setFeedbackOpen(false)}
+        onSubmit={handleFeedback}
+      />
 
       <Toast message={toastMessage} />
     </div>

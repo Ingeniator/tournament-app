@@ -174,5 +174,107 @@ describe('mexicano strategy', () => {
       const standings = mexicanoStrategy.calculateStandings(tournament);
       expect(standings.length).toBe(4);
     });
+
+    it('accumulates points from scored matches', () => {
+      const players = makePlayers(4);
+      const tournament = {
+        id: 't1', name: 'Test', config: makeConfig(1),
+        phase: 'in-progress' as const, players,
+        rounds: [{
+          id: 'r1', roundNumber: 1, sitOuts: [] as string[],
+          matches: [{
+            id: 'm1', courtId: 'c1',
+            team1: ['p1', 'p2'] as [string, string],
+            team2: ['p3', 'p4'] as [string, string],
+            score: { team1Points: 13, team2Points: 8 },
+          }],
+        }],
+        createdAt: 0, updatedAt: 0,
+      };
+      const standings = mexicanoStrategy.calculateStandings(tournament);
+      const p1 = standings.find(s => s.playerId === 'p1')!;
+      expect(p1.totalPoints).toBe(13);
+      expect(p1.matchesWon).toBe(1);
+      expect(p1.matchesLost).toBe(0);
+      const p3 = standings.find(s => s.playerId === 'p3')!;
+      expect(p3.totalPoints).toBe(8);
+      expect(p3.matchesLost).toBe(1);
+    });
+
+    it('ranks by total points descending', () => {
+      const players = makePlayers(4);
+      const tournament = {
+        id: 't1', name: 'Test', config: makeConfig(1),
+        phase: 'in-progress' as const, players,
+        rounds: [{
+          id: 'r1', roundNumber: 1, sitOuts: [] as string[],
+          matches: [{
+            id: 'm1', courtId: 'c1',
+            team1: ['p1', 'p2'] as [string, string],
+            team2: ['p3', 'p4'] as [string, string],
+            score: { team1Points: 15, team2Points: 6 },
+          }],
+        }],
+        createdAt: 0, updatedAt: 0,
+      };
+      const standings = mexicanoStrategy.calculateStandings(tournament);
+      expect(standings[0].totalPoints).toBeGreaterThanOrEqual(standings[1].totalPoints);
+      expect(standings[0].rank).toBe(1);
+    });
+
+    it('awards sit-out compensation', () => {
+      const players = makePlayers(5);
+      const tournament = {
+        id: 't1', name: 'Test', config: makeConfig(1),
+        phase: 'in-progress' as const, players,
+        rounds: [{
+          id: 'r1', roundNumber: 1, sitOuts: ['p5'],
+          matches: [{
+            id: 'm1', courtId: 'c1',
+            team1: ['p1', 'p2'] as [string, string],
+            team2: ['p3', 'p4'] as [string, string],
+            score: { team1Points: 13, team2Points: 8 },
+          }],
+        }],
+        createdAt: 0, updatedAt: 0,
+      };
+      const standings = mexicanoStrategy.calculateStandings(tournament);
+      const p5 = standings.find(s => s.playerId === 'p5')!;
+      // avg = (13 + 8) / 4 = 5.25, round = 5
+      expect(p5.totalPoints).toBe(5);
+    });
+  });
+
+  describe('getCompetitors', () => {
+    it('returns one competitor per available player', () => {
+      const players = makePlayers(4);
+      const tournament = {
+        id: 't1', name: 'Test', config: makeConfig(1),
+        phase: 'in-progress' as const, players,
+        rounds: [], createdAt: 0, updatedAt: 0,
+      };
+      const competitors = mexicanoStrategy.getCompetitors(tournament);
+      expect(competitors.length).toBe(4);
+      for (const c of competitors) {
+        const player = players.find(p => p.id === c.id)!;
+        expect(c.name).toBe(player.name);
+        expect(c.playerIds).toEqual([player.id]);
+      }
+    });
+
+    it('excludes unavailable players', () => {
+      const players = [
+        ...makePlayers(3),
+        { id: 'p4', name: 'Player 4', unavailable: true },
+      ];
+      const tournament = {
+        id: 't1', name: 'Test', config: makeConfig(1),
+        phase: 'in-progress' as const, players,
+        rounds: [], createdAt: 0, updatedAt: 0,
+      };
+      const competitors = mexicanoStrategy.getCompetitors(tournament);
+      expect(competitors.length).toBe(3);
+      expect(competitors.find(c => c.id === 'p4')).toBeUndefined();
+    });
   });
 });

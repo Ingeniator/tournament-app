@@ -24,6 +24,7 @@ export { Toast } from './components/Toast';
 export { ErrorBoundary } from './components/ErrorBoundary';
 export { ThemeToggle } from './components/ThemeToggle';
 export { AccentPicker } from './components/AccentPicker';
+export { FeedbackModal } from './components/FeedbackModal';
 export { useToast } from './hooks/useToast';
 export { useTheme, ACCENT_COLORS } from './hooks/useTheme';
 export type { Theme, AccentColor } from './hooks/useTheme';
