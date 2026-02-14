@@ -274,3 +274,64 @@
   color: var(--color-text-secondary);
 }
 
+/* Image preview overlay (Telegram fallback) */
+.imagePreviewOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+}
+
+.imagePreviewContent {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.imagePreviewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) var(--space-md);
+  flex-shrink: 0;
+}
+
+.imagePreviewHint {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.imagePreviewClose {
+  background: none;
+  border: none;
+  color: var(--color-text);
+  font-size: var(--text-xl);
+  padding: var(--space-xs);
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.imagePreviewScroll {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: var(--space-sm) var(--space-md) var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.imagePreviewImg {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  border-radius: var(--radius-md);
+}
+
