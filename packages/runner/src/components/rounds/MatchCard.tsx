@@ -26,6 +26,9 @@ export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, on
         <div className={`${styles.playerCell} ${styles.topLeft} ${team1Won ? styles.winner : ''}`} title={name(match.team1[0])}><span className={styles.playerName}>{name(match.team1[0])}</span></div>
         <div className={`${styles.playerCell} ${styles.topRight} ${team2Won ? styles.winner : ''}`} title={name(match.team2[0])}><span className={styles.playerName}>{name(match.team2[0])}</span></div>
 
+        <span className={styles.teamConnectorLeft}>&amp;</span>
+        <span className={styles.teamConnectorRight}>&amp;</span>
+
         {readOnly && match.score ? (
           <div
             className={`${styles.scoreCenter} ${onTapScore ? styles.tappable : ''}`}
