@@ -63,9 +63,6 @@ export function HomeScreen() {
 
   return (
     <main className={styles.container}>
-      <div className={styles.themeToggleWrap}>
-        <SkinPicker skin={skin} onSelect={setSkin} />
-      </div>
       <div className={styles.logo}>
         <svg viewBox="0 0 100 100" width="48" height="48" aria-hidden="true">
           <defs>
@@ -84,6 +81,8 @@ export function HomeScreen() {
       </div>
       <h1 className={styles.title}>Tournament Manager</h1>
       <p className={styles.subtitle}>Organize tournaments at the court</p>
+
+      <SkinPicker skin={skin} onSelect={setSkin} />
 
       <div className={styles.actions}>
         {hasSaved && (
