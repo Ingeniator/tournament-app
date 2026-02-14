@@ -349,7 +349,27 @@ export async function shareStandingsImage(
 
     const tg = window.Telegram?.WebApp;
 
-    // Try Web Share API first (works on mobile browsers and some desktops)
+    // Telegram WebApp must be checked FIRST: its WebView exposes navigator.share
+    // but it doesn't actually work (resolves without sharing). Blob downloads and
+    // programmatic <a>.click() are also blocked.
+    if (tg) {
+      // Try Telegram's native downloadFile API (Bot API 8.0+) for the standings image
+      if (typeof tg.downloadFile === 'function') {
+        try {
+          const dataUrl = standingsCanvas.toDataURL('image/png');
+          await tg.downloadFile({ url: dataUrl, file_name: `${safeName}_results.png` });
+          return { status: 'downloaded' };
+        } catch {
+          // downloadFile not supported or failed — fall through to preview
+        }
+      }
+      // Fallback: show preview overlay so users can long-press to save
+      const allCanvases = [standingsCanvas, ...nominationCanvases];
+      const dataUrls = allCanvases.map(c => c.toDataURL('image/png'));
+      return { status: 'preview', dataUrls };
+    }
+
+    // Try Web Share API (works on mobile browsers and some desktops)
     if (navigator.share) {
       const shareData = { files };
       // canShare may not exist in all environments; skip the check if absent
@@ -365,14 +385,6 @@ export async function shareStandingsImage(
           // Share failed (e.g. files not supported) — fall through to fallbacks
         }
       }
-    }
-
-    if (tg) {
-      // Telegram WebApp blocks blob downloads and programmatic <a>.click().
-      // Show a preview overlay so users can long-press images to save/share.
-      const allCanvases = [standingsCanvas, ...nominationCanvases];
-      const dataUrls = allCanvases.map(c => c.toDataURL('image/png'));
-      return { status: 'preview', dataUrls };
     }
 
     // Fallback: download all files via <a> click

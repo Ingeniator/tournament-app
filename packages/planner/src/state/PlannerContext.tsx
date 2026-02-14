@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, createContext, useContext, type ReactNode } from 'react';
 import { ref, get } from 'firebase/database';
 import type { PlannerTournament, PlannerRegistration, TournamentSummary, SkinId } from '@padel/common';
-import { useTranslation, useTheme } from '@padel/common';
+import { useTranslation, useTheme, isValidSkin, DEFAULT_SKIN } from '@padel/common';
 import { useAuth } from '../hooks/useAuth';
 import { usePlannerTournament } from '../hooks/usePlannerTournament';
 import { db } from '../firebase';
@@ -48,6 +48,20 @@ export interface PlannerContextValue {
   setSkin: (skin: SkinId) => void;
 }
 
+const SKIN_KEY = 'padel-skin';
+
+function loadLocalSkin(): SkinId {
+  try {
+    const data = localStorage.getItem(SKIN_KEY);
+    if (data && isValidSkin(data)) return data;
+    return DEFAULT_SKIN;
+  } catch {
+    return DEFAULT_SKIN;
+  }
+}
+
+const initialSkin = loadLocalSkin();
+
 const PlannerCtx = createContext<PlannerContextValue>(null!);
 
 export function usePlanner() {
@@ -72,12 +86,20 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
 
   const { name: userName, skin: userSkin, loading: userNameLoading, updateName: updateUserName, updateSkin: updateUserSkin, updateTelegramId, updateTelegramUsername } = useUserProfile(uid);
 
-  const { skin, setSkin: rawSetSkin } = useTheme(userSkin ?? undefined);
+  const { skin, setSkin: rawSetSkin } = useTheme(initialSkin);
+
+  // Firebase is source of truth — sync to local state and localStorage cache
+  useEffect(() => {
+    if (userSkin) {
+      rawSetSkin(userSkin);
+      try { localStorage.setItem(SKIN_KEY, userSkin); } catch {}
+    }
+  }, [userSkin, rawSetSkin]);
 
   const setSkin = useCallback((s: SkinId) => {
     rawSetSkin(s);
     updateUserSkin(s).catch(() => {});
-    try { localStorage.setItem('padel-skin', s); } catch {}
+    try { localStorage.setItem(SKIN_KEY, s); } catch {}
   }, [rawSetSkin, updateUserSkin]);
 
   const telegramUser = useTelegram();

@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ref, push, set } from 'firebase/database';
+import { onAuthStateChanged } from 'firebase/auth';
+import { ref, push, set, onValue } from 'firebase/database';
 import { ErrorBoundary, I18nProvider, SkinPicker, AppFooter, FeedbackModal, useTranslation, useTheme, isValidSkin, DEFAULT_SKIN } from '@padel/common';
 import type { SkinId } from '@padel/common';
 import { translations } from './i18n';
-import { db } from './firebase';
+import { auth, db, signIn, firebaseConfigured } from './firebase';
 import styles from './App.module.css';
 
 declare global {
@@ -24,7 +25,7 @@ declare global {
 
 const SKIN_KEY = 'padel-skin';
 
-function loadSkin(): SkinId {
+function loadLocalSkin(): SkinId {
   try {
     const data = localStorage.getItem(SKIN_KEY);
     if (data && isValidSkin(data)) return data;
@@ -34,16 +35,46 @@ function loadSkin(): SkinId {
   }
 }
 
-function saveSkin(skin: SkinId): void {
-  try { localStorage.setItem(SKIN_KEY, skin); } catch { /* ignore */ }
-}
-
-const initialSkin = loadSkin();
+const initialSkin = loadLocalSkin();
 
 function LandingContent() {
   const { t } = useTranslation();
   const { skin, setSkin: rawSetSkin } = useTheme(initialSkin);
-  const setSkin = useCallback((s: SkinId) => { rawSetSkin(s); saveSkin(s); }, [rawSetSkin]);
+  const [uid, setUid] = useState<string | null>(null);
+
+  // Auth
+  useEffect(() => {
+    if (!firebaseConfigured || !auth) return;
+    const unsub = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUid(user.uid);
+      } else {
+        signIn().catch(() => {});
+      }
+    });
+    return unsub;
+  }, []);
+
+  // Read skin from Firebase (source of truth)
+  useEffect(() => {
+    if (!uid || !db) return;
+    const unsub = onValue(ref(db, `users/${uid}/skin`), (snapshot) => {
+      const val = snapshot.val() as string | null;
+      if (val && isValidSkin(val)) {
+        rawSetSkin(val);
+        try { localStorage.setItem(SKIN_KEY, val); } catch {}
+      }
+    });
+    return unsub;
+  }, [uid, rawSetSkin]);
+
+  const setSkin = useCallback((s: SkinId) => {
+    rawSetSkin(s);
+    try { localStorage.setItem(SKIN_KEY, s); } catch {}
+    if (uid && db) {
+      set(ref(db, `users/${uid}/skin`), s).catch(() => {});
+    }
+  }, [rawSetSkin, uid]);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [telegramName, setTelegramName] = useState<string | null>(null);
 
