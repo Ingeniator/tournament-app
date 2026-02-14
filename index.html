@@ -32,27 +32,29 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* Dark theme (default) — Radix mauve/crimson aligned */
     :root {
-      --bg: #1a1a2e;
-      --text: #e0e0e0;
-      --muted: #8e8ea3;
-      --accent: #e94560;
-      --card-bg: #16213e;
-      --card-border: #2a2a4a;
-      --toggle-bg: #22223a;
-      --toggle-border: #2a2a44;
-      --toggle-icon: #a0a0b8;
+      --bg: #121113;
+      --text: #eeeef0;
+      --muted: #b5b2bc;
+      --accent: #e93d82;
+      --card-bg: #1a191b;
+      --card-border: #3c393f;
+      --toggle-bg: #232225;
+      --toggle-border: #3c393f;
+      --toggle-icon: #b5b2bc;
     }
-    [data-theme="light"] {
-      --bg: #f4f4f8;
-      --text: #1a1a2e;
-      --muted: #7e7e96;
-      --accent: #d63851;
-      --card-bg: #ffffff;
-      --card-border: #d8d8e2;
-      --toggle-bg: #eeeef3;
-      --toggle-border: #d8d8e2;
-      --toggle-icon: #52526a;
+    /* Light theme — Radix mauve/crimson aligned */
+    .light-theme {
+      --bg: #fdfcfd;
+      --text: #211f26;
+      --muted: #65636d;
+      --accent: #e93d82;
+      --card-bg: #faf9fb;
+      --card-border: #dbd8e0;
+      --toggle-bg: #f2eff3;
+      --toggle-border: #dbd8e0;
+      --toggle-icon: #65636d;
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -188,10 +190,13 @@
 
       function apply(t) {
         theme = t;
-        if (t === 'light') {
-          document.documentElement.setAttribute('data-theme', 'light');
+        var el = document.documentElement;
+        if (t === 'dark') {
+          el.classList.add('dark-theme');
+          el.classList.remove('light-theme');
         } else {
-          document.documentElement.removeAttribute('data-theme');
+          el.classList.remove('dark-theme');
+          el.classList.add('light-theme');
         }
         document.getElementById('icon-sun').style.display = t === 'dark' ? '' : 'none';
         document.getElementById('icon-moon').style.display = t === 'light' ? '' : 'none';

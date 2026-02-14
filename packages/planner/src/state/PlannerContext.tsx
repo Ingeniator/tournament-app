@@ -37,6 +37,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     const next = theme === 'dark' ? 'light' : 'dark';
     rawToggle();
     updateUserTheme(next);
+    try { localStorage.setItem('padel-theme', next); } catch {}
   }, [theme, rawToggle, updateUserTheme]);
   const telegramUser = useTelegram();
   const { tournaments: myTournaments, loading: myLoading } = useMyTournaments(uid);

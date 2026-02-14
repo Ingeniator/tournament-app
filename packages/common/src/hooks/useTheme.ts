@@ -4,10 +4,12 @@ export type Theme = 'dark' | 'light';
 
 function applyTheme(theme: Theme) {
   const el = document.documentElement;
-  if (theme === 'light') {
-    el.setAttribute('data-theme', 'light');
+  if (theme === 'dark') {
+    el.classList.add('dark-theme');
+    el.classList.remove('light-theme');
   } else {
-    el.removeAttribute('data-theme');
+    el.classList.remove('dark-theme');
+    el.classList.add('light-theme');
   }
 }
 

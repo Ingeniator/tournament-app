@@ -14,7 +14,7 @@ html {
   color-scheme: dark;
 }
 
-html[data-theme="light"] {
+html.light-theme {
   color-scheme: light;
 }
 
