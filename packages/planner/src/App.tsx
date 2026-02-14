@@ -9,6 +9,21 @@ import { JoinScreen } from './screens/JoinScreen';
 import { translations } from './i18n';
 import styles from './App.module.css';
 
+const LOCALE_KEY = 'padel-locale';
+const SUPPORTED_LOCALES = ['en', 'es', 'it', 'pt'];
+
+function preSeedLocaleFromUrl() {
+  try {
+    if (localStorage.getItem(LOCALE_KEY)) return;
+    const lang = new URLSearchParams(window.location.search).get('lang');
+    if (lang && SUPPORTED_LOCALES.includes(lang)) {
+      localStorage.setItem(LOCALE_KEY, lang);
+    }
+  } catch {}
+}
+
+preSeedLocaleFromUrl();
+
 function FirebaseSetupMessage() {
   const { t } = useTranslation();
   return (
@@ -21,8 +36,18 @@ function FirebaseSetupMessage() {
 }
 
 function AppContent() {
-  const { screen, setScreen, authLoading, authError, loadByCode } = usePlanner();
-  const { t } = useTranslation();
+  const { screen, setScreen, authLoading, authError, loadByCode, tournament } = usePlanner();
+  const { t, setLocale } = useTranslation();
+
+  // Apply tournament locale for Telegram deep links (no &lang= in URL)
+  useEffect(() => {
+    if (!tournament?.locale) return;
+    try {
+      if (!localStorage.getItem(LOCALE_KEY)) {
+        setLocale(tournament.locale as 'en' | 'es' | 'it' | 'pt');
+      }
+    } catch {}
+  }, [tournament?.locale, setLocale]);
 
   // Check URL for ?code=XXXXXX or Telegram startapp param on mount
   useEffect(() => {

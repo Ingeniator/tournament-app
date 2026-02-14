@@ -11,7 +11,7 @@ import styles from './OrganizerScreen.module.css';
 
 export function OrganizerScreen() {
   const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, deleteTournament } = usePlanner();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const { toastMessage, showToast } = useToast();
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
@@ -46,7 +46,7 @@ export function OrganizerScreen() {
   const isTelegram = !!window.Telegram?.WebApp?.initData;
   const shareUrl = isTelegram && botName
     ? `https://t.me/${botName}?startapp=${tournament.code}`
-    : `${window.location.origin}/plan?code=${tournament.code}`;
+    : `${window.location.origin}/plan?code=${tournament.code}&lang=${locale}`;
 
   const handleCopyLink = async () => {
     try {

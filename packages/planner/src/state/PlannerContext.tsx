@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, createContext, useContext, type ReactNode } from 'react';
 import { ref, get } from 'firebase/database';
 import type { PlannerTournament, PlannerRegistration, TournamentSummary } from '@padel/common';
+import { useTranslation } from '@padel/common';
 import { useAuth } from '../hooks/useAuth';
 import { usePlannerTournament } from '../hooks/usePlannerTournament';
 import { db } from '../firebase';
@@ -107,12 +108,14 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     return () => { cancelled = true; };
   }, [tournament, uid, userName]);
 
+  const { locale } = useTranslation();
+
   const createTournament = useCallback(async (name: string) => {
     if (!uid) return;
-    const id = await createInDb(name, uid);
+    const id = await createInDb(name, uid, locale);
     setTournamentId(id);
     setScreen('organizer');
-  }, [uid, createInDb]);
+  }, [uid, locale, createInDb]);
 
   const loadByCode = useCallback(async (code: string): Promise<boolean> => {
     const id = await loadByCodeFromDb(code);

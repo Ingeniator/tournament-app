@@ -29,6 +29,7 @@ function toTournament(id: string, data: Record<string, unknown>): PlannerTournam
     extraSpots: data.extraSpots as number | undefined,
     chatLink: data.chatLink as string | undefined,
     description: data.description as string | undefined,
+    locale: data.locale as string | undefined,
   };
 }
 
@@ -52,7 +53,7 @@ export function usePlannerTournament(tournamentId: string | null) {
     return unsubscribe;
   }, [tournamentId]);
 
-  const createTournament = useCallback(async (name: string, organizerId: string): Promise<string> => {
+  const createTournament = useCallback(async (name: string, organizerId: string, locale?: string): Promise<string> => {
     if (!db) throw new Error('Firebase not configured');
     const id = generateId();
     const code = await generateUniqueCode();
@@ -65,6 +66,7 @@ export function usePlannerTournament(tournamentId: string | null) {
       code,
       createdAt: Date.now(),
       duration: 120,
+      locale,
     };
     // Atomic multi-path write
     await firebaseUpdate(ref(db), {

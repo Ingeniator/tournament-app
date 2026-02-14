@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 import type { Locale, TranslationMap } from './types';
 
 const STORAGE_KEY = 'padel-locale';
@@ -41,12 +41,6 @@ export function I18nProvider({ translations, children }: I18nProviderProps) {
       localStorage.setItem(STORAGE_KEY, loc);
     } catch {}
   }, []);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, locale);
-    } catch {}
-  }, [locale]);
 
   const t = useCallback((key: string, params?: Record<string, string | number>): string => {
     let text = translations[locale]?.[key] ?? translations.en?.[key] ?? key;
