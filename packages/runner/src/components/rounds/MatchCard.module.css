@@ -37,7 +37,7 @@
   grid-column: 1;
   grid-row: 1;
   justify-content: flex-start;
-  border-right: 1px dashed color-mix(in srgb, var(--color-separator) 50%, transparent);
+  border-right: 1px dashed var(--color-separator);
 }
 
 .topRight {
@@ -51,7 +51,7 @@
   grid-column: 1;
   grid-row: 3;
   justify-content: flex-start;
-  border-right: 1px dashed color-mix(in srgb, var(--color-separator) 50%, transparent);
+  border-right: 1px dashed var(--color-separator);
 }
 
 .bottomRight {
