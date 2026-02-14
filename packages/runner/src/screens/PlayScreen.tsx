@@ -269,9 +269,32 @@ export function PlayScreen() {
         </div>
       )}
 
-      {/* Previous + Next round previews */}
+      {/* Next + Previous round previews */}
       {(prevRound || nextRound) && (
         <div className={styles.roundPreviews}>
+          {nextRound && (
+            <div className={styles.roundPreview}>
+              <h3 className={styles.roundPreviewTitle}>{t('play.upNextRound', { num: nextRound.roundNumber })}</h3>
+              {nextRound.matches.map(match => {
+                const courtName = tournament.config.courts.find(c => c.id === match.courtId)?.name ?? match.courtId;
+                return (
+                  <div key={match.id} className={styles.compactMatch}>
+                    <span className={styles.compactCourt}>{courtName}</span>
+                    <span className={styles.compactTeams}>
+                      {name(match.team1[0])} & {name(match.team1[1])}
+                      <span className={styles.previewVs}>{t('play.vs')}</span>
+                      {name(match.team2[0])} & {name(match.team2[1])}
+                    </span>
+                  </div>
+                );
+              })}
+              {nextRound.sitOuts.length > 0 && (
+                <div className={styles.compactSitOut}>
+                  {t('play.sit', { names: nextRound.sitOuts.map(name).join(', ') })}
+                </div>
+              )}
+            </div>
+          )}
           {prevRound && (
             <div className={styles.roundPreview}>
               <h3 className={styles.roundPreviewTitle}>{t('play.previousRound', { num: prevRound.roundNumber })}</h3>
@@ -296,29 +319,6 @@ export function PlayScreen() {
               {prevRound.sitOuts.length > 0 && (
                 <div className={styles.compactSitOut}>
                   {t('play.sit', { names: prevRound.sitOuts.map(name).join(', ') })}
-                </div>
-              )}
-            </div>
-          )}
-          {nextRound && (
-            <div className={styles.roundPreview}>
-              <h3 className={styles.roundPreviewTitle}>{t('play.upNextRound', { num: nextRound.roundNumber })}</h3>
-              {nextRound.matches.map(match => {
-                const courtName = tournament.config.courts.find(c => c.id === match.courtId)?.name ?? match.courtId;
-                return (
-                  <div key={match.id} className={styles.compactMatch}>
-                    <span className={styles.compactCourt}>{courtName}</span>
-                    <span className={styles.compactTeams}>
-                      {name(match.team1[0])} & {name(match.team1[1])}
-                      <span className={styles.previewVs}>{t('play.vs')}</span>
-                      {name(match.team2[0])} & {name(match.team2[1])}
-                    </span>
-                  </div>
-                );
-              })}
-              {nextRound.sitOuts.length > 0 && (
-                <div className={styles.compactSitOut}>
-                  {t('play.sit', { names: nextRound.sitOuts.map(name).join(', ') })}
                 </div>
               )}
             </div>
