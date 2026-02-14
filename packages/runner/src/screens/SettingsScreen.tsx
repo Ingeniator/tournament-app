@@ -270,10 +270,13 @@ export function SettingsScreen() {
                 ) : (
                   <div
                     className={styles.playerNameRow}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => {
                       setEditCourtName(court.name);
                       setEditingCourtId(court.id);
                     }}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setEditCourtName(court.name); setEditingCourtId(court.id); } }}
                   >
                     <span className={`${styles.playerName} ${court.unavailable ? styles.playerInactive : ''}`}>
                       {court.name}
@@ -382,10 +385,12 @@ export function SettingsScreen() {
                 ) : (
                   <div
                     className={styles.playerNameRow}
-                    onClick={tournament.phase !== 'completed' ? () => {
-                      setEditPlayerName(player.name);
-                      setEditingPlayerId(player.id);
-                    } : undefined}
+                    {...(tournament.phase !== 'completed' ? {
+                      role: 'button' as const,
+                      tabIndex: 0,
+                      onClick: () => { setEditPlayerName(player.name); setEditingPlayerId(player.id); },
+                      onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setEditPlayerName(player.name); setEditingPlayerId(player.id); } },
+                    } : {})}
                   >
                     <span className={`${styles.playerName} ${player.unavailable ? styles.playerInactive : ''}`}>
                       {player.name}
