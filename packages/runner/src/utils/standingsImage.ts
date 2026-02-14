@@ -317,11 +317,17 @@ export async function shareStandingsImage(
   standings: StandingsEntry[],
   nominations: Nomination[] = [],
 ): Promise<ShareImageResult> {
-  const safeName = tournamentName.replace(/[^a-zA-Z0-9]/g, '_');
+  let standingsCanvas: HTMLCanvasElement;
+  let nominationCanvases: HTMLCanvasElement[];
 
-  // Render all canvases
-  const standingsCanvas = renderStandingsImage(tournamentName, standings);
-  const nominationCanvases = nominations.map(n => renderNominationImage(tournamentName, n));
+  try {
+    standingsCanvas = renderStandingsImage(tournamentName, standings);
+    nominationCanvases = nominations.map(n => renderNominationImage(tournamentName, n));
+  } catch {
+    return { status: 'failed' };
+  }
+
+  const safeName = tournamentName.replace(/[^a-zA-Z0-9]/g, '_');
 
   try {
     // Convert all to blobs
@@ -343,36 +349,33 @@ export async function shareStandingsImage(
 
     const tg = window.Telegram?.WebApp;
 
-    if (tg) {
-      // Telegram WebApp blocks blob downloads and programmatic <a>.click().
-      // Try the Web Share API directly without the canShare gate — Telegram's
-      // WebView may support sharing files even when canShare reports false.
-      if (navigator.share) {
+    // Try Web Share API first (works on mobile browsers and some desktops)
+    if (navigator.share) {
+      const shareData = { files };
+      // canShare may not exist in all environments; skip the check if absent
+      const canShare = !navigator.canShare || navigator.canShare(shareData);
+      if (canShare) {
         try {
-          await navigator.share({ files });
+          await navigator.share(shareData);
           return { status: 'shared' };
         } catch (e) {
-          if (e instanceof DOMException && e.name === 'AbortError') return { status: 'failed' };
-          // Share not supported for files in this Telegram WebView
+          if (e instanceof DOMException && e.name === 'AbortError') {
+            return { status: 'failed' };
+          }
+          // Share failed (e.g. files not supported) — fall through to fallbacks
         }
       }
-      // Fallback: return data URLs so the UI can show a preview overlay.
-      // Users can long-press images to save/share them natively.
+    }
+
+    if (tg) {
+      // Telegram WebApp blocks blob downloads and programmatic <a>.click().
+      // Show a preview overlay so users can long-press images to save/share.
       const allCanvases = [standingsCanvas, ...nominationCanvases];
       const dataUrls = allCanvases.map(c => c.toDataURL('image/png'));
       return { status: 'preview', dataUrls };
     }
 
-    // Try Web Share API (mobile)
-    if (navigator.share && navigator.canShare) {
-      const shareData = { files };
-      if (navigator.canShare(shareData)) {
-        await navigator.share(shareData);
-        return { status: 'shared' };
-      }
-    }
-
-    // Fallback: download all files (works in regular browsers, not in Telegram)
+    // Fallback: download all files via <a> click
     for (const file of files) {
       const url = URL.createObjectURL(file);
       const a = document.createElement('a');
@@ -381,12 +384,24 @@ export async function shareStandingsImage(
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      // Delay revocation so the browser has time to start the download
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
     }
     return { status: 'downloaded' };
   } catch (e) {
-    // User cancelled share dialog
     if (e instanceof DOMException && e.name === 'AbortError') return { status: 'failed' };
+
+    // Last resort for Telegram: show preview overlay
+    if (window.Telegram?.WebApp) {
+      try {
+        const allCanvases = [standingsCanvas, ...nominationCanvases];
+        const dataUrls = allCanvases.map(c => c.toDataURL('image/png'));
+        return { status: 'preview', dataUrls };
+      } catch {
+        // give up
+      }
+    }
+
     return { status: 'failed' };
   }
 }

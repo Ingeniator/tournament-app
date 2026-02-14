@@ -95,9 +95,9 @@ export function PlayScreen() {
     });
   }, [nominations]);
 
-  if (!tournament) return null;
-
   const [previewImages, setPreviewImages] = useState<string[] | null>(null);
+
+  if (!tournament) return null;
 
   // Completed state — show summary
   if (tournament.phase === 'completed') {
@@ -128,7 +128,7 @@ export function PlayScreen() {
             )),
           ]}
         </Carousel>
-        <Button variant="secondary" fullWidth onClick={handleShareImage}>
+        <Button fullWidth onClick={handleShareImage}>
           {t('play.shareImage')}
         </Button>
         {tournament.rounds.some(r => r.matches.some(m => m.score)) && (
@@ -174,7 +174,7 @@ export function PlayScreen() {
             </div>
           </details>
         )}
-        <Button fullWidth onClick={handleCopy}>
+        <Button variant="secondary" fullWidth onClick={handleCopy}>
           {t('play.shareText')}
         </Button>
         <button className={styles.supportCta} onClick={() => setShowSupport(true)}>
