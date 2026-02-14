@@ -10,7 +10,7 @@ import { TeamPairingScreen } from './screens/TeamPairingScreen';
 import { PlayScreen } from './screens/PlayScreen';
 import { LogScreen } from './screens/LogScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
-import { Button, ErrorBoundary, ThemeSwitcher } from '@padel/common';
+import { Button, ErrorBoundary, SkinPicker } from '@padel/common';
 import { useRunnerTheme } from './state/ThemeContext';
 import { saveUIState, loadUIState } from './state/persistence';
 
@@ -84,7 +84,7 @@ function AppContent() {
         hasBottomNav
         headerRight={
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <ThemeSwitcher skin={skin} onSelect={setSkin} />
+            <SkinPicker skin={skin} onSelect={setSkin} />
             <Button
               variant="ghost"
               size="small"

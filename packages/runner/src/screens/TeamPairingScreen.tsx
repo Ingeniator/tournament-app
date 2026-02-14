@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTournament } from '../hooks/useTournament';
 import { useRunnerTheme } from '../state/ThemeContext';
 import { AppShell } from '../components/layout/AppShell';
-import { Button, ThemeSwitcher } from '@padel/common';
+import { Button, SkinPicker } from '@padel/common';
 import styles from './TeamPairingScreen.module.css';
 
 export function TeamPairingScreen() {
@@ -65,7 +65,7 @@ export function TeamPairingScreen() {
       title="Teams"
       headerRight={
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <ThemeSwitcher skin={skin} onSelect={setSkin} />
+          <SkinPicker skin={skin} onSelect={setSkin} />
           <Button variant="ghost" size="small" onClick={handleBack}>
             Back
           </Button>

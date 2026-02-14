@@ -7,7 +7,7 @@ import { AppShell } from '../components/layout/AppShell';
 import { PlayerInput } from '../components/setup/PlayerInput';
 import { PlayerList } from '../components/setup/PlayerList';
 import { TournamentConfigForm } from '../components/setup/TournamentConfigForm';
-import { Button, Card, ThemeSwitcher } from '@padel/common';
+import { Button, Card, SkinPicker } from '@padel/common';
 import styles from './SetupScreen.module.css';
 
 export function SetupScreen() {
@@ -45,7 +45,7 @@ export function SetupScreen() {
       title="Setup"
       headerRight={
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <ThemeSwitcher skin={skin} onSelect={setSkin} />
+          <SkinPicker skin={skin} onSelect={setSkin} />
           <Button variant="ghost" size="small" onClick={handleBack}>
             Cancel
           </Button>
