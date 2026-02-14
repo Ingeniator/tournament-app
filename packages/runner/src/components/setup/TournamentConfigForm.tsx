@@ -27,12 +27,12 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
   // Resolve: what values will actually be used (fills in defaults for empty fields)
   const resolved = resolveConfigDefaults(config, playerCount);
   const effectivePoints = resolved.pointsPerMatch;
-  const effectiveRounds = resolved.maxRounds ?? 0;
+  const effectiveRounds = resolved.maxRounds ?? 1;
 
   // Per-field suggestions: what each field would be if cleared, given the other's current value
   const suggestedRoundsConfig = resolveConfigDefaults({ ...config, maxRounds: null }, playerCount);
   const suggestedPointsConfig = resolveConfigDefaults({ ...config, pointsPerMatch: 0 }, playerCount);
-  const suggestedRounds = suggestedRoundsConfig.maxRounds ?? 0;
+  const suggestedRounds = suggestedRoundsConfig.maxRounds ?? 1;
   const suggestedPoints = suggestedPointsConfig.pointsPerMatch;
 
   // Duration estimate
