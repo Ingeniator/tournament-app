@@ -28,10 +28,9 @@ export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, on
           <span className={styles.playerName}>{name(match.team1[0])}</span>
           <span className={styles.ampersand}>&amp;</span>
         </div>
-        <div className={styles.netSegment} />
         <div className={`${styles.playerCell} ${styles.topRight} ${team2Won ? styles.winner : ''}`} title={name(match.team2[0])}>
-          <span className={styles.ampersand}>&amp;</span>
           <span className={styles.playerName}>{name(match.team2[0])}</span>
+          <span className={styles.ampersand}>&amp;</span>
         </div>
 
         {/* Row 2: second players */}
