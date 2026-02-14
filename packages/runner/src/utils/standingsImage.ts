@@ -298,11 +298,17 @@ function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob | null> {
   return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
 }
 
+export type ShareImageResult =
+  | { status: 'shared' }
+  | { status: 'downloaded' }
+  | { status: 'failed' }
+  | { status: 'preview'; dataUrls: string[] };
+
 export async function shareStandingsImage(
   tournamentName: string,
   standings: StandingsEntry[],
   nominations: Nomination[] = [],
-): Promise<'shared' | 'downloaded' | 'failed'> {
+): Promise<ShareImageResult> {
   const safeName = tournamentName.replace(/[^a-zA-Z0-9]/g, '_');
 
   // Render all canvases
@@ -312,7 +318,7 @@ export async function shareStandingsImage(
   try {
     // Convert all to blobs
     const standingsBlob = await canvasToBlob(standingsCanvas);
-    if (!standingsBlob) return 'failed';
+    if (!standingsBlob) return { status: 'failed' };
 
     const files: File[] = [
       new File([standingsBlob], `${safeName}_results.png`, { type: 'image/png' }),
@@ -336,14 +342,17 @@ export async function shareStandingsImage(
       if (navigator.share) {
         try {
           await navigator.share({ files });
-          return 'shared';
+          return { status: 'shared' };
         } catch (e) {
-          if (e instanceof DOMException && e.name === 'AbortError') return 'failed';
+          if (e instanceof DOMException && e.name === 'AbortError') return { status: 'failed' };
           // Share not supported for files in this Telegram WebView
         }
       }
-      // No working fallback inside Telegram — blob downloads are blocked.
-      return 'failed';
+      // Fallback: return data URLs so the UI can show a preview overlay.
+      // Users can long-press images to save/share them natively.
+      const allCanvases = [standingsCanvas, ...nominationCanvases];
+      const dataUrls = allCanvases.map(c => c.toDataURL('image/png'));
+      return { status: 'preview', dataUrls };
     }
 
     // Try Web Share API (mobile)
@@ -351,7 +360,7 @@ export async function shareStandingsImage(
       const shareData = { files };
       if (navigator.canShare(shareData)) {
         await navigator.share(shareData);
-        return 'shared';
+        return { status: 'shared' };
       }
     }
 
@@ -366,11 +375,11 @@ export async function shareStandingsImage(
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
-    return 'downloaded';
+    return { status: 'downloaded' };
   } catch (e) {
     // User cancelled share dialog
-    if (e instanceof DOMException && e.name === 'AbortError') return 'failed';
-    return 'failed';
+    if (e instanceof DOMException && e.name === 'AbortError') return { status: 'failed' };
+    return { status: 'failed' };
   }
 }
 
