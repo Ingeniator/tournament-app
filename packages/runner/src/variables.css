@@ -30,6 +30,21 @@
 @import "@radix-ui/colors/bronze.css";
 @import "@radix-ui/colors/bronze-dark.css";
 
+@import "@radix-ui/colors/indigo.css";
+@import "@radix-ui/colors/indigo-dark.css";
+@import "@radix-ui/colors/indigo-alpha.css";
+@import "@radix-ui/colors/indigo-dark-alpha.css";
+
+@import "@radix-ui/colors/violet.css";
+@import "@radix-ui/colors/violet-dark.css";
+@import "@radix-ui/colors/violet-alpha.css";
+@import "@radix-ui/colors/violet-dark-alpha.css";
+
+@import "@radix-ui/colors/orange.css";
+@import "@radix-ui/colors/orange-dark.css";
+@import "@radix-ui/colors/orange-alpha.css";
+@import "@radix-ui/colors/orange-dark-alpha.css";
+
 @import "@radix-ui/colors/black-alpha.css";
 @import "@radix-ui/colors/white-alpha.css";
 
@@ -108,4 +123,32 @@
   /* Layout */
   --bottom-nav-height: 64px;
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── Accent color presets ──
+   Applied via class on <html>, e.g. class="dark-theme accent-indigo"
+   Default (no accent class) = crimson */
+
+.accent-indigo {
+  --color-primary: var(--indigo-9);
+  --color-primary-hover: var(--indigo-10);
+  --color-primary-tint: var(--indigo-a3);
+}
+
+.accent-teal {
+  --color-primary: var(--teal-9);
+  --color-primary-hover: var(--teal-10);
+  --color-primary-tint: var(--teal-a3);
+}
+
+.accent-orange {
+  --color-primary: var(--orange-9);
+  --color-primary-hover: var(--orange-10);
+  --color-primary-tint: var(--orange-a3);
+}
+
+.accent-violet {
+  --color-primary: var(--violet-9);
+  --color-primary-hover: var(--violet-10);
+  --color-primary-tint: var(--violet-a3);
 }

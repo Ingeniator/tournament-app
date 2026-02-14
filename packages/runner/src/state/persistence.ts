@@ -1,9 +1,11 @@
-import type { Tournament, Theme } from '@padel/common';
+import type { Tournament, Theme, AccentColor } from '@padel/common';
+import { ACCENT_COLORS } from '@padel/common';
 import { deduplicateNames } from '../utils/deduplicateNames';
 
 const STORAGE_KEY = 'padel-tournament-v1';
 const UI_STATE_KEY = 'padel-ui-state-v1';
 const THEME_KEY = 'padel-theme';
+const ACCENT_KEY = 'padel-accent';
 
 export function saveTournament(tournament: Tournament | null): boolean {
   try {
@@ -66,5 +68,25 @@ export function loadTheme(): Theme {
     return data === 'light' ? 'light' : 'dark';
   } catch {
     return 'dark';
+  }
+}
+
+export function saveAccent(accent: AccentColor): void {
+  try {
+    localStorage.setItem(ACCENT_KEY, accent);
+  } catch {
+    // silently fail
+  }
+}
+
+export function loadAccent(): AccentColor {
+  try {
+    const data = localStorage.getItem(ACCENT_KEY);
+    if (data && (ACCENT_COLORS as readonly string[]).includes(data)) {
+      return data as AccentColor;
+    }
+    return 'crimson';
+  } catch {
+    return 'crimson';
   }
 }

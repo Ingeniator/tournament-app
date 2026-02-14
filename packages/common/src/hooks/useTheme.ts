@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 
 export type Theme = 'dark' | 'light';
+export type AccentColor = 'crimson' | 'indigo' | 'teal' | 'orange' | 'violet';
+
+export const ACCENT_COLORS: AccentColor[] = ['crimson', 'indigo', 'teal', 'orange', 'violet'];
 
 function applyTheme(theme: Theme) {
   const el = document.documentElement;
@@ -13,12 +16,27 @@ function applyTheme(theme: Theme) {
   }
 }
 
-export function useTheme(initialTheme?: Theme) {
+function applyAccent(accent: AccentColor) {
+  const el = document.documentElement;
+  for (const c of ACCENT_COLORS) {
+    el.classList.remove(`accent-${c}`);
+  }
+  if (accent !== 'crimson') {
+    el.classList.add(`accent-${accent}`);
+  }
+}
+
+export function useTheme(initialTheme?: Theme, initialAccent?: AccentColor) {
   const [theme, setThemeState] = useState<Theme>(initialTheme ?? 'dark');
+  const [accent, setAccentState] = useState<AccentColor>(initialAccent ?? 'crimson');
 
   useEffect(() => {
     applyTheme(theme);
   }, [theme]);
+
+  useEffect(() => {
+    applyAccent(accent);
+  }, [accent]);
 
   // Sync when initialTheme changes (e.g. loaded from Firebase)
   useEffect(() => {
@@ -26,6 +44,12 @@ export function useTheme(initialTheme?: Theme) {
       setThemeState(initialTheme);
     }
   }, [initialTheme]);
+
+  useEffect(() => {
+    if (initialAccent) {
+      setAccentState(initialAccent);
+    }
+  }, [initialAccent]);
 
   const setTheme = useCallback((t: Theme) => {
     setThemeState(t);
@@ -35,5 +59,9 @@ export function useTheme(initialTheme?: Theme) {
     setThemeState(prev => (prev === 'dark' ? 'light' : 'dark'));
   }, []);
 
-  return { theme, setTheme, toggleTheme };
+  const setAccent = useCallback((a: AccentColor) => {
+    setAccentState(a);
+  }, []);
+
+  return { theme, setTheme, toggleTheme, accent, setAccent };
 }

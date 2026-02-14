@@ -5,12 +5,12 @@ import { SupportOverlay } from '../components/support/SupportOverlay';
 import { EditableField } from '../components/settings/EditableField';
 import { copyToClipboard } from '../utils/clipboard';
 import { exportTournament, validateImport } from '../utils/importExport';
-import { Button, Card, Toast, useToast, ThemeToggle } from '@padel/common';
+import { Button, Card, Toast, useToast, ThemeToggle, AccentPicker } from '@padel/common';
 import styles from './SettingsScreen.module.css';
 
 export function SettingsScreen() {
   const { tournament, dispatch } = useTournament();
-  const { theme, toggleTheme } = useRunnerTheme();
+  const { theme, toggleTheme, accent, setAccent } = useRunnerTheme();
   const { toastMessage, showToast } = useToast();
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [editPlayerName, setEditPlayerName] = useState('');
@@ -114,6 +114,10 @@ export function SettingsScreen() {
             <span className={styles.themeLabel}>{theme === 'dark' ? 'Dark' : 'Light'} theme</span>
           </div>
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
+        </div>
+        <div className={styles.accentRow}>
+          <span className={styles.accentLabel}>Accent color</span>
+          <AccentPicker accent={accent} onSelect={setAccent} />
         </div>
       </Card>
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import { ref, get } from 'firebase/database';
-import type { PlannerTournament } from '@padel/common';
+import type { PlannerTournament, AccentColor } from '@padel/common';
 import { useTheme } from '@padel/common';
 import { useAuth } from '../hooks/useAuth';
 import { usePlannerTournament } from '../hooks/usePlannerTournament';
@@ -29,9 +29,9 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
 
   const { players, registerPlayer: registerInDb, removePlayer: removeInDb, updateConfirmed: updateConfirmedInDb, addPlayer: addPlayerInDb, bulkAddPlayers: bulkAddPlayersInDb, toggleConfirmed: toggleConfirmedInDb, updatePlayerName: updatePlayerNameInDb, isRegistered: checkRegistered } = usePlayers(tournamentId);
 
-  const { name: userName, theme: userTheme, loading: userNameLoading, updateName: updateUserName, updateTheme: updateUserTheme, updateTelegramId, updateTelegramUsername } = useUserProfile(uid);
+  const { name: userName, theme: userTheme, accent: userAccent, loading: userNameLoading, updateName: updateUserName, updateTheme: updateUserTheme, updateAccent: updateUserAccent, updateTelegramId, updateTelegramUsername } = useUserProfile(uid);
 
-  const { theme, toggleTheme: rawToggle } = useTheme(userTheme ?? undefined);
+  const { theme, toggleTheme: rawToggle, accent, setAccent: rawSetAccent } = useTheme(userTheme ?? undefined, userAccent ?? undefined);
 
   const toggleTheme = useCallback(() => {
     const next = theme === 'dark' ? 'light' : 'dark';
@@ -39,6 +39,12 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     updateUserTheme(next);
     try { localStorage.setItem('padel-theme', next); } catch {}
   }, [theme, rawToggle, updateUserTheme]);
+
+  const setAccent = useCallback((a: AccentColor) => {
+    rawSetAccent(a);
+    updateUserAccent(a);
+    try { localStorage.setItem('padel-accent', a); } catch {}
+  }, [rawSetAccent, updateUserAccent]);
   const telegramUser = useTelegram();
   const { tournaments: myTournaments, loading: myLoading } = useMyTournaments(uid);
   const { tournaments: registeredTournaments, loading: regLoading } = useRegisteredTournaments(uid);
@@ -179,6 +185,8 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       telegramUser,
       theme,
       toggleTheme,
+      accent,
+      setAccent,
     }}>
       {children}
     </PlannerCtx.Provider>

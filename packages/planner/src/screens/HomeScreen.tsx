@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Card, ThemeToggle } from '@padel/common';
+import { Button, Card, ThemeToggle, AccentPicker } from '@padel/common';
 import type { TournamentSummary } from '@padel/common';
 import { usePlanner } from '../state/plannerContext';
 import { randomTournamentName } from '../utils/tournamentNames';
@@ -24,7 +24,7 @@ export function HomeScreen() {
     createTournament, loadByCode, setScreen,
     userName, userNameLoading, updateUserName,
     myTournaments, registeredTournaments, listingsLoading,
-    openTournament, theme, toggleTheme,
+    openTournament, theme, toggleTheme, accent, setAccent,
   } = usePlanner();
 
   const [name, setName] = useState(randomTournamentName);
@@ -116,6 +116,7 @@ export function HomeScreen() {
           </g>
         </svg>
         <h1 className={styles.headerTitle}>Tournament Planner</h1>
+        <AccentPicker accent={accent} onSelect={setAccent} />
         <ThemeToggle theme={theme} onToggle={toggleTheme} />
       </header>
 

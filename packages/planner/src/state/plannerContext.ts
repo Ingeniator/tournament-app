@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { PlannerTournament, PlannerRegistration, TournamentSummary, Theme } from '@padel/common';
+import type { PlannerTournament, PlannerRegistration, TournamentSummary, Theme, AccentColor } from '@padel/common';
 import type { TelegramUser } from '../hooks/useTelegram';
 
 export type Screen = 'loading' | 'home' | 'organizer' | 'join' | 'supporters';
@@ -36,6 +36,8 @@ export interface PlannerContextValue {
   telegramUser: TelegramUser | null;
   theme: Theme;
   toggleTheme: () => void;
+  accent: AccentColor;
+  setAccent: (accent: AccentColor) => void;
 }
 
 export const PlannerCtx = createContext<PlannerContextValue>(null!);
