@@ -64,7 +64,7 @@ export function resolveConfigDefaults(config: TournamentConfig, playerCount: num
   const rawDefault = Math.min(baseRounds, maxRoundsForDuration);
 
   // Try to nudge the default towards a fair round count (equal sit-outs)
-  const defaultRounds = nudgeToFairRounds(rawDefault, playerCount, config.courts.length, maxRoundsForDuration);
+  const defaultRounds = Math.max(1, nudgeToFairRounds(rawDefault, playerCount, config.courts.length, maxRoundsForDuration));
 
   const effectiveRounds = config.maxRounds ?? defaultRounds;
 

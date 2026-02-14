@@ -23,7 +23,7 @@ export function HomeScreen() {
           format: 'americano',
           pointsPerMatch: 0,
           courts: [{ id: generateId(), name: 'Court 1' }],
-          maxRounds: null,
+          maxRounds: 1,
         },
       },
     });
