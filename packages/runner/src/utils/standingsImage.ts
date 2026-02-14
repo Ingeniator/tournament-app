@@ -1,23 +1,29 @@
 import type { StandingsEntry } from '@padel/common';
 import type { Nomination } from '../hooks/useNominations';
 
-// Theme matching runner variables.css
-const BG = '#0f0f1a';
-const SURFACE = '#1a1a2e';
-const SURFACE_RAISED = '#22223a';
-const BORDER = '#2a2a44';
-const TEXT = '#f0f0f0';
-const TEXT_SECONDARY = '#a0a0b8';
-const TEXT_MUTED = '#6b6b80';
-const PRIMARY = '#e94560';
-const SUCCESS = '#16c79a';
-const DANGER = '#e94560';
-
-const RANK_GOLD = '#ffd700';
-const RANK_SILVER = '#c0c0c0';
-const RANK_BRONZE = '#cd7f32';
-
 const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+
+/** Read current theme colors from CSS variables on <html> */
+function getThemeColors() {
+  const s = getComputedStyle(document.documentElement);
+  const v = (name: string) => s.getPropertyValue(name).trim();
+  return {
+    bg:            v('--color-bg')             || '#0f0f1a',
+    surface:       v('--color-surface')        || '#1a1a2e',
+    surfaceRaised: v('--color-surface-raised') || '#22223a',
+    border:        v('--color-border')         || '#2a2a44',
+    text:          v('--color-text')           || '#f0f0f0',
+    textSecondary: v('--color-text-secondary') || '#a0a0b8',
+    textMuted:     v('--color-text-muted')     || '#6b6b80',
+    primary:       v('--color-primary')        || '#e94560',
+    accent:        v('--color-accent')         || '#16c79a',
+    success:       v('--color-success')        || '#16c79a',
+    danger:        v('--color-danger')         || '#e94560',
+    rankGold:      v('--color-rank-gold')      || '#ffd700',
+    rankSilver:    v('--color-rank-silver')    || '#c0c0c0',
+    rankBronze:    v('--color-rank-bronze')    || '#cd7f32',
+  };
+}
 
 const SCALE = 2; // retina
 
@@ -29,6 +35,7 @@ export function renderStandingsImage(
   tournamentName: string,
   standings: StandingsEntry[],
 ): HTMLCanvasElement {
+  const t = getThemeColors();
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d')!;
 
@@ -48,12 +55,12 @@ export function renderStandingsImage(
   canvas.height = canvasHeight;
 
   // Background
-  ctx.fillStyle = BG;
+  ctx.fillStyle = t.bg;
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
   // Header
   let y = padding;
-  ctx.fillStyle = TEXT;
+  ctx.fillStyle = t.text;
   ctx.font = `bold ${s(18)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
   ctx.textAlign = 'center';
   ctx.fillText(tournamentName, canvasWidth / 2, y + s(24));
@@ -65,11 +72,11 @@ export function renderStandingsImage(
   const tableY = y;
   const cardRadius = s(8);
 
-  ctx.fillStyle = SURFACE;
+  ctx.fillStyle = t.surface;
   roundRect(ctx, tableX, tableY, tableW, tableHeight + s(8), cardRadius);
   ctx.fill();
 
-  ctx.strokeStyle = BORDER;
+  ctx.strokeStyle = t.border;
   ctx.lineWidth = s(1);
   roundRect(ctx, tableX, tableY, tableW, tableHeight + s(8), cardRadius);
   ctx.stroke();
@@ -85,7 +92,7 @@ export function renderStandingsImage(
   y = tableY + s(4);
   ctx.textAlign = 'left';
   ctx.font = `600 ${s(9)}px ${FONT}`;
-  ctx.fillStyle = TEXT_MUTED;
+  ctx.fillStyle = t.textMuted;
   const headerY = y + s(20);
   ctx.fillText('#', tableX + colRank, headerY);
   ctx.fillText('PLAYER', tableX + colName, headerY);
@@ -98,7 +105,7 @@ export function renderStandingsImage(
 
   // Header separator
   y += tableHeaderHeight;
-  ctx.strokeStyle = BORDER;
+  ctx.strokeStyle = t.border;
   ctx.lineWidth = s(1);
   ctx.beginPath();
   ctx.moveTo(tableX + s(8), y);
@@ -117,7 +124,7 @@ export function renderStandingsImage(
 
     // Row separator (skip first)
     if (i > 0) {
-      ctx.strokeStyle = BORDER;
+      ctx.strokeStyle = t.border;
       ctx.lineWidth = s(0.5);
       ctx.beginPath();
       ctx.moveTo(tableX + s(8), rowY);
@@ -129,27 +136,27 @@ export function renderStandingsImage(
     ctx.textAlign = 'left';
     ctx.font = boldFont;
     ctx.fillStyle =
-      entry.rank === 1 ? RANK_GOLD
-        : entry.rank === 2 ? RANK_SILVER
-        : entry.rank === 3 ? RANK_BRONZE
-        : TEXT_MUTED;
+      entry.rank === 1 ? t.rankGold
+        : entry.rank === 2 ? t.rankSilver
+        : entry.rank === 3 ? t.rankBronze
+        : t.textMuted;
     ctx.fillText(String(entry.rank), tableX + colRank, textY);
 
     // Name (truncated if too long)
     ctx.font = `600 ${s(12)}px ${FONT}`;
-    ctx.fillStyle = TEXT;
+    ctx.fillStyle = t.text;
     const displayName = truncateText(ctx, entry.playerName, nameMaxWidth);
     ctx.fillText(displayName, tableX + colName, textY);
 
     // Points
     ctx.textAlign = 'right';
     ctx.font = boldFont;
-    ctx.fillStyle = PRIMARY;
+    ctx.fillStyle = t.primary;
     ctx.fillText(String(entry.totalPoints), tableX + colPts, textY);
 
     // W-T-L
     ctx.font = bodyFont;
-    ctx.fillStyle = TEXT_SECONDARY;
+    ctx.fillStyle = t.textSecondary;
     ctx.textAlign = 'center';
     ctx.fillText(`${entry.matchesWon}-${entry.matchesDraw}-${entry.matchesLost}`, tableX + colWtl, textY);
 
@@ -157,7 +164,7 @@ export function renderStandingsImage(
     ctx.textAlign = 'right';
     const diffStr = (entry.pointDiff > 0 ? '+' : '') + entry.pointDiff;
     ctx.fillStyle =
-      entry.pointDiff > 0 ? SUCCESS : entry.pointDiff < 0 ? DANGER : TEXT_SECONDARY;
+      entry.pointDiff > 0 ? t.success : entry.pointDiff < 0 ? t.danger : t.textSecondary;
     ctx.font = bodyFont;
     ctx.fillText(diffStr, tableX + colDiff, textY);
   }
@@ -166,7 +173,7 @@ export function renderStandingsImage(
   const footerY = tableY + tableHeight + s(8) + s(16);
   ctx.textAlign = 'center';
   ctx.font = `${s(9)}px ${FONT}`;
-  ctx.fillStyle = TEXT_MUTED;
+  ctx.fillStyle = t.textMuted;
   ctx.fillText(window.location.hostname, canvasWidth / 2, footerY + s(12));
 
   return canvas;
@@ -176,6 +183,7 @@ export function renderNominationImage(
   tournamentName: string,
   nomination: Nomination,
 ): HTMLCanvasElement {
+  const t = getThemeColors();
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d')!;
 
@@ -212,16 +220,16 @@ export function renderNominationImage(
 
   const cardR = s(16);
 
-  // Card gradient background matching CSS: linear-gradient(145deg, SURFACE, SURFACE_RAISED)
+  // Card gradient background matching CSS: linear-gradient(145deg, surface, surfaceRaised)
   const grad = ctx.createLinearGradient(0, 0, canvasWidth * 0.7, canvasHeight * 0.7);
-  grad.addColorStop(0, SURFACE);
-  grad.addColorStop(1, SURFACE_RAISED);
+  grad.addColorStop(0, t.surface);
+  grad.addColorStop(1, t.surfaceRaised);
   ctx.fillStyle = grad;
   roundRect(ctx, 0, 0, canvasWidth, canvasHeight, cardR);
   ctx.fill();
 
   // Card border
-  ctx.strokeStyle = BORDER;
+  ctx.strokeStyle = t.border;
   ctx.lineWidth = s(1);
   roundRect(ctx, 0, 0, canvasWidth, canvasHeight, cardR);
   ctx.stroke();
@@ -230,7 +238,7 @@ export function renderNominationImage(
   let y = padV;
 
   // Tournament name (small, top)
-  ctx.fillStyle = TEXT_MUTED;
+  ctx.fillStyle = t.textMuted;
   ctx.font = `600 ${s(9)}px ${FONT}`;
   ctx.fillText(tournamentName.toUpperCase(), cx, y + s(10));
   y += headerH + headerGap;
@@ -241,13 +249,13 @@ export function renderNominationImage(
   y += emojiH + gap;
 
   // Title — matching CSS: --text-xs (12px), bold, uppercase, letter-spacing, accent color
-  ctx.fillStyle = SUCCESS;
+  ctx.fillStyle = t.accent;
   ctx.font = `bold ${s(12)}px ${FONT}`;
   ctx.fillText(nomination.title.toUpperCase(), cx, y + s(12));
   y += titleH + gap;
 
   // Player names — matching CSS: --text-xl (20px), bold
-  ctx.fillStyle = TEXT;
+  ctx.fillStyle = t.text;
 
   if (isMultiPlayer) {
     ctx.font = `bold ${s(16)}px ${FONT}`;
@@ -256,11 +264,11 @@ export function renderNominationImage(
     ctx.fillText(truncateText(ctx, pair1, maxTextW), cx, y + s(16));
     y += s(24);
     // VS — matching CSS: --text-xs (12px), muted, uppercase
-    ctx.fillStyle = TEXT_MUTED;
+    ctx.fillStyle = t.textMuted;
     ctx.font = `${s(12)}px ${FONT}`;
     ctx.fillText('VS', cx, y + s(10));
     y += s(16);
-    ctx.fillStyle = TEXT;
+    ctx.fillStyle = t.text;
     ctx.font = `bold ${s(16)}px ${FONT}`;
     ctx.fillText(truncateText(ctx, pair2, maxTextW), cx, y + s(16));
     y += s(24) + gap;
@@ -276,18 +284,18 @@ export function renderNominationImage(
   }
 
   // Stat — matching CSS: --text-lg (18px), bold, primary
-  ctx.fillStyle = PRIMARY;
+  ctx.fillStyle = t.primary;
   ctx.font = `bold ${s(18)}px ${FONT}`;
   ctx.fillText(nomination.stat, cx, y + s(16));
   y += statH + gap;
 
   // Description — matching CSS: --text-sm (14px), muted
-  ctx.fillStyle = TEXT_MUTED;
+  ctx.fillStyle = t.textMuted;
   ctx.font = `${s(14)}px ${FONT}`;
   ctx.fillText(nomination.description, cx, y + s(12));
 
   // Footer / watermark
-  ctx.fillStyle = TEXT_MUTED;
+  ctx.fillStyle = t.textMuted;
   ctx.font = `${s(8)}px ${FONT}`;
   ctx.fillText(window.location.hostname, cx, canvasHeight - padV + s(16));
 
