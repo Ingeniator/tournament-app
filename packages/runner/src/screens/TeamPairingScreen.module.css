@@ -91,7 +91,7 @@
 
 .playerChipSelected {
   border-color: var(--color-primary);
-  background-color: rgba(99, 102, 241, 0.1);
+  background-color: var(--color-primary-tint);
 }
 
 .actions {

@@ -24,12 +24,12 @@
 }
 
 .primary {
-  background-color: #c93b51;
+  background-color: var(--color-primary);
   color: white;
 }
 
 .primary:hover:not(:disabled) {
-  background-color: #b33347;
+  background-color: var(--color-primary-hover);
 }
 
 .secondary {
@@ -49,7 +49,7 @@
 }
 
 .danger:hover:not(:disabled) {
-  background-color: rgba(233, 69, 96, 0.1);
+  background-color: var(--color-danger-tint);
 }
 
 .ghost {

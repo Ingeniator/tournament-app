@@ -38,15 +38,15 @@
 }
 
 .rank1 {
-  color: #ffd700;
+  color: var(--color-rank-gold);
 }
 
 .rank2 {
-  color: #c0c0c0;
+  color: var(--color-rank-silver);
 }
 
 .rank3 {
-  color: #cd7f32;
+  color: var(--color-rank-bronze);
 }
 
 .name {

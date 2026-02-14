@@ -73,7 +73,7 @@ function AppContent() {
   return (
     <>
       {saveError && (
-        <div style={{ background: '#d97706', color: '#fff', textAlign: 'center', padding: '6px 12px', fontSize: '13px' }}>
+        <div style={{ background: 'var(--color-warning)', color: '#fff', textAlign: 'center', padding: '6px 12px', fontSize: '13px' }}>
           Could not save — storage may be full. Your progress may be lost if you close this page.
         </div>
       )}

@@ -15,6 +15,18 @@
   --color-warning: #f0a500;
   --color-success: #16c79a;
 
+  /* Semantic tints & overlays */
+  --color-danger-tint: rgba(233, 69, 96, 0.12);
+  --color-success-tint: rgba(22, 199, 154, 0.15);
+  --color-warning-tint: rgba(240, 165, 0, 0.1);
+  --color-primary-tint: rgba(233, 69, 96, 0.08);
+  --color-overlay: rgba(0, 0, 0, 0.6);
+  --color-overlay-heavy: rgba(0, 0, 0, 0.85);
+  --color-separator: rgba(255, 255, 255, 0.12);
+  --color-rank-gold: #ffd700;
+  --color-rank-silver: #c0c0c0;
+  --color-rank-bronze: #cd7f32;
+
   /* Spacing */
   --space-xs: 4px;
   --space-sm: 8px;
@@ -59,4 +71,15 @@
   --color-danger: #d63851;
   --color-warning: #c98800;
   --color-success: #0fa87f;
+
+  --color-danger-tint: rgba(214, 56, 81, 0.1);
+  --color-success-tint: rgba(15, 168, 127, 0.12);
+  --color-warning-tint: rgba(201, 136, 0, 0.1);
+  --color-primary-tint: rgba(214, 56, 81, 0.08);
+  --color-overlay: rgba(0, 0, 0, 0.4);
+  --color-overlay-heavy: rgba(0, 0, 0, 0.7);
+  --color-separator: rgba(0, 0, 0, 0.08);
+  --color-rank-gold: #b8960c;
+  --color-rank-silver: #757575;
+  --color-rank-bronze: #8b5e20;
 }
