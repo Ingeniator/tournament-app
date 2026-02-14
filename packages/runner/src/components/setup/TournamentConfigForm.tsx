@@ -1,6 +1,6 @@
 import type { TournamentConfig, TournamentFormat, Court } from '@padel/common';
 import { Button, generateId } from '@padel/common';
-import { resolveConfigDefaults } from '../../utils/resolveConfigDefaults';
+import { resolveConfigDefaults, computeSitOutInfo } from '../../utils/resolveConfigDefaults';
 import styles from './TournamentConfigForm.module.css';
 
 const MINUTES_PER_POINT = 0.5;
@@ -44,6 +44,9 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
   const playersPerRound = Math.min(config.courts.length * 4, playerCount);
   const minRoundsForAll = playersPerRound > 0 ? Math.ceil(playerCount / playersPerRound) : 0;
   const somePlayersExcluded = playersPerRound < playerCount && effectiveRounds < minRoundsForAll;
+
+  // Check if sit-outs are distributed equally
+  const sitOutInfo = computeSitOutInfo(playerCount, config.courts.length, effectiveRounds);
 
   const addCourt = () => {
     if (config.courts.length >= maxCourts) return;
@@ -175,6 +178,23 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
               <><strong>{suggestedPoints} points</strong> per match or </>
             )}
             <strong>{suggestedRounds} rounds</strong>.
+          </div>
+        </div>
+      )}
+
+      {!sitOutInfo.isEqual && sitOutInfo.sitOutsPerRound > 0 && (
+        <div className={styles.warning}>
+          <div className={styles.warningTitle}>Unequal sit-outs</div>
+          <div className={styles.warningBody}>
+            With {effectiveRounds} rounds, {sitOutInfo.sitOutsPerRound} player(s) sit out each round
+            — sit-outs cannot be split equally across {playerCount} players.
+            {sitOutInfo.nearestFairBelow && sitOutInfo.nearestFairAbove && sitOutInfo.nearestFairBelow !== sitOutInfo.nearestFairAbove ? (
+              <> Try <strong>{sitOutInfo.nearestFairBelow}</strong> or <strong>{sitOutInfo.nearestFairAbove} rounds</strong> for equal sit-outs.</>
+            ) : sitOutInfo.nearestFairAbove ? (
+              <> Try <strong>{sitOutInfo.nearestFairAbove} rounds</strong> for equal sit-outs.</>
+            ) : sitOutInfo.nearestFairBelow ? (
+              <> Try <strong>{sitOutInfo.nearestFairBelow} rounds</strong> for equal sit-outs.</>
+            ) : null}
           </div>
         </div>
       )}
