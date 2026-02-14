@@ -280,16 +280,24 @@ export function PlayScreen() {
                 return (
                   <div key={match.id} className={styles.compactMatch}>
                     <span className={styles.compactCourt}>{courtName}</span>
-                    <span className={styles.compactTeams}>
-                      {name(match.team1[0])} & {name(match.team1[1])}
+                    <div className={styles.compactTeamLine}>
+                      <span className={styles.compactPlayerName}>{name(match.team1[0])}</span>
+                      <span className={styles.compactAmp}>&amp;</span>
+                      <span className={styles.compactPlayerName}>{name(match.team1[1])}</span>
+                    </div>
+                    <div className={styles.compactVsRow}>
                       <span className={styles.previewVs}>{t('play.vs')}</span>
-                      {name(match.team2[0])} & {name(match.team2[1])}
-                    </span>
-                    {match.score && (
-                      <span className={styles.compactScore}>
-                        {match.score.team1Points}:{match.score.team2Points}
-                      </span>
-                    )}
+                      {match.score && (
+                        <span className={styles.compactScore}>
+                          {match.score.team1Points}:{match.score.team2Points}
+                        </span>
+                      )}
+                    </div>
+                    <div className={styles.compactTeamLine}>
+                      <span className={styles.compactPlayerName}>{name(match.team2[0])}</span>
+                      <span className={styles.compactAmp}>&amp;</span>
+                      <span className={styles.compactPlayerName}>{name(match.team2[1])}</span>
+                    </div>
                   </div>
                 );
               })}
@@ -308,11 +316,19 @@ export function PlayScreen() {
                 return (
                   <div key={match.id} className={styles.compactMatch}>
                     <span className={styles.compactCourt}>{courtName}</span>
-                    <span className={styles.compactTeams}>
-                      {name(match.team1[0])} & {name(match.team1[1])}
+                    <div className={styles.compactTeamLine}>
+                      <span className={styles.compactPlayerName}>{name(match.team1[0])}</span>
+                      <span className={styles.compactAmp}>&amp;</span>
+                      <span className={styles.compactPlayerName}>{name(match.team1[1])}</span>
+                    </div>
+                    <div className={styles.compactVsRow}>
                       <span className={styles.previewVs}>{t('play.vs')}</span>
-                      {name(match.team2[0])} & {name(match.team2[1])}
-                    </span>
+                    </div>
+                    <div className={styles.compactTeamLine}>
+                      <span className={styles.compactPlayerName}>{name(match.team2[0])}</span>
+                      <span className={styles.compactAmp}>&amp;</span>
+                      <span className={styles.compactPlayerName}>{name(match.team2[1])}</span>
+                    </div>
                   </div>
                 );
               })}
