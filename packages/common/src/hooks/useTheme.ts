@@ -44,7 +44,7 @@ export const THEME_SKINS: ThemeSkin[] = [
   { id: 'nature',          name: 'Nature',          mode: 'light', preview: { bg: '#f8f5f0', surface: '#f0e9e0', accent: '#2e7d32' } },
 ];
 
-export const DEFAULT_SKIN: SkinId = 'midnight';
+export const DEFAULT_SKIN: SkinId = 'claude';
 
 const VALID_SKINS = new Set<string>(THEME_SKINS.map(s => s.id));
 
