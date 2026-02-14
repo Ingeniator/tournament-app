@@ -6,17 +6,17 @@
   overflow: hidden;
 }
 
-/* Court — 2-col grid: team1 left, team2 right, score spanning center row */
+/* Court — 3-col grid: teammate & teammate per row, score as net between teams */
 .court {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr auto 1fr;
   grid-template-rows: 1fr auto 1fr;
   padding-bottom: 6px;
 }
 
-/* Player cells — four corners of the court */
+/* Player cells */
 .playerCell {
-  padding: 12px 20px;
+  padding: 12px 16px;
   font-size: var(--text-sm);
   font-weight: 500;
   color: var(--color-text);
@@ -33,56 +33,55 @@
   text-overflow: ellipsis;
 }
 
-.topLeft {
+/* Team 1 — top row */
+.team1Left {
   grid-column: 1;
   grid-row: 1;
   justify-content: flex-start;
-  border-right: 2px solid var(--color-separator);
 }
 
-.topRight {
-  grid-column: 2;
+.team1Right {
+  grid-column: 3;
   grid-row: 1;
   justify-content: flex-end;
   text-align: right;
 }
 
-.bottomLeft {
+/* Team 2 — bottom row */
+.team2Left {
   grid-column: 1;
   grid-row: 3;
   justify-content: flex-start;
-  border-right: 2px solid var(--color-separator);
 }
 
-.bottomRight {
-  grid-column: 2;
+.team2Right {
+  grid-column: 3;
   grid-row: 3;
   justify-content: flex-end;
   text-align: right;
 }
 
-
-/* Team connectors — & signs on the score row, one per column */
-.teamConnectorLeft,
-.teamConnectorRight {
-  grid-row: 2;
+/* Team connector — & between teammates */
+.teamConnector {
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--color-text-muted);
   font-size: var(--text-xs);
-  pointer-events: none;
+  padding: 0 2px;
 }
 
-.teamConnectorLeft {
-  grid-column: 1;
-}
-
-.teamConnectorRight {
+.connectorTop {
   grid-column: 2;
+  grid-row: 1;
 }
 
-/* Score center — readOnly, spans full width on the net row */
+.connectorBottom {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+/* Score center — spans full width as the net */
 .scoreCenter {
   grid-column: 1 / -1;
   grid-row: 2;
@@ -91,39 +90,35 @@
   justify-content: center;
   gap: var(--space-xs);
   padding: var(--space-xs) 0;
+  border-top: 1px dashed var(--color-separator);
+  border-bottom: 1px dashed var(--color-separator);
 }
 
-/* Hide net line when picker is open */
-.court:has([data-picking]) .topLeft,
-.court:has([data-picking]) .bottomLeft {
-  border-right-color: transparent;
-}
-
-/* Highlight active team side — full-side overlay via grid placement */
+/* Highlight active team — full-row overlay via grid placement */
 .court:has([data-picking="team1"])::before {
   content: '';
-  grid-column: 1;
-  grid-row: 1 / 4;
+  grid-column: 1 / -1;
+  grid-row: 1;
   background-color: var(--color-danger-tint);
   pointer-events: none;
 }
 
 .court:has([data-picking="team2"])::after {
   content: '';
-  grid-column: 2;
-  grid-row: 1 / 4;
+  grid-column: 1 / -1;
+  grid-row: 3;
   background-color: var(--color-danger-tint);
   pointer-events: none;
 }
 
-.court:has([data-picking="team1"]) .topLeft,
-.court:has([data-picking="team1"]) .bottomLeft {
+.court:has([data-picking="team1"]) .team1Left,
+.court:has([data-picking="team1"]) .team1Right {
   color: var(--color-primary);
   font-weight: 700;
 }
 
-.court:has([data-picking="team2"]) .topRight,
-.court:has([data-picking="team2"]) .bottomRight {
+.court:has([data-picking="team2"]) .team2Left,
+.court:has([data-picking="team2"]) .team2Right {
   color: var(--color-primary);
   font-weight: 700;
 }
