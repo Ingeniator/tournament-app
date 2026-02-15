@@ -130,7 +130,7 @@ export function OrganizerScreen() {
   };
 
   // Determine which settings groups have values (for auto-collapse)
-  const hasWhenWhere = !!(tournament.date || tournament.place || tournament.duration);
+  const hasWhenWhere = !!(tournament.date || tournament.place);
   const hasFormatCourts = tournament.courts.length > 1 || (tournament.extraSpots ?? 0) > 0;
   const hasDetails = !!(tournament.chatLink || tournament.description);
 
