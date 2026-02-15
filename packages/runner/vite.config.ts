@@ -14,6 +14,8 @@ export default defineConfig({
         name: 'Tournament Manager',
         short_name: 'TM',
         description: 'Organize tournaments at the court',
+        start_url: '/play',
+        scope: '/play',
         theme_color: '#1a1a2e',
         background_color: '#1a1a2e',
         display: 'standalone',
