@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, type ClipboardEvent } from 'react';
+import { useState, useMemo, useRef, type ClipboardEvent, type ReactNode } from 'react';
 import { ref, push, set } from 'firebase/database';
 import { Button, Card, FeedbackModal, AppFooter, Toast, useToast, useTranslation } from '@padel/common';
 import type { TournamentFormat, Court } from '@padel/common';
@@ -8,6 +8,27 @@ import { db } from '../firebase';
 import { launchInRunner, buildRunnerTournament } from '../utils/exportToRunner';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import styles from './OrganizerScreen.module.css';
+
+function CollapsibleSection({ title, summary, defaultOpen, children }: {
+  title: string;
+  summary?: string;
+  defaultOpen: boolean;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className={styles.collapsible}>
+      <div className={styles.collapsibleHeader} onClick={() => setOpen(v => !v)}>
+        <div>
+          <div className={styles.collapsibleTitle}>{title}</div>
+          {!open && summary && <div className={styles.collapsibleSummary}>{summary}</div>}
+        </div>
+        <span className={`${styles.chevron} ${open ? styles.chevronOpen : ''}`}>&#x25BC;</span>
+      </div>
+      {open && <div className={styles.collapsibleBody}>{children}</div>}
+    </div>
+  );
+}
 
 export function OrganizerScreen() {
   const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, deleteTournament } = usePlanner();
@@ -108,6 +129,38 @@ export function OrganizerScreen() {
     setScreen('home');
   };
 
+  // Determine which settings groups have values (for auto-collapse)
+  const hasWhenWhere = !!(tournament.date || tournament.place || tournament.duration);
+  const hasFormatCourts = tournament.courts.length > 1 || (tournament.extraSpots ?? 0) > 0;
+  const hasDetails = !!(tournament.chatLink || tournament.description);
+
+  // Build summaries for collapsed state
+  const whenWhereParts: string[] = [];
+  if (tournament.date) {
+    const datePart = tournament.date.split('T')[0];
+    const timePart = tournament.date.split('T')[1];
+    if (datePart) whenWhereParts.push(datePart);
+    if (timePart) whenWhereParts.push(timePart);
+  }
+  if (tournament.duration) whenWhereParts.push(`${tournament.duration} min`);
+  if (tournament.place) whenWhereParts.push(tournament.place);
+  const whenWhereSummary = whenWhereParts.join(' \u00b7 ');
+
+  const formatLabel = tournament.format === 'americano' ? t('organizer.formatAmericano')
+    : tournament.format === 'team-americano' ? t('organizer.formatTeamAmericano')
+    : t('organizer.formatMexicano');
+  const formatCourtsSummary = `${formatLabel} \u00b7 ${t('organizer.courts', { count: tournament.courts.length })}`;
+
+  const detailsParts: string[] = [];
+  if (tournament.chatLink) detailsParts.push(t('organizer.groupChat'));
+  if (tournament.description) {
+    const desc = tournament.description.length > 30
+      ? tournament.description.slice(0, 30) + '...'
+      : tournament.description;
+    detailsParts.push(desc);
+  }
+  const detailsSummary = detailsParts.join(' \u00b7 ');
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -141,6 +194,176 @@ export function OrganizerScreen() {
       {userName && (
         <span className={styles.organizerLabel}>{t('organizer.by', { name: userName })}</span>
       )}
+
+      {/* Settings groups — at the top */}
+      <CollapsibleSection
+        title={t('organizer.whenWhere')}
+        summary={whenWhereSummary}
+        defaultOpen={!hasWhenWhere}
+      >
+        <div className={styles.configGrid}>
+          <label className={styles.configLabel}>{t('organizer.date')}</label>
+          <input
+            className={styles.configInput}
+            type="date"
+            value={tournament.date?.split('T')[0] ?? ''}
+            onChange={e => {
+              const date = e.target.value;
+              if (!date) { updateTournament({ date: undefined }); return; }
+              const time = tournament.date?.split('T')[1] ?? '12:00';
+              updateTournament({ date: `${date}T${time}` });
+            }}
+          />
+
+          <label className={styles.configLabel}>{t('organizer.time')}</label>
+          <input
+            className={styles.configInput}
+            type="time"
+            value={tournament.date?.split('T')[1] ?? ''}
+            onChange={e => {
+              const time = e.target.value;
+              const date = tournament.date?.split('T')[0] ?? '';
+              if (!date) return;
+              updateTournament({ date: time ? `${date}T${time}` : `${date}T12:00` });
+            }}
+          />
+
+          <label className={styles.configLabel}>{t('organizer.durationMin')}</label>
+          <input
+            className={styles.configInput}
+            type="number"
+            value={tournament.duration ?? ''}
+            onChange={e => {
+              const v = e.target.value === '' ? undefined : parseInt(e.target.value, 10);
+              updateTournament({ duration: v && v > 0 ? v : undefined });
+            }}
+            min={1}
+            placeholder={t('organizer.durationPlaceholder')}
+          />
+
+          <label className={styles.configLabel}>{t('organizer.place')}</label>
+          <input
+            className={styles.configInput}
+            type="text"
+            value={tournament.place ?? ''}
+            onChange={e => updateTournament({ place: e.target.value || undefined })}
+            placeholder={t('organizer.placePlaceholder')}
+          />
+        </div>
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title={t('organizer.formatAndCourts')}
+        summary={formatCourtsSummary}
+        defaultOpen={!hasFormatCourts}
+      >
+        <div className={styles.configGrid}>
+          <label className={styles.configLabel}>
+            {t('organizer.format')}
+            <button
+              className={styles.infoBtn}
+              onClick={(e) => { e.stopPropagation(); setShowFormatInfo(v => !v); }}
+              type="button"
+              aria-label={t('organizer.formatInfo')}
+            >
+              i
+            </button>
+          </label>
+          <select
+            className={styles.select}
+            value={tournament.format}
+            onChange={e => handleFormatChange(e.target.value as TournamentFormat)}
+          >
+            <option value="americano">{t('organizer.formatAmericano')}</option>
+            <option value="team-americano">{t('organizer.formatTeamAmericano')}</option>
+            <option value="mexicano">{t('organizer.formatMexicano')}</option>
+          </select>
+          {showFormatInfo && (
+            <div className={styles.formatInfo}>
+              <p><strong>{t('organizer.americanoDesc')}</strong></p>
+              <p><strong>{t('organizer.teamAmericanoDesc')}</strong></p>
+              <p><strong>{t('organizer.mexicanoDesc')}</strong></p>
+            </div>
+          )}
+        </div>
+
+        <div className={styles.courtsSection}>
+          <div className={styles.courtsHeader}>
+            <span>{t('organizer.courts', { count: tournament.courts.length })}</span>
+            <Button variant="ghost" size="small" onClick={handleAddCourt}>{t('organizer.addCourt')}</Button>
+          </div>
+          {tournament.courts.map(court => (
+            <div key={court.id} className={styles.courtItem}>
+              <input
+                className={styles.courtNameInput}
+                value={court.name}
+                onChange={e => {
+                  const courts = tournament.courts.map(c =>
+                    c.id === court.id ? { ...c, name: e.target.value } : c
+                  );
+                  updateTournament({ courts });
+                }}
+              />
+              {tournament.courts.length > 1 && (
+                <button
+                  className={styles.removeBtn}
+                  onClick={() => handleRemoveCourt(court.id)}
+                >
+                  &times;
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className={styles.capacitySection}>
+          <label className={styles.configLabel}>{t('organizer.extraSpots')}</label>
+          <input
+            className={styles.configInput}
+            type="number"
+            value={tournament.extraSpots || ''}
+            onChange={e => {
+              const v = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
+              updateTournament({ extraSpots: isNaN(v) ? 0 : Math.max(0, v) });
+            }}
+            min={0}
+            placeholder="0"
+          />
+          <span className={styles.capacityTotal}>
+            {t('organizer.totalSpots', {
+              total: tournament.courts.length * 4 + (tournament.extraSpots ?? 0),
+              courts: tournament.courts.length,
+              extra: (tournament.extraSpots ?? 0) > 0 ? t('organizer.extraSuffix', { count: tournament.extraSpots ?? 0 }) : '',
+            })}
+          </span>
+        </div>
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title={t('organizer.details')}
+        summary={detailsSummary}
+        defaultOpen={!hasDetails}
+      >
+        <div className={styles.configGrid}>
+          <label className={styles.configLabel}>{t('organizer.groupChat')}</label>
+          <input
+            className={styles.configInput}
+            type="url"
+            value={tournament.chatLink ?? ''}
+            onChange={e => updateTournament({ chatLink: e.target.value || undefined })}
+            placeholder={t('organizer.groupChatPlaceholder')}
+          />
+
+          <label className={styles.configLabel}>{t('organizer.description')}</label>
+          <textarea
+            className={styles.configTextarea}
+            value={tournament.description ?? ''}
+            onChange={e => updateTournament({ description: e.target.value || undefined })}
+            placeholder={t('organizer.descriptionPlaceholder')}
+            rows={3}
+          />
+        </div>
+      </CollapsibleSection>
 
       {/* Share section */}
       <Card>
@@ -250,158 +473,6 @@ export function OrganizerScreen() {
           >
             {t('organizer.addPlayer')}
           </Button>
-        </div>
-      </Card>
-
-      {/* Config section */}
-      <Card>
-        <h2 className={styles.sectionTitle}>{t('organizer.settings')}</h2>
-        <div className={styles.configGrid}>
-          <label className={styles.configLabel}>{t('organizer.date')}</label>
-          <input
-            className={styles.configInput}
-            type="date"
-            value={tournament.date?.split('T')[0] ?? ''}
-            onChange={e => {
-              const date = e.target.value;
-              if (!date) { updateTournament({ date: undefined }); return; }
-              const time = tournament.date?.split('T')[1] ?? '12:00';
-              updateTournament({ date: `${date}T${time}` });
-            }}
-          />
-
-          <label className={styles.configLabel}>{t('organizer.time')}</label>
-          <input
-            className={styles.configInput}
-            type="time"
-            value={tournament.date?.split('T')[1] ?? ''}
-            onChange={e => {
-              const time = e.target.value;
-              const date = tournament.date?.split('T')[0] ?? '';
-              if (!date) return;
-              updateTournament({ date: time ? `${date}T${time}` : `${date}T12:00` });
-            }}
-          />
-
-          <label className={styles.configLabel}>{t('organizer.durationMin')}</label>
-          <input
-            className={styles.configInput}
-            type="number"
-            value={tournament.duration ?? ''}
-            onChange={e => {
-              const v = e.target.value === '' ? undefined : parseInt(e.target.value, 10);
-              updateTournament({ duration: v && v > 0 ? v : undefined });
-            }}
-            min={1}
-            placeholder={t('organizer.durationPlaceholder')}
-          />
-
-          <label className={styles.configLabel}>{t('organizer.place')}</label>
-          <input
-            className={styles.configInput}
-            type="text"
-            value={tournament.place ?? ''}
-            onChange={e => updateTournament({ place: e.target.value || undefined })}
-            placeholder={t('organizer.placePlaceholder')}
-          />
-
-          <label className={styles.configLabel}>{t('organizer.groupChat')}</label>
-          <input
-            className={styles.configInput}
-            type="url"
-            value={tournament.chatLink ?? ''}
-            onChange={e => updateTournament({ chatLink: e.target.value || undefined })}
-            placeholder={t('organizer.groupChatPlaceholder')}
-          />
-
-          <label className={styles.configLabel}>{t('organizer.description')}</label>
-          <textarea
-            className={styles.configTextarea}
-            value={tournament.description ?? ''}
-            onChange={e => updateTournament({ description: e.target.value || undefined })}
-            placeholder={t('organizer.descriptionPlaceholder')}
-            rows={3}
-          />
-
-          <label className={styles.configLabel}>
-            {t('organizer.format')}
-            <button
-              className={styles.infoBtn}
-              onClick={() => setShowFormatInfo(v => !v)}
-              type="button"
-              aria-label={t('organizer.formatInfo')}
-            >
-              i
-            </button>
-          </label>
-          <select
-            className={styles.select}
-            value={tournament.format}
-            onChange={e => handleFormatChange(e.target.value as TournamentFormat)}
-          >
-            <option value="americano">{t('organizer.formatAmericano')}</option>
-            <option value="team-americano">{t('organizer.formatTeamAmericano')}</option>
-            <option value="mexicano">{t('organizer.formatMexicano')}</option>
-          </select>
-          {showFormatInfo && (
-            <div className={styles.formatInfo}>
-              <p><strong>{t('organizer.americanoDesc')}</strong></p>
-              <p><strong>{t('organizer.teamAmericanoDesc')}</strong></p>
-              <p><strong>{t('organizer.mexicanoDesc')}</strong></p>
-            </div>
-          )}
-
-        </div>
-
-        <div className={styles.courtsSection}>
-          <div className={styles.courtsHeader}>
-            <span>{t('organizer.courts', { count: tournament.courts.length })}</span>
-            <Button variant="ghost" size="small" onClick={handleAddCourt}>{t('organizer.addCourt')}</Button>
-          </div>
-          {tournament.courts.map(court => (
-            <div key={court.id} className={styles.courtItem}>
-              <input
-                className={styles.courtNameInput}
-                value={court.name}
-                onChange={e => {
-                  const courts = tournament.courts.map(c =>
-                    c.id === court.id ? { ...c, name: e.target.value } : c
-                  );
-                  updateTournament({ courts });
-                }}
-              />
-              {tournament.courts.length > 1 && (
-                <button
-                  className={styles.removeBtn}
-                  onClick={() => handleRemoveCourt(court.id)}
-                >
-                  &times;
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className={styles.capacitySection}>
-          <label className={styles.configLabel}>{t('organizer.extraSpots')}</label>
-          <input
-            className={styles.configInput}
-            type="number"
-            value={tournament.extraSpots || ''}
-            onChange={e => {
-              const v = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
-              updateTournament({ extraSpots: isNaN(v) ? 0 : Math.max(0, v) });
-            }}
-            min={0}
-            placeholder="0"
-          />
-          <span className={styles.capacityTotal}>
-            {t('organizer.totalSpots', {
-              total: tournament.courts.length * 4 + (tournament.extraSpots ?? 0),
-              courts: tournament.courts.length,
-              extra: (tournament.extraSpots ?? 0) > 0 ? t('organizer.extraSuffix', { count: tournament.extraSpots ?? 0 }) : '',
-            })}
-          </span>
         </div>
       </Card>
 
