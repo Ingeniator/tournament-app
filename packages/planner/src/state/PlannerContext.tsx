@@ -12,7 +12,7 @@ import { useRegisteredTournaments } from '../hooks/useRegisteredTournaments';
 import { useTelegram, type TelegramUser } from '../hooks/useTelegram';
 import { useTelegramSync } from '../hooks/useTelegramSync';
 
-export type Screen = 'loading' | 'home' | 'organizer' | 'join';
+export type Screen = 'loading' | 'home' | 'organizer' | 'join' | 'supporters';
 
 export interface PlannerContextValue {
   uid: string | null;
@@ -25,7 +25,7 @@ export interface PlannerContextValue {
   setScreen: (screen: Screen) => void;
   createTournament: (name: string) => Promise<void>;
   loadByCode: (code: string) => Promise<boolean>;
-  updateTournament: (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'courts' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description'>>) => Promise<void>;
+  updateTournament: (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'pointsPerMatch' | 'courts' | 'maxRounds' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description'>>) => Promise<void>;
   registerPlayer: (name: string) => Promise<void>;
   removePlayer: (playerId: string) => Promise<void>;
   updateConfirmed: (confirmed: boolean) => Promise<void>;
@@ -48,6 +48,12 @@ export interface PlannerContextValue {
   setSkin: (skin: SkinId) => void;
 }
 
+const PlannerCtx = createContext<PlannerContextValue>(null!);
+
+export function usePlanner() {
+  return useContext(PlannerCtx);
+}
+
 const SKIN_KEY = 'padel-skin';
 
 function loadLocalSkin(): SkinId {
@@ -61,12 +67,6 @@ function loadLocalSkin(): SkinId {
 }
 
 const initialSkin = loadLocalSkin();
-
-const PlannerCtx = createContext<PlannerContextValue>(null!);
-
-export function usePlanner() {
-  return useContext(PlannerCtx);
-}
 
 export function PlannerProvider({ children }: { children: ReactNode }) {
   const { uid, loading: authLoading, authError } = useAuth();
@@ -159,7 +159,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     return false;
   }, [loadByCodeFromDb]);
 
-  const updateTournament = useCallback(async (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'courts' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description'>>) => {
+  const updateTournament = useCallback(async (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'pointsPerMatch' | 'courts' | 'maxRounds' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description'>>) => {
     await updateInDb(updates);
   }, [updateInDb]);
 
