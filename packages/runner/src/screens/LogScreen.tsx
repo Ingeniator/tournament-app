@@ -87,7 +87,7 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
 
     // Early stop when all quality gates are green
     const isAllGreen = (s: [number, number, number, number]) =>
-      s[0] <= idealRepeats && s[1] <= 1 && s[2] <= idealNeverPlayed;
+      s[0] <= idealRepeats && s[1] <= 2 && s[2] <= idealNeverPlayed;
 
     // Score current schedule as baseline
     const currentUnscored = tournament.rounds.filter(r => r.matches.every(m => !m.score));
