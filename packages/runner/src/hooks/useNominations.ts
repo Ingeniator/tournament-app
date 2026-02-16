@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import type { Tournament, StandingsEntry, Competitor } from '@padel/common';
 import { getStrategy } from '../strategies';
 
+export type AwardTier = 'common' | 'rare' | 'legendary';
+
 export interface Nomination {
   id: string;
   title: string;
@@ -9,7 +11,39 @@ export interface Nomination {
   description: string;
   playerNames: string[];
   stat: string;
+  tier?: AwardTier;
 }
+
+/**
+ * Tier assignments for non-podium awards.
+ * - legendary: very hard to achieve or rare tournament conditions
+ * - rare: moderately unusual statistical achievements
+ * - common: straightforward stats that appear most tournaments
+ */
+const AWARD_TIERS: Record<string, AwardTier> = {
+  'undefeated': 'legendary',
+  'giant-slayer': 'legendary',
+  'comeback-king': 'legendary',
+  'nemesis': 'legendary',
+  'dominator': 'rare',
+  'clutch-player': 'rare',
+  'iron-wall': 'rare',
+  'consistency-champion': 'rare',
+  'gatekeeper': 'rare',
+  'best-duo': 'rare',
+  'hot-streak-duo': 'rare',
+  'nearly-there': 'rare',
+  'point-machine': 'common',
+  'quick-strike': 'common',
+  'see-saw': 'common',
+  'competitive-game': 'common',
+  'battle-tested': 'common',
+  'warrior': 'common',
+  'offensive-powerhouse': 'common',
+  'offensive-duo': 'common',
+  'wall-pair': 'common',
+  'rubber-match': 'common',
+};
 
 interface PlayerMatchInfo {
   roundNumber: number;
@@ -765,8 +799,12 @@ export function useNominations(
       });
     }
 
-    // Shuffle awards using seeded PRNG so every qualifying award has a fair
-    // chance of being shown, but results stay stable for a given tournament.
+    // Assign rarity tiers to each award
+    for (const award of awards) {
+      award.tier = AWARD_TIERS[award.id] ?? 'common';
+    }
+
+    // Seeded shuffle helper
     const seededShuffle = <T>(arr: T[], s: number): T[] => {
       const copy = [...arr];
       let h = Math.abs(s) | 1;
@@ -780,9 +818,51 @@ export function useNominations(
       return copy;
     };
 
-    const shuffledAwards = seededShuffle(awards, seed);
+    // Tier-aware weighted selection: separate awards into tier buckets,
+    // shuffle each, then for each slot roll a weighted random tier.
+    // This makes legendary awards appear less often (collectible feel)
+    // while common awards fill most slots.
+    const legendary = seededShuffle(awards.filter(a => a.tier === 'legendary'), seed);
+    const rare = seededShuffle(awards.filter(a => a.tier === 'rare'), seed + 1);
+    const common = seededShuffle(awards.filter(a => a.tier === 'common'), seed + 2);
 
-    // Combine: podium (always) + capped shuffled awards + lucky (always)
-    return [...podium, ...shuffledAwards.slice(0, MAX_AWARDS), ...lucky];
+    const tierQueues = { legendary: [...legendary], rare: [...rare], common: [...common] };
+
+    // Seeded random number generator (0–1 range)
+    let h = Math.abs(seed + 7) | 1;
+    const nextRand = () => {
+      h = Math.imul(h ^ (h >>> 16), 0x45d9f3b);
+      h = Math.imul(h ^ (h >>> 16), 0x45d9f3b);
+      h = h ^ (h >>> 16);
+      return (h >>> 0) / 0x100000000;
+    };
+
+    const pickFromTier = (preferred: AwardTier): Nomination | undefined => {
+      if (tierQueues[preferred].length > 0) return tierQueues[preferred].shift();
+      // Fall back to adjacent tiers
+      const fallback: AwardTier[] =
+        preferred === 'legendary' ? ['rare', 'common'] :
+        preferred === 'rare' ? ['common', 'legendary'] :
+        ['rare', 'legendary'];
+      for (const t of fallback) {
+        if (tierQueues[t].length > 0) return tierQueues[t].shift();
+      }
+      return undefined;
+    };
+
+    const selected: Nomination[] = [];
+    for (let i = 0; i < MAX_AWARDS; i++) {
+      const roll = nextRand();
+      // Weights: 15% legendary, 30% rare, 55% common
+      const tier: AwardTier = roll < 0.15 ? 'legendary' : roll < 0.45 ? 'rare' : 'common';
+      const picked = pickFromTier(tier);
+      if (picked) selected.push(picked);
+    }
+
+    // Final shuffle of selected awards so tiers are interleaved
+    const finalAwards = seededShuffle(selected, seed + 3);
+
+    // Combine: podium (always) + tier-weighted awards + lucky (always)
+    return [...podium, ...finalAwards, ...lucky];
   }, [tournament, standings]);
 }
