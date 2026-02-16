@@ -765,7 +765,24 @@ export function useNominations(
       });
     }
 
-    // Combine: podium (always) + capped awards + lucky (always)
-    return [...podium, ...awards.slice(0, MAX_AWARDS), ...lucky];
+    // Shuffle awards using seeded PRNG so every qualifying award has a fair
+    // chance of being shown, but results stay stable for a given tournament.
+    const seededShuffle = <T>(arr: T[], s: number): T[] => {
+      const copy = [...arr];
+      let h = Math.abs(s) | 1;
+      for (let i = copy.length - 1; i > 0; i--) {
+        h = Math.imul(h ^ (h >>> 16), 0x45d9f3b);
+        h = Math.imul(h ^ (h >>> 16), 0x45d9f3b);
+        h = h ^ (h >>> 16);
+        const j = ((h >>> 0) % (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    };
+
+    const shuffledAwards = seededShuffle(awards, seed);
+
+    // Combine: podium (always) + capped shuffled awards + lucky (always)
+    return [...podium, ...shuffledAwards.slice(0, MAX_AWARDS), ...lucky];
   }, [tournament, standings]);
 }
