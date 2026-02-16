@@ -84,10 +84,11 @@ describe('validateImport', () => {
     expect(result.error).toContain('Unknown format');
   });
 
-  it('rejects missing format field', () => {
+  it('rejects missing format field with no recognisable tournament', () => {
     const json = JSON.stringify({ tournament: {} });
     const result = validateImport(json);
-    expect(result.error).toContain('Unknown format');
+    expect(result.error).not.toBeNull();
+    expect(result.tournament).toBeNull();
   });
 
   it('rejects missing tournament', () => {
@@ -157,6 +158,23 @@ describe('validateImport', () => {
     });
     const result = validateImport(json);
     expect(result.error).toContain('config');
+  });
+
+  it('accepts bare tournament object (planner "Copy for device" format)', () => {
+    const tournament = makeTournament();
+    const json = JSON.stringify(tournament, null, 2);
+    const result = validateImport(json);
+    expect(result.error).toBeNull();
+    expect(result.tournament).not.toBeNull();
+    expect(result.tournament!.id).toBe('t1');
+    expect(result.tournament!.name).toBe('Test Tournament');
+  });
+
+  it('rejects bare object missing required fields', () => {
+    const json = JSON.stringify({ id: 't1', name: 'T' });
+    const result = validateImport(json);
+    expect(result.error).not.toBeNull();
+    expect(result.tournament).toBeNull();
   });
 
   it('accepts tournament with empty players and rounds', () => {

@@ -3,7 +3,7 @@ import { Button, Card, Toast, useToast, useTranslation } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import { downloadICS } from '../utils/icsExport';
-import { launchInRunner, buildRunnerTournament } from '../utils/exportToRunner';
+import { launchInRunner, exportRunnerJson } from '../utils/exportToRunner';
 import styles from './JoinScreen.module.css';
 
 export function JoinScreen() {
@@ -114,7 +114,7 @@ export function JoinScreen() {
   };
 
   const handleCopyExport = async () => {
-    const json = JSON.stringify(buildRunnerTournament(tournament!, players), null, 2);
+    const json = exportRunnerJson(tournament!, players);
     try {
       await navigator.clipboard.writeText(json);
       showToast(t('join.jsonCopied'));

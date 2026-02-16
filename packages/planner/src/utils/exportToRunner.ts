@@ -4,6 +4,7 @@ import { generateId } from '@padel/common';
 import { getPlayerStatuses } from './playerStatus';
 
 const RUNNER_STORAGE_KEY = 'padel-tournament-v1';
+const EXPORT_FORMAT = 'padel-tournament-v1';
 
 export function buildRunnerTournament(
   plannerTournament: PlannerTournament,
@@ -35,6 +36,14 @@ export function buildRunnerTournament(
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
+}
+
+export function exportRunnerJson(
+  plannerTournament: PlannerTournament,
+  registrations: PlannerRegistration[]
+): string {
+  const tournament = buildRunnerTournament(plannerTournament, registrations);
+  return JSON.stringify({ _format: EXPORT_FORMAT, tournament }, null, 2);
 }
 
 export function launchInRunner(
