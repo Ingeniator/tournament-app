@@ -70,6 +70,7 @@ const pt: Translations = {
   'play.supportCta': 'Gostou de usar? Ajude a manter gratuito.',
   'play.madeWithCare': 'Feito com cuidado',
   'play.sendFeedback': 'Enviar feedback',
+  'play.completedSummary': '{rounds} rondas \u00b7 {points} pts/jogo \u00b7 {players} {entity}',
   'play.longPressHint': 'Pressione longamente uma imagem para guardar',
   'play.copied': 'Copiado!',
   'play.failedCopy': 'Falha ao copiar',

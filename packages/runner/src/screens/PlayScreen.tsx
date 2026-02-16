@@ -9,6 +9,7 @@ import { Carousel } from '../components/carousel/Carousel';
 import { useShareText } from '../hooks/useShareText';
 import { copyToClipboard } from '../utils/clipboard';
 import { shareStandingsImage } from '../utils/standingsImage';
+import { getStrategy } from '../strategies';
 import { ref, push, set } from 'firebase/database';
 import { db, firebaseConfigured } from '../firebase';
 import { Button, FeedbackModal, Modal, SupportOverlay, Toast, useToast, useTranslation } from '@padel/common';
@@ -113,10 +114,20 @@ export function PlayScreen() {
       else showToast(t('play.failedShare'));
     };
 
+    const entityLabel = getStrategy(tournament.config.format).hasFixedPartners ? 'teams' : 'players';
+
     return (
       <div className={styles.container}>
         <div className={styles.completedHeader}>
           <h2 className={styles.completedName}>{tournament.name}</h2>
+          <p className={styles.completedSummary}>
+            {t('play.completedSummary', {
+              rounds: String(tournament.rounds.length),
+              points: String(tournament.config.pointsPerMatch),
+              players: String(standings.length),
+              entity: entityLabel,
+            })}
+          </p>
         </div>
         <Carousel>
           {[

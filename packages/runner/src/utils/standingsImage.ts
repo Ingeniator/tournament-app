@@ -84,8 +84,9 @@ export function renderStandingsImage(
   // Column positions (relative to tableX)
   const colRank = s(12);
   const colName = s(40);
-  const colPts = tableW - s(100);
-  const colWtl = tableW - s(56);
+  const colPts = tableW - s(130);
+  const colGp = tableW - s(102);
+  const colWtl = tableW - s(62);
   const colDiff = tableW - s(14);
 
   // Table header
@@ -98,6 +99,7 @@ export function renderStandingsImage(
   ctx.fillText('PLAYER', tableX + colName, headerY);
   ctx.textAlign = 'right';
   ctx.fillText('PTS', tableX + colPts, headerY);
+  ctx.fillText('GP', tableX + colGp, headerY);
   ctx.textAlign = 'center';
   ctx.fillText('W-T-L', tableX + colWtl, headerY);
   ctx.textAlign = 'right';
@@ -153,6 +155,12 @@ export function renderStandingsImage(
     ctx.font = boldFont;
     ctx.fillStyle = t.primary;
     ctx.fillText(String(entry.totalPoints), tableX + colPts, textY);
+
+    // GP
+    ctx.font = bodyFont;
+    ctx.fillStyle = t.textSecondary;
+    ctx.textAlign = 'right';
+    ctx.fillText(String(entry.matchesPlayed), tableX + colGp, textY);
 
     // W-T-L
     ctx.font = bodyFont;

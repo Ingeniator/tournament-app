@@ -22,7 +22,7 @@ export function StandingsTable({ standings, plannedGames }: StandingsTableProps)
           <th className={styles.rank}>#</th>
           <th>{t('standings.name')}</th>
           <th className={`${styles.right} ${styles.numCol}`}>{t('standings.pts')}</th>
-          {plannedGames && <th className={`${styles.right} ${styles.numCol}`}>{t('standings.gp')}</th>}
+          <th className={`${styles.right} ${styles.numCol}`}>{t('standings.gp')}</th>
           <th className={`${styles.right} ${styles.wtlCol}`}>{t('standings.wtl')}</th>
           <th className={`${styles.right} ${styles.diff}`}>{t('standings.diff')}</th>
         </tr>
@@ -50,12 +50,10 @@ export function StandingsTable({ standings, plannedGames }: StandingsTableProps)
               <td className={`${styles.rank} ${rankClass}`}>{entry.rank}</td>
               <td className={styles.name}>{entry.playerName}</td>
               <td className={`${styles.right} ${styles.points}`}>{entry.totalPoints}</td>
-              {plannedGames && (
-                <td className={`${styles.right} ${styles.gamesCol} ${planned === 0 ? styles.noPlanned : ''}`}>
-                  {entry.matchesPlayed}
-                  <span className={styles.plannedPart}>+{planned}</span>
-                </td>
-              )}
+              <td className={`${styles.right} ${styles.gamesCol} ${plannedGames && planned === 0 ? styles.noPlanned : ''}`}>
+                {entry.matchesPlayed}
+                {planned > 0 && <span className={styles.plannedPart}>+{planned}</span>}
+              </td>
               <td className={styles.right}>{entry.matchesWon}-{entry.matchesDraw}-{entry.matchesLost}</td>
               <td className={`${styles.right} ${styles.diff} ${diffClass}`}>
                 {entry.pointDiff > 0 ? '+' : ''}

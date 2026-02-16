@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { tournamentReducer } from './tournamentReducer';
-import type { Tournament, TournamentConfig, Player } from '@padel/common';
+import { getStrategy } from '../strategies';
+import type { Tournament, TournamentConfig, Player, StandingsEntry } from '@padel/common';
 
 function makeConfig(numCourts = 1): TournamentConfig {
   return {
@@ -850,6 +851,103 @@ describe('tournamentReducer', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const result = tournamentReducer(state, { type: 'UNKNOWN' } as any);
       expect(result).toBe(state);
+    });
+  });
+
+  describe('standings include all rounds after ADD_ROUNDS beyond planned count', () => {
+    function make10PlayerTournament(): Tournament {
+      const players: Player[] = Array.from({ length: 10 }, (_, i) => ({
+        id: `p${i + 1}`,
+        name: `Player ${i + 1}`,
+      }));
+      const config: TournamentConfig = {
+        format: 'americano',
+        pointsPerMatch: 24,
+        courts: [
+          { id: 'c1', name: 'Court 1' },
+          { id: 'c2', name: 'Court 2' },
+        ],
+        maxRounds: 10,
+      };
+      const setup: Tournament = {
+        id: 't1', name: 'Test', config, phase: 'setup',
+        players, rounds: [], createdAt: 0, updatedAt: 0,
+      };
+      return tournamentReducer(setup, { type: 'GENERATE_SCHEDULE' })!;
+    }
+
+    function scoreAllMatches(state: Tournament): Tournament {
+      for (const round of state.rounds) {
+        for (const match of round.matches) {
+          if (match.score) continue;
+          state = tournamentReducer(state, {
+            type: 'SET_MATCH_SCORE',
+            payload: {
+              roundId: round.id,
+              matchId: match.id,
+              score: { team1Points: 14, team2Points: 10 },
+            },
+          })!;
+        }
+      }
+      return state;
+    }
+
+    it('standings reflect all 13 rounds after adding 3 beyond the original 10', () => {
+      let state = make10PlayerTournament();
+      expect(state.rounds.length).toBe(10);
+
+      // Score all 10 initial rounds
+      state = scoreAllMatches(state);
+
+      // Add 3 more rounds
+      state = tournamentReducer(state, { type: 'ADD_ROUNDS', payload: { count: 1 } })!;
+      state = tournamentReducer(state, { type: 'ADD_ROUNDS', payload: { count: 1 } })!;
+      state = tournamentReducer(state, { type: 'ADD_ROUNDS', payload: { count: 1 } })!;
+      expect(state.rounds.length).toBe(13);
+
+      // Score rounds 11-13
+      state = scoreAllMatches(state);
+
+      // Complete tournament
+      state = tournamentReducer(state, { type: 'COMPLETE_TOURNAMENT' })!;
+      expect(state.phase).toBe('completed');
+      expect(state.rounds.length).toBe(13);
+
+      // Calculate standings
+      const strategy = getStrategy(state.config.format);
+      const standings: StandingsEntry[] = strategy.calculateStandings(state);
+
+      // Total matchesPlayed across all players should reflect all 13 rounds
+      // With 10 players and 2 courts: 8 play per round, so 8 * 13 = 104 total player-matches
+      const totalMatchesPlayed = standings.reduce(
+        (sum, s) => sum + s.matchesPlayed, 0,
+      );
+      // Each round has 2 matches × 4 players = 8 player-matches
+      // 13 rounds × 8 = 104
+      expect(totalMatchesPlayed).toBe(13 * 8);
+
+      // Each player should have played more than 10 matches worth of W+T+L
+      // (some will have sit-outs, but total across all players must include added rounds)
+      for (const entry of standings) {
+        const played = entry.matchesWon + entry.matchesDraw + entry.matchesLost;
+        expect(played).toBe(entry.matchesPlayed);
+        // Each player should have played at least 8 matches
+        // (minimum with 2 sit-outs per round × 13 rounds = 26 total sit-outs,
+        //  26/10 ≈ 2.6, so worst case player sits out 4 times → plays 9)
+        expect(played).toBeGreaterThanOrEqual(8);
+      }
+
+      // Verify total points include sit-out compensation for all 13 rounds
+      // Total points scored in matches: each match is 24 pts, 2 matches per round, 13 rounds
+      const totalMatchPoints = 13 * 2 * 24; // 624
+      // Sit-out compensation: 2 players per round × 13 rounds = 26 sit-outs
+      // Average points per match ≈ 12, so compensation ≈ 26 * 12 = 312
+      // Total standings points should be > 624 (match points + sit-out compensation)
+      const totalStandingsPoints = standings.reduce(
+        (sum, s) => sum + s.totalPoints, 0,
+      );
+      expect(totalStandingsPoints).toBeGreaterThan(totalMatchPoints);
     });
   });
 });

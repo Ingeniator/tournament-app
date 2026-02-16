@@ -162,6 +162,12 @@
   font-weight: 700;
 }
 
+.completedSummary {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--space-xs);
+}
+
 .completedStandings {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);

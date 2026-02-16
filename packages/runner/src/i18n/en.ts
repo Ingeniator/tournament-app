@@ -68,6 +68,7 @@ const en: Translations = {
   'play.supportCta': 'Enjoyed using this? Help keep it free.',
   'play.madeWithCare': 'Made with care',
   'play.sendFeedback': 'Send feedback',
+  'play.completedSummary': '{rounds} rounds \u00b7 {points} pts/match \u00b7 {players} {entity}',
   'play.longPressHint': 'Long-press an image to save',
   'play.copied': 'Copied!',
   'play.failedCopy': 'Failed to copy',
