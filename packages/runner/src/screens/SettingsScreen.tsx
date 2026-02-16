@@ -3,7 +3,7 @@ import { ref, push, set } from 'firebase/database';
 import { useTournament } from '../hooks/useTournament';
 import { EditableField } from '../components/settings/EditableField';
 import { copyToClipboard } from '../utils/clipboard';
-import { exportTournament, validateImport } from '../utils/importExport';
+import { exportTournament, exportTournamentToFile, validateImport } from '../utils/importExport';
 import { db } from '../firebase';
 import { computeSitOutInfo } from '../utils/resolveConfigDefaults';
 import { Button, Card, FeedbackModal, AppFooter, Toast, useToast, useTranslation } from '@padel/common';
@@ -23,8 +23,6 @@ export function SettingsScreen() {
   const [editCourtName, setEditCourtName] = useState('');
   const [replacingCourtId, setReplacingCourtId] = useState<string | null>(null);
   const [replaceCourtName, setReplaceCourtName] = useState('');
-  const [importMode, setImportMode] = useState(false);
-  const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -84,8 +82,12 @@ export function SettingsScreen() {
     showToast(ok ? t('settings.tournamentCopied') : t('settings.failedCopy'));
   };
 
-  const handleImport = () => {
-    const result = validateImport(importText);
+  const handleExportFile = () => {
+    exportTournamentToFile(tournament);
+  };
+
+  const loadImport = (text: string) => {
+    const result = validateImport(text);
     if (result.error || !result.tournament) {
       setImportError(result.error ?? 'Unknown error');
       return;
@@ -94,17 +96,15 @@ export function SettingsScreen() {
       return;
     }
     dispatch({ type: 'LOAD_TOURNAMENT', payload: result.tournament });
-    setImportMode(false);
-    setImportText('');
     setImportError(null);
     showToast(t('settings.tournamentImported'));
   };
 
-  const handleReadClipboard = async () => {
+  const handleImportClipboard = async () => {
+    setImportError(null);
     try {
       const text = await navigator.clipboard.readText();
-      setImportText(text);
-      setImportError(null);
+      loadImport(text);
     } catch {
       setImportError(t('settings.clipboardError'));
     }
@@ -115,8 +115,7 @@ export function SettingsScreen() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      setImportText(reader.result as string);
-      setImportError(null);
+      loadImport(reader.result as string);
     };
     reader.readAsText(file);
     e.target.value = '';
@@ -473,57 +472,24 @@ export function SettingsScreen() {
           <Button variant="secondary" fullWidth onClick={handleCopy}>
             {t('settings.copyData')}
           </Button>
-          <Button
-            variant="secondary"
-            fullWidth
-            onClick={() => {
-              setImportMode(!importMode);
-              setImportError(null);
-              setImportText('');
-            }}
-          >
-            {importMode ? t('settings.cancelImport') : t('settings.importFromClipboard')}
+          <Button variant="secondary" fullWidth onClick={handleExportFile}>
+            {t('settings.exportFile')}
           </Button>
+          <Button variant="secondary" fullWidth onClick={handleImportClipboard}>
+            {t('settings.importFromClipboard')}
+          </Button>
+          <Button variant="secondary" fullWidth onClick={() => fileInputRef.current?.click()}>
+            {t('settings.loadFile')}
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,application/json"
+            onChange={handleFileLoad}
+            className={styles.fileInput}
+          />
         </div>
-
-        {importMode && (
-          <div className={styles.importSection}>
-            <p className={styles.hint}>{t('settings.importHint')}</p>
-            <div className={styles.importActions}>
-              <Button variant="secondary" fullWidth onClick={handleReadClipboard}>
-                {t('settings.readClipboard')}
-              </Button>
-              <Button variant="secondary" fullWidth onClick={() => fileInputRef.current?.click()}>
-                {t('settings.loadFile')}
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".json,application/json"
-                onChange={handleFileLoad}
-                className={styles.fileInput}
-              />
-            </div>
-            <textarea
-              className={styles.importArea}
-              value={importText}
-              onChange={e => {
-                setImportText(e.target.value);
-                setImportError(null);
-              }}
-              placeholder={t('settings.importPlaceholder')}
-              rows={6}
-            />
-            {importError && <div className={styles.error}>{importError}</div>}
-            <Button
-              fullWidth
-              onClick={handleImport}
-              disabled={!importText.trim()}
-            >
-              {t('settings.validateImport')}
-            </Button>
-          </div>
-        )}
+        {importError && <div className={styles.error}>{importError}</div>}
       </Card>
 
       {/* Danger zone */}

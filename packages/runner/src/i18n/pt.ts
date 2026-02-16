@@ -120,6 +120,7 @@ const pt: Translations = {
   'settings.out': 'fora',
   'settings.exportImport': 'Exportar / Importar',
   'settings.copyData': 'Copiar Dados do Torneio',
+  'settings.exportFile': 'Guardar como Ficheiro',
   'settings.cancelImport': 'Cancelar Importação',
   'settings.importFromClipboard': 'Importar da Área de Transferência',
   'settings.importHint': 'Cole os dados exportados do torneio abaixo:',

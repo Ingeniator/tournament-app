@@ -69,42 +69,8 @@
   width: 100%;
 }
 
-.importSection {
-  width: 100%;
-  text-align: left;
-}
-
-.importActions {
-  display: flex;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-sm);
-}
-
 .fileInput {
   display: none;
-}
-
-.importArea {
-  width: 100%;
-  padding: 12px;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  font-size: var(--text-xs);
-  font-family: monospace;
-  color: var(--color-text);
-  resize: vertical;
-  min-height: 120px;
-  margin-bottom: var(--space-sm);
-}
-
-.importArea::placeholder {
-  color: var(--color-text-muted);
-}
-
-.importArea:focus {
-  outline: none;
-  border-color: var(--color-primary);
 }
 
 .importError {

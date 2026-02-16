@@ -118,6 +118,7 @@ const en: Translations = {
   'settings.out': 'out',
   'settings.exportImport': 'Export / Import',
   'settings.copyData': 'Copy Tournament Data',
+  'settings.exportFile': 'Save as File',
   'settings.cancelImport': 'Cancel Import',
   'settings.importFromClipboard': 'Import from Clipboard',
   'settings.importHint': 'Paste exported tournament data below:',
