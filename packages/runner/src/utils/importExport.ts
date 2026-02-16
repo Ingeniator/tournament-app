@@ -7,6 +7,17 @@ export function exportTournament(tournament: Tournament): string {
   return JSON.stringify(data, null, 2);
 }
 
+export function exportTournamentToFile(tournament: Tournament): void {
+  const json = exportTournament(tournament);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${tournament.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function validateImport(text: string): { tournament: Tournament; error: null } | { tournament: null; error: string } {
   let parsed: unknown;
   try {
