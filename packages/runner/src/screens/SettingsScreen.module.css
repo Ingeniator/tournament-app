@@ -193,6 +193,16 @@
   margin-bottom: var(--space-sm);
 }
 
+.importActions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.fileInput {
+  display: none;
+}
+
 .importArea {
   width: 100%;
   padding: 12px;

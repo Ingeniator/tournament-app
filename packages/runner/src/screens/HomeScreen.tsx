@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { ref, push, set } from 'firebase/database';
 import { useTournament } from '../hooks/useTournament';
 import { useRunnerTheme } from '../state/ThemeContext';
@@ -16,6 +16,7 @@ export function HomeScreen() {
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleNew = () => {
     dispatch({
@@ -52,6 +53,28 @@ export function HomeScreen() {
     setImportMode(false);
     setImportText('');
     setImportError(null);
+  };
+
+  const handleReadClipboard = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setImportText(text);
+      setImportError(null);
+    } catch {
+      setImportError(t('home.clipboardError'));
+    }
+  };
+
+  const handleFileLoad = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImportText(reader.result as string);
+      setImportError(null);
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   };
 
   const handleFeedback = async (message: string) => {
@@ -128,6 +151,21 @@ export function HomeScreen() {
 
             {importMode && (
               <div className={styles.importSection}>
+                <div className={styles.importActions}>
+                  <Button variant="secondary" fullWidth onClick={handleReadClipboard}>
+                    {t('home.readClipboard')}
+                  </Button>
+                  <Button variant="secondary" fullWidth onClick={() => fileInputRef.current?.click()}>
+                    {t('home.loadFile')}
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".json,application/json"
+                    onChange={handleFileLoad}
+                    className={styles.fileInput}
+                  />
+                </div>
                 <textarea
                   className={styles.importArea}
                   value={importText}
@@ -137,7 +175,6 @@ export function HomeScreen() {
                   }}
                   placeholder={t('home.importPlaceholder')}
                   rows={6}
-                  autoFocus
                 />
                 {importError && <div className={styles.importError}>{importError}</div>}
                 <Button

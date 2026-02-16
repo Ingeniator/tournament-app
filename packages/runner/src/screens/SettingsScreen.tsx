@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { ref, push, set } from 'firebase/database';
 import { useTournament } from '../hooks/useTournament';
 import { EditableField } from '../components/settings/EditableField';
@@ -27,6 +27,7 @@ export function SettingsScreen() {
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!tournament) return null;
 
@@ -97,6 +98,28 @@ export function SettingsScreen() {
     setImportText('');
     setImportError(null);
     showToast(t('settings.tournamentImported'));
+  };
+
+  const handleReadClipboard = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setImportText(text);
+      setImportError(null);
+    } catch {
+      setImportError(t('settings.clipboardError'));
+    }
+  };
+
+  const handleFileLoad = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImportText(reader.result as string);
+      setImportError(null);
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   };
 
   const handleFeedback = async (message: string) => {
@@ -466,6 +489,21 @@ export function SettingsScreen() {
         {importMode && (
           <div className={styles.importSection}>
             <p className={styles.hint}>{t('settings.importHint')}</p>
+            <div className={styles.importActions}>
+              <Button variant="secondary" fullWidth onClick={handleReadClipboard}>
+                {t('settings.readClipboard')}
+              </Button>
+              <Button variant="secondary" fullWidth onClick={() => fileInputRef.current?.click()}>
+                {t('settings.loadFile')}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json,application/json"
+                onChange={handleFileLoad}
+                className={styles.fileInput}
+              />
+            </div>
             <textarea
               className={styles.importArea}
               value={importText}
