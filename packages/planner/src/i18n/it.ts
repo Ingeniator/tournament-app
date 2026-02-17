@@ -98,6 +98,7 @@ const it: Translations = {
   'organizer.deleteConfirm': 'Eliminare questo torneo? L\'azione non può essere annullata.',
   'organizer.completed': 'Torneo Completato',
   'organizer.completedOn': 'Completato il {date}',
+  'organizer.undoComplete': 'Riapri Torneo',
 
   // JoinScreen
   'join.back': 'Indietro',

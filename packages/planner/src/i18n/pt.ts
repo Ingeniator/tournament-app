@@ -98,6 +98,7 @@ const pt: Translations = {
   'organizer.deleteConfirm': 'Eliminar este torneio? Esta ação é irreversível.',
   'organizer.completed': 'Torneio Concluído',
   'organizer.completedOn': 'Concluído em {date}',
+  'organizer.undoComplete': 'Reabrir Torneio',
 
   // JoinScreen
   'join.back': 'Voltar',

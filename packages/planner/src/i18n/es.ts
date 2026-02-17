@@ -98,6 +98,7 @@ const es: Translations = {
   'organizer.deleteConfirm': '¿Eliminar este torneo? Esta acción no se puede deshacer.',
   'organizer.completed': 'Torneo Completado',
   'organizer.completedOn': 'Completado el {date}',
+  'organizer.undoComplete': 'Reabrir Torneo',
 
   // JoinScreen
   'join.back': 'Volver',

@@ -131,5 +131,10 @@ export function usePlannerTournament(tournamentId: string | null) {
     await firebaseUpdate(ref(db), deletes);
   }, [tournamentId]);
 
-  return { tournament, completedAt, loading, createTournament, updateTournament, updateCourts, loadByCode, deleteTournament };
+  const undoComplete = useCallback(async () => {
+    if (!tournamentId || !db) return;
+    await set(ref(db, `tournaments/${tournamentId}/completedAt`), null);
+  }, [tournamentId]);
+
+  return { tournament, completedAt, loading, createTournament, updateTournament, updateCourts, loadByCode, deleteTournament, undoComplete };
 }

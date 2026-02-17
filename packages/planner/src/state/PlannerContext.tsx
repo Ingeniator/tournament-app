@@ -43,6 +43,7 @@ export interface PlannerContextValue {
   listingsLoading: boolean;
   openTournament: (id: string, screen: 'organizer' | 'join') => void;
   completedAt: number | null;
+  undoComplete: () => Promise<void>;
   deleteTournament: () => Promise<void>;
   telegramUser: TelegramUser | null;
   skin: SkinId;
@@ -82,6 +83,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     updateTournament: updateInDb,
     loadByCode: loadByCodeFromDb,
     deleteTournament: deleteInDb,
+    undoComplete,
   } = usePlannerTournament(tournamentId);
 
   const { players, registerPlayer: registerInDb, removePlayer: removeInDb, updateConfirmed: updateConfirmedInDb, addPlayer: addPlayerInDb, bulkAddPlayers: bulkAddPlayersInDb, toggleConfirmed: toggleConfirmedInDb, updatePlayerName: updatePlayerNameInDb, isRegistered: checkRegistered } = usePlayers(tournamentId);
@@ -243,6 +245,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       listingsLoading,
       openTournament,
       completedAt,
+      undoComplete,
       deleteTournament,
       telegramUser,
       skin,

@@ -98,6 +98,7 @@ const en: Translations = {
   'organizer.deleteConfirm': 'Delete this tournament? This cannot be undone.',
   'organizer.completed': 'Tournament Completed',
   'organizer.completedOn': 'Completed on {date}',
+  'organizer.undoComplete': 'Reopen Tournament',
 
   // JoinScreen
   'join.back': 'Back',

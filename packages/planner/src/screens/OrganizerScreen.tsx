@@ -33,7 +33,7 @@ function CollapsibleSection({ title, summary, defaultOpen, children }: {
 }
 
 export function OrganizerScreen() {
-  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, deleteTournament, completedAt, uid } = usePlanner();
+  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, deleteTournament, completedAt, undoComplete, uid } = usePlanner();
   const { startedBy, showWarning, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
   const { t, locale } = useTranslation();
   const { toastMessage, showToast } = useToast();
@@ -77,6 +77,9 @@ export function OrganizerScreen() {
           <Card>
             <h2 className={styles.sectionTitle}>{t('organizer.completed')}</h2>
             <p>{t('organizer.completedOn', { date: new Date(completedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) })}</p>
+            <Button variant="secondary" fullWidth onClick={undoComplete}>
+              {t('organizer.undoComplete')}
+            </Button>
           </Card>
           <button
             className={styles.deleteBtn}
