@@ -70,8 +70,6 @@ const it: Translations = {
   'play.supportCta': 'Ti \u00e8 piaciuto? Aiutaci a mantenerlo gratuito.',
   'play.madeWithCare': 'Fatto con cura',
   'play.sendFeedback': 'Invia feedback',
-  'play.openInBrowser': 'Apri nel browser per condividere tutto',
-  'play.openBrowserHint': 'Apri nel browser per condividere tutto',
   'play.copied': 'Copiato!',
   'play.failedCopy': 'Copia fallita',
   'play.shared': 'Condiviso!',
