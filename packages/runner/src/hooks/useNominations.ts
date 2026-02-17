@@ -115,7 +115,7 @@ export function useNominations(
       }
     }
 
-    if (allScored.length < 2) return [];
+    if (allScored.length === 0) return [];
 
     const strategy = getStrategy(tournament.config.format);
     const competitors = strategy.getCompetitors(tournament);
