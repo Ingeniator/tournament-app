@@ -82,13 +82,14 @@ export function usePlayers(tournamentId: string | null) {
     });
   }, [tournamentId]);
 
-  const addPlayer = useCallback(async (name: string) => {
+  const addPlayer = useCallback(async (name: string, telegramUsername?: string) => {
     if (!tournamentId || !db) return;
     const id = generateId();
     await set(ref(db, `tournaments/${tournamentId}/players/${id}`), {
       name,
       timestamp: Date.now(),
       confirmed: true,
+      ...(telegramUsername ? { telegramUsername } : {}),
     });
   }, [tournamentId]);
 

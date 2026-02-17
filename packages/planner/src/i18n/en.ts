@@ -53,6 +53,7 @@ const en: Translations = {
   'organizer.reserveSuffix': ' + {count} reserve',
   'organizer.noPlayersYet': 'No players registered yet',
   'organizer.playerNamePlaceholder': 'Player name or paste a list',
+  'organizer.telegramPlaceholder': '@username (optional)',
   'organizer.addPlayer': '+ Add',
   'organizer.reserve': 'reserve',
   'organizer.markCancelled': 'Mark as cancelled',

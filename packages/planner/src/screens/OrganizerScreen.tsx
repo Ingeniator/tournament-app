@@ -40,6 +40,7 @@ export function OrganizerScreen() {
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const [newPlayerName, setNewPlayerName] = useState('');
+  const [newPlayerTelegram, setNewPlayerTelegram] = useState('');
   const addingPlayer = useRef(false);
   const addPlayerInputRef = useRef<HTMLInputElement>(null);
   const [showFormatInfo, setShowFormatInfo] = useState(false);
@@ -463,34 +464,57 @@ export function OrganizerScreen() {
             ))}
           </div>
         )}
-        <div className={styles.addPlayerRow}>
-          <input
-            ref={addPlayerInputRef}
-            className={styles.addPlayerInput}
-            type="text"
-            value={newPlayerName}
-            onChange={e => setNewPlayerName(e.target.value)}
-            placeholder={t('organizer.playerNamePlaceholder')}
-            onKeyDown={async e => {
-              if (e.key === 'Enter' && newPlayerName.trim() && !addingPlayer.current) {
-                addingPlayer.current = true;
-                const name = newPlayerName.trim();
-                setNewPlayerName('');
-                await addPlayer(name);
-                addingPlayer.current = false;
-                addPlayerInputRef.current?.focus();
-              }
-            }}
-            onPaste={(e: ClipboardEvent<HTMLInputElement>) => {
-              const text = e.clipboardData.getData('text');
-              if (!text.includes('\n')) return;
-              e.preventDefault();
-              const names = parsePlayerList(text);
-              if (names.length > 0) {
-                bulkAddPlayers(names);
-              }
-            }}
-          />
+        <div className={styles.addPlayerForm}>
+          <div className={styles.addPlayerRow}>
+            <input
+              ref={addPlayerInputRef}
+              className={styles.addPlayerInput}
+              type="text"
+              value={newPlayerName}
+              onChange={e => setNewPlayerName(e.target.value)}
+              placeholder={t('organizer.playerNamePlaceholder')}
+              onKeyDown={async e => {
+                if (e.key === 'Enter' && newPlayerName.trim() && !addingPlayer.current) {
+                  addingPlayer.current = true;
+                  const name = newPlayerName.trim();
+                  const tg = newPlayerTelegram.trim().replace(/^@/, '') || undefined;
+                  setNewPlayerName('');
+                  setNewPlayerTelegram('');
+                  await addPlayer(name, tg);
+                  addingPlayer.current = false;
+                  addPlayerInputRef.current?.focus();
+                }
+              }}
+              onPaste={(e: ClipboardEvent<HTMLInputElement>) => {
+                const text = e.clipboardData.getData('text');
+                if (!text.includes('\n')) return;
+                e.preventDefault();
+                const names = parsePlayerList(text);
+                if (names.length > 0) {
+                  bulkAddPlayers(names);
+                }
+              }}
+            />
+            <input
+              className={styles.addPlayerInput}
+              type="text"
+              value={newPlayerTelegram}
+              onChange={e => setNewPlayerTelegram(e.target.value)}
+              placeholder={t('organizer.telegramPlaceholder')}
+              onKeyDown={async e => {
+                if (e.key === 'Enter' && newPlayerName.trim() && !addingPlayer.current) {
+                  addingPlayer.current = true;
+                  const name = newPlayerName.trim();
+                  const tg = newPlayerTelegram.trim().replace(/^@/, '') || undefined;
+                  setNewPlayerName('');
+                  setNewPlayerTelegram('');
+                  await addPlayer(name, tg);
+                  addingPlayer.current = false;
+                  addPlayerInputRef.current?.focus();
+                }
+              }}
+            />
+          </div>
           <Button
             variant="ghost"
             size="small"
@@ -498,8 +522,10 @@ export function OrganizerScreen() {
               if (newPlayerName.trim() && !addingPlayer.current) {
                 addingPlayer.current = true;
                 const name = newPlayerName.trim();
+                const tg = newPlayerTelegram.trim().replace(/^@/, '') || undefined;
                 setNewPlayerName('');
-                await addPlayer(name);
+                setNewPlayerTelegram('');
+                await addPlayer(name, tg);
                 addingPlayer.current = false;
                 addPlayerInputRef.current?.focus();
               }

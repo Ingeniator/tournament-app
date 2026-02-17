@@ -29,7 +29,7 @@ export interface PlannerContextValue {
   registerPlayer: (name: string) => Promise<void>;
   removePlayer: (playerId: string) => Promise<void>;
   updateConfirmed: (confirmed: boolean) => Promise<void>;
-  addPlayer: (name: string) => Promise<void>;
+  addPlayer: (name: string, telegramUsername?: string) => Promise<void>;
   bulkAddPlayers: (names: string[]) => Promise<void>;
   toggleConfirmed: (playerId: string, currentConfirmed: boolean) => Promise<void>;
   updatePlayerName: (playerId: string, name: string) => Promise<void>;
@@ -180,8 +180,8 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     await removeInDb(playerId);
   }, [removeInDb]);
 
-  const addPlayer = useCallback(async (name: string) => {
-    await addPlayerInDb(name);
+  const addPlayer = useCallback(async (name: string, telegramUsername?: string) => {
+    await addPlayerInDb(name, telegramUsername);
   }, [addPlayerInDb]);
 
   const bulkAddPlayers = useCallback(async (names: string[]) => {
