@@ -27,6 +27,7 @@ const pt: Translations = {
   'home.noTournamentsJoined': 'Ainda não te inscreveste em nenhum torneio',
   'home.tournamentNotFound': 'Torneio não encontrado',
   'home.failedCreate': 'Falha ao criar o torneio',
+  'home.analytics': 'Estatísticas',
   'home.expired': 'Expirado',
   'home.completed': 'Concluído',
 
@@ -176,6 +177,19 @@ const pt: Translations = {
   'feedback.send': 'Enviar',
   'error.title': 'Algo correu mal',
   'error.reload': 'Recarregar',
+
+  // AnalyticsScreen
+  'analytics.back': 'Voltar',
+  'analytics.title': 'Estatísticas',
+  'analytics.retry': 'Tentar novamente',
+  'analytics.totalTournaments': 'Torneios',
+  'analytics.totalPlayers': 'Jogadores',
+  'analytics.totalOrganizers': 'Organizadores',
+  'analytics.avgPlayersPerTournament': 'Jogadores méd. / torneio',
+  'analytics.avgTournamentsPerOrganizer': 'Torneios méd. / organizador',
+  'analytics.byFormat': 'Por Formato',
+  'analytics.byPlace': 'Por Local',
+  'analytics.refresh': 'Atualizar',
 
   // Start Warning
   'startWarning.title': 'Torneio Já Iniciado',

@@ -6,6 +6,7 @@ import { usePlanner } from './state/PlannerContext';
 import { HomeScreen } from './screens/HomeScreen';
 import { OrganizerScreen } from './screens/OrganizerScreen';
 import { JoinScreen } from './screens/JoinScreen';
+import { AnalyticsScreen } from './screens/AnalyticsScreen';
 import { translations } from './i18n';
 import styles from './App.module.css';
 
@@ -52,6 +53,11 @@ function AppContent() {
   // Check URL for ?code=XXXXXX or Telegram startapp param on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const screenParam = params.get('screen');
+    if (screenParam === 'analytics') {
+      setScreen('analytics');
+      return;
+    }
     const code = params.get('code')
       ?? window.Telegram?.WebApp?.initDataUnsafe?.start_param
       ?? null;
@@ -96,6 +102,8 @@ function AppContent() {
       return <OrganizerScreen />;
     case 'join':
       return <JoinScreen />;
+    case 'analytics':
+      return <AnalyticsScreen />;
     default:
       return <HomeScreen />;
   }

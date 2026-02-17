@@ -239,3 +239,7 @@
   padding: var(--space-md);
 }
 
+.analyticsLink {
+  margin-top: var(--space-sm);
+}
+
