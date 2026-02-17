@@ -69,11 +69,8 @@ export function resolveConfigDefaults(config: TournamentConfig, playerCount: num
     effectiveRounds = config.maxRounds!;
     effectivePoints = config.pointsPerMatch;
   } else if (hasExplicitPoints) {
-    // Points set — calculate rounds to fill duration
-    const roundDur = Math.round(config.pointsPerMatch * MINUTES_PER_POINT + CHANGEOVER_MINUTES);
-    const maxRounds = Math.max(1, Math.floor(durationMinutes / roundDur));
-    const raw = Math.min(baseRounds, maxRounds);
-    effectiveRounds = Math.max(1, nudgeToFairRounds(raw, playerCount, courtCount, maxRounds));
+    // Points set — find best round count to fill duration
+    effectiveRounds = findBestRoundsForPoints(durationMinutes, config.pointsPerMatch, playerCount, courtCount, baseRounds);
     effectivePoints = config.pointsPerMatch;
   } else if (hasExplicitRounds) {
     // Rounds set — calculate points to fill duration
@@ -147,21 +144,37 @@ function findBestConfig(
   return { rounds: bestRounds, points: bestPoints };
 }
 
-/** Nudge a round count towards the nearest fair value that does NOT exceed the duration limit.
- *  Courts are booked for a fixed time, so going over is not acceptable.
- *  Only fall back to a value above maxRounds if no fair value exists at or below. */
-function nudgeToFairRounds(rawRounds: number, playerCount: number, courtCount: number, maxRounds: number): number {
-  const info = computeSitOutInfo(playerCount, courtCount, rawRounds);
-  if (info.isEqual || info.sitOutsPerRound === 0) return rawRounds;
+/** Find best round count for user-specified points, using same scoring as findBestConfig. */
+function findBestRoundsForPoints(
+  durationMinutes: number,
+  pointsPerMatch: number,
+  playerCount: number,
+  courtCount: number,
+  baseRounds: number,
+): number {
+  const roundDur = Math.round(pointsPerMatch * MINUTES_PER_POINT + CHANGEOVER_MINUTES);
+  const maxRounds = Math.max(1, Math.floor(durationMinutes / roundDur));
 
-  const below = info.nearestFairBelow;
-  const above = info.nearestFairAbove;
+  let bestRounds = 1;
+  let bestScore = Infinity;
 
-  // Strongly prefer fair values that stay within the duration limit
-  if (below !== null && below >= 1 && below <= maxRounds) return below;
-  // Only go above if nothing fair fits within the limit
-  if (above !== null && above >= 1 && above <= maxRounds) return above;
+  for (let r = 1; r <= maxRounds; r++) {
+    const estimate = r * roundDur;
+    const diff = durationMinutes - estimate;
+    const timeCost = diff >= 0 ? diff : -diff * 3;
 
-  // No fair value within limit — stay with the raw value (capped to limit)
-  return Math.min(rawRounds, maxRounds);
+    const sitOut = computeSitOutInfo(playerCount, courtCount, r);
+    const isFair = sitOut.isEqual || sitOut.sitOutsPerRound === 0;
+    const fairCost = isFair ? 0 : UNFAIR_PENALTY;
+
+    const varietyBonus = Math.min(r, baseRounds) * 0.1;
+    const score = timeCost + fairCost - varietyBonus;
+
+    if (score < bestScore || (score === bestScore && r > bestRounds)) {
+      bestScore = score;
+      bestRounds = r;
+    }
+  }
+
+  return bestRounds;
 }
