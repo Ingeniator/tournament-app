@@ -3,8 +3,8 @@ import { ref, onValue, get, remove } from 'firebase/database';
 import type { TournamentSummary, PlannerTournament } from '@padel/common';
 import { db } from '../firebase';
 
-function toSummary(id: string, t: PlannerTournament): TournamentSummary {
-  return { id, name: t.name, date: t.date, place: t.place, organizerId: t.organizerId, code: t.code, createdAt: t.createdAt };
+function toSummary(id: string, t: PlannerTournament, completedAt?: number | null): TournamentSummary {
+  return { id, name: t.name, date: t.date, place: t.place, organizerId: t.organizerId, code: t.code, createdAt: t.createdAt, completedAt };
 }
 
 function sortByDate(a: TournamentSummary, b: TournamentSummary): number {
@@ -44,7 +44,8 @@ export function useMyTournaments(uid: string | null) {
           remove(ref(db!, `users/${uid}/organized/${id}`));
           return;
         }
-        results.push(toSummary(id, tSnap.val() as PlannerTournament));
+        const data = tSnap.val();
+        results.push(toSummary(id, data as PlannerTournament, typeof data.completedAt === 'number' ? data.completedAt : null));
       }));
 
       // Skip if a newer listener call has started (re-entrant from remove())

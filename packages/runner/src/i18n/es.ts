@@ -14,7 +14,7 @@ const es: Translations = {
   'home.importPlaceholder': 'Pega el JSON del torneo aqu\u00ed...',
   'home.import': 'Importar',
   'home.readClipboard': 'Leer del Portapapeles',
-  'home.loadFile': 'Cargar Archivo JSON',
+  'home.loadFile': 'Importar desde Archivo',
   'home.clipboardError': 'No se pudo leer el portapapeles. Intenta pegar manualmente o cargar un archivo.',
   'home.deleteConfirm': '\u00bfEliminar este torneo? Esta acci\u00f3n no se puede deshacer.',
   // Footer & Options
@@ -68,7 +68,8 @@ const es: Translations = {
   'play.supportCta': '\u00bfTe ha gustado? Ay\u00fadanos a mantenerlo gratis.',
   'play.madeWithCare': 'Hecho con cari\u00f1o',
   'play.sendFeedback': 'Enviar comentarios',
-  'play.longPressHint': 'Mant\u00e9n pulsada una imagen para guardarla',
+  'play.openInBrowser': 'Abrir en navegador para compartir todo',
+  'play.openBrowserHint': 'Abre en navegador para compartir todo',
   'play.copied': '\u00a1Copiado!',
   'play.failedCopy': 'Error al copiar',
   'play.shared': '\u00a1Compartido!',
@@ -117,15 +118,15 @@ const es: Translations = {
   'settings.addPlayer': '+ A\u00f1adir Jugador',
   'settings.out': 'fuera',
   'settings.exportImport': 'Exportar / Importar',
-  'settings.copyData': 'Copiar Datos del Torneo',
-  'settings.exportFile': 'Guardar como Archivo',
+  'settings.copyData': 'Exportar al Portapapeles',
+  'settings.exportFile': 'Exportar a Archivo',
   'settings.cancelImport': 'Cancelar Importaci\u00f3n',
   'settings.importFromClipboard': 'Importar desde Portapapeles',
   'settings.importHint': 'Pega los datos exportados del torneo a continuaci\u00f3n:',
   'settings.importPlaceholder': '{"_format": "padel-tournament-v1", ...}',
   'settings.validateImport': 'Validar e Importar',
   'settings.readClipboard': 'Leer del Portapapeles',
-  'settings.loadFile': 'Cargar Archivo JSON',
+  'settings.loadFile': 'Importar desde Archivo',
   'settings.clipboardError': 'No se pudo leer el portapapeles. Intenta pegar manualmente o cargar un archivo.',
   'settings.dangerZone': 'Zona de Peligro',
   'settings.deleteTournament': 'Eliminar Torneo',
@@ -252,6 +253,12 @@ const es: Translations = {
   // ErrorBoundary
   'error.title': 'Algo sali\u00f3 mal',
   'error.reload': 'Recargar',
+
+  // CeremonyScreen
+  'ceremony.skip': 'Saltar',
+  'ceremony.tapToReveal': 'Toca para revelar',
+  'ceremony.tapForNext': 'Toca para el siguiente premio',
+  'ceremony.tapToFinish': 'Toca para ver resultados',
 
   // Common
   'common.cancel': 'Cancelar',

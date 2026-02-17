@@ -21,6 +21,15 @@ function formatCreatedAt(ts: number): string {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
+function isExpired(t: TournamentSummary): boolean {
+  if (t.completedAt) return false;
+  if (!t.date) return false;
+  const tournamentDate = new Date(t.date);
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  return tournamentDate < now;
+}
+
 export function HomeScreen() {
   const {
     createTournament, loadByCode, setScreen,
@@ -96,21 +105,28 @@ export function HomeScreen() {
     await set(feedbackRef, { message, source: 'planner', createdAt: Date.now() });
   };
 
-  const renderTournamentItem = (t: TournamentSummary, screen: 'organizer' | 'join') => (
+  const renderTournamentItem = (ti: TournamentSummary, screen: 'organizer' | 'join') => (
     <div
-      key={t.id}
+      key={ti.id}
       className={styles.tournamentItem}
       role="button"
       tabIndex={0}
-      onClick={() => openTournament(t.id, screen)}
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTournament(t.id, screen); } }}
+      onClick={() => openTournament(ti.id, screen)}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTournament(ti.id, screen); } }}
     >
-      <span className={styles.tournamentName}>{t.name}</span>
+      <span className={styles.tournamentNameRow}>
+        <span className={styles.tournamentName}>{ti.name}</span>
+        {ti.completedAt ? (
+          <span className={`${styles.badge} ${styles.badgeCompleted}`}>{t('home.completed')}</span>
+        ) : isExpired(ti) ? (
+          <span className={`${styles.badge} ${styles.badgeExpired}`}>{t('home.expired')}</span>
+        ) : null}
+      </span>
       <span className={styles.tournamentMeta}>
-        {t.date && <span>{formatDate(t.date)}</span>}
-        {t.place && <span>{t.place}</span>}
-        {t.organizerName && <span>by {t.organizerName}</span>}
-        {!t.date && <span>{formatCreatedAt(t.createdAt)}</span>}
+        {ti.date && <span>{formatDate(ti.date)}</span>}
+        {ti.place && <span>{ti.place}</span>}
+        {ti.organizerName && <span>by {ti.organizerName}</span>}
+        {!ti.date && <span>{formatCreatedAt(ti.createdAt)}</span>}
       </span>
     </div>
   );

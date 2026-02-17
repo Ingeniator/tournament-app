@@ -6,6 +6,7 @@ import { RoundCard } from '../components/rounds/RoundCard';
 import { StandingsTable } from '../components/standings/StandingsTable';
 import { NominationCard } from '../components/nominations/NominationCard';
 import { Carousel } from '../components/carousel/Carousel';
+import { CeremonyScreen } from '../components/ceremony/CeremonyScreen';
 import { useShareText } from '../hooks/useShareText';
 import { copyToClipboard } from '../utils/clipboard';
 import { shareStandingsImage } from '../utils/standingsImage';
@@ -99,8 +100,20 @@ export function PlayScreen() {
 
   if (!tournament) return null;
 
-  // Completed state — show summary
+  // Completed state — show ceremony or summary
   if (tournament.phase === 'completed') {
+    // Show ceremony if not yet completed
+    if (!tournament.ceremonyCompleted && nominations.length > 0) {
+      return (
+        <CeremonyScreen
+          nominations={nominations}
+          onComplete={(noms) => {
+            dispatch({ type: 'COMPLETE_CEREMONY', payload: { nominations: noms } });
+          }}
+        />
+      );
+    }
+
     const handleCopy = async () => {
       const ok = await copyToClipboard(buildMessengerText(roundsExpanded));
       showToast(ok ? t('play.copied') : t('play.failedCopy'));
@@ -203,13 +216,24 @@ export function PlayScreen() {
           }}
         />
         {previewImages && (
-          <div className={styles.imagePreviewOverlay} onClick={() => setPreviewImages(null)}>
+          <div className={styles.imagePreviewOverlay} onClick={() => {
+            previewImages.forEach(u => { if (u.startsWith('blob:')) URL.revokeObjectURL(u); });
+            setPreviewImages(null);
+          }}>
             <div className={styles.imagePreviewContent} onClick={e => e.stopPropagation()}>
               <div className={styles.imagePreviewHeader}>
-                <span className={styles.imagePreviewHint}>{t('play.longPressHint')}</span>
-                <button className={styles.imagePreviewClose} onClick={() => setPreviewImages(null)}>&#x2715;</button>
+                <span className={styles.imagePreviewHint}>{t('play.openBrowserHint')}</span>
+                <button className={styles.imagePreviewClose} onClick={() => {
+                  previewImages.forEach(u => { if (u.startsWith('blob:')) URL.revokeObjectURL(u); });
+                  setPreviewImages(null);
+                }}>&#x2715;</button>
               </div>
               <div className={styles.imagePreviewScroll}>
+                <Button fullWidth onClick={() => {
+                  window.open(window.location.href, '_blank');
+                }}>
+                  {t('play.openInBrowser')}
+                </Button>
                 {previewImages.map((url, i) => (
                   <img key={i} src={url} alt={`Result ${i + 1}`} className={styles.imagePreviewImg} />
                 ))}

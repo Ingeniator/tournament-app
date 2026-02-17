@@ -1,0 +1,217 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background-color: var(--color-bg);
+  z-index: 400;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.content {
+  width: 100%;
+  max-width: 500px;
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+  text-align: center;
+}
+
+/* ── Progress indicator ── */
+.progress {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  letter-spacing: 0.05em;
+}
+
+/* ── Category reveal (before player is shown) ── */
+.categoryReveal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  animation: fadeSlideUp 0.4s ease-out both;
+}
+
+.categoryEmoji {
+  font-size: 3.5rem;
+  line-height: 1;
+  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+.categoryTitle {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-accent);
+}
+
+.categoryDescription {
+  font-size: var(--text-base);
+  color: var(--color-text-muted);
+  max-width: 280px;
+}
+
+/* ── Full card reveal (after tap) ── */
+.cardReveal {
+  animation: fadeSlideUp 0.35s ease-out both;
+}
+
+.playerName {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-text);
+  animation: nameReveal 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+.playerNameMulti {
+  font-size: var(--text-xl);
+}
+
+.statLine {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-primary);
+  animation: fadeIn 0.4s ease-out 0.15s both;
+}
+
+/* ── Tier badge (during ceremony) ── */
+.tierBadge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  line-height: 1.4;
+  animation: fadeIn 0.3s ease-out both;
+}
+
+.tierRare {
+  color: var(--color-tier-rare);
+  background: var(--color-tier-rare-tint);
+}
+
+.tierLegendary {
+  color: var(--color-tier-legendary);
+  background: var(--color-tier-legendary-tint);
+}
+
+/* ── Tap hint ── */
+.tapHint {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  opacity: 0;
+  animation: fadeIn 0.4s ease-out 0.8s both;
+}
+
+/* ── Skip button ── */
+.skipButton {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  padding: var(--space-xs) var(--space-sm);
+  z-index: 10;
+}
+
+.skipButton:active {
+  opacity: 0.6;
+}
+
+/* ── Champion special ── */
+.championReveal .categoryEmoji {
+  font-size: 5rem;
+  animation: championPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+.championReveal .playerName {
+  font-size: var(--text-3xl);
+  animation: championName 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+/* vs layout for multi-player awards */
+.vs {
+  font-size: var(--text-xs);
+  font-weight: 400;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* ── Animations ── */
+
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes nameReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.5) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes championPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes championName {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(20px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.08) translateY(0);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}

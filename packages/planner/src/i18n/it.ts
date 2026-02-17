@@ -28,6 +28,8 @@ const it: Translations = {
   'home.tournamentNotFound': 'Torneo non trovato',
   'home.failedCreate': 'Impossibile creare il torneo',
   'home.analytics': 'Statistiche',
+  'home.expired': 'Scaduto',
+  'home.completed': 'Completato',
 
   // Footer & Options
   'footer.freeOpenSource': 'Gratuito e open source',
@@ -53,11 +55,20 @@ const it: Translations = {
   'organizer.noPlayersYet': 'Nessun giocatore registrato',
   'organizer.playerNamePlaceholder': 'Nome giocatore o incolla una lista',
   'organizer.addPlayer': '+ Aggiungi',
+  'organizer.linkProfile': 'Collega profilo',
+  'organizer.linkProfileTitle': 'Collega {name}',
+  'organizer.telegramUsername': 'Username Telegram',
+  'organizer.telegramPlaceholder': '@username',
+  'organizer.saveLink': 'Salva',
+  'organizer.removeLink': 'Rimuovi',
   'organizer.reserve': 'riserva',
   'organizer.markCancelled': 'Segna come cancellato',
   'organizer.markConfirmed': 'Segna come confermato',
   'organizer.removePlayer': 'Rimuovi giocatore',
   'organizer.settings': 'Impostazioni',
+  'organizer.whenWhere': 'Quando e Dove',
+  'organizer.formatAndCourts': 'Formato e Campi',
+  'organizer.details': 'Dettagli',
   'organizer.dateTime': 'Data e ora',
   'organizer.date': 'Data',
   'organizer.time': 'Ora',
@@ -94,6 +105,9 @@ const it: Translations = {
   'organizer.jsonCopied': 'JSON del torneo copiato!',
   'organizer.deleteTournament': 'Elimina Torneo',
   'organizer.deleteConfirm': 'Eliminare questo torneo? L\'azione non può essere annullata.',
+  'organizer.completed': 'Torneo Completato',
+  'organizer.completedOn': 'Completato il {date}',
+  'organizer.undoComplete': 'Riapri Torneo',
 
   // JoinScreen
   'join.back': 'Indietro',
@@ -140,6 +154,8 @@ const it: Translations = {
   'join.copyForDevice': 'Copia per un Altro Dispositivo',
   'join.jsonCopied': 'JSON del torneo copiato!',
   'join.failedCopy': 'Impossibile copiare',
+  'join.completed': 'Questo torneo è stato completato',
+  'join.completedOn': 'Completato il {date}',
 
   // SupportOverlay
   'support.title': 'Supportaci',
@@ -174,6 +190,13 @@ const it: Translations = {
   'analytics.byFormat': 'Per Formato',
   'analytics.byPlace': 'Per Luogo',
   'analytics.refresh': 'Aggiorna',
+
+  // Start Warning
+  'startWarning.title': 'Torneo Già Avviato',
+  'startWarning.alreadyStarted': '{name} ha già avviato questo torneo sul suo dispositivo.',
+  'startWarning.onePersonOnly': 'Solo una persona deve inserire i risultati \u2014 i punteggi sono salvati localmente sul dispositivo di quella persona, non online.',
+  'startWarning.dataLost': 'Se i dati di quella persona sono andati persi, puoi procedere e ricominciare.',
+  'startWarning.proceedAnyway': 'Avvia Comunque',
 
   // Planner App
   'app.connectionError': 'Errore di Connessione',

@@ -28,6 +28,8 @@ const en: Translations = {
   'home.tournamentNotFound': 'Tournament not found',
   'home.failedCreate': 'Failed to create tournament',
   'home.analytics': 'Analytics',
+  'home.expired': 'Expired',
+  'home.completed': 'Completed',
 
   // Footer & Options
   'footer.freeOpenSource': 'Free & open source',
@@ -53,11 +55,20 @@ const en: Translations = {
   'organizer.noPlayersYet': 'No players registered yet',
   'organizer.playerNamePlaceholder': 'Player name or paste a list',
   'organizer.addPlayer': '+ Add',
+  'organizer.linkProfile': 'Link profile',
+  'organizer.linkProfileTitle': 'Link {name}',
+  'organizer.telegramUsername': 'Telegram username',
+  'organizer.telegramPlaceholder': '@username',
+  'organizer.saveLink': 'Save',
+  'organizer.removeLink': 'Remove',
   'organizer.reserve': 'reserve',
   'organizer.markCancelled': 'Mark as cancelled',
   'organizer.markConfirmed': 'Mark as confirmed',
   'organizer.removePlayer': 'Remove player',
   'organizer.settings': 'Settings',
+  'organizer.whenWhere': 'When & Where',
+  'organizer.formatAndCourts': 'Format & Courts',
+  'organizer.details': 'Details',
   'organizer.dateTime': 'Date & time',
   'organizer.date': 'Date',
   'organizer.time': 'Time',
@@ -94,6 +105,9 @@ const en: Translations = {
   'organizer.jsonCopied': 'Tournament JSON copied!',
   'organizer.deleteTournament': 'Delete Tournament',
   'organizer.deleteConfirm': 'Delete this tournament? This cannot be undone.',
+  'organizer.completed': 'Tournament Completed',
+  'organizer.completedOn': 'Completed on {date}',
+  'organizer.undoComplete': 'Reopen Tournament',
 
   // JoinScreen
   'join.back': 'Back',
@@ -140,6 +154,8 @@ const en: Translations = {
   'join.copyForDevice': 'Copy for Another Device',
   'join.jsonCopied': 'Tournament JSON copied!',
   'join.failedCopy': 'Failed to copy',
+  'join.completed': 'This tournament has been completed',
+  'join.completedOn': 'Completed on {date}',
 
   // SupportOverlay
   'support.title': 'Support Us',
@@ -174,6 +190,13 @@ const en: Translations = {
   'analytics.byFormat': 'By Format',
   'analytics.byPlace': 'By Place',
   'analytics.refresh': 'Refresh',
+
+  // Start Warning
+  'startWarning.title': 'Tournament Already Started',
+  'startWarning.alreadyStarted': '{name} has already started this tournament on their device.',
+  'startWarning.onePersonOnly': 'Only one person should enter results \u2014 scores are stored locally on that person\'s device, not online.',
+  'startWarning.dataLost': 'If that person\'s data was lost, you can proceed and start fresh.',
+  'startWarning.proceedAnyway': 'Start Anyway',
 
   // Planner App
   'app.connectionError': 'Connection Error',

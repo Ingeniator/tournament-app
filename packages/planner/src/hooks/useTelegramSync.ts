@@ -39,6 +39,7 @@ export function useTelegramSync(uid: string | null, telegramUsername: string | u
       // Different device detected — claim sweep
       setSyncing(true);
 
+      // Claim registrations
       const registrations = snap.child('registrations').val() as Record<string, boolean> | null;
       if (registrations) {
         for (const tournamentId of Object.keys(registrations)) {
@@ -55,13 +56,32 @@ export function useTelegramSync(uid: string | null, telegramUsername: string | u
           const newPlayerSnap = await get(ref(db, `tournaments/${tournamentId}/players/${uid}`));
           if (newPlayerSnap.exists()) continue;
 
-          // Atomic claim: move player from old UID to new UID
+          // Move player and registration index separately to avoid
+          // cross-node permission issues with atomic multi-path updates
           await update(ref(db), {
             [`tournaments/${tournamentId}/players/${currentUid}`]: null,
             [`tournaments/${tournamentId}/players/${uid}`]: { ...playerData, telegramUsername },
-            [`users/${currentUid}/registrations/${tournamentId}`]: null,
-            [`users/${uid}/registrations/${tournamentId}`]: true,
           });
+          await set(ref(db, `users/${currentUid}/registrations/${tournamentId}`), null);
+          await set(ref(db, `users/${uid}/registrations/${tournamentId}`), true);
+        }
+      }
+
+      if (cancelled) return;
+
+      // Claim organized tournaments
+      const organized = snap.child('organized').val() as Record<string, boolean> | null;
+      if (organized) {
+        for (const tournamentId of Object.keys(organized)) {
+          if (cancelled) return;
+
+          const tournamentSnap = await get(ref(db, `tournaments/${tournamentId}/organizerId`));
+          if (!tournamentSnap.exists() || tournamentSnap.val() !== currentUid) continue;
+
+          // Transfer organizer ownership and move organized index
+          await set(ref(db, `tournaments/${tournamentId}/organizerId`), uid);
+          await set(ref(db, `users/${currentUid}/organized/${tournamentId}`), null);
+          await set(ref(db, `users/${uid}/organized/${tournamentId}`), true);
         }
       }
 

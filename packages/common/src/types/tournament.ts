@@ -1,4 +1,5 @@
 import type { Player } from './player';
+import type { Nomination } from './nomination';
 
 export type TournamentFormat = 'americano' | 'mexicano' | 'team-americano' | 'round-robin';
 
@@ -59,6 +60,9 @@ export interface Tournament {
   players: Player[];
   rounds: Round[];
   teams?: Team[];
+  plannerTournamentId?: string;
+  nominations?: Nomination[];
+  ceremonyCompleted?: boolean;
   createdAt: number;
   updatedAt: number;
 }

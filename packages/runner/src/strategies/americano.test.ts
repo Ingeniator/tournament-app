@@ -73,9 +73,10 @@ function analyzeSchedule(players: Player[], config: TournamentConfig, rounds: Re
   let partnerRepeats = 0;
   for (const c of partnerCounts.values()) if (c > 1) partnerRepeats += c - 1;
 
-  // Opponent spread
+  // Opponent spread (account for pairs that never met as opponents)
   const oppArr = [...opponentCounts.values()];
-  const oppMin = oppArr.length > 0 ? Math.min(...oppArr) : 0;
+  const totalPlayerPairs = activePlayers.length * (activePlayers.length - 1) / 2;
+  const oppMin = opponentCounts.size < totalPlayerPairs && opponentCounts.size > 0 ? 0 : (oppArr.length > 0 ? Math.min(...oppArr) : 0);
   const oppMax = oppArr.length > 0 ? Math.max(...oppArr) : 0;
 
   // Court balance per court
@@ -272,8 +273,8 @@ describe('americano distribution', () => {
       { players: 12, courts: 2, rounds: 11, maxMs: 600,  maxPartnerRepeats: 0, maxOppSpread: 2, label: '12p / 2c / 11r' },
       { players: 12, courts: 3, rounds: 11, maxMs: 1200, maxPartnerRepeats: 0, maxOppSpread: 3, label: '12p / 3c / 11r' },
       { players: 15, courts: 3, rounds: 14, maxMs: 1200, maxPartnerRepeats: 0, maxOppSpread: 2, label: '15p / 3c / 14r' },
-      { players: 16, courts: 4, rounds: 15, maxMs: 1500, maxPartnerRepeats: 5, maxOppSpread: 3, label: '16p / 4c / 15r' },
-      { players: 20, courts: 4, rounds: 19, maxMs: 1500, maxPartnerRepeats: 0, maxOppSpread: 2, label: '20p / 4c / 19r' },
+      { players: 16, courts: 4, rounds: 15, maxMs: 1500, maxPartnerRepeats: 5, maxOppSpread: 4, label: '16p / 4c / 15r' },
+      { players: 20, courts: 4, rounds: 19, maxMs: 1500, maxPartnerRepeats: 0, maxOppSpread: 3, label: '20p / 4c / 19r' },
     ];
 
     for (const tc of cases) {

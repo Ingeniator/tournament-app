@@ -30,6 +30,7 @@ export function AppFooter({ onFeedbackClick }: AppFooterProps) {
             {t('footer.options')}
           </button>
         </div>
+        <div className={styles.version}>v.{__COMMIT_HASH__}</div>
       </footer>
       <OptionsModal open={optionsOpen} onClose={() => setOptionsOpen(false)} />
       <SupportOverlay open={supportOpen} onClose={() => setSupportOpen(false)} />
