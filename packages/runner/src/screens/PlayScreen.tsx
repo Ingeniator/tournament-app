@@ -96,6 +96,7 @@ export function PlayScreen() {
     });
   }, [nominations]);
 
+  const [previewImages, setPreviewImages] = useState<string[] | null>(null);
 
   if (!tournament) return null;
 
@@ -121,6 +122,7 @@ export function PlayScreen() {
       const result = await shareStandingsImage(tournament.name, standings, nominations);
       if (result.status === 'shared') showToast(t('play.shared'));
       else if (result.status === 'downloaded') showToast(t('play.imageSaved'));
+      else if (result.status === 'preview') setPreviewImages(result.dataUrls);
       else showToast(t('play.failedShare'));
     };
 
@@ -213,6 +215,32 @@ export function PlayScreen() {
             await set(feedbackRef, { message, source: 'runner', createdAt: Date.now() });
           }}
         />
+        {previewImages && (
+          <div className={styles.imagePreviewOverlay} onClick={() => {
+            previewImages.forEach(u => { if (u.startsWith('blob:')) URL.revokeObjectURL(u); });
+            setPreviewImages(null);
+          }}>
+            <div className={styles.imagePreviewContent} onClick={e => e.stopPropagation()}>
+              <div className={styles.imagePreviewHeader}>
+                <span className={styles.imagePreviewHint}>{t('play.openBrowserHint')}</span>
+                <button className={styles.imagePreviewClose} onClick={() => {
+                  previewImages.forEach(u => { if (u.startsWith('blob:')) URL.revokeObjectURL(u); });
+                  setPreviewImages(null);
+                }}>&#x2715;</button>
+              </div>
+              <div className={styles.imagePreviewScroll}>
+                <Button fullWidth onClick={() => {
+                  window.open(window.location.href, '_blank');
+                }}>
+                  {t('play.openInBrowser')}
+                </Button>
+                {previewImages.map((url, i) => (
+                  <img key={i} src={url} alt={`Result ${i + 1}`} className={styles.imagePreviewImg} />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
         <Toast message={toastMessage} />
       </div>
     );

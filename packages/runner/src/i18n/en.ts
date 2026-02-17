@@ -68,6 +68,8 @@ const en: Translations = {
   'play.supportCta': 'Enjoyed using this? Help keep it free.',
   'play.madeWithCare': 'Made with care',
   'play.sendFeedback': 'Send feedback',
+  'play.openInBrowser': 'Open in Browser to Share All',
+  'play.openBrowserHint': 'Open in browser for full sharing',
   'play.copied': 'Copied!',
   'play.failedCopy': 'Failed to copy',
   'play.shared': 'Shared!',

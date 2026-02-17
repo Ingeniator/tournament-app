@@ -350,7 +350,8 @@ function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob | null> {
 export type ShareImageResult =
   | { status: 'shared' }
   | { status: 'downloaded' }
-  | { status: 'failed' };
+  | { status: 'failed' }
+  | { status: 'preview'; dataUrls: string[] };
 
 export async function shareStandingsImage(
   tournamentName: string,
@@ -409,6 +410,26 @@ export async function shareStandingsImage(
       }
     }
 
+    const tg = window.Telegram?.WebApp;
+    const isTelegramBrowser = tg || /Telegram/i.test(navigator.userAgent);
+
+    // Telegram in-app browser (both Mini App and regular in-app browser):
+    // navigator.share is absent or silently resolves without sharing.
+    // Programmatic <a>.click() downloads are also blocked.
+    // Show preview overlay — each image gets a copy-to-clipboard button.
+    if (isTelegramBrowser) {
+      const allCanvases = [
+        ...podiumIndices.map(i => nominationCanvases[i]),
+        standingsCanvas,
+        ...otherIndices.map(i => nominationCanvases[i]),
+      ];
+      const blobs = await Promise.all(allCanvases.map(c => canvasToBlob(c)));
+      const blobUrls = blobs
+        .filter((b): b is Blob => b !== null)
+        .map(b => URL.createObjectURL(b));
+      return { status: 'preview', dataUrls: blobUrls };
+    }
+
     // Try Web Share API (works on mobile browsers and some desktops)
     if (navigator.share) {
       const shareData = { files };
@@ -442,6 +463,24 @@ export async function shareStandingsImage(
     return { status: 'downloaded' };
   } catch (e) {
     if (e instanceof DOMException && e.name === 'AbortError') return { status: 'failed' };
+
+    // Last resort for Telegram: show preview overlay
+    if (window.Telegram?.WebApp) {
+      try {
+        const allCanvases = [
+          ...podiumIndices.map(i => nominationCanvases[i]),
+          standingsCanvas,
+          ...otherIndices.map(i => nominationCanvases[i]),
+        ];
+        const blobs = await Promise.all(allCanvases.map(c => canvasToBlob(c)));
+        const blobUrls = blobs
+          .filter((b): b is Blob => b !== null)
+          .map(b => URL.createObjectURL(b));
+        return { status: 'preview', dataUrls: blobUrls };
+      } catch {
+        // give up
+      }
+    }
 
     return { status: 'failed' };
   }
