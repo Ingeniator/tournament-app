@@ -5,7 +5,9 @@ import type { TournamentFormat, Court } from '@padel/common';
 import { generateId, parsePlayerList } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { db } from '../firebase';
-import { launchInRunner, buildRunnerTournament } from '../utils/exportToRunner';
+import { buildRunnerTournament } from '../utils/exportToRunner';
+import { useStartGuard } from '../hooks/useStartGuard';
+import { StartWarningModal } from '../components/StartWarningModal';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import styles from './OrganizerScreen.module.css';
 
@@ -31,7 +33,8 @@ function CollapsibleSection({ title, summary, defaultOpen, children }: {
 }
 
 export function OrganizerScreen() {
-  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, deleteTournament } = usePlanner();
+  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, deleteTournament, uid } = usePlanner();
+  const { startedBy, showWarning, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
   const { t, locale } = useTranslation();
   const { toastMessage, showToast } = useToast();
   const [editingName, setEditingName] = useState(false);
@@ -89,7 +92,7 @@ export function OrganizerScreen() {
   };
 
   const handleLaunch = () => {
-    launchInRunner(tournament, players);
+    handleGuardedLaunch(tournament!, players);
   };
 
   const handleCopyExport = async () => {
@@ -532,6 +535,13 @@ export function OrganizerScreen() {
       />
 
       <Toast message={toastMessage} className={styles.toast} />
+
+      <StartWarningModal
+        open={showWarning}
+        startedBy={startedBy}
+        onProceed={() => proceedAnyway(tournament!, players)}
+        onClose={dismissWarning}
+      />
     </div>
   );
 }

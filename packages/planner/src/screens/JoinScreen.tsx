@@ -3,11 +3,14 @@ import { Button, Card, Toast, useToast, useTranslation } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import { downloadICS } from '../utils/icsExport';
-import { launchInRunner, buildRunnerTournament } from '../utils/exportToRunner';
+import { buildRunnerTournament } from '../utils/exportToRunner';
+import { useStartGuard } from '../hooks/useStartGuard';
+import { StartWarningModal } from '../components/StartWarningModal';
 import styles from './JoinScreen.module.css';
 
 export function JoinScreen() {
   const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, isRegistered, setScreen, organizerName, userName, telegramUser } = usePlanner();
+  const { startedBy, showWarning, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
   const { t } = useTranslation();
   const [name, setName] = useState(userName ?? telegramUser?.displayName ?? '');
   const [registering, setRegistering] = useState(false);
@@ -110,7 +113,7 @@ export function JoinScreen() {
   };
 
   const handleLaunch = () => {
-    launchInRunner(tournament!, players);
+    handleGuardedLaunch(tournament!, players);
   };
 
   const handleCopyExport = async () => {
@@ -344,6 +347,13 @@ export function JoinScreen() {
       </main>
 
       <Toast message={toastMessage} className={styles.toast} />
+
+      <StartWarningModal
+        open={showWarning}
+        startedBy={startedBy}
+        onProceed={() => proceedAnyway(tournament!, players)}
+        onClose={dismissWarning}
+      />
     </div>
   );
 }

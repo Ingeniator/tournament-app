@@ -164,6 +164,13 @@ const pt: Translations = {
   'error.title': 'Algo correu mal',
   'error.reload': 'Recarregar',
 
+  // Start Warning
+  'startWarning.title': 'Torneio Já Iniciado',
+  'startWarning.alreadyStarted': '{name} já iniciou este torneio no seu dispositivo.',
+  'startWarning.onePersonOnly': 'Apenas uma pessoa deve introduzir os resultados \u2014 as pontuações são guardadas localmente no dispositivo dessa pessoa, não online.',
+  'startWarning.dataLost': 'Se os dados dessa pessoa foram perdidos, podes continuar e começar de novo.',
+  'startWarning.proceedAnyway': 'Iniciar Mesmo Assim',
+
   // Planner App
   'app.connectionError': 'Erro de Ligação',
   'app.retry': 'Tentar novamente',

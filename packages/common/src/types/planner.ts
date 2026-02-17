@@ -37,3 +37,9 @@ export interface PlannerRegistration {
   confirmed?: boolean;
   telegramUsername?: string;
 }
+
+export interface TournamentStartInfo {
+  uid: string;
+  name: string;
+  timestamp: number;
+}

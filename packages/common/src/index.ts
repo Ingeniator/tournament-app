@@ -13,7 +13,7 @@ export type {
 } from './types/tournament';
 export type { StandingsEntry } from './types/standings';
 export type { Supporter, GroupedSupporter } from './types/supporter';
-export type { PlannerTournament, PlannerRegistration, TournamentSummary } from './types/planner';
+export type { PlannerTournament, PlannerRegistration, TournamentSummary, TournamentStartInfo } from './types/planner';
 export { generateId } from './utils/id';
 export { parsePlayerList } from './utils/parsePlayerList';
 export { groupSupporters } from './utils/groupSupporters';

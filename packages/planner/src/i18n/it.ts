@@ -164,6 +164,13 @@ const it: Translations = {
   'error.title': 'Qualcosa è andato storto',
   'error.reload': 'Ricarica',
 
+  // Start Warning
+  'startWarning.title': 'Torneo Già Avviato',
+  'startWarning.alreadyStarted': '{name} ha già avviato questo torneo sul suo dispositivo.',
+  'startWarning.onePersonOnly': 'Solo una persona deve inserire i risultati \u2014 i punteggi sono salvati localmente sul dispositivo di quella persona, non online.',
+  'startWarning.dataLost': 'Se i dati di quella persona sono andati persi, puoi procedere e ricominciare.',
+  'startWarning.proceedAnyway': 'Avvia Comunque',
+
   // Planner App
   'app.connectionError': 'Errore di Connessione',
   'app.retry': 'Riprova',
