@@ -6,6 +6,7 @@ import { RoundCard } from '../components/rounds/RoundCard';
 import { StandingsTable } from '../components/standings/StandingsTable';
 import { NominationCard } from '../components/nominations/NominationCard';
 import { Carousel } from '../components/carousel/Carousel';
+import { CeremonyScreen } from '../components/ceremony/CeremonyScreen';
 import { useShareText } from '../hooks/useShareText';
 import { copyToClipboard } from '../utils/clipboard';
 import { shareStandingsImage } from '../utils/standingsImage';
@@ -99,8 +100,20 @@ export function PlayScreen() {
 
   if (!tournament) return null;
 
-  // Completed state — show summary
+  // Completed state — show ceremony or summary
   if (tournament.phase === 'completed') {
+    // Show ceremony if not yet completed
+    if (!tournament.ceremonyCompleted && nominations.length > 0) {
+      return (
+        <CeremonyScreen
+          nominations={nominations}
+          onComplete={(noms) => {
+            dispatch({ type: 'COMPLETE_CEREMONY', payload: { nominations: noms } });
+          }}
+        />
+      );
+    }
+
     const handleCopy = async () => {
       const ok = await copyToClipboard(buildMessengerText(roundsExpanded));
       showToast(ok ? t('play.copied') : t('play.failedCopy'));

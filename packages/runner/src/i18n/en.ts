@@ -253,6 +253,12 @@ const en: Translations = {
   'error.title': 'Something went wrong',
   'error.reload': 'Reload',
 
+  // CeremonyScreen
+  'ceremony.skip': 'Skip',
+  'ceremony.tapToReveal': 'Tap to reveal',
+  'ceremony.tapForNext': 'Tap for next award',
+  'ceremony.tapToFinish': 'Tap to see results',
+
   // Common
   'common.cancel': 'Cancel',
   'common.save': 'Save',

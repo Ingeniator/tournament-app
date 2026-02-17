@@ -1,18 +1,8 @@
 import { useMemo } from 'react';
-import type { Tournament, StandingsEntry, Competitor } from '@padel/common';
+import type { Tournament, StandingsEntry, Competitor, AwardTier, Nomination } from '@padel/common';
 import { getStrategy } from '../strategies';
 
-export type AwardTier = 'common' | 'rare' | 'legendary';
-
-export interface Nomination {
-  id: string;
-  title: string;
-  emoji: string;
-  description: string;
-  playerNames: string[];
-  stat: string;
-  tier?: AwardTier;
-}
+export type { AwardTier, Nomination };
 
 /**
  * Tier assignments for non-podium awards.
@@ -61,6 +51,11 @@ export function useNominations(
 ): Nomination[] {
   return useMemo(() => {
     if (!tournament || tournament.phase !== 'completed' || standings.length < 2) return [];
+
+    // Return stored nominations if ceremony has already been completed
+    if (tournament.nominations && tournament.nominations.length > 0) {
+      return tournament.nominations;
+    }
 
     const nameOf = (id: string) => tournament.players.find(p => p.id === id)?.name ?? '?';
     const ppm = tournament.config.pointsPerMatch;

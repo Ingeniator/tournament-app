@@ -1,4 +1,4 @@
-import type { TournamentConfig, MatchScore, Tournament, Round } from '@padel/common';
+import type { TournamentConfig, MatchScore, Tournament, Round, Nomination } from '@padel/common';
 
 export type TournamentAction =
   | { type: 'CREATE_TOURNAMENT'; payload: { name: string; config: TournamentConfig } }
@@ -30,4 +30,5 @@ export type TournamentAction =
   | { type: 'RENAME_TEAM'; payload: { teamId: string; name: string } }
   | { type: 'SET_TEAMS_BACK' }
   | { type: 'COMPLETE_TOURNAMENT' }
+  | { type: 'COMPLETE_CEREMONY'; payload: { nominations: Nomination[] } }
   | { type: 'RESET_TOURNAMENT' };

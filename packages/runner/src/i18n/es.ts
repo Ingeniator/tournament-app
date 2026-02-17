@@ -253,6 +253,12 @@ const es: Translations = {
   'error.title': 'Algo sali\u00f3 mal',
   'error.reload': 'Recargar',
 
+  // CeremonyScreen
+  'ceremony.skip': 'Saltar',
+  'ceremony.tapToReveal': 'Toca para revelar',
+  'ceremony.tapForNext': 'Toca para el siguiente premio',
+  'ceremony.tapToFinish': 'Toca para ver resultados',
+
   // Common
   'common.cancel': 'Cancelar',
   'common.save': 'Guardar',
