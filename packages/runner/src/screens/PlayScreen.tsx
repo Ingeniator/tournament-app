@@ -230,7 +230,18 @@ export function PlayScreen() {
               </div>
               <div className={styles.imagePreviewScroll}>
                 {previewImages.map((url, i) => (
-                  <img key={i} src={url} alt={`Result ${i + 1}`} className={styles.imagePreviewImg} />
+                  <div key={i} className={styles.imagePreviewItem}>
+                    <img src={url} alt={`Result ${i + 1}`} className={styles.imagePreviewImg} />
+                    <a
+                      href={url}
+                      download={`${tournament.name.replace(/[^a-zA-Z0-9]/g, '_')}_${i + 1}.png`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.imagePreviewDownload}
+                    >
+                      &#x2913; {t('play.saveImage')}
+                    </a>
+                  </div>
                 ))}
               </div>
             </div>
