@@ -17,7 +17,6 @@ export function AppFooter({ onFeedbackClick }: AppFooterProps) {
     <>
       <footer className={styles.footer}>
         <div>{t('footer.freeOpenSource')} {'\u00b7'} {t('footer.madeWithCare')}</div>
-        <div className={styles.version}>v.{__COMMIT_HASH__}</div>
         <div>
           <button className={styles.footerLink} onClick={() => setSupportOpen(true)}>
             {t('footer.supportUs')}
@@ -31,6 +30,7 @@ export function AppFooter({ onFeedbackClick }: AppFooterProps) {
             {t('footer.options')}
           </button>
         </div>
+        <div className={styles.version}>v.{__COMMIT_HASH__}</div>
       </footer>
       <OptionsModal open={optionsOpen} onClose={() => setOptionsOpen(false)} />
       <SupportOverlay open={supportOpen} onClose={() => setSupportOpen(false)} />
