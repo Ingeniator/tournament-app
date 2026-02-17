@@ -255,6 +255,12 @@ const pt: Translations = {
   'error.title': 'Algo correu mal',
   'error.reload': 'Recarregar',
 
+  // CeremonyScreen
+  'ceremony.skip': 'Saltar',
+  'ceremony.tapToReveal': 'Toque para revelar',
+  'ceremony.tapForNext': 'Toque para o pr\u00f3ximo pr\u00e9mio',
+  'ceremony.tapToFinish': 'Toque para ver resultados',
+
   // Common
   'common.cancel': 'Cancelar',
   'common.save': 'Guardar',
