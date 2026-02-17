@@ -27,6 +27,8 @@ const es: Translations = {
   'home.noTournamentsJoined': 'Aún no te has unido a ningún torneo',
   'home.tournamentNotFound': 'Torneo no encontrado',
   'home.failedCreate': 'Error al crear el torneo',
+  'home.expired': 'Expirado',
+  'home.completed': 'Completado',
 
   // Footer & Options
   'footer.freeOpenSource': 'Gratuito y de código abierto',

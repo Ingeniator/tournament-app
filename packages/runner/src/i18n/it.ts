@@ -71,6 +71,7 @@ const it: Translations = {
   'play.madeWithCare': 'Fatto con cura',
   'play.sendFeedback': 'Invia feedback',
   'play.longPressHint': 'Tieni premuto su un\'immagine per salvarla',
+  'play.saveImage': 'Salva Immagine',
   'play.copied': 'Copiato!',
   'play.failedCopy': 'Copia fallita',
   'play.shared': 'Condiviso!',

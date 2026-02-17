@@ -28,6 +28,7 @@ export interface TournamentSummary {
   organizerName?: string;
   code: string;
   createdAt: number;
+  completedAt?: number | null;
 }
 
 export interface PlannerRegistration {

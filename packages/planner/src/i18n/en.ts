@@ -27,6 +27,8 @@ const en: Translations = {
   'home.noTournamentsJoined': 'No tournaments joined yet',
   'home.tournamentNotFound': 'Tournament not found',
   'home.failedCreate': 'Failed to create tournament',
+  'home.expired': 'Expired',
+  'home.completed': 'Completed',
 
   // Footer & Options
   'footer.freeOpenSource': 'Free & open source',
