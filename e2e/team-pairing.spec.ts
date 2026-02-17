@@ -11,10 +11,9 @@ test.describe('Team Pairing', () => {
   });
 
   test('displays team cards with players', async ({ page }) => {
-    // Verify team name inputs with placeholder labels
-    await expect(page.getByPlaceholder('Team 1')).toBeVisible();
-    await expect(page.getByPlaceholder('Team 2')).toBeVisible();
-    await expect(page.getByPlaceholder('Team 3')).toBeVisible();
+    // Verify 3 team name inputs exist (placeholders are dynamic player names)
+    const teamInputs = page.locator('[class*="teamNameInput"]');
+    await expect(teamInputs).toHaveCount(3);
 
     // Verify all player names are visible
     for (const name of ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank']) {
