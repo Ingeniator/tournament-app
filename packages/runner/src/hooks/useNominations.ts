@@ -43,6 +43,7 @@ const AWARD_TIERS: Record<string, AwardTier> = {
   'offensive-duo': 'common',
   'wall-pair': 'common',
   'rubber-match': 'common',
+  'peacemaker': 'rare',
 };
 
 interface PlayerMatchInfo {
@@ -541,6 +542,25 @@ export function useNominations(
         playerNames: [competitorNameOf(bestOffense.id)],
         stat: `${bestOffense.avg.toFixed(1)} avg per game`,
       });
+    }
+
+    // 16. PEACEMAKER - Most drawn matches
+    let maxDraws = 0;
+    for (const entry of standings) {
+      if (entry.matchesDraw > maxDraws) maxDraws = entry.matchesDraw;
+    }
+    if (maxDraws >= 2) {
+      const drawLeaders = standings.filter(s => s.matchesDraw === maxDraws);
+      if (drawLeaders.length <= 2) {
+        awards.push({
+          id: 'peacemaker',
+          title: 'Peacemaker',
+          emoji: '🕊️',
+          description: 'Nobody wins, nobody loses',
+          playerNames: drawLeaders.map(d => d.playerName),
+          stat: `${maxDraws} drawn matches`,
+        });
+      }
     }
 
     // Pair/duo awards — only make sense when partners rotate

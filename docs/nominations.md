@@ -24,7 +24,7 @@ The final output is an ordered array:
 
 Podium slots are skipped when ranks don't match position (e.g., ties).
 
-### Non-Podium Awards (up to 22 possible)
+### Non-Podium Awards (up to 23 possible)
 
 Awards are evaluated against tournament data. Each has qualification criteria — not all will qualify in every tournament. In a typical tournament, 8–15 may qualify; up to 7 are shown.
 
@@ -47,23 +47,24 @@ Awards are evaluated against tournament data. Each has qualification criteria �
 | 13 | `warrior` | Warrior | 💪 | Common | Most games played (only if variation exists, max 2 recipients) |
 | 14 | `dominator` | Dominator | 🔥 | Rare | Longest winning streak (min 3 consecutive wins) |
 | 15 | `offensive-powerhouse` | Offensive Powerhouse | 💣 | Common | Highest scoring average per game (excluded if rank #1 or same as Iron Wall winner) |
+| 16 | `peacemaker` | Peacemaker | 🕊️ | Rare | Most drawn matches (min 2 draws, max 2 recipients) |
 
 #### Pair / Duo (only when partners rotate, i.e. `!strategy.hasFixedPartners`)
 
 | # | ID | Title | Emoji | Tier | Criteria |
 |---|-----|-------|-------|------|----------|
-| 16 | `best-duo` | Best Duo | 🤝 | Rare | Pair with highest win % together (min 2 games) |
-| 17 | `offensive-duo` | Offensive Duo | 🚀 | Common | Pair with highest avg points scored (min 2, excluded if same as Best Duo) |
-| 18 | `wall-pair` | Defensive Duo | 🏰 | Common | Pair with lowest avg points conceded (min 2 games) |
-| 19 | `hot-streak-duo` | Hot Streak Duo | 🔥 | Rare | Pair with longest winning streak (min 3) |
+| 17 | `best-duo` | Best Duo | 🤝 | Rare | Pair with highest win % together (min 2 games) |
+| 18 | `offensive-duo` | Offensive Duo | 🚀 | Common | Pair with highest avg points scored (min 2, excluded if same as Best Duo) |
+| 19 | `wall-pair` | Defensive Duo | 🏰 | Common | Pair with lowest avg points conceded (min 2 games) |
+| 20 | `hot-streak-duo` | Hot Streak Duo | 🔥 | Rare | Pair with longest winning streak (min 3) |
 
 #### Head-to-Head (only when partners rotate)
 
 | # | ID | Title | Emoji | Tier | Criteria |
 |---|-----|-------|-------|------|----------|
-| 20 | `nemesis` | Nemesis | 😈 | Legendary | Beat same opponent 3+ times with 0 losses |
-| 21 | `rubber-match` | Rubber Match | 🔄 | Common | Same team pair played multiple times with split results |
-| 22 | `gatekeeper` | Gatekeeper | 🚧 | Rare | Beat all lower-ranked, lost to all higher-ranked (min 3 games, not rank 1 or last) |
+| 21 | `nemesis` | Nemesis | 😈 | Legendary | Beat same opponent 3+ times with 0 losses |
+| 22 | `rubber-match` | Rubber Match | 🔄 | Common | Same team pair played multiple times with split results |
+| 23 | `gatekeeper` | Gatekeeper | 🚧 | Rare | Beat all lower-ranked, lost to all higher-ranked (min 3 games, not rank 1 or last) |
 
 ### Lucky Award (always shown, 1)
 
@@ -105,7 +106,7 @@ Every non-podium award is assigned a tier that controls how often it appears acr
 | Tier | Awards | Selection Weight | Appearance Feel |
 |------|--------|-----------------|-----------------|
 | **Legendary** | Undefeated, Giant Slayer, Comeback King, Nemesis | 15% of slots | Rare sighting — collectible |
-| **Rare** | Dominator, Clutch Player, Iron Wall, Consistency Champion, Gatekeeper, Best Duo, Hot Streak Duo, Nearly There | 30% of slots | Moderately unusual |
+| **Rare** | Dominator, Clutch Player, Iron Wall, Consistency Champion, Gatekeeper, Best Duo, Hot Streak Duo, Nearly There, Peacemaker | 30% of slots | Moderately unusual |
 | **Common** | Point Machine, Quick Strike, See-Saw, Instant Classic, Battle Tested, Warrior, Offensive Powerhouse, Offensive Duo, Defensive Duo, Rubber Match | 55% of slots | Appear most tournaments |
 
 Tier assignment reflects both the difficulty of the statistical achievement and the specificity of the conditions required. Legendary awards require rare tournament conditions (someone winning every game, a massive comeback from a losing start, etc.).
