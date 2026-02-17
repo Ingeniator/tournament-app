@@ -22,6 +22,10 @@ function getThemeColors() {
     rankGold:      v('--color-rank-gold')      || '#ffd700',
     rankSilver:    v('--color-rank-silver')    || '#c0c0c0',
     rankBronze:    v('--color-rank-bronze')    || '#cd7f32',
+    tierLegendary:     v('--color-tier-legendary')      || '#f0a030',
+    tierLegendaryTint: v('--color-tier-legendary-tint') || 'rgba(240,160,48,0.15)',
+    tierRare:          v('--color-tier-rare')            || '#8b5cf6',
+    tierRareTint:      v('--color-tier-rare-tint')       || 'rgba(139,92,246,0.15)',
   };
 }
 
@@ -192,11 +196,14 @@ export function renderNominationImage(
   const maxTextW = canvasWidth - s(48);
   const isMultiPlayer = nomination.playerNames.length > 2;
 
+  const tier = nomination.tier;
+
   // Matching CSS: gap var(--space-xs)=4px, padding var(--space-xl)=32px var(--space-lg)=24px
   const gap = s(4);
   const padV = s(32);
   const headerH = s(14);    // tournament name line
   const headerGap = s(12);
+  const tierBadgeH = tier && tier !== 'common' ? s(16) + gap : 0; // badge + gap
   const emojiH = s(44);     // 2.5rem = 40px + margin
   const titleH = s(16);     // --text-xs: 0.75rem = 12px + line-height
   const statH = s(22);      // --text-lg: 1.125rem = 18px + line-height
@@ -212,7 +219,7 @@ export function renderNominationImage(
     playersH = s(26); // --text-xl: 1.25rem = 20px + line-height
   }
 
-  const contentH = emojiH + gap + titleH + gap + playersH + gap + statH + gap + descH;
+  const contentH = tierBadgeH + emojiH + gap + titleH + gap + playersH + gap + statH + gap + descH;
   const canvasHeight = padV + headerH + headerGap + contentH + footerGap + footerH + padV;
 
   canvas.width = canvasWidth;
@@ -228,11 +235,24 @@ export function renderNominationImage(
   roundRect(ctx, 0, 0, canvasWidth, canvasHeight, cardR);
   ctx.fill();
 
-  // Card border
-  ctx.strokeStyle = t.border;
-  ctx.lineWidth = s(1);
+  // Card border — tier-colored for rare/legendary
+  const borderColor = tier === 'legendary' ? t.tierLegendary : tier === 'rare' ? t.tierRare : t.border;
+  ctx.strokeStyle = borderColor;
+  ctx.lineWidth = tier && tier !== 'common' ? s(1.5) : s(1);
   roundRect(ctx, 0, 0, canvasWidth, canvasHeight, cardR);
   ctx.stroke();
+
+  // Tier glow effect for rare/legendary
+  if (tier === 'legendary' || tier === 'rare') {
+    ctx.save();
+    ctx.shadowColor = tier === 'legendary' ? t.tierLegendary : t.tierRare;
+    ctx.shadowBlur = s(8);
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = s(0.5);
+    roundRect(ctx, 0, 0, canvasWidth, canvasHeight, cardR);
+    ctx.stroke();
+    ctx.restore();
+  }
 
   ctx.textAlign = 'center';
   let y = padV;
@@ -242,6 +262,26 @@ export function renderNominationImage(
   ctx.font = `600 ${s(9)}px ${FONT}`;
   ctx.fillText(tournamentName.toUpperCase(), cx, y + s(10));
   y += headerH + headerGap;
+
+  // Tier badge (rare/legendary only)
+  if (tier && tier !== 'common') {
+    const label = tier === 'legendary' ? 'LEGENDARY' : 'RARE';
+    const badgeColor = tier === 'legendary' ? t.tierLegendary : t.tierRare;
+    const badgeTint = tier === 'legendary' ? t.tierLegendaryTint : t.tierRareTint;
+    ctx.font = `bold ${s(8)}px ${FONT}`;
+    const badgeW = ctx.measureText(label).width + s(12);
+    const badgeH = s(14);
+    const badgeX = cx - badgeW / 2;
+    const badgeY = y;
+    // Badge background
+    ctx.fillStyle = badgeTint;
+    roundRect(ctx, badgeX, badgeY, badgeW, badgeH, s(7));
+    ctx.fill();
+    // Badge text
+    ctx.fillStyle = badgeColor;
+    ctx.fillText(label, cx, badgeY + s(10));
+    y += s(16) + gap;
+  }
 
   // Emoji — matching CSS: font-size 2.5rem
   ctx.font = `${s(40)}px ${FONT}`;

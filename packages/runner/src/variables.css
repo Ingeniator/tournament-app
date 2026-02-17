@@ -86,6 +86,12 @@
   --color-rank-gold: var(--gold-9);
   --color-rank-bronze: var(--bronze-9);
 
+  /* ── Award tier colors ── */
+  --color-tier-legendary: var(--amber-9);
+  --color-tier-legendary-tint: var(--amber-a3);
+  --color-tier-rare: var(--violet-9);
+  --color-tier-rare-tint: var(--violet-a3);
+
   /* ── Spacing ── */
   --space-xs: 4px;
   --space-sm: 8px;
@@ -253,6 +259,9 @@
   --color-border: #acb0be;
   --color-separator: rgba(172, 176, 190, 0.4);
   --color-rank-silver: #7c7f93;
+  /* Primary is deep purple — swap rare tier to crimson for contrast */
+  --color-tier-rare: var(--crimson-9);
+  --color-tier-rare-tint: var(--crimson-a3);
 }
 
 /* ── Cyberpunk  (deep purple + neon pink · tweakcn) ── */
@@ -338,6 +347,9 @@
   --color-border: #2e1065;
   --color-separator: rgba(46, 16, 101, 0.4);
   --color-rank-silver: #9b8ec4;
+  /* Primary is violet — swap rare tier to crimson for contrast */
+  --color-tier-rare: var(--crimson-9);
+  --color-tier-rare-tint: var(--crimson-a3);
 }
 
 /* ── Sunset  (warm dark + coral · tweakcn) ── */
