@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { Nomination, AwardTier } from '@padel/common';
+import type { Nomination } from '@padel/common';
 import { useTranslation } from '@padel/common';
 import styles from './CeremonyScreen.module.css';
 
