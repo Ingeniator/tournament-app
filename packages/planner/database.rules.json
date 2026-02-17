@@ -1,6 +1,7 @@
 {
   "rules": {
     "tournaments": {
+      ".read": "auth != null",
       "$tournamentId": {
         ".read": true,
         ".write": "auth != null && (!data.exists() || data.child('organizerId').val() === auth.uid)",
