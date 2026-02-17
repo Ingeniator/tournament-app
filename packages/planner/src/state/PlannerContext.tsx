@@ -145,10 +145,10 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
 
   const createTournament = useCallback(async (name: string) => {
     if (!uid) return;
-    const id = await createInDb(name, uid, locale);
+    const id = await createInDb(name, uid, locale, telegramUser?.username);
     setTournamentId(id);
     setScreen('organizer');
-  }, [uid, locale, createInDb]);
+  }, [uid, locale, telegramUser, createInDb]);
 
   const loadByCode = useCallback(async (code: string): Promise<boolean> => {
     const id = await loadByCodeFromDb(code);
