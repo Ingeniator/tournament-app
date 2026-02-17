@@ -410,13 +410,23 @@ export async function shareStandingsImage(
     }
 
     const tg = window.Telegram?.WebApp;
+    const isTelegramBrowser = tg || /Telegram/i.test(navigator.userAgent);
 
-    // Telegram WebApp: navigator.share() silently resolves without actually
-    // sharing. Programmatic <a>.click() downloads are also blocked. Clipboard
-    // write fails in most versions. Show preview overlay with blob URLs so
-    // users can tap download links (user-initiated taps may bypass restrictions
-    // that block programmatic clicks) or long-press to save.
-    if (tg) {
+    // DEBUG
+    alert([
+      `tg=${!!tg}`,
+      `isTgBrowser=${isTelegramBrowser}`,
+      `UA=${navigator.userAgent}`,
+      `share=${!!navigator.share}`,
+      `canShare=${navigator.canShare?.({ files })}`,
+      `clipboard=${!!navigator.clipboard?.write}`,
+    ].join('\n'));
+
+    // Telegram in-app browser (both Mini App and regular in-app browser):
+    // navigator.share() silently resolves without actually sharing.
+    // Programmatic <a>.click() downloads are also blocked. Show preview
+    // overlay with blob URLs so users can tap download links or long-press.
+    if (isTelegramBrowser) {
       const allCanvases = [
         ...podiumIndices.map(i => nominationCanvases[i]),
         standingsCanvas,
