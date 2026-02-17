@@ -54,7 +54,7 @@ export function CeremonyScreen({ nominations, onComplete }: CeremonyScreenProps)
   const current = ceremonyOrder[currentIndex];
   if (!current) return null;
 
-  const isChampion = current.id === 'podium-1';
+  const isChampion = current.id.startsWith('podium-1');
   const isPodium = current.id.startsWith('podium-');
   const isMultiPlayer = current.playerNames.length > 2;
   const tier = current.tier;

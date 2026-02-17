@@ -190,19 +190,22 @@ export function useNominations(
       { emoji: '🥈', title: 'Runner-up', description: 'Second place' },
       { emoji: '🥉', title: 'Third Place', description: 'Bronze medal finish' },
     ];
-    for (let i = 0; i < Math.min(3, standings.length); i++) {
-      const entry = standings[i];
-      if (entry.rank !== i + 1) continue; // skip if rank doesn't match (ties)
-      const medal = MEDALS[i];
-      const diff = entry.pointDiff >= 0 ? `+${entry.pointDiff}` : String(entry.pointDiff);
-      const wtl = `${entry.matchesWon}W-${entry.matchesDraw}T-${entry.matchesLost}L`;
-      podium.push({
-        id: `podium-${i + 1}`,
-        title: medal.title,
-        emoji: medal.emoji,
-        description: medal.description,
-        playerNames: [entry.playerName],
-        stat: `${entry.totalPoints} pts · ${wtl} · ${diff}`,
+    for (let rank = 1; rank <= 3; rank++) {
+      const entries = standings.filter(s => s.rank === rank);
+      if (entries.length === 0) continue;
+      const medal = MEDALS[rank - 1];
+      entries.forEach((entry, idx) => {
+        const diff = entry.pointDiff >= 0 ? `+${entry.pointDiff}` : String(entry.pointDiff);
+        const wtl = `${entry.matchesWon}W-${entry.matchesDraw}T-${entry.matchesLost}L`;
+        const suffix = idx === 0 ? '' : `-${String.fromCharCode(97 + idx)}`;
+        podium.push({
+          id: `podium-${rank}${suffix}`,
+          title: medal.title,
+          emoji: medal.emoji,
+          description: medal.description,
+          playerNames: [entry.playerName],
+          stat: `${entry.totalPoints} pts · ${wtl} · ${diff}`,
+        });
       });
     }
 
