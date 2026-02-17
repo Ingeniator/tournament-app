@@ -143,9 +143,46 @@ export function usePlayers(tournamentId: string | null) {
     await update(ref(db, `tournaments/${tournamentId}/players/${playerId}`), { name });
   }, [tournamentId]);
 
+  const updatePlayerTelegram = useCallback(async (playerId: string, telegramUsername: string | null) => {
+    if (!tournamentId || !db) return;
+    await update(ref(db, `tournaments/${tournamentId}/players/${playerId}`), {
+      telegramUsername: telegramUsername || null,
+    });
+  }, [tournamentId]);
+
+  /**
+   * Claim a registration that was manually added by the organizer with a
+   * telegramUsername. Moves the player record from the random orphan ID to
+   * the real Firebase UID so the Telegram user can manage their own
+   * participation (cancel, edit name, etc.).
+   */
+  const claimOrphanRegistration = useCallback(async (orphanId: string, newUid: string, telegramUsername: string) => {
+    if (!tournamentId || !db) return;
+
+    const playerSnap = await get(ref(db, `tournaments/${tournamentId}/players/${orphanId}`));
+    if (!playerSnap.exists()) return;
+
+    const playerData = playerSnap.val();
+    if (playerData.telegramUsername !== telegramUsername) return;
+
+    // Already claimed by this UID
+    const existing = await get(ref(db, `tournaments/${tournamentId}/players/${newUid}`));
+    if (existing.exists()) return;
+
+    // Move player record atomically (delete orphan + create under real UID)
+    await update(ref(db), {
+      [`tournaments/${tournamentId}/players/${orphanId}`]: null,
+      [`tournaments/${tournamentId}/players/${newUid}`]: { ...playerData, telegramUsername },
+    });
+
+    // Set up indexes separately to avoid cross-node permission issues
+    await set(ref(db, `users/${newUid}/registrations/${tournamentId}`), true);
+    await set(ref(db, `telegramUsers/${telegramUsername}/registrations/${tournamentId}`), true);
+  }, [tournamentId]);
+
   const isRegistered = useCallback((uid: string): boolean => {
     return players.some(p => p.id === uid);
   }, [players]);
 
-  return { players, loading, registerPlayer, removePlayer, updateConfirmed, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, isRegistered, claimRegistration };
+  return { players, loading, registerPlayer, removePlayer, updateConfirmed, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, isRegistered, claimRegistration, claimOrphanRegistration };
 }
