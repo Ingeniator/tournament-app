@@ -1,5 +1,5 @@
 import { useRef, type Ref } from 'react';
-import type { Nomination } from '../../hooks/useNominations';
+import type { Nomination, AwardTier } from '../../hooks/useNominations';
 import styles from './NominationCard.module.css';
 
 interface NominationCardProps {
@@ -8,12 +8,32 @@ interface NominationCardProps {
   minHeight?: number;
 }
 
+const TIER_LABELS: Record<AwardTier, string> = {
+  common: '',
+  rare: 'RARE',
+  legendary: 'LEGENDARY',
+};
+
+const TIER_STYLES: Record<AwardTier, string | undefined> = {
+  common: undefined,
+  rare: styles.tierRare,
+  legendary: styles.tierLegendary,
+};
+
 export function NominationCard({ nomination, cardRef, minHeight }: NominationCardProps) {
   const isMultiPlayer = nomination.playerNames.length > 2;
   const fallbackRef = useRef<HTMLDivElement>(null);
+  const tier = nomination.tier;
+  const tierClass = tier ? TIER_STYLES[tier] : undefined;
+  const tierLabel = tier ? TIER_LABELS[tier] : '';
 
   return (
-    <div className={styles.card} ref={cardRef ?? fallbackRef} style={minHeight ? { minHeight } : undefined}>
+    <div
+      className={`${styles.card}${tierClass ? ` ${tierClass}` : ''}`}
+      ref={cardRef ?? fallbackRef}
+      style={minHeight ? { minHeight } : undefined}
+    >
+      {tierLabel && <div className={styles.tierBadge}>{tierLabel}</div>}
       <div className={styles.emoji}>{nomination.emoji}</div>
       <div className={styles.title}>{nomination.title}</div>
       <div className={styles.players}>

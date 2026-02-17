@@ -16,6 +16,38 @@
   gap: var(--space-xs);
 }
 
+/* ── Tier variants ── */
+
+.tierRare {
+  border-color: var(--color-tier-rare);
+  box-shadow: 0 0 12px var(--color-tier-rare-tint), inset 0 0 12px var(--color-tier-rare-tint);
+}
+
+.tierLegendary {
+  border-color: var(--color-tier-legendary);
+  box-shadow: 0 0 16px var(--color-tier-legendary-tint), inset 0 0 16px var(--color-tier-legendary-tint);
+}
+
+.tierBadge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  line-height: 1.4;
+}
+
+.tierRare .tierBadge {
+  color: var(--color-tier-rare);
+  background: var(--color-tier-rare-tint);
+}
+
+.tierLegendary .tierBadge {
+  color: var(--color-tier-legendary);
+  background: var(--color-tier-legendary-tint);
+}
+
 .emoji {
   font-size: 2.5rem;
   line-height: 1;

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { ref, push, set } from 'firebase/database';
 import { useTournament } from '../hooks/useTournament';
 import { useRunnerTheme } from '../state/ThemeContext';
@@ -12,10 +12,9 @@ export function HomeScreen() {
   const { tournament, dispatch } = useTournament();
   const { t } = useTranslation();
   const { skin, setSkin } = useRunnerTheme();
-  const [importMode, setImportMode] = useState(false);
-  const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleNew = () => {
     dispatch({
@@ -42,16 +41,35 @@ export function HomeScreen() {
     }
   };
 
-  const handleImport = () => {
-    const result = validateImport(importText);
+  const loadTournament = (text: string) => {
+    const result = validateImport(text);
     if (result.error || !result.tournament) {
       setImportError(result.error ?? 'Unknown error');
       return;
     }
-    dispatch({ type: 'LOAD_TOURNAMENT', payload: result.tournament });
-    setImportMode(false);
-    setImportText('');
     setImportError(null);
+    dispatch({ type: 'LOAD_TOURNAMENT', payload: result.tournament });
+  };
+
+  const handleImportClipboard = async () => {
+    setImportError(null);
+    try {
+      const text = await navigator.clipboard.readText();
+      loadTournament(text);
+    } catch {
+      setImportError(t('home.clipboardError'));
+    }
+  };
+
+  const handleFileLoad = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      loadTournament(reader.result as string);
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   };
 
   const handleFeedback = async (message: string) => {
@@ -114,41 +132,20 @@ export function HomeScreen() {
                 {t('home.planShare')}
               </Button>
             </a>
-            <Button
-              variant="secondary"
-              fullWidth
-              onClick={() => {
-                setImportMode(!importMode);
-                setImportError(null);
-                setImportText('');
-              }}
-            >
-              {importMode ? t('home.cancel') : t('home.importFromClipboard')}
+            <Button variant="secondary" fullWidth onClick={handleImportClipboard}>
+              {t('home.importFromClipboard')}
             </Button>
-
-            {importMode && (
-              <div className={styles.importSection}>
-                <textarea
-                  className={styles.importArea}
-                  value={importText}
-                  onChange={e => {
-                    setImportText(e.target.value);
-                    setImportError(null);
-                  }}
-                  placeholder={t('home.importPlaceholder')}
-                  rows={6}
-                  autoFocus
-                />
-                {importError && <div className={styles.importError}>{importError}</div>}
-                <Button
-                  fullWidth
-                  onClick={handleImport}
-                  disabled={!importText.trim()}
-                >
-                  {t('home.import')}
-                </Button>
-              </div>
-            )}
+            <Button variant="secondary" fullWidth onClick={() => fileInputRef.current?.click()}>
+              {t('home.loadFile')}
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json,application/json"
+              onChange={handleFileLoad}
+              className={styles.fileInput}
+            />
+            {importError && <div className={styles.importError}>{importError}</div>}
           </>
         )}
       </div>
