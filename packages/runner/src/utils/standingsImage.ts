@@ -367,6 +367,18 @@ export async function shareStandingsImage(
     return { status: 'failed' };
   }
 
+  // Split nominations into podium and non-podium for reordering:
+  // podium awards first, then standings table, then other nominations
+  const podiumIndices: number[] = [];
+  const otherIndices: number[] = [];
+  nominations.forEach((n, i) => {
+    if (n.id.startsWith('podium-')) {
+      podiumIndices.push(i);
+    } else {
+      otherIndices.push(i);
+    }
+  });
+
   const safeName = tournamentName.replace(/[^a-zA-Z0-9]/g, '_');
 
   try {
@@ -374,15 +386,25 @@ export async function shareStandingsImage(
     const standingsBlob = await canvasToBlob(standingsCanvas);
     if (!standingsBlob) return { status: 'failed' };
 
-    const files: File[] = [
-      new File([standingsBlob], `${safeName}_results.png`, { type: 'image/png' }),
-    ];
+    // Order: podium awards → standings table → other nominations
+    const files: File[] = [];
 
-    for (let i = 0; i < nominationCanvases.length; i++) {
+    for (const i of podiumIndices) {
       const blob = await canvasToBlob(nominationCanvases[i]);
       if (blob) {
-        const nom = nominations[i];
-        const nomName = nom.id.replace(/[^a-zA-Z0-9-]/g, '_');
+        const nomName = nominations[i].id.replace(/[^a-zA-Z0-9-]/g, '_');
+        files.push(new File([blob], `${safeName}_${nomName}.png`, { type: 'image/png' }));
+      }
+    }
+
+    files.push(
+      new File([standingsBlob], `${safeName}_results.png`, { type: 'image/png' }),
+    );
+
+    for (const i of otherIndices) {
+      const blob = await canvasToBlob(nominationCanvases[i]);
+      if (blob) {
+        const nomName = nominations[i].id.replace(/[^a-zA-Z0-9-]/g, '_');
         files.push(new File([blob], `${safeName}_${nomName}.png`, { type: 'image/png' }));
       }
     }
@@ -404,7 +426,11 @@ export async function shareStandingsImage(
         }
       }
       // Fallback: show preview overlay so users can long-press to save
-      const allCanvases = [standingsCanvas, ...nominationCanvases];
+      const allCanvases = [
+        ...podiumIndices.map(i => nominationCanvases[i]),
+        standingsCanvas,
+        ...otherIndices.map(i => nominationCanvases[i]),
+      ];
       const dataUrls = allCanvases.map(c => c.toDataURL('image/png'));
       return { status: 'preview', dataUrls };
     }
@@ -446,7 +472,11 @@ export async function shareStandingsImage(
     // Last resort for Telegram: show preview overlay
     if (window.Telegram?.WebApp) {
       try {
-        const allCanvases = [standingsCanvas, ...nominationCanvases];
+        const allCanvases = [
+          ...podiumIndices.map(i => nominationCanvases[i]),
+          standingsCanvas,
+          ...otherIndices.map(i => nominationCanvases[i]),
+        ];
         const dataUrls = allCanvases.map(c => c.toDataURL('image/png'));
         return { status: 'preview', dataUrls };
       } catch {
