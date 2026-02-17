@@ -362,5 +362,9 @@
   max-width: 400px;
   height: auto;
   border-radius: var(--radius-md);
+  /* Enable long-press context menu in WebViews (especially iOS) */
+  -webkit-touch-callout: default !important;
+  -webkit-user-select: auto !important;
+  user-select: auto;
 }
 

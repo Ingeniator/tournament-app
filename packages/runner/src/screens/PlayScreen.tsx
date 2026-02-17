@@ -203,11 +203,17 @@ export function PlayScreen() {
           }}
         />
         {previewImages && (
-          <div className={styles.imagePreviewOverlay} onClick={() => setPreviewImages(null)}>
+          <div className={styles.imagePreviewOverlay} onClick={() => {
+            previewImages.forEach(u => { if (u.startsWith('blob:')) URL.revokeObjectURL(u); });
+            setPreviewImages(null);
+          }}>
             <div className={styles.imagePreviewContent} onClick={e => e.stopPropagation()}>
               <div className={styles.imagePreviewHeader}>
                 <span className={styles.imagePreviewHint}>{t('play.longPressHint')}</span>
-                <button className={styles.imagePreviewClose} onClick={() => setPreviewImages(null)}>&#x2715;</button>
+                <button className={styles.imagePreviewClose} onClick={() => {
+                  previewImages.forEach(u => { if (u.startsWith('blob:')) URL.revokeObjectURL(u); });
+                  setPreviewImages(null);
+                }}>&#x2715;</button>
               </div>
               <div className={styles.imagePreviewScroll}>
                 {previewImages.map((url, i) => (

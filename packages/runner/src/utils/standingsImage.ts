@@ -411,11 +411,22 @@ export async function shareStandingsImage(
 
     const tg = window.Telegram?.WebApp;
 
-    // Telegram WebApp must be checked FIRST: its WebView exposes navigator.share
-    // but it doesn't actually work (resolves without sharing). Blob downloads and
-    // programmatic <a>.click() are also blocked. downloadFile requires HTTPS URLs
-    // (data URLs silently fail).
+    // Telegram WebApp: blob downloads and programmatic <a>.click() are blocked.
+    // Try Web Share API with files first (works in newer Telegram versions),
+    // then clipboard, then fall back to preview overlay with blob URLs.
     if (tg) {
+      // Try Web Share API with files — works in newer Telegram WebViews.
+      // canShare({ files }) must return true; without it, share may silently
+      // resolve without actually sharing.
+      if (navigator.share && navigator.canShare?.({ files })) {
+        try {
+          await navigator.share({ files });
+          return { status: 'shared' };
+        } catch {
+          // Share failed or cancelled — fall through
+        }
+      }
+
       // Try clipboard write — works in some Telegram WebViews
       try {
         if (navigator.clipboard?.write) {
@@ -431,14 +442,18 @@ export async function shareStandingsImage(
         // clipboard not available — fall through to preview
       }
 
-      // Fallback: show preview overlay so users can long-press to save
+      // Fallback: show preview overlay with blob URLs (better context menu
+      // support than data URLs in WebViews)
       const allCanvases = [
         ...podiumIndices.map(i => nominationCanvases[i]),
         standingsCanvas,
         ...otherIndices.map(i => nominationCanvases[i]),
       ];
-      const dataUrls = allCanvases.map(c => c.toDataURL('image/png'));
-      return { status: 'preview', dataUrls };
+      const blobs = await Promise.all(allCanvases.map(c => canvasToBlob(c)));
+      const blobUrls = blobs
+        .filter((b): b is Blob => b !== null)
+        .map(b => URL.createObjectURL(b));
+      return { status: 'preview', dataUrls: blobUrls };
     }
 
     // Try Web Share API (works on mobile browsers and some desktops)
@@ -483,8 +498,11 @@ export async function shareStandingsImage(
           standingsCanvas,
           ...otherIndices.map(i => nominationCanvases[i]),
         ];
-        const dataUrls = allCanvases.map(c => c.toDataURL('image/png'));
-        return { status: 'preview', dataUrls };
+        const blobs = await Promise.all(allCanvases.map(c => canvasToBlob(c)));
+        const blobUrls = blobs
+          .filter((b): b is Blob => b !== null)
+          .map(b => URL.createObjectURL(b));
+        return { status: 'preview', dataUrls: blobUrls };
       } catch {
         // give up
       }
