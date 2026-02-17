@@ -278,6 +278,12 @@ export function HomeScreen() {
 
       </main>
 
+      <div className={styles.analyticsLink}>
+        <Button variant="ghost" fullWidth onClick={() => setScreen('analytics')}>
+          {t('home.analytics')}
+        </Button>
+      </div>
+
       <AppFooter
         onFeedbackClick={() => setFeedbackOpen(true)}
       />

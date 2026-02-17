@@ -12,7 +12,7 @@ import { useRegisteredTournaments } from '../hooks/useRegisteredTournaments';
 import { useTelegram, type TelegramUser } from '../hooks/useTelegram';
 import { useTelegramSync } from '../hooks/useTelegramSync';
 
-export type Screen = 'loading' | 'home' | 'organizer' | 'join';
+export type Screen = 'loading' | 'home' | 'organizer' | 'join' | 'analytics';
 
 export interface PlannerContextValue {
   uid: string | null;

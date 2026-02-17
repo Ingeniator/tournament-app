@@ -6,6 +6,7 @@ import { usePlanner } from './state/PlannerContext';
 import { HomeScreen } from './screens/HomeScreen';
 import { OrganizerScreen } from './screens/OrganizerScreen';
 import { JoinScreen } from './screens/JoinScreen';
+import { AnalyticsScreen } from './screens/AnalyticsScreen';
 import { translations } from './i18n';
 import styles from './App.module.css';
 
@@ -96,6 +97,8 @@ function AppContent() {
       return <OrganizerScreen />;
     case 'join':
       return <JoinScreen />;
+    case 'analytics':
+      return <AnalyticsScreen />;
     default:
       return <HomeScreen />;
   }

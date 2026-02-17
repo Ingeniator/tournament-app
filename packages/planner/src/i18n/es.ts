@@ -27,6 +27,7 @@ const es: Translations = {
   'home.noTournamentsJoined': 'Aún no te has unido a ningún torneo',
   'home.tournamentNotFound': 'Torneo no encontrado',
   'home.failedCreate': 'Error al crear el torneo',
+  'home.analytics': 'Estadísticas',
 
   // Footer & Options
   'footer.freeOpenSource': 'Gratuito y de código abierto',
@@ -160,6 +161,19 @@ const es: Translations = {
   'feedback.send': 'Enviar',
   'error.title': 'Algo salió mal',
   'error.reload': 'Recargar',
+
+  // AnalyticsScreen
+  'analytics.back': 'Volver',
+  'analytics.title': 'Estadísticas',
+  'analytics.retry': 'Reintentar',
+  'analytics.totalTournaments': 'Torneos',
+  'analytics.totalPlayers': 'Jugadores',
+  'analytics.totalOrganizers': 'Organizadores',
+  'analytics.avgPlayersPerTournament': 'Jugadores prom. / torneo',
+  'analytics.avgTournamentsPerOrganizer': 'Torneos prom. / organizador',
+  'analytics.byFormat': 'Por Formato',
+  'analytics.byPlace': 'Por Lugar',
+  'analytics.refresh': 'Actualizar',
 
   // Planner App
   'app.connectionError': 'Error de Conexión',

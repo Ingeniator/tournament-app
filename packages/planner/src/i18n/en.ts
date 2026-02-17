@@ -27,6 +27,7 @@ const en: Translations = {
   'home.noTournamentsJoined': 'No tournaments joined yet',
   'home.tournamentNotFound': 'Tournament not found',
   'home.failedCreate': 'Failed to create tournament',
+  'home.analytics': 'Analytics',
 
   // Footer & Options
   'footer.freeOpenSource': 'Free & open source',
@@ -160,6 +161,19 @@ const en: Translations = {
   'feedback.send': 'Send',
   'error.title': 'Something went wrong',
   'error.reload': 'Reload',
+
+  // AnalyticsScreen
+  'analytics.back': 'Back',
+  'analytics.title': 'Analytics',
+  'analytics.retry': 'Retry',
+  'analytics.totalTournaments': 'Tournaments',
+  'analytics.totalPlayers': 'Players',
+  'analytics.totalOrganizers': 'Organizers',
+  'analytics.avgPlayersPerTournament': 'Avg players / tournament',
+  'analytics.avgTournamentsPerOrganizer': 'Avg tournaments / organizer',
+  'analytics.byFormat': 'By Format',
+  'analytics.byPlace': 'By Place',
+  'analytics.refresh': 'Refresh',
 
   // Planner App
   'app.connectionError': 'Connection Error',
