@@ -544,14 +544,17 @@ export function useNominations(
       });
     }
 
-    // 16. PEACEMAKER - Most drawn matches
+    // 16. PEACEMAKER - Most drawn matches (min 2, and >45% draw rate if 4+ games)
     let maxDraws = 0;
     for (const entry of standings) {
       if (entry.matchesDraw > maxDraws) maxDraws = entry.matchesDraw;
     }
     if (maxDraws >= 2) {
-      const drawLeaders = standings.filter(s => s.matchesDraw === maxDraws);
-      if (drawLeaders.length <= 2) {
+      const drawLeaders = standings.filter(s =>
+        s.matchesDraw === maxDraws &&
+        (s.matchesPlayed < 4 || s.matchesDraw / s.matchesPlayed > 0.45),
+      );
+      if (drawLeaders.length >= 1 && drawLeaders.length <= 2) {
         awards.push({
           id: 'peacemaker',
           title: 'Peacemaker',

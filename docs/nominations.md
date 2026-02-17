@@ -47,7 +47,7 @@ Awards are evaluated against tournament data. Each has qualification criteria �
 | 13 | `warrior` | Warrior | 💪 | Common | Most games played (only if variation exists, max 2 recipients) |
 | 14 | `dominator` | Dominator | 🔥 | Rare | Longest winning streak (min 3 consecutive wins) |
 | 15 | `offensive-powerhouse` | Offensive Powerhouse | 💣 | Common | Highest scoring average per game (excluded if rank #1 or same as Iron Wall winner) |
-| 16 | `peacemaker` | Peacemaker | 🕊️ | Rare | Most drawn matches (min 2 draws, max 2 recipients) |
+| 16 | `peacemaker` | Peacemaker | 🕊️ | Rare | Most drawn matches (min 2 draws, >45% draw rate if 4+ games played, max 2 recipients) |
 
 #### Pair / Duo (only when partners rotate, i.e. `!strategy.hasFixedPartners`)
 
