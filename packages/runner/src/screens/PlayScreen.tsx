@@ -228,12 +228,12 @@ export function PlayScreen() {
                   setPreviewImages(null);
                 }}>&#x2715;</button>
               </div>
-              <Button fullWidth onClick={() => {
-                window.open(window.location.href, '_blank');
-              }}>
-                {t('play.openInBrowser')}
-              </Button>
               <div className={styles.imagePreviewScroll}>
+                <Button fullWidth onClick={() => {
+                  window.open(window.location.href, '_blank');
+                }}>
+                  {t('play.openInBrowser')}
+                </Button>
                 {previewImages.map((url, i) => (
                   <div key={i} className={styles.imagePreviewItem}>
                     <img src={url} alt={`Result ${i + 1}`} className={styles.imagePreviewImg} />
