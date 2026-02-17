@@ -837,26 +837,58 @@ export function useNominations(
       return (h >>> 0) / 0x100000000;
     };
 
-    const pickFromTier = (preferred: AwardTier): Nomination | undefined => {
-      if (tierQueues[preferred].length > 0) return tierQueues[preferred].shift();
-      // Fall back to adjacent tiers
-      const fallback: AwardTier[] =
-        preferred === 'legendary' ? ['rare', 'common'] :
-        preferred === 'rare' ? ['common', 'legendary'] :
-        ['rare', 'legendary'];
-      for (const t of fallback) {
-        if (tierQueues[t].length > 0) return tierQueues[t].shift();
+    // Soft cap: max 2 non-podium awards per player name.
+    // Spreads recognition across more competitors while still
+    // allowing a standout player to earn two awards.
+    const MAX_PER_PLAYER = 2;
+    const playerAwardCount = new Map<string, number>();
+
+    const isWithinCap = (award: Nomination): boolean =>
+      award.playerNames.every(name => (playerAwardCount.get(name) ?? 0) < MAX_PER_PLAYER);
+
+    const recordSelection = (award: Nomination): void => {
+      for (const name of award.playerNames) {
+        playerAwardCount.set(name, (playerAwardCount.get(name) ?? 0) + 1);
+      }
+    };
+
+    const pickFromTier = (preferred: AwardTier, respectCap: boolean): Nomination | undefined => {
+      const tryOrder: AwardTier[] =
+        preferred === 'legendary' ? ['legendary', 'rare', 'common'] :
+        preferred === 'rare' ? ['rare', 'common', 'legendary'] :
+        ['common', 'rare', 'legendary'];
+      for (const t of tryOrder) {
+        const queue = tierQueues[t];
+        const idx = respectCap ? queue.findIndex(isWithinCap) : 0;
+        if (idx !== -1 && idx < queue.length) {
+          const [picked] = queue.splice(idx, 1);
+          recordSelection(picked);
+          return picked;
+        }
       }
       return undefined;
     };
 
+    // Primary pass — respect the per-player cap
     const selected: Nomination[] = [];
     for (let i = 0; i < MAX_AWARDS; i++) {
       const roll = nextRand();
       // Weights: 15% legendary, 30% rare, 55% common
       const tier: AwardTier = roll < 0.15 ? 'legendary' : roll < 0.45 ? 'rare' : 'common';
-      const picked = pickFromTier(tier);
+      const picked = pickFromTier(tier, true);
       if (picked) selected.push(picked);
+    }
+
+    // Soft relaxation — if slots remain unfilled, ignore the cap
+    if (selected.length < MAX_AWARDS) {
+      const remaining = seededShuffle(
+        [...tierQueues.legendary, ...tierQueues.rare, ...tierQueues.common],
+        seed + 4,
+      );
+      for (const award of remaining) {
+        if (selected.length >= MAX_AWARDS) break;
+        selected.push(award);
+      }
     }
 
     // Final shuffle of selected awards so tiers are interleaved
