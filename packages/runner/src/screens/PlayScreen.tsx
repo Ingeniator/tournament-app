@@ -235,26 +235,7 @@ export function PlayScreen() {
                   {t('play.openInBrowser')}
                 </Button>
                 {previewImages.map((url, i) => (
-                  <div key={i} className={styles.imagePreviewItem}>
-                    <img src={url} alt={`Result ${i + 1}`} className={styles.imagePreviewImg} />
-                    <button
-                      className={styles.imagePreviewCopy}
-                      onClick={async () => {
-                        try {
-                          const res = await fetch(url);
-                          const blob = await res.blob();
-                          await navigator.clipboard.write([
-                            new ClipboardItem({ 'image/png': blob }),
-                          ]);
-                          showToast(t('play.copied'));
-                        } catch {
-                          showToast(t('play.failedCopy'));
-                        }
-                      }}
-                    >
-                      {t('play.copyImage')}
-                    </button>
-                  </div>
+                  <img key={i} src={url} alt={`Result ${i + 1}`} className={styles.imagePreviewImg} />
                 ))}
               </div>
             </div>
