@@ -3,8 +3,8 @@ import { ref, onValue, get, remove } from 'firebase/database';
 import type { TournamentSummary, PlannerTournament } from '@padel/common';
 import { db } from '../firebase';
 
-function toSummary(id: string, t: PlannerTournament, organizerName?: string): TournamentSummary {
-  return { id, name: t.name, date: t.date, place: t.place, organizerId: t.organizerId, organizerName, code: t.code, createdAt: t.createdAt };
+function toSummary(id: string, t: PlannerTournament, organizerName?: string, completedAt?: number | null): TournamentSummary {
+  return { id, name: t.name, date: t.date, place: t.place, organizerId: t.organizerId, organizerName, code: t.code, createdAt: t.createdAt, completedAt };
 }
 
 function sortByDate(a: TournamentSummary, b: TournamentSummary): number {
@@ -44,7 +44,8 @@ export function useRegisteredTournaments(uid: string | null) {
           remove(ref(db!, `users/${uid}/registrations/${id}`));
           return;
         }
-        const t = tSnap.val() as PlannerTournament;
+        const data = tSnap.val();
+        const t = data as PlannerTournament;
         // Check player still registered
         const playerSnap = await get(ref(db!, `tournaments/${id}/players/${uid}`));
         if (!playerSnap.exists()) {
@@ -54,7 +55,7 @@ export function useRegisteredTournaments(uid: string | null) {
         }
         const nameSnap = await get(ref(db!, `users/${t.organizerId}/name`));
         const orgName = nameSnap.exists() ? (nameSnap.val() as string) : undefined;
-        results.push(toSummary(id, t, orgName));
+        results.push(toSummary(id, t, orgName, typeof data.completedAt === 'number' ? data.completedAt : null));
       }));
 
       // Skip if a newer listener call has started (re-entrant from remove())

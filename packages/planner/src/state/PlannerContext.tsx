@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, createContext, useContext, type ReactNode } from 'react';
+import { useState, useEffect, useCallback, useRef, createContext, useContext, type ReactNode } from 'react';
 import { ref, get } from 'firebase/database';
 import type { PlannerTournament, PlannerRegistration, TournamentSummary, SkinId } from '@padel/common';
 import { useTranslation, useTheme, isValidSkin, DEFAULT_SKIN } from '@padel/common';
@@ -29,10 +29,11 @@ export interface PlannerContextValue {
   registerPlayer: (name: string) => Promise<void>;
   removePlayer: (playerId: string) => Promise<void>;
   updateConfirmed: (confirmed: boolean) => Promise<void>;
-  addPlayer: (name: string) => Promise<void>;
+  addPlayer: (name: string, telegramUsername?: string) => Promise<void>;
   bulkAddPlayers: (names: string[]) => Promise<void>;
   toggleConfirmed: (playerId: string, currentConfirmed: boolean) => Promise<void>;
   updatePlayerName: (playerId: string, name: string) => Promise<void>;
+  updatePlayerTelegram: (playerId: string, telegramUsername: string | null) => Promise<void>;
   isRegistered: boolean;
   organizerName: string | null;
   userName: string | null;
@@ -42,6 +43,8 @@ export interface PlannerContextValue {
   registeredTournaments: TournamentSummary[];
   listingsLoading: boolean;
   openTournament: (id: string, screen: 'organizer' | 'join') => void;
+  completedAt: number | null;
+  undoComplete: () => Promise<void>;
   deleteTournament: () => Promise<void>;
   telegramUser: TelegramUser | null;
   skin: SkinId;
@@ -75,14 +78,16 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
 
   const {
     tournament,
+    completedAt,
     loading: tournamentLoading,
     createTournament: createInDb,
     updateTournament: updateInDb,
     loadByCode: loadByCodeFromDb,
     deleteTournament: deleteInDb,
+    undoComplete,
   } = usePlannerTournament(tournamentId);
 
-  const { players, registerPlayer: registerInDb, removePlayer: removeInDb, updateConfirmed: updateConfirmedInDb, addPlayer: addPlayerInDb, bulkAddPlayers: bulkAddPlayersInDb, toggleConfirmed: toggleConfirmedInDb, updatePlayerName: updatePlayerNameInDb, isRegistered: checkRegistered } = usePlayers(tournamentId);
+  const { players, registerPlayer: registerInDb, removePlayer: removeInDb, updateConfirmed: updateConfirmedInDb, addPlayer: addPlayerInDb, bulkAddPlayers: bulkAddPlayersInDb, toggleConfirmed: toggleConfirmedInDb, updatePlayerName: updatePlayerNameInDb, updatePlayerTelegram: updatePlayerTelegramInDb, isRegistered: checkRegistered, claimOrphanRegistration } = usePlayers(tournamentId);
 
   const { name: userName, skin: userSkin, loading: userNameLoading, updateName: updateUserName, updateSkin: updateUserSkin, updateTelegramId, updateTelegramUsername } = useUserProfile(uid);
 
@@ -122,6 +127,21 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
 
   // Cross-device sync: claim registrations from previous device UID
   useTelegramSync(uid, telegramUser?.username);
+
+  // Auto-claim: when a Telegram user views a tournament where the organizer
+  // manually added them (by telegramUsername), move the orphan record to their
+  // real UID so they can manage their own participation.
+  const claimingRef = useRef(false);
+  useEffect(() => {
+    if (!uid || !telegramUser?.username || players.length === 0 || claimingRef.current) return;
+    const tgUsername = telegramUser.username;
+    const orphan = players.find(p => p.telegramUsername === tgUsername && p.id !== uid);
+    if (!orphan) return;
+    claimingRef.current = true;
+    claimOrphanRegistration(orphan.id, uid, tgUsername).finally(() => {
+      claimingRef.current = false;
+    });
+  }, [uid, telegramUser, players, claimOrphanRegistration]);
 
   // Fetch organizer name for active tournament
   const [organizerName, setOrganizerName] = useState<string | null>(null);
@@ -176,8 +196,8 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     await removeInDb(playerId);
   }, [removeInDb]);
 
-  const addPlayer = useCallback(async (name: string) => {
-    await addPlayerInDb(name);
+  const addPlayer = useCallback(async (name: string, telegramUsername?: string) => {
+    await addPlayerInDb(name, telegramUsername);
   }, [addPlayerInDb]);
 
   const bulkAddPlayers = useCallback(async (names: string[]) => {
@@ -191,6 +211,10 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
   const updatePlayerName = useCallback(async (playerId: string, name: string) => {
     await updatePlayerNameInDb(playerId, name);
   }, [updatePlayerNameInDb]);
+
+  const updatePlayerTelegram = useCallback(async (playerId: string, telegramUsername: string | null) => {
+    await updatePlayerTelegramInDb(playerId, telegramUsername);
+  }, [updatePlayerTelegramInDb]);
 
   const updateConfirmed = useCallback(async (confirmed: boolean) => {
     if (!uid) return;
@@ -231,6 +255,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       bulkAddPlayers,
       toggleConfirmed,
       updatePlayerName,
+      updatePlayerTelegram,
       isRegistered,
       organizerName,
       userName,
@@ -240,6 +265,8 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       registeredTournaments,
       listingsLoading,
       openTournament,
+      completedAt,
+      undoComplete,
       deleteTournament,
       telegramUser,
       skin,

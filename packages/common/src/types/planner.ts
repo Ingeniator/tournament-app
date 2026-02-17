@@ -28,6 +28,7 @@ export interface TournamentSummary {
   organizerName?: string;
   code: string;
   createdAt: number;
+  completedAt?: number | null;
 }
 
 export interface PlannerRegistration {
@@ -36,4 +37,10 @@ export interface PlannerRegistration {
   timestamp: number;
   confirmed?: boolean;
   telegramUsername?: string;
+}
+
+export interface TournamentStartInfo {
+  uid: string;
+  name: string;
+  timestamp: number;
 }

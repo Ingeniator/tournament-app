@@ -60,6 +60,7 @@ export interface Tournament {
   players: Player[];
   rounds: Round[];
   teams?: Team[];
+  plannerTournamentId?: string;
   nominations?: Nomination[];
   ceremonyCompleted?: boolean;
   createdAt: number;

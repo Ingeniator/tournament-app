@@ -9,6 +9,14 @@
             ".write": "auth != null && ($playerId === auth.uid || !newData.exists() && data.child('telegramUsername').exists() && data.child('telegramUsername').val() === root.child('users').child(auth.uid).child('telegramUsername').val())",
             ".validate": "newData.hasChildren(['name', 'timestamp']) && newData.child('name').isString() && newData.child('name').val().length < 30 && newData.child('timestamp').isNumber() && (!newData.hasChild('confirmed') || newData.child('confirmed').isBoolean()) && (!newData.hasChild('telegramUsername') || newData.child('telegramUsername').isString() && newData.child('telegramUsername').val().length < 50)"
           }
+        },
+        "startedBy": {
+          ".write": "auth != null",
+          ".validate": "newData.hasChildren(['uid', 'name', 'timestamp']) && newData.child('uid').isString() && newData.child('name').isString() && newData.child('timestamp').isNumber()"
+        },
+        "completedAt": {
+          ".write": "auth != null",
+          ".validate": "newData.isNumber()"
         }
       }
     },

@@ -28,7 +28,9 @@ test.describe('Team Americano Flow', () => {
   });
 
   test('standings show custom team names', async ({ page }) => {
-    await page.getByPlaceholder('Team 1').fill('The Aces');
+    // Fill the first team name input (placeholder is dynamic player names)
+    const firstTeamInput = page.locator('[class*="teamNameInput"]').first();
+    await firstTeamInput.fill('The Aces');
 
     await page.getByRole('button', { name: 'Start Tournament' }).click();
     await closeOverlay(page);
