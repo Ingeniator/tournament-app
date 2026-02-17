@@ -358,17 +358,24 @@ export function scoreSchedule(rounds: Round[], seedPartnerCounts?: Map<string, n
   let repeats = 0;
   for (const c of pc.values()) if (c > 1) repeats += c - 1;
 
+  const totalPairs = playerIds.size * (playerIds.size - 1) / 2;
+
   let min = Infinity;
   let max = -Infinity;
   for (const c of oc.values()) {
     if (c < min) min = c;
     if (c > max) max = c;
   }
+  // Account for player pairs that never met as opponents (opponent count = 0).
+  // With sit-outs (odd player counts), some pairs may share a court only as
+  // partners but never face each other. The spread must reflect these 0-count pairs.
+  if (oc.size < totalPairs && oc.size > 0) {
+    min = 0;
+  }
   const spread = max === -Infinity ? 0 : max - min;
 
   // Never played: pairs who never shared a court (as partner or opponent)
   const courtMates = new Set<string>([...pc.keys(), ...oc.keys()]);
-  const totalPairs = playerIds.size * (playerIds.size - 1) / 2;
   const neverPlayed = totalPairs - courtMates.size;
 
   // Court spread: max spread across all courts

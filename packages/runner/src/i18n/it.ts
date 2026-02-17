@@ -255,6 +255,12 @@ const it: Translations = {
   'error.title': 'Qualcosa \u00e8 andato storto',
   'error.reload': 'Ricarica',
 
+  // CeremonyScreen
+  'ceremony.skip': 'Salta',
+  'ceremony.tapToReveal': 'Tocca per rivelare',
+  'ceremony.tapForNext': 'Tocca per il prossimo premio',
+  'ceremony.tapToFinish': 'Tocca per vedere i risultati',
+
   // Common
   'common.cancel': 'Annulla',
   'common.save': 'Salva',

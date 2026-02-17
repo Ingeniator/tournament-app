@@ -53,7 +53,7 @@ export function usePlannerTournament(tournamentId: string | null) {
     return unsubscribe;
   }, [tournamentId]);
 
-  const createTournament = useCallback(async (name: string, organizerId: string, locale?: string): Promise<string> => {
+  const createTournament = useCallback(async (name: string, organizerId: string, locale?: string, telegramUsername?: string): Promise<string> => {
     if (!db) throw new Error('Firebase not configured');
     const id = generateId();
     const code = await generateUniqueCode();
@@ -69,11 +69,16 @@ export function usePlannerTournament(tournamentId: string | null) {
       locale,
     };
     // Atomic multi-path write
-    await firebaseUpdate(ref(db), {
+    const updates: Record<string, unknown> = {
       [`tournaments/${id}`]: tournament,
       [`codes/${code}`]: id,
       [`users/${organizerId}/organized/${id}`]: true,
-    });
+    };
+    if (telegramUsername) {
+      updates[`telegramUsers/${telegramUsername}/organized/${id}`] = true;
+      updates[`telegramUsers/${telegramUsername}/currentUid`] = organizerId;
+    }
+    await firebaseUpdate(ref(db), updates);
     return id;
   }, []);
 

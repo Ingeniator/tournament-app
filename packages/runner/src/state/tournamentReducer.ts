@@ -480,6 +480,16 @@ export function tournamentReducer(
       };
     }
 
+    case 'COMPLETE_CEREMONY': {
+      if (!state || state.phase !== 'completed') return state;
+      return {
+        ...state,
+        nominations: action.payload.nominations,
+        ceremonyCompleted: true,
+        updatedAt: Date.now(),
+      };
+    }
+
     case 'RESET_TOURNAMENT':
       return null;
 

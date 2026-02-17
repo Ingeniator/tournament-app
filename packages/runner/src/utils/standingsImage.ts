@@ -413,18 +413,24 @@ export async function shareStandingsImage(
 
     // Telegram WebApp must be checked FIRST: its WebView exposes navigator.share
     // but it doesn't actually work (resolves without sharing). Blob downloads and
-    // programmatic <a>.click() are also blocked.
+    // programmatic <a>.click() are also blocked. downloadFile requires HTTPS URLs
+    // (data URLs silently fail).
     if (tg) {
-      // Try Telegram's native downloadFile API (Bot API 8.0+) for the standings image
-      if (typeof tg.downloadFile === 'function') {
-        try {
-          const dataUrl = standingsCanvas.toDataURL('image/png');
-          await tg.downloadFile({ url: dataUrl, file_name: `${safeName}_results.png` });
-          return { status: 'downloaded' };
-        } catch {
-          // downloadFile not supported or failed — fall through to preview
+      // Try clipboard write — works in some Telegram WebViews
+      try {
+        if (navigator.clipboard?.write) {
+          const blob = await canvasToBlob(standingsCanvas);
+          if (blob) {
+            await navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob }),
+            ]);
+            return { status: 'shared' };
+          }
         }
+      } catch {
+        // clipboard not available — fall through to preview
       }
+
       // Fallback: show preview overlay so users can long-press to save
       const allCanvases = [
         ...podiumIndices.map(i => nominationCanvases[i]),

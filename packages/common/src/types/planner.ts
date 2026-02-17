@@ -4,7 +4,9 @@ export interface PlannerTournament {
   id: string;
   name: string;
   format: TournamentFormat;
+  pointsPerMatch?: number;
   courts: Court[];
+  maxRounds?: number | null;
   organizerId: string;
   code: string;
   createdAt: number;
