@@ -3,8 +3,9 @@ import type { TournamentConfig } from '@padel/common';
 const MINUTES_PER_POINT = 0.5;
 const CHANGEOVER_MINUTES = 3;
 const DEFAULT_DURATION_MINUTES = 120;
-const PREFERRED_POINTS = 24;
+const PREFERRED_POINTS = 30;
 const MIN_POINTS_PER_MATCH = 16;
+const UNFAIR_PENALTY = 10;
 
 function gcd(a: number, b: number): number {
   a = Math.abs(a);
@@ -50,35 +51,100 @@ export function computeSitOutInfo(playerCount: number, courtCount: number, round
 
 export function resolveConfigDefaults(config: TournamentConfig, playerCount: number): TournamentConfig {
   const durationMinutes = config.targetDuration ?? DEFAULT_DURATION_MINUTES;
-  const playersPerRound = Math.min(config.courts.length * 4, playerCount);
+  const courtCount = config.courts.length;
+  const playersPerRound = Math.min(courtCount * 4, playerCount);
 
   const baseRounds = playersPerRound > 0
     ? Math.max(1, Math.ceil((playerCount - 1) * playerCount / playersPerRound))
     : 1;
 
+  const hasExplicitRounds = config.maxRounds != null;
   const hasExplicitPoints = config.pointsPerMatch > 0;
-  const assumedRoundDur = hasExplicitPoints
-    ? Math.round(config.pointsPerMatch * MINUTES_PER_POINT + CHANGEOVER_MINUTES)
-    : Math.round(MIN_POINTS_PER_MATCH * MINUTES_PER_POINT + CHANGEOVER_MINUTES);
-  const maxRoundsForDuration = Math.floor(durationMinutes / assumedRoundDur);
-  const rawDefault = Math.min(baseRounds, maxRoundsForDuration);
 
-  // Try to nudge the default towards a fair round count (equal sit-outs)
-  const defaultRounds = Math.max(1, nudgeToFairRounds(rawDefault, playerCount, config.courts.length, maxRoundsForDuration));
+  let effectiveRounds: number;
+  let effectivePoints: number;
 
-  const effectiveRounds = config.maxRounds ?? defaultRounds;
-
-  const maxPtsForRounds = effectiveRounds > 0
-    ? Math.floor((durationMinutes / effectiveRounds - CHANGEOVER_MINUTES) / MINUTES_PER_POINT)
-    : PREFERRED_POINTS;
-  const defaultPoints = Math.min(PREFERRED_POINTS, Math.max(MIN_POINTS_PER_MATCH, maxPtsForRounds));
-  const effectivePoints = hasExplicitPoints ? config.pointsPerMatch : defaultPoints;
+  if (hasExplicitRounds && hasExplicitPoints) {
+    // Both set by user — use as-is
+    effectiveRounds = config.maxRounds!;
+    effectivePoints = config.pointsPerMatch;
+  } else if (hasExplicitPoints) {
+    // Points set — calculate rounds to fill duration
+    const roundDur = Math.round(config.pointsPerMatch * MINUTES_PER_POINT + CHANGEOVER_MINUTES);
+    const maxRounds = Math.max(1, Math.floor(durationMinutes / roundDur));
+    const raw = Math.min(baseRounds, maxRounds);
+    effectiveRounds = Math.max(1, nudgeToFairRounds(raw, playerCount, courtCount, maxRounds));
+    effectivePoints = config.pointsPerMatch;
+  } else if (hasExplicitRounds) {
+    // Rounds set — calculate points to fill duration
+    effectiveRounds = config.maxRounds!;
+    const rawPts = effectiveRounds > 0
+      ? Math.floor((durationMinutes / effectiveRounds - CHANGEOVER_MINUTES) / MINUTES_PER_POINT)
+      : PREFERRED_POINTS;
+    effectivePoints = Math.min(PREFERRED_POINTS, Math.max(MIN_POINTS_PER_MATCH, rawPts));
+  } else {
+    // Neither set — find best (rounds, points) combo to fill target duration
+    const result = findBestConfig(durationMinutes, playerCount, courtCount, baseRounds);
+    effectiveRounds = result.rounds;
+    effectivePoints = result.points;
+  }
 
   return {
     ...config,
     pointsPerMatch: effectivePoints,
     maxRounds: effectiveRounds,
   };
+}
+
+/** Search all feasible round counts and pick the (rounds, points) combo
+ *  that best fills the target duration, preferring fair sit-out distribution. */
+function findBestConfig(
+  durationMinutes: number,
+  playerCount: number,
+  courtCount: number,
+  baseRounds: number,
+): { rounds: number; points: number } {
+  const maxRoundDur = Math.round(PREFERRED_POINTS * MINUTES_PER_POINT + CHANGEOVER_MINUTES);
+  const minRoundDur = Math.round(MIN_POINTS_PER_MATCH * MINUTES_PER_POINT + CHANGEOVER_MINUTES);
+
+  const minRounds = Math.max(1, Math.ceil(durationMinutes / maxRoundDur));
+  const maxRounds = Math.floor(durationMinutes / minRoundDur);
+
+  if (maxRounds < 1) {
+    return { rounds: 1, points: MIN_POINTS_PER_MATCH };
+  }
+
+  let bestRounds = minRounds;
+  let bestPoints = PREFERRED_POINTS;
+  let bestScore = Infinity;
+
+  for (let r = minRounds; r <= maxRounds; r++) {
+    const rawPts = Math.floor((durationMinutes / r - CHANGEOVER_MINUTES) / MINUTES_PER_POINT);
+    const pts = Math.min(PREFERRED_POINTS, Math.max(MIN_POINTS_PER_MATCH, rawPts));
+    const roundDur = Math.round(pts * MINUTES_PER_POINT + CHANGEOVER_MINUTES);
+    const estimate = r * roundDur;
+    const diff = durationMinutes - estimate;
+
+    // Penalize going over target more heavily (courts are booked for fixed time)
+    const timeCost = diff >= 0 ? diff : -diff * 3;
+
+    const sitOut = computeSitOutInfo(playerCount, courtCount, r);
+    const isFair = sitOut.isEqual || sitOut.sitOutsPerRound === 0;
+    const fairCost = isFair ? 0 : UNFAIR_PENALTY;
+
+    // Slight preference for more rounds (more player variety) as tiebreaker
+    const varietyBonus = Math.min(r, baseRounds) * 0.1;
+
+    const score = timeCost + fairCost - varietyBonus;
+
+    if (score < bestScore || (score === bestScore && r > bestRounds)) {
+      bestScore = score;
+      bestRounds = r;
+      bestPoints = pts;
+    }
+  }
+
+  return { rounds: bestRounds, points: bestPoints };
 }
 
 /** Nudge a round count towards the nearest fair value that does NOT exceed the duration limit.
