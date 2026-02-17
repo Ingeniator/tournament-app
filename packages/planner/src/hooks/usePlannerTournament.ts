@@ -35,6 +35,7 @@ function toTournament(id: string, data: Record<string, unknown>): PlannerTournam
 
 export function usePlannerTournament(tournamentId: string | null) {
   const [tournament, setTournament] = useState<PlannerTournament | null>(null);
+  const [completedAt, setCompletedAt] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
 
   // Real-time subscription
@@ -45,8 +46,10 @@ export function usePlannerTournament(tournamentId: string | null) {
       const data = snapshot.val();
       if (data) {
         setTournament(toTournament(tournamentId, data));
+        setCompletedAt(typeof data.completedAt === 'number' ? data.completedAt : null);
       } else {
         setTournament(null);
+        setCompletedAt(null);
       }
       setLoading(false);
     });
@@ -128,5 +131,5 @@ export function usePlannerTournament(tournamentId: string | null) {
     await firebaseUpdate(ref(db), deletes);
   }, [tournamentId]);
 
-  return { tournament, loading, createTournament, updateTournament, updateCourts, loadByCode, deleteTournament };
+  return { tournament, completedAt, loading, createTournament, updateTournament, updateCourts, loadByCode, deleteTournament };
 }

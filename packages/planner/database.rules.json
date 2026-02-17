@@ -13,6 +13,10 @@
         "startedBy": {
           ".write": "auth != null",
           ".validate": "newData.hasChildren(['uid', 'name', 'timestamp']) && newData.child('uid').isString() && newData.child('name').isString() && newData.child('timestamp').isNumber()"
+        },
+        "completedAt": {
+          ".write": "auth != null",
+          ".validate": "newData.isNumber()"
         }
       }
     },

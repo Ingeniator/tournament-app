@@ -33,7 +33,7 @@ function CollapsibleSection({ title, summary, defaultOpen, children }: {
 }
 
 export function OrganizerScreen() {
-  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, deleteTournament, uid } = usePlanner();
+  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, deleteTournament, completedAt, uid } = usePlanner();
   const { startedBy, showWarning, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
   const { t, locale } = useTranslation();
   const { toastMessage, showToast } = useToast();
@@ -63,6 +63,35 @@ export function OrganizerScreen() {
   }, [players]);
 
   if (!tournament) return null;
+
+  if (completedAt) {
+    return (
+      <div className={styles.container}>
+        <header className={styles.header}>
+          <button className={styles.backBtn} onClick={() => setScreen('home')} aria-label={t('organizer.back')}>&larr;</button>
+          <div className={styles.nameRow}>
+            <h1 className={styles.name}>{tournament.name}</h1>
+          </div>
+        </header>
+        <main>
+          <Card>
+            <h2 className={styles.sectionTitle}>{t('organizer.completed')}</h2>
+            <p>{t('organizer.completedOn', { date: new Date(completedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) })}</p>
+          </Card>
+          <button
+            className={styles.deleteBtn}
+            onClick={async () => {
+              if (window.confirm(t('organizer.deleteConfirm'))) {
+                await deleteTournament();
+              }
+            }}
+          >
+            {t('organizer.deleteTournament')}
+          </button>
+        </main>
+      </div>
+    );
+  }
 
   const confirmedCount = players.filter(p => p.confirmed !== false).length;
   const reserveCount = [...statuses.values()].filter(s => s === 'reserve').length;

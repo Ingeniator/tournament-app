@@ -29,3 +29,4 @@ docs/adr/*
 playwright-report/*
 test-results/*
 playwright-report/index.html
+coverage

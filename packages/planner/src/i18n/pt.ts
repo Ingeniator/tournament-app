@@ -96,6 +96,8 @@ const pt: Translations = {
   'organizer.jsonCopied': 'JSON do torneio copiado!',
   'organizer.deleteTournament': 'Eliminar Torneio',
   'organizer.deleteConfirm': 'Eliminar este torneio? Esta ação é irreversível.',
+  'organizer.completed': 'Torneio Concluído',
+  'organizer.completedOn': 'Concluído em {date}',
 
   // JoinScreen
   'join.back': 'Voltar',
@@ -142,6 +144,8 @@ const pt: Translations = {
   'join.copyForDevice': 'Copiar para Outro Dispositivo',
   'join.jsonCopied': 'JSON do torneio copiado!',
   'join.failedCopy': 'Falha ao copiar',
+  'join.completed': 'Este torneio foi concluído',
+  'join.completedOn': 'Concluído em {date}',
 
   // SupportOverlay
   'support.title': 'Apoie-nos',

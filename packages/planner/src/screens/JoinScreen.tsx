@@ -9,7 +9,7 @@ import { StartWarningModal } from '../components/StartWarningModal';
 import styles from './JoinScreen.module.css';
 
 export function JoinScreen() {
-  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, isRegistered, setScreen, organizerName, userName, telegramUser } = usePlanner();
+  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, isRegistered, setScreen, organizerName, userName, telegramUser, completedAt } = usePlanner();
   const { startedBy, showWarning, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
   const { t } = useTranslation();
   const [name, setName] = useState(userName ?? telegramUser?.displayName ?? '');
@@ -44,6 +44,47 @@ export function JoinScreen() {
   }, [myStatus, myRegistration, players, capacity]);
 
   if (!tournament) return null;
+
+  if (completedAt) {
+    return (
+      <div className={styles.container}>
+        <header className={styles.header}>
+          <button className={styles.backBtn} onClick={() => setScreen('home')} aria-label={t('join.back')}>&larr;</button>
+          <h1 className={styles.title}>{tournament.name}</h1>
+        </header>
+        <main>
+          {(tournament.date || tournament.place || organizerName) && (
+            <Card>
+              <div className={styles.detailsList}>
+                {tournament.date && (
+                  <div className={styles.detailRow}>
+                    <span className={styles.detailLabel}>{t('join.date')}</span>
+                    <span>{new Date(tournament.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                )}
+                {tournament.place && (
+                  <div className={styles.detailRow}>
+                    <span className={styles.detailLabel}>{t('join.place')}</span>
+                    <span>{tournament.place}</span>
+                  </div>
+                )}
+                {organizerName && (
+                  <div className={styles.detailRow}>
+                    <span className={styles.detailLabel}>{t('join.organizer')}</span>
+                    <span>{organizerName}</span>
+                  </div>
+                )}
+              </div>
+            </Card>
+          )}
+          <Card>
+            <h2 className={styles.sectionTitle}>{t('join.completed')}</h2>
+            <p>{t('join.completedOn', { date: new Date(completedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) })}</p>
+          </Card>
+        </main>
+      </div>
+    );
+  }
 
   const confirmedCount = players.filter(p => p.confirmed !== false).length;
   const spotsLeft = capacity - confirmedCount;

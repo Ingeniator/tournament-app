@@ -42,6 +42,7 @@ export interface PlannerContextValue {
   registeredTournaments: TournamentSummary[];
   listingsLoading: boolean;
   openTournament: (id: string, screen: 'organizer' | 'join') => void;
+  completedAt: number | null;
   deleteTournament: () => Promise<void>;
   telegramUser: TelegramUser | null;
   skin: SkinId;
@@ -75,6 +76,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
 
   const {
     tournament,
+    completedAt,
     loading: tournamentLoading,
     createTournament: createInDb,
     updateTournament: updateInDb,
@@ -240,6 +242,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       registeredTournaments,
       listingsLoading,
       openTournament,
+      completedAt,
       deleteTournament,
       telegramUser,
       skin,

@@ -96,6 +96,8 @@ const it: Translations = {
   'organizer.jsonCopied': 'JSON del torneo copiato!',
   'organizer.deleteTournament': 'Elimina Torneo',
   'organizer.deleteConfirm': 'Eliminare questo torneo? L\'azione non può essere annullata.',
+  'organizer.completed': 'Torneo Completato',
+  'organizer.completedOn': 'Completato il {date}',
 
   // JoinScreen
   'join.back': 'Indietro',
@@ -142,6 +144,8 @@ const it: Translations = {
   'join.copyForDevice': 'Copia per un Altro Dispositivo',
   'join.jsonCopied': 'JSON del torneo copiato!',
   'join.failedCopy': 'Impossibile copiare',
+  'join.completed': 'Questo torneo è stato completato',
+  'join.completedOn': 'Completato il {date}',
 
   // SupportOverlay
   'support.title': 'Supportaci',

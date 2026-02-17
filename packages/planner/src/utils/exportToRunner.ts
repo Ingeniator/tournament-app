@@ -32,6 +32,7 @@ export function buildRunnerTournament(
     phase: 'setup',
     players,
     rounds: [],
+    plannerTournamentId: plannerTournament.id,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };

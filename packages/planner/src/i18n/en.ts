@@ -96,6 +96,8 @@ const en: Translations = {
   'organizer.jsonCopied': 'Tournament JSON copied!',
   'organizer.deleteTournament': 'Delete Tournament',
   'organizer.deleteConfirm': 'Delete this tournament? This cannot be undone.',
+  'organizer.completed': 'Tournament Completed',
+  'organizer.completedOn': 'Completed on {date}',
 
   // JoinScreen
   'join.back': 'Back',
@@ -142,6 +144,8 @@ const en: Translations = {
   'join.copyForDevice': 'Copy for Another Device',
   'join.jsonCopied': 'Tournament JSON copied!',
   'join.failedCopy': 'Failed to copy',
+  'join.completed': 'This tournament has been completed',
+  'join.completedOn': 'Completed on {date}',
 
   // SupportOverlay
   'support.title': 'Support Us',
