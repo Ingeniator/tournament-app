@@ -74,6 +74,8 @@ const pt: Translations = {
   'play.saveImage': 'Guardar Imagem',
   'play.copyImage': 'Copiar',
   'play.copyHint': 'Toque Copiar e cole no chat',
+  'play.openInBrowser': 'Abrir no navegador para partilhar tudo',
+  'play.openBrowserHint': 'Abra no navegador para partilhar tudo, ou copie as imagens abaixo',
   'play.copied': 'Copiado!',
   'play.failedCopy': 'Falha ao copiar',
   'play.shared': 'Partilhado!',

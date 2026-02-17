@@ -222,12 +222,17 @@ export function PlayScreen() {
           }}>
             <div className={styles.imagePreviewContent} onClick={e => e.stopPropagation()}>
               <div className={styles.imagePreviewHeader}>
-                <span className={styles.imagePreviewHint}>{t('play.copyHint')}</span>
+                <span className={styles.imagePreviewHint}>{t('play.openBrowserHint')}</span>
                 <button className={styles.imagePreviewClose} onClick={() => {
                   previewImages.forEach(u => { if (u.startsWith('blob:')) URL.revokeObjectURL(u); });
                   setPreviewImages(null);
                 }}>&#x2715;</button>
               </div>
+              <Button fullWidth onClick={() => {
+                window.open(window.location.href, '_blank');
+              }}>
+                {t('play.openInBrowser')}
+              </Button>
               <div className={styles.imagePreviewScroll}>
                 {previewImages.map((url, i) => (
                   <div key={i} className={styles.imagePreviewItem}>
