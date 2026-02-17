@@ -70,6 +70,8 @@ const en: Translations = {
   'play.sendFeedback': 'Send feedback',
   'play.longPressHint': 'Long-press an image to save',
   'play.saveImage': 'Save Image',
+  'play.copyImage': 'Copy',
+  'play.copyHint': 'Tap Copy, then paste in chat',
   'play.copied': 'Copied!',
   'play.failedCopy': 'Failed to copy',
   'play.shared': 'Shared!',

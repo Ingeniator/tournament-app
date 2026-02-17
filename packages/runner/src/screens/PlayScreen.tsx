@@ -222,7 +222,7 @@ export function PlayScreen() {
           }}>
             <div className={styles.imagePreviewContent} onClick={e => e.stopPropagation()}>
               <div className={styles.imagePreviewHeader}>
-                <span className={styles.imagePreviewHint}>{t('play.longPressHint')}</span>
+                <span className={styles.imagePreviewHint}>{t('play.copyHint')}</span>
                 <button className={styles.imagePreviewClose} onClick={() => {
                   previewImages.forEach(u => { if (u.startsWith('blob:')) URL.revokeObjectURL(u); });
                   setPreviewImages(null);
@@ -232,15 +232,23 @@ export function PlayScreen() {
                 {previewImages.map((url, i) => (
                   <div key={i} className={styles.imagePreviewItem}>
                     <img src={url} alt={`Result ${i + 1}`} className={styles.imagePreviewImg} />
-                    <a
-                      href={url}
-                      download={`${tournament.name.replace(/[^a-zA-Z0-9]/g, '_')}_${i + 1}.png`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={styles.imagePreviewDownload}
+                    <button
+                      className={styles.imagePreviewCopy}
+                      onClick={async () => {
+                        try {
+                          const res = await fetch(url);
+                          const blob = await res.blob();
+                          await navigator.clipboard.write([
+                            new ClipboardItem({ 'image/png': blob }),
+                          ]);
+                          showToast(t('play.copied'));
+                        } catch {
+                          showToast(t('play.failedCopy'));
+                        }
+                      }}
                     >
-                      &#x2913; {t('play.saveImage')}
-                    </a>
+                      {t('play.copyImage')}
+                    </button>
                   </div>
                 ))}
               </div>

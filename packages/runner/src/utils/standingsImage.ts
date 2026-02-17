@@ -346,6 +346,7 @@ function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob | null> {
   return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
 }
 
+
 export type ShareImageResult =
   | { status: 'shared' }
   | { status: 'downloaded' }
@@ -415,20 +416,8 @@ export async function shareStandingsImage(
     // Telegram in-app browser (both Mini App and regular in-app browser):
     // navigator.share is absent or silently resolves without sharing.
     // Programmatic <a>.click() downloads are also blocked.
-    // Try clipboard first (available in mobile Telegram), then preview overlay.
+    // Show preview overlay — each image gets a copy-to-clipboard button.
     if (isTelegramBrowser) {
-      // Try clipboard write — available in Telegram's in-app browser
-      try {
-        if (navigator.clipboard?.write) {
-          const items = files.map(f => new ClipboardItem({ [f.type]: f }));
-          await navigator.clipboard.write(items);
-          return { status: 'shared' };
-        }
-      } catch {
-        // clipboard blocked — fall through to preview
-      }
-
-      // Fallback: preview overlay with blob URLs
       const allCanvases = [
         ...podiumIndices.map(i => nominationCanvases[i]),
         standingsCanvas,

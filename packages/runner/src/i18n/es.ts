@@ -70,6 +70,8 @@ const es: Translations = {
   'play.sendFeedback': 'Enviar comentarios',
   'play.longPressHint': 'Mant\u00e9n pulsada una imagen para guardarla',
   'play.saveImage': 'Guardar Imagen',
+  'play.copyImage': 'Copiar',
+  'play.copyHint': 'Toca Copiar y pega en el chat',
   'play.copied': '\u00a1Copiado!',
   'play.failedCopy': 'Error al copiar',
   'play.shared': '\u00a1Compartido!',

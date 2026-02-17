@@ -72,6 +72,8 @@ const pt: Translations = {
   'play.sendFeedback': 'Enviar feedback',
   'play.longPressHint': 'Pressione longamente uma imagem para guardar',
   'play.saveImage': 'Guardar Imagem',
+  'play.copyImage': 'Copiar',
+  'play.copyHint': 'Toque Copiar e cole no chat',
   'play.copied': 'Copiado!',
   'play.failedCopy': 'Falha ao copiar',
   'play.shared': 'Partilhado!',
