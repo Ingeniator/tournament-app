@@ -63,37 +63,39 @@ describe('validateImport', () => {
 
   it('rejects invalid JSON', () => {
     const result = validateImport('not valid json{');
-    expect(result.error).toContain('Invalid JSON');
+    expect(result.error?.key).toBe('import.invalidJson');
     expect(result.tournament).toBeNull();
   });
 
   it('rejects non-object JSON', () => {
     const result = validateImport('"just a string"');
-    expect(result.error).toContain('Invalid format');
+    expect(result.error?.key).toBe('import.invalidFormat');
     expect(result.tournament).toBeNull();
   });
 
   it('rejects null JSON', () => {
     const result = validateImport('null');
-    expect(result.error).toContain('Invalid format');
+    expect(result.error?.key).toBe('import.invalidFormat');
   });
 
   it('rejects wrong format version', () => {
     const json = JSON.stringify({ _format: 'wrong-format', tournament: {} });
     const result = validateImport(json);
-    expect(result.error).toContain('Unknown format');
+    expect(result.error?.key).toBe('import.unknownFormat');
+    expect(result.error?.params).toEqual({ found: 'wrong-format', expected: EXPORT_FORMAT });
   });
 
   it('rejects missing format field', () => {
     const json = JSON.stringify({ tournament: {} });
     const result = validateImport(json);
-    expect(result.error).toContain('Unknown format');
+    expect(result.error?.key).toBe('import.unknownFormat');
+    expect(result.error?.params).toEqual({ found: '', expected: EXPORT_FORMAT });
   });
 
   it('rejects missing tournament', () => {
     const json = JSON.stringify({ _format: EXPORT_FORMAT });
     const result = validateImport(json);
-    expect(result.error).toContain('Missing tournament data');
+    expect(result.error?.key).toBe('import.missingTournament');
   });
 
   it('rejects missing id field', () => {
@@ -102,7 +104,8 @@ describe('validateImport', () => {
       tournament: { name: 'Test', phase: 'setup', players: [], rounds: [], config: { courts: [] } },
     });
     const result = validateImport(json);
-    expect(result.error).toContain('id');
+    expect(result.error?.key).toBe('import.missingField');
+    expect(result.error?.params).toEqual({ field: 'id' });
   });
 
   it('rejects missing name field', () => {
@@ -111,7 +114,8 @@ describe('validateImport', () => {
       tournament: { id: 't1', phase: 'setup', players: [], rounds: [], config: { courts: [] } },
     });
     const result = validateImport(json);
-    expect(result.error).toContain('name');
+    expect(result.error?.key).toBe('import.missingField');
+    expect(result.error?.params).toEqual({ field: 'name' });
   });
 
   it('rejects missing phase field', () => {
@@ -120,7 +124,8 @@ describe('validateImport', () => {
       tournament: { id: 't1', name: 'T', players: [], rounds: [], config: { courts: [] } },
     });
     const result = validateImport(json);
-    expect(result.error).toContain('phase');
+    expect(result.error?.key).toBe('import.missingField');
+    expect(result.error?.params).toEqual({ field: 'phase' });
   });
 
   it('rejects missing players array', () => {
@@ -129,7 +134,7 @@ describe('validateImport', () => {
       tournament: { id: 't1', name: 'T', phase: 'setup', rounds: [], config: { courts: [] } },
     });
     const result = validateImport(json);
-    expect(result.error).toContain('players or rounds');
+    expect(result.error?.key).toBe('import.missingArrays');
   });
 
   it('rejects missing rounds array', () => {
@@ -138,7 +143,7 @@ describe('validateImport', () => {
       tournament: { id: 't1', name: 'T', phase: 'setup', players: [], config: { courts: [] } },
     });
     const result = validateImport(json);
-    expect(result.error).toContain('players or rounds');
+    expect(result.error?.key).toBe('import.missingArrays');
   });
 
   it('rejects missing config', () => {
@@ -147,7 +152,7 @@ describe('validateImport', () => {
       tournament: { id: 't1', name: 'T', phase: 'setup', players: [], rounds: [] },
     });
     const result = validateImport(json);
-    expect(result.error).toContain('config');
+    expect(result.error?.key).toBe('import.invalidConfig');
   });
 
   it('rejects config without courts array', () => {
@@ -156,7 +161,7 @@ describe('validateImport', () => {
       tournament: { id: 't1', name: 'T', phase: 'setup', players: [], rounds: [], config: {} },
     });
     const result = validateImport(json);
-    expect(result.error).toContain('config');
+    expect(result.error?.key).toBe('import.invalidConfig');
   });
 
   it('accepts tournament with empty players and rounds', () => {
