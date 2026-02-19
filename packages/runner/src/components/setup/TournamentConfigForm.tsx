@@ -83,8 +83,43 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
           <option value="americano">{t('config.formatAmericano')}</option>
           <option value="team-americano">{t('config.formatTeamAmericano')}</option>
           <option value="mexicano">{t('config.formatMexicano')}</option>
+          <option value="mixicano">{t('config.formatMixicano')}</option>
         </select>
       </div>
+
+      {config.format === 'mixicano' && (
+        <div className={styles.field}>
+          <label className={styles.label}>{t('config.groupLabels')}</label>
+          <div className={styles.courtList}>
+            <div className={styles.courtRow}>
+              <input
+                className={styles.courtInput}
+                type="text"
+                value={config.groupLabels?.[0] ?? ''}
+                placeholder={t('config.groupLabelAPlaceholder')}
+                onChange={e => {
+                  const labels: [string, string] = [e.target.value, config.groupLabels?.[1] ?? ''];
+                  onUpdate({ groupLabels: labels });
+                }}
+                aria-label={t('config.groupLabelA')}
+              />
+            </div>
+            <div className={styles.courtRow}>
+              <input
+                className={styles.courtInput}
+                type="text"
+                value={config.groupLabels?.[1] ?? ''}
+                placeholder={t('config.groupLabelBPlaceholder')}
+                onChange={e => {
+                  const labels: [string, string] = [config.groupLabels?.[0] ?? '', e.target.value];
+                  onUpdate({ groupLabels: labels });
+                }}
+                aria-label={t('config.groupLabelB')}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className={styles.field}>
         <label className={styles.label} id="courts-label">{t('config.courts')}</label>

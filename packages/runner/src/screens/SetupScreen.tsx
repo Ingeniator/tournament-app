@@ -75,6 +75,11 @@ export function SetupScreen() {
           onRemove={playerId =>
             dispatch({ type: 'REMOVE_PLAYER', payload: { playerId } })
           }
+          format={tournament.config.format}
+          groupLabels={tournament.config.groupLabels}
+          onSetGroup={(playerId, group) =>
+            dispatch({ type: 'SET_PLAYER_GROUP', payload: { playerId, group } })
+          }
         />
       </div>
 

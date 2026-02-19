@@ -104,6 +104,18 @@ export function tournamentReducer(
       };
     }
 
+    case 'SET_PLAYER_GROUP': {
+      if (!state || state.phase !== 'setup') return state;
+      const { playerId: gpId, group } = action.payload;
+      return {
+        ...state,
+        players: state.players.map(p =>
+          p.id === gpId ? { ...p, group } : p
+        ),
+        updatedAt: Date.now(),
+      };
+    }
+
     case 'TOGGLE_PLAYER_AVAILABILITY': {
       if (!state) return state;
       const { playerId: toggleId } = action.payload;
@@ -122,7 +134,8 @@ export function tournamentReducer(
     case 'REPLACE_PLAYER': {
       if (!state || state.phase !== 'in-progress') return state;
       const { oldPlayerId, newPlayerName } = action.payload;
-      const replaceNew: Player = { id: generateId(), name: newPlayerName };
+      const oldPlayer = state.players.find(p => p.id === oldPlayerId);
+      const replaceNew: Player = { id: generateId(), name: newPlayerName, ...(oldPlayer?.group ? { group: oldPlayer.group } : {}) };
       const rawReplace = state.players.map(p =>
         p.id === oldPlayerId ? { ...p, unavailable: true } : p
       );
@@ -165,7 +178,7 @@ export function tournamentReducer(
 
     case 'ADD_PLAYER_LIVE': {
       if (!state || state.phase !== 'in-progress') return state;
-      const livePlayer: Player = { id: generateId(), name: action.payload.name };
+      const livePlayer: Player = { id: generateId(), name: action.payload.name, ...(action.payload.group ? { group: action.payload.group } : {}) };
       const updatedPlayers = deduplicateNames([...state.players, livePlayer]);
       const newRounds = regenerateUnscoredRounds(state, updatedPlayers, state.config);
       return { ...state, players: updatedPlayers, rounds: newRounds, updatedAt: Date.now() };
