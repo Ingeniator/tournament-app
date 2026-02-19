@@ -226,6 +226,8 @@ const pt: Translations = {
   'config.formatTeamAmericano': 'Team Americano',
   'config.formatMexicano': 'Mexicano',
   'config.formatMixicano': 'Mixicano',
+  'config.formatKingOfTheCourt': 'Rei do Campo',
+  'config.courtBonus': 'Pts bónus',
   'config.groupLabels': 'Grupos',
   'config.groupLabelA': 'Nome Grupo A',
   'config.groupLabelB': 'Nome Grupo B',

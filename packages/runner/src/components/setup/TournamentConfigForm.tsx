@@ -1,6 +1,7 @@
 import type { TournamentConfig, TournamentFormat, Court } from '@padel/common';
 import { Button, generateId, useTranslation } from '@padel/common';
 import { resolveConfigDefaults, computeSitOutInfo } from '../../utils/resolveConfigDefaults';
+import { randomRankLabels } from '../../utils/courtRankLabels';
 import styles from './TournamentConfigForm.module.css';
 
 const MINUTES_PER_POINT = 0.5;
@@ -52,9 +53,11 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
 
   const addCourt = () => {
     if (config.courts.length >= maxCourts) return;
+    const newIndex = config.courts.length;
     const newCourt: Court = {
       id: generateId(),
-      name: `Court ${config.courts.length + 1}`,
+      name: `Court ${newIndex + 1}`,
+      ...(isKOTC ? { rankLabel: randomRankLabels(newIndex + 1)[newIndex] } : {}),
     };
     onUpdate({ courts: [...config.courts, newCourt] });
   };
@@ -70,6 +73,20 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
     });
   };
 
+  const updateCourtBonus = (courtId: string, bonus: number) => {
+    onUpdate({
+      courts: config.courts.map(c => (c.id === courtId ? { ...c, bonus: bonus || undefined } : c)),
+    });
+  };
+
+  const updateCourtRankLabel = (courtId: string, rankLabel: string) => {
+    onUpdate({
+      courts: config.courts.map(c => (c.id === courtId ? { ...c, rankLabel: rankLabel || undefined } : c)),
+    });
+  };
+
+  const isKOTC = config.format === 'king-of-the-court';
+
   return (
     <div className={styles.form}>
       <div className={styles.field}>
@@ -78,12 +95,29 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
           id="config-format"
           className={styles.input}
           value={config.format}
-          onChange={e => onUpdate({ format: e.target.value as TournamentFormat })}
+          onChange={e => {
+            const newFormat = e.target.value as TournamentFormat;
+            if (newFormat === 'king-of-the-court' && config.format !== 'king-of-the-court') {
+              const labels = randomRankLabels(config.courts.length);
+              onUpdate({
+                format: newFormat,
+                courts: config.courts.map((c, i) => ({ ...c, rankLabel: labels[i] })),
+              });
+            } else if (newFormat !== 'king-of-the-court' && config.format === 'king-of-the-court') {
+              onUpdate({
+                format: newFormat,
+                courts: config.courts.map(c => ({ ...c, rankLabel: undefined, bonus: undefined })),
+              });
+            } else {
+              onUpdate({ format: newFormat });
+            }
+          }}
         >
           <option value="americano">{t('config.formatAmericano')}</option>
           <option value="team-americano">{t('config.formatTeamAmericano')}</option>
           <option value="mexicano">{t('config.formatMexicano')}</option>
           <option value="mixicano">{t('config.formatMixicano')}</option>
+          <option value="king-of-the-court">{t('config.formatKingOfTheCourt')}</option>
         </select>
       </div>
 
@@ -124,15 +158,37 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
       <div className={styles.field}>
         <label className={styles.label} id="courts-label">{t('config.courts')}</label>
         <div className={styles.courtList} role="group" aria-labelledby="courts-label">
-          {config.courts.map(court => (
+          {config.courts.map((court, courtIdx) => (
             <div key={court.id} className={styles.courtRow}>
               <input
                 className={styles.courtInput}
                 type="text"
                 value={court.name}
                 onChange={e => updateCourtName(court.id, e.target.value)}
-                aria-label={`Court ${config.courts.indexOf(court) + 1} name`}
+                aria-label={`Court ${courtIdx + 1} name`}
               />
+              {isKOTC && (
+                <input
+                  className={styles.rankLabelInput}
+                  type="text"
+                  value={court.rankLabel ?? ''}
+                  placeholder={`#${courtIdx + 1}`}
+                  onChange={e => updateCourtRankLabel(court.id, e.target.value)}
+                  aria-label={`Rank label for ${court.name}`}
+                />
+              )}
+              {isKOTC && (
+                <input
+                  className={styles.bonusInput}
+                  type="number"
+                  min={0}
+                  value={court.bonus ?? ''}
+                  placeholder="0"
+                  onChange={e => updateCourtBonus(court.id, parseInt(e.target.value) || 0)}
+                  aria-label={`${t('config.courtBonus')} ${court.name}`}
+                  title={t('config.courtBonus')}
+                />
+              )}
               {config.courts.length > 1 && (
                 <button
                   className={styles.removeCourt}
