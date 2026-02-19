@@ -185,6 +185,7 @@ export function OrganizerScreen() {
 
   const formatLabel = tournament.format === 'americano' ? t('organizer.formatAmericano')
     : tournament.format === 'team-americano' ? t('organizer.formatTeamAmericano')
+    : tournament.format === 'team-mexicano' ? t('organizer.formatTeamMexicano')
     : tournament.format === 'king-of-the-court' ? t('organizer.formatKingOfTheCourt')
     : t('organizer.formatMexicano');
   const formatCourtsSummary = `${formatLabel} \u00b7 ${t('organizer.courts', { count: tournament.courts.length })}`;
@@ -315,6 +316,7 @@ export function OrganizerScreen() {
             <option value="americano">{t('organizer.formatAmericano')}</option>
             <option value="team-americano">{t('organizer.formatTeamAmericano')}</option>
             <option value="mexicano">{t('organizer.formatMexicano')}</option>
+            <option value="team-mexicano">{t('organizer.formatTeamMexicano')}</option>
             <option value="king-of-the-court">{t('organizer.formatKingOfTheCourt')}</option>
           </select>
           {showFormatInfo && (
@@ -322,6 +324,7 @@ export function OrganizerScreen() {
               <p><strong>{t('organizer.americanoDesc')}</strong></p>
               <p><strong>{t('organizer.teamAmericanoDesc')}</strong></p>
               <p><strong>{t('organizer.mexicanoDesc')}</strong></p>
+              <p><strong>{t('organizer.teamMexicanoDesc')}</strong></p>
               <p><strong>{t('organizer.kingOfTheCourtDesc')}</strong></p>
             </div>
           )}

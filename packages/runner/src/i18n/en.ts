@@ -222,6 +222,7 @@ const en: Translations = {
   'config.format': 'Format',
   'config.formatAmericano': 'Americano',
   'config.formatTeamAmericano': 'Team Americano',
+  'config.formatTeamMexicano': 'Team Mexicano',
   'config.formatMexicano': 'Mexicano',
   'config.formatMixicano': 'Mixicano',
   'config.formatKingOfTheCourt': 'King of the Court',

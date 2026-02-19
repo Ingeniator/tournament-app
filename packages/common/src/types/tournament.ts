@@ -1,7 +1,7 @@
 import type { Player } from './player';
 import type { Nomination } from './nomination';
 
-export type TournamentFormat = 'americano' | 'mexicano' | 'mixicano' | 'team-americano' | 'round-robin' | 'king-of-the-court';
+export type TournamentFormat = 'americano' | 'mexicano' | 'mixicano' | 'team-americano' | 'team-mexicano' | 'round-robin' | 'king-of-the-court';
 
 export type TournamentPhase = 'setup' | 'team-pairing' | 'in-progress' | 'completed';
 

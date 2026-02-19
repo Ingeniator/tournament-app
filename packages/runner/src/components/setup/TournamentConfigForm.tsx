@@ -116,6 +116,7 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
           <option value="americano">{t('config.formatAmericano')}</option>
           <option value="team-americano">{t('config.formatTeamAmericano')}</option>
           <option value="mexicano">{t('config.formatMexicano')}</option>
+          <option value="team-mexicano">{t('config.formatTeamMexicano')}</option>
           <option value="mixicano">{t('config.formatMixicano')}</option>
           <option value="king-of-the-court">{t('config.formatKingOfTheCourt')}</option>
         </select>
