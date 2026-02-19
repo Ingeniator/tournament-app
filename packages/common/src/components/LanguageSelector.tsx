@@ -7,6 +7,9 @@ const LOCALES: { code: Locale; label: string }[] = [
   { code: 'es', label: 'ES' },
   { code: 'it', label: 'IT' },
   { code: 'pt', label: 'PT' },
+  { code: 'sr', label: 'SR' },
+  { code: 'fr', label: 'FR' },
+  { code: 'sv', label: 'SV' },
 ];
 
 export function LanguageSelector() {

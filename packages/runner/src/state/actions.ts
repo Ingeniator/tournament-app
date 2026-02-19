@@ -9,7 +9,8 @@ export type TournamentAction =
   | { type: 'UPDATE_PLAYER'; payload: { playerId: string; name: string } }
   | { type: 'TOGGLE_PLAYER_AVAILABILITY'; payload: { playerId: string } }
   | { type: 'REPLACE_PLAYER'; payload: { oldPlayerId: string; newPlayerName: string } }
-  | { type: 'ADD_PLAYER_LIVE'; payload: { name: string } }
+  | { type: 'SET_PLAYER_GROUP'; payload: { playerId: string; group: 'A' | 'B' } }
+  | { type: 'ADD_PLAYER_LIVE'; payload: { name: string; group?: 'A' | 'B' } }
   | { type: 'REGENERATE_FUTURE_ROUNDS'; payload?: { timeBudgetMs?: number } }
   | { type: 'SET_FUTURE_ROUNDS'; payload: { rounds: Round[] } }
   | { type: 'UPDATE_COURT'; payload: { courtId: string; name: string } }

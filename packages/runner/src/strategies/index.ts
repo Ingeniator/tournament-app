@@ -2,7 +2,10 @@ import type { TournamentFormat } from '@padel/common';
 import type { TournamentStrategy } from './types';
 import { americanoStrategy } from './americano';
 import { mexicanoStrategy } from './mexicano';
+import { mixicanoStrategy } from './mixicano';
 import { teamAmericanoStrategy } from './teamAmericano';
+import { teamMexicanoStrategy } from './teamMexicano';
+import { kingOfTheCourtStrategy } from './kingOfTheCourt';
 
 export type { TournamentStrategy, ScheduleResult } from './types';
 export { scoreSchedule } from './americano';
@@ -24,6 +27,7 @@ export function getStrategy(format: TournamentFormat): TournamentStrategy {
 // Register built-in strategies
 registerStrategy('americano', americanoStrategy);
 registerStrategy('mexicano', mexicanoStrategy);
+registerStrategy('mixicano', mixicanoStrategy);
 registerStrategy('team-americano', teamAmericanoStrategy);
-registerStrategy('mixicano', mexicanoStrategy);
-registerStrategy('kotc', americanoStrategy);
+registerStrategy('team-mexicano', teamMexicanoStrategy);
+registerStrategy('king-of-the-court', kingOfTheCourtStrategy);

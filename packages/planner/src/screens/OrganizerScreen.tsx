@@ -148,13 +148,13 @@ export function OrganizerScreen() {
   };
 
   const handleFormatChange = (format: TournamentFormat) => {
-    if (format === 'kotc') {
+    if (format === 'king-of-the-court') {
       const names = getKotcCourtNames(tournament.courts.length);
       const courts: Court[] = tournament.courts.map((c, i) => ({
         ...c,
         name: names[i] ?? c.name,
-        subname: `Court ${i + 1}`,
-        bonusPoints: getKotcDefaultBonusPoints(i, tournament.courts.length),
+        rankLabel: `Court ${i + 1}`,
+        bonus: getKotcDefaultBonusPoints(i, tournament.courts.length),
       }));
       updateTournament({ format, courts });
     } else {
@@ -164,13 +164,13 @@ export function OrganizerScreen() {
 
   const handleAddCourt = async () => {
     const newIndex = tournament.courts.length;
-    if (tournament.format === 'kotc') {
+    if (tournament.format === 'king-of-the-court') {
       const names = getKotcCourtNames(newIndex + 1);
       const courts: Court[] = [...tournament.courts, {
         id: generateId(),
         name: names[newIndex] ?? `Court ${newIndex + 1}`,
-        subname: `Court ${newIndex + 1}`,
-        bonusPoints: getKotcDefaultBonusPoints(newIndex, newIndex + 1),
+        rankLabel: `Court ${newIndex + 1}`,
+        bonus: getKotcDefaultBonusPoints(newIndex, newIndex + 1),
       }];
       await updateTournament({ courts });
     } else {
@@ -208,8 +208,9 @@ export function OrganizerScreen() {
 
   const formatLabel = tournament.format === 'americano' ? t('organizer.formatAmericano')
     : tournament.format === 'team-americano' ? t('organizer.formatTeamAmericano')
+    : tournament.format === 'team-mexicano' ? t('organizer.formatTeamMexicano')
     : tournament.format === 'mixicano' ? t('organizer.formatMixicano')
-    : tournament.format === 'kotc' ? t('organizer.formatKotc')
+    : tournament.format === 'king-of-the-court' ? t('organizer.formatKingOfTheCourt')
     : t('organizer.formatMexicano');
   const formatCourtsSummary = `${formatLabel} \u00b7 ${t('organizer.courts', { count: tournament.courts.length })}`;
 
@@ -339,16 +340,18 @@ export function OrganizerScreen() {
             <option value="americano">{t('organizer.formatAmericano')}</option>
             <option value="team-americano">{t('organizer.formatTeamAmericano')}</option>
             <option value="mexicano">{t('organizer.formatMexicano')}</option>
+            <option value="team-mexicano">{t('organizer.formatTeamMexicano')}</option>
             <option value="mixicano">{t('organizer.formatMixicano')}</option>
-            <option value="kotc">{t('organizer.formatKotc')}</option>
+            <option value="king-of-the-court">{t('organizer.formatKingOfTheCourt')}</option>
           </select>
           {showFormatInfo && (
             <div className={styles.formatInfo}>
               <p><strong>{t('organizer.americanoDesc')}</strong></p>
               <p><strong>{t('organizer.teamAmericanoDesc')}</strong></p>
               <p><strong>{t('organizer.mexicanoDesc')}</strong></p>
+              <p><strong>{t('organizer.teamMexicanoDesc')}</strong></p>
               <p><strong>{t('organizer.mixicanoDesc')}</strong></p>
-              <p><strong>{t('organizer.kotcDesc')}</strong></p>
+              <p><strong>{t('organizer.kingOfTheCourtDesc')}</strong></p>
             </div>
           )}
         </div>
@@ -359,7 +362,7 @@ export function OrganizerScreen() {
             <Button variant="ghost" size="small" onClick={handleAddCourt}>{t('organizer.addCourt')}</Button>
           </div>
           {tournament.courts.map(court => (
-            <div key={court.id} className={tournament.format === 'kotc' ? styles.courtItemKotc : styles.courtItem}>
+            <div key={court.id} className={tournament.format === 'king-of-the-court' ? styles.courtItemKotc : styles.courtItem}>
               <div className={styles.courtMainRow}>
                 <input
                   className={styles.courtNameInput}
@@ -380,14 +383,14 @@ export function OrganizerScreen() {
                   </button>
                 )}
               </div>
-              {tournament.format === 'kotc' && (
+              {tournament.format === 'king-of-the-court' && (
                 <div className={styles.courtKotcFields}>
                   <input
                     className={styles.courtSubnameInput}
-                    value={court.subname ?? ''}
+                    value={court.rankLabel ?? ''}
                     onChange={e => {
                       const courts = tournament.courts.map(c =>
-                        c.id === court.id ? { ...c, subname: e.target.value } : c
+                        c.id === court.id ? { ...c, rankLabel: e.target.value } : c
                       );
                       updateTournament({ courts });
                     }}
@@ -399,11 +402,11 @@ export function OrganizerScreen() {
                       className={styles.courtBonusInput}
                       type="number"
                       min={0}
-                      value={court.bonusPoints ?? 0}
+                      value={court.bonus ?? 0}
                       onChange={e => {
                         const v = parseInt(e.target.value, 10);
                         const courts = tournament.courts.map(c =>
-                          c.id === court.id ? { ...c, bonusPoints: isNaN(v) ? 0 : Math.max(0, v) } : c
+                          c.id === court.id ? { ...c, bonus: isNaN(v) ? 0 : Math.max(0, v) } : c
                         );
                         updateTournament({ courts });
                       }}

@@ -18,6 +18,7 @@ export function SettingsScreen() {
   const [replacingPlayerId, setReplacingPlayerId] = useState<string | null>(null);
   const [replacePlayerName, setReplacePlayerName] = useState('');
   const [addPlayerName, setAddPlayerName] = useState('');
+  const [addPlayerGroup, setAddPlayerGroup] = useState<'A' | 'B'>('A');
   const [showAddPlayer, setShowAddPlayer] = useState(false);
   const [editingCourtId, setEditingCourtId] = useState<string | null>(null);
   const [editCourtName, setEditCourtName] = useState('');
@@ -50,7 +51,8 @@ export function SettingsScreen() {
     const trimmed = addPlayerName.trim();
     if (!trimmed) return;
     if (tournament.phase === 'in-progress') {
-      dispatch({ type: 'ADD_PLAYER_LIVE', payload: { name: trimmed } });
+      const group = tournament.config.format === 'mixicano' ? addPlayerGroup : undefined;
+      dispatch({ type: 'ADD_PLAYER_LIVE', payload: { name: trimmed, group } });
     } else {
       dispatch({ type: 'ADD_PLAYER', payload: { name: trimmed } });
     }
@@ -443,6 +445,22 @@ export function SettingsScreen() {
               }}
               autoFocus
             />
+            {tournament.config.format === 'mixicano' && (
+              <div className={styles.groupSelector}>
+                <button
+                  className={`${styles.groupBtn} ${addPlayerGroup === 'A' ? styles.groupBtnActive : ''}`}
+                  onClick={() => setAddPlayerGroup('A')}
+                >
+                  {tournament.config.groupLabels?.[0] || t('config.groupLabelAPlaceholder')}
+                </button>
+                <button
+                  className={`${styles.groupBtn} ${addPlayerGroup === 'B' ? styles.groupBtnActive : ''}`}
+                  onClick={() => setAddPlayerGroup('B')}
+                >
+                  {tournament.config.groupLabels?.[1] || t('config.groupLabelBPlaceholder')}
+                </button>
+              </div>
+            )}
             <div className={styles.addPlayerActions}>
               <Button size="small" onClick={handleAddPlayer} disabled={!addPlayerName.trim()}>
                 {t('settings.add')}
@@ -457,7 +475,7 @@ export function SettingsScreen() {
             variant="secondary"
             size="small"
             fullWidth
-            onClick={() => setShowAddPlayer(true)}
+            onClick={() => { setShowAddPlayer(true); setAddPlayerGroup('A'); }}
             style={{ marginTop: 'var(--space-sm)' }}
           >
             {t('settings.addPlayer')}

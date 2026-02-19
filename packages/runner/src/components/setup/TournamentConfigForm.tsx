@@ -1,6 +1,7 @@
 import type { TournamentConfig, TournamentFormat, Court } from '@padel/common';
 import { Button, generateId, useTranslation, getKotcCourtNames, getKotcDefaultBonusPoints } from '@padel/common';
 import { resolveConfigDefaults, computeSitOutInfo } from '../../utils/resolveConfigDefaults';
+import { randomRankLabels } from '../../utils/courtRankLabels';
 import styles from './TournamentConfigForm.module.css';
 
 const MINUTES_PER_POINT = 0.5;
@@ -50,25 +51,17 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
   // Check if sit-outs are distributed equally
   const sitOutInfo = computeSitOutInfo(playerCount, config.courts.length, effectiveRounds);
 
+  const isKOTC = config.format === 'king-of-the-court';
+
   const addCourt = () => {
     if (config.courts.length >= maxCourts) return;
     const newIndex = config.courts.length;
-    if (config.format === 'kotc') {
-      const names = getKotcCourtNames(newIndex + 1);
-      const newCourt: Court = {
-        id: generateId(),
-        name: names[newIndex] ?? `Court ${newIndex + 1}`,
-        subname: `Court ${newIndex + 1}`,
-        bonusPoints: getKotcDefaultBonusPoints(newIndex, newIndex + 1),
-      };
-      onUpdate({ courts: [...config.courts, newCourt] });
-    } else {
-      const newCourt: Court = {
-        id: generateId(),
-        name: `Court ${newIndex + 1}`,
-      };
-      onUpdate({ courts: [...config.courts, newCourt] });
-    }
+    const newCourt: Court = {
+      id: generateId(),
+      name: `Court ${newIndex + 1}`,
+      ...(isKOTC ? { rankLabel: randomRankLabels(newIndex + 1)[newIndex], bonus: getKotcDefaultBonusPoints(newIndex, newIndex + 1) } : {}),
+    };
+    onUpdate({ courts: [...config.courts, newCourt] });
   };
 
   const removeCourt = (courtId: string) => {
@@ -82,6 +75,18 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
     });
   };
 
+  const updateCourtBonus = (courtId: string, bonus: number) => {
+    onUpdate({
+      courts: config.courts.map(c => (c.id === courtId ? { ...c, bonus: bonus || undefined } : c)),
+    });
+  };
+
+  const updateCourtRankLabel = (courtId: string, rankLabel: string) => {
+    onUpdate({
+      courts: config.courts.map(c => (c.id === courtId ? { ...c, rankLabel: rankLabel || undefined } : c)),
+    });
+  };
+
   return (
     <div className={styles.form}>
       <div className={styles.field}>
@@ -91,41 +96,82 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
           className={styles.input}
           value={config.format}
           onChange={e => {
-            const format = e.target.value as TournamentFormat;
-            if (format === 'kotc') {
-              const names = getKotcCourtNames(config.courts.length);
-              const courts: Court[] = config.courts.map((c, i) => ({
-                ...c,
-                name: names[i] ?? c.name,
-                subname: `Court ${i + 1}`,
-                bonusPoints: getKotcDefaultBonusPoints(i, config.courts.length),
-              }));
-              onUpdate({ format, courts });
+            const newFormat = e.target.value as TournamentFormat;
+            if (newFormat === 'king-of-the-court' && config.format !== 'king-of-the-court') {
+              const labels = randomRankLabels(config.courts.length);
+              onUpdate({
+                format: newFormat,
+                courts: config.courts.map((c, i) => ({
+                  ...c,
+                  rankLabel: labels[i],
+                  bonus: getKotcDefaultBonusPoints(i, config.courts.length),
+                })),
+              });
+            } else if (newFormat !== 'king-of-the-court' && config.format === 'king-of-the-court') {
+              onUpdate({
+                format: newFormat,
+                courts: config.courts.map(c => ({ ...c, rankLabel: undefined, bonus: undefined })),
+              });
             } else {
-              onUpdate({ format });
+              onUpdate({ format: newFormat });
             }
           }}
         >
           <option value="americano">{t('config.formatAmericano')}</option>
           <option value="team-americano">{t('config.formatTeamAmericano')}</option>
           <option value="mexicano">{t('config.formatMexicano')}</option>
+          <option value="team-mexicano">{t('config.formatTeamMexicano')}</option>
           <option value="mixicano">{t('config.formatMixicano')}</option>
-          <option value="kotc">{t('config.formatKotc')}</option>
+          <option value="king-of-the-court">{t('config.formatKingOfTheCourt')}</option>
         </select>
       </div>
+
+      {config.format === 'mixicano' && (
+        <div className={styles.field}>
+          <label className={styles.label}>{t('config.groupLabels')}</label>
+          <div className={styles.courtList}>
+            <div className={styles.courtRow}>
+              <input
+                className={styles.courtInput}
+                type="text"
+                value={config.groupLabels?.[0] ?? ''}
+                placeholder={t('config.groupLabelAPlaceholder')}
+                onChange={e => {
+                  const labels: [string, string] = [e.target.value, config.groupLabels?.[1] ?? ''];
+                  onUpdate({ groupLabels: labels });
+                }}
+                aria-label={t('config.groupLabelA')}
+              />
+            </div>
+            <div className={styles.courtRow}>
+              <input
+                className={styles.courtInput}
+                type="text"
+                value={config.groupLabels?.[1] ?? ''}
+                placeholder={t('config.groupLabelBPlaceholder')}
+                onChange={e => {
+                  const labels: [string, string] = [config.groupLabels?.[0] ?? '', e.target.value];
+                  onUpdate({ groupLabels: labels });
+                }}
+                aria-label={t('config.groupLabelB')}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className={styles.field}>
         <label className={styles.label} id="courts-label">{t('config.courts')}</label>
         <div className={styles.courtList} role="group" aria-labelledby="courts-label">
-          {config.courts.map((court, idx) => (
-            <div key={court.id} className={config.format === 'kotc' ? styles.courtRowKotc : styles.courtRow}>
-              <div className={styles.courtMainRow}>
+          {config.courts.map((court, courtIdx) => (
+            <div key={court.id} className={isKOTC ? styles.courtRowKotc : styles.courtRow}>
+              <div className={isKOTC ? styles.courtMainRow : undefined}>
                 <input
                   className={styles.courtInput}
                   type="text"
                   value={court.name}
                   onChange={e => updateCourtName(court.id, e.target.value)}
-                  aria-label={`Court ${idx + 1} name`}
+                  aria-label={`Court ${courtIdx + 1} name`}
                 />
                 {config.courts.length > 1 && (
                   <button
@@ -137,38 +183,26 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
                   </button>
                 )}
               </div>
-              {config.format === 'kotc' && (
+              {isKOTC && (
                 <div className={styles.courtKotcFields}>
                   <input
                     className={styles.courtSubnameInput}
                     type="text"
-                    value={court.subname ?? ''}
-                    onChange={e => {
-                      onUpdate({
-                        courts: config.courts.map(c =>
-                          c.id === court.id ? { ...c, subname: e.target.value } : c
-                        ),
-                      });
-                    }}
-                    placeholder={t('config.courtSubname')}
-                    aria-label={`Court ${idx + 1} subname`}
+                    value={court.rankLabel ?? ''}
+                    placeholder={`#${courtIdx + 1}`}
+                    onChange={e => updateCourtRankLabel(court.id, e.target.value)}
+                    aria-label={`Rank label for ${court.name}`}
                   />
                   <label className={styles.courtBonusLabel}>
-                    {t('config.courtBonusPoints')}
+                    {t('config.courtBonus')}
                     <input
                       className={styles.courtBonusInput}
                       type="number"
                       min={0}
-                      value={court.bonusPoints ?? 0}
-                      onChange={e => {
-                        const v = parseInt(e.target.value, 10);
-                        onUpdate({
-                          courts: config.courts.map(c =>
-                            c.id === court.id ? { ...c, bonusPoints: isNaN(v) ? 0 : Math.max(0, v) } : c
-                          ),
-                        });
-                      }}
-                      aria-label={`Court ${idx + 1} bonus points`}
+                      value={court.bonus ?? ''}
+                      placeholder="0"
+                      onChange={e => updateCourtBonus(court.id, parseInt(e.target.value) || 0)}
+                      aria-label={`${t('config.courtBonus')} ${court.name}`}
                     />
                   </label>
                 </div>
