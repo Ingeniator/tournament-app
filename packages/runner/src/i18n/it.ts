@@ -262,6 +262,15 @@ const it: Translations = {
   'ceremony.tapForNext': 'Tocca per il prossimo premio',
   'ceremony.tapToFinish': 'Tocca per vedere i risultati',
 
+  // Import validation errors
+  'import.invalidJson': 'JSON non valido — assicurati di aver incollato tutto il testo esportato',
+  'import.invalidFormat': 'Formato non valido — previsto un oggetto di esportazione torneo',
+  'import.unknownFormat': 'Formato sconosciuto "{found}" — previsto "{expected}". Assicurati di aver esportato dall\'app.',
+  'import.missingTournament': 'Dati del torneo mancanti',
+  'import.missingField': 'Campo mancante o non valido: {field}',
+  'import.missingArrays': 'Dati di giocatori o turni mancanti',
+  'import.invalidConfig': 'Configurazione del torneo mancante o non valida',
+
   // Common
   'common.cancel': 'Annulla',
   'common.save': 'Salva',
