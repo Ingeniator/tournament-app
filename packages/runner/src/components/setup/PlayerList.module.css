@@ -28,6 +28,16 @@
 .left {
   display: flex;
   align-items: center;
+  min-width: 0;
+  flex-shrink: 1;
+  overflow: hidden;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-shrink: 0;
 }
 
 .removeBtn {
@@ -50,4 +60,39 @@
   color: var(--color-text-muted);
   padding: var(--space-xl) 0;
   font-size: var(--text-sm);
+}
+
+.groupToggle {
+  display: flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.groupBtn {
+  padding: 4px 8px;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 28px;
+}
+
+.groupBtn + .groupBtn {
+  border-left: 1px solid var(--color-border);
+}
+
+.groupBtn:hover {
+  background-color: var(--color-surface-raised);
+}
+
+.groupActive {
+  background-color: var(--color-primary);
+  color: var(--color-text-on-primary, #fff);
+}
+
+.groupActive:hover {
+  background-color: var(--color-primary);
 }

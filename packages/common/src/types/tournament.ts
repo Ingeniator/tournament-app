@@ -1,7 +1,7 @@
 import type { Player } from './player';
 import type { Nomination } from './nomination';
 
-export type TournamentFormat = 'americano' | 'mexicano' | 'team-americano' | 'round-robin';
+export type TournamentFormat = 'americano' | 'mexicano' | 'mixicano' | 'team-americano' | 'round-robin';
 
 export type TournamentPhase = 'setup' | 'team-pairing' | 'in-progress' | 'completed';
 
@@ -30,6 +30,7 @@ export interface TournamentConfig {
   courts: Court[];
   maxRounds: number | null;
   targetDuration?: number;
+  groupLabels?: [string, string];
 }
 
 export interface MatchScore {
