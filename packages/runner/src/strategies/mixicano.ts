@@ -69,7 +69,7 @@ function generateMixicanoRounds(
   const playersPerGroupPerRound = numCourts * 2;
   const sitOutCountA = groupAPlayers.length - playersPerGroupPerRound;
   const sitOutCountB = groupBPlayers.length - playersPerGroupPerRound;
-  const { gamesPlayed, partnerCounts } = seedFromRounds(existingRounds, activePlayers);
+  const { gamesPlayed, partnerCounts, lastSitOutRound } = seedFromRounds(existingRounds, activePlayers);
 
   if ((sitOutCountA > 0 || sitOutCountB > 0) && existingRounds.length === 0) {
     warnings.push(`${sitOutCountA + sitOutCountB} player(s) will sit out each round`);
@@ -80,8 +80,8 @@ function generateMixicanoRounds(
 
   for (let r = 0; r < count; r++) {
     // Group-balanced sit-outs
-    const { sitOutIds: sitOutA } = selectSitOuts(groupAPlayers, sitOutCountA, gamesPlayed);
-    const { sitOutIds: sitOutB } = selectSitOuts(groupBPlayers, sitOutCountB, gamesPlayed);
+    const { sitOutIds: sitOutA } = selectSitOuts(groupAPlayers, sitOutCountA, gamesPlayed, lastSitOutRound);
+    const { sitOutIds: sitOutB } = selectSitOuts(groupBPlayers, sitOutCountB, gamesPlayed, lastSitOutRound);
     const sitOutIds = new Set([...sitOutA, ...sitOutB]);
 
     const activeA = groupAPlayers.filter(p => !sitOutIds.has(p.id));

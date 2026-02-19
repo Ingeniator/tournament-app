@@ -203,12 +203,24 @@ function generateKOTCRounds(
       );
     }
 
+    // Pre-compute standings once for pairing within court groups
+    let standingsMap: Map<string, number> | undefined;
+    if (existingRounds.length + r > 0) {
+      const allRoundsForStandings = [...existingRounds, ...rounds];
+      const standingsEntries = calculateKOTCStandingsInternal(
+        activePlayers,
+        allRoundsForStandings,
+        config,
+      );
+      standingsMap = new Map(standingsEntries.map((s, i) => [s.playerId, i]));
+    }
+
     // Create matches: within each group, 1st+4th vs 2nd+3rd by standings
     const matches: Match[] = groups.map((group, idx) => {
       let team1: [string, string];
       let team2: [string, string];
 
-      if (existingRounds.length + r === 0) {
+      if (!standingsMap) {
         // Round 1: pick pairing with fewest partner repeats
         const pairings: [[string, string], [string, string]][] = [
           [[group[0], group[3]], [group[1], group[2]]],
@@ -229,13 +241,6 @@ function generateKOTCRounds(
         [team1, team2] = bestPairing;
       } else {
         // KOTC rule: within each court group, rank by standings, 1st+4th vs 2nd+3rd
-        const allRoundsForStandings = [...existingRounds, ...rounds];
-        const standingsEntries = calculateKOTCStandingsInternal(
-          activePlayers,
-          allRoundsForStandings,
-          config,
-        );
-        const standingsMap = new Map(standingsEntries.map((s, i) => [s.playerId, i]));
         const sorted = [...group].sort(
           (a, b) => (standingsMap.get(a) ?? 999) - (standingsMap.get(b) ?? 999)
         );

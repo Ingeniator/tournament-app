@@ -475,7 +475,7 @@ export function SettingsScreen() {
             variant="secondary"
             size="small"
             fullWidth
-            onClick={() => setShowAddPlayer(true)}
+            onClick={() => { setShowAddPlayer(true); setAddPlayerGroup('A'); }}
             style={{ marginTop: 'var(--space-sm)' }}
           >
             {t('settings.addPlayer')}

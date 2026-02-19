@@ -186,6 +186,7 @@ export function OrganizerScreen() {
   const formatLabel = tournament.format === 'americano' ? t('organizer.formatAmericano')
     : tournament.format === 'team-americano' ? t('organizer.formatTeamAmericano')
     : tournament.format === 'team-mexicano' ? t('organizer.formatTeamMexicano')
+    : tournament.format === 'mixicano' ? t('organizer.formatMixicano')
     : tournament.format === 'king-of-the-court' ? t('organizer.formatKingOfTheCourt')
     : t('organizer.formatMexicano');
   const formatCourtsSummary = `${formatLabel} \u00b7 ${t('organizer.courts', { count: tournament.courts.length })}`;
