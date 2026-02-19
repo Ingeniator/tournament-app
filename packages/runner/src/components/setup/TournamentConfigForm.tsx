@@ -1,5 +1,5 @@
 import type { TournamentConfig, TournamentFormat, Court } from '@padel/common';
-import { Button, generateId, useTranslation } from '@padel/common';
+import { Button, generateId, useTranslation, getKotcDefaultBonusPoints } from '@padel/common';
 import { resolveConfigDefaults, computeSitOutInfo } from '../../utils/resolveConfigDefaults';
 import { randomRankLabels } from '../../utils/courtRankLabels';
 import styles from './TournamentConfigForm.module.css';
@@ -51,13 +51,15 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
   // Check if sit-outs are distributed equally
   const sitOutInfo = computeSitOutInfo(playerCount, config.courts.length, effectiveRounds);
 
+  const isKOTC = config.format === 'king-of-the-court';
+
   const addCourt = () => {
     if (config.courts.length >= maxCourts) return;
     const newIndex = config.courts.length;
     const newCourt: Court = {
       id: generateId(),
       name: `Court ${newIndex + 1}`,
-      ...(isKOTC ? { rankLabel: randomRankLabels(newIndex + 1)[newIndex] } : {}),
+      ...(isKOTC ? { rankLabel: randomRankLabels(newIndex + 1)[newIndex], bonus: getKotcDefaultBonusPoints(newIndex, newIndex + 1) } : {}),
     };
     onUpdate({ courts: [...config.courts, newCourt] });
   };
@@ -85,8 +87,6 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
     });
   };
 
-  const isKOTC = config.format === 'king-of-the-court';
-
   return (
     <div className={styles.form}>
       <div className={styles.field}>
@@ -101,7 +101,11 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
               const labels = randomRankLabels(config.courts.length);
               onUpdate({
                 format: newFormat,
-                courts: config.courts.map((c, i) => ({ ...c, rankLabel: labels[i] })),
+                courts: config.courts.map((c, i) => ({
+                  ...c,
+                  rankLabel: labels[i],
+                  bonus: getKotcDefaultBonusPoints(i, config.courts.length),
+                })),
               });
             } else if (newFormat !== 'king-of-the-court' && config.format === 'king-of-the-court') {
               onUpdate({
@@ -160,44 +164,48 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
         <label className={styles.label} id="courts-label">{t('config.courts')}</label>
         <div className={styles.courtList} role="group" aria-labelledby="courts-label">
           {config.courts.map((court, courtIdx) => (
-            <div key={court.id} className={styles.courtRow}>
-              <input
-                className={styles.courtInput}
-                type="text"
-                value={court.name}
-                onChange={e => updateCourtName(court.id, e.target.value)}
-                aria-label={`Court ${courtIdx + 1} name`}
-              />
-              {isKOTC && (
+            <div key={court.id} className={isKOTC ? styles.courtRowKotc : styles.courtRow}>
+              <div className={isKOTC ? styles.courtMainRow : undefined}>
                 <input
-                  className={styles.rankLabelInput}
+                  className={styles.courtInput}
                   type="text"
-                  value={court.rankLabel ?? ''}
-                  placeholder={`#${courtIdx + 1}`}
-                  onChange={e => updateCourtRankLabel(court.id, e.target.value)}
-                  aria-label={`Rank label for ${court.name}`}
+                  value={court.name}
+                  onChange={e => updateCourtName(court.id, e.target.value)}
+                  aria-label={`Court ${courtIdx + 1} name`}
                 />
-              )}
+                {config.courts.length > 1 && (
+                  <button
+                    className={styles.removeCourt}
+                    onClick={() => removeCourt(court.id)}
+                    aria-label={t('config.removeCourt')}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
               {isKOTC && (
-                <input
-                  className={styles.bonusInput}
-                  type="number"
-                  min={0}
-                  value={court.bonus ?? ''}
-                  placeholder="0"
-                  onChange={e => updateCourtBonus(court.id, parseInt(e.target.value) || 0)}
-                  aria-label={`${t('config.courtBonus')} ${court.name}`}
-                  title={t('config.courtBonus')}
-                />
-              )}
-              {config.courts.length > 1 && (
-                <button
-                  className={styles.removeCourt}
-                  onClick={() => removeCourt(court.id)}
-                  aria-label={t('config.removeCourt')}
-                >
-                  ✕
-                </button>
+                <div className={styles.courtKotcFields}>
+                  <input
+                    className={styles.courtSubnameInput}
+                    type="text"
+                    value={court.rankLabel ?? ''}
+                    placeholder={`#${courtIdx + 1}`}
+                    onChange={e => updateCourtRankLabel(court.id, e.target.value)}
+                    aria-label={`Rank label for ${court.name}`}
+                  />
+                  <label className={styles.courtBonusLabel}>
+                    {t('config.courtBonus')}
+                    <input
+                      className={styles.courtBonusInput}
+                      type="number"
+                      min={0}
+                      value={court.bonus ?? ''}
+                      placeholder="0"
+                      onChange={e => updateCourtBonus(court.id, parseInt(e.target.value) || 0)}
+                      aria-label={`${t('config.courtBonus')} ${court.name}`}
+                    />
+                  </label>
+                </div>
               )}
             </div>
           ))}
