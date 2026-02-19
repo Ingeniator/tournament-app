@@ -339,4 +339,105 @@ describe('validateImport', () => {
     const result = validateImport(json);
     expect(result.error).toBeNull();
   });
+
+  it('rejects raw tournament without _format envelope (cross-device regression)', () => {
+    // This simulates what the planner used to export before the fix:
+    // a raw tournament object without the { _format, tournament } wrapper
+    const rawTournament = JSON.stringify(makeTournament());
+    const result = validateImport(rawTournament);
+    expect(result.error).not.toBeNull();
+    expect(result.error?.key).toBe('import.unknownFormat');
+  });
+});
+
+describe('cross-device: planner export → runner import', () => {
+  // Simulates the exact flow: plan on one device, "Copy for Another Device",
+  // paste into runner's "Import from Clipboard" on a different device.
+  // This is a regression test for the bug where the planner exported raw JSON
+  // without the _format envelope, causing import to fail.
+
+  function simulatePlannerExport(overrides?: Partial<{
+    format: string;
+    courts: Array<{ id: string; name: string }>;
+    playerCount: number;
+    duration: number;
+  }>): string {
+    const format = overrides?.format ?? 'americano';
+    const courts = overrides?.courts ?? [{ id: 'c1', name: 'Court 1' }];
+    const playerCount = overrides?.playerCount ?? 4;
+    const duration = overrides?.duration ?? 120;
+
+    const players = Array.from({ length: playerCount }, (_, i) => ({
+      id: `p${i + 1}`,
+      name: `Player ${i + 1}`,
+    }));
+
+    const tournament = {
+      id: 'planner-export-1',
+      name: 'Saturday Padel',
+      config: {
+        format,
+        pointsPerMatch: 0,
+        courts,
+        maxRounds: null,
+        targetDuration: duration,
+      },
+      phase: 'setup',
+      players,
+      rounds: [],
+      plannerTournamentId: 'pt-1',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    // This must match what exportRunnerTournamentJSON produces
+    return JSON.stringify({ _format: EXPORT_FORMAT, tournament }, null, 2);
+  }
+
+  it('runner validates planner-exported americano tournament', () => {
+    const json = simulatePlannerExport({ format: 'americano', playerCount: 8, courts: [
+      { id: 'c1', name: 'Court 1' },
+      { id: 'c2', name: 'Court 2' },
+    ]});
+    const result = validateImport(json);
+
+    expect(result.error).toBeNull();
+    expect(result.tournament).not.toBeNull();
+    expect(result.tournament!.name).toBe('Saturday Padel');
+    expect(result.tournament!.config.format).toBe('americano');
+    expect(result.tournament!.players).toHaveLength(8);
+    expect(result.tournament!.phase).toBe('setup');
+  });
+
+  it('runner validates planner-exported mexicano tournament', () => {
+    const json = simulatePlannerExport({ format: 'mexicano', playerCount: 4 });
+    const result = validateImport(json);
+
+    expect(result.error).toBeNull();
+    expect(result.tournament!.config.format).toBe('mexicano');
+  });
+
+  it('runner validates planner-exported team-americano tournament', () => {
+    const json = simulatePlannerExport({ format: 'team-americano', playerCount: 8 });
+    const result = validateImport(json);
+
+    expect(result.error).toBeNull();
+    expect(result.tournament!.config.format).toBe('team-americano');
+  });
+
+  it('preserves plannerTournamentId through roundtrip', () => {
+    const json = simulatePlannerExport();
+    const result = validateImport(json);
+
+    expect(result.error).toBeNull();
+    expect(result.tournament!.plannerTournamentId).toBe('pt-1');
+  });
+
+  it('preserves targetDuration through roundtrip', () => {
+    const json = simulatePlannerExport({ duration: 90 });
+    const result = validateImport(json);
+
+    expect(result.error).toBeNull();
+    expect(result.tournament!.config.targetDuration).toBe(90);
+  });
 });
