@@ -269,6 +269,15 @@ const en: Translations = {
   'ceremony.tapForNext': 'Tap for next award',
   'ceremony.tapToFinish': 'Tap to see results',
 
+  // Import validation errors
+  'import.invalidJson': 'Invalid JSON — make sure you pasted the full export text',
+  'import.invalidFormat': 'Invalid format — expected a tournament export object',
+  'import.unknownFormat': 'Unknown format "{found}" — expected "{expected}". Make sure you exported from the app.',
+  'import.missingTournament': 'Missing tournament data',
+  'import.missingField': 'Missing or invalid field: {field}',
+  'import.missingArrays': 'Missing players or rounds data',
+  'import.invalidConfig': 'Missing or invalid tournament config',
+
   // Common
   'common.cancel': 'Cancel',
   'common.save': 'Save',

@@ -91,7 +91,7 @@ export function SettingsScreen() {
   const loadImport = (text: string) => {
     const result = validateImport(text);
     if (result.error || !result.tournament) {
-      setImportError(result.error ?? 'Unknown error');
+      setImportError(result.error ? t(result.error.key, result.error.params) : t('import.invalidJson'));
       return;
     }
     if (!confirm(t('settings.replaceImportConfirm'))) {
