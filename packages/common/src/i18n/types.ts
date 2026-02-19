@@ -1,4 +1,4 @@
-export type Locale = 'en' | 'es' | 'it' | 'pt';
+export type Locale = 'en' | 'es' | 'it' | 'pt' | 'sr' | 'fr' | 'sv';
 
 export type Translations = Record<string, string>;
 
