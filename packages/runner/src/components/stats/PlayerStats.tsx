@@ -19,6 +19,9 @@ export function PlayerStats({ stats }: Props) {
         <div key={player.playerId} className={styles.card}>
           <div className={styles.header}>
             <span className={styles.name}>{player.playerName}</span>
+            {player.playerGroup && (
+              <span className={styles.group}>{t('playerStats.group', { group: player.playerGroup })}</span>
+            )}
             <span className={styles.summary}>
               {t('playerStats.games', { count: player.gamesPlayed, s: player.gamesPlayed !== 1 ? 's' : '' })}
               {player.sitOuts > 0 && (

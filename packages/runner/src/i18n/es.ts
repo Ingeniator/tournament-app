@@ -117,6 +117,8 @@ const es: Translations = {
   'settings.add': 'A\u00f1adir',
   'settings.addPlayer': '+ A\u00f1adir Jugador',
   'settings.out': 'fuera',
+  'settings.group': 'Grupo',
+  'settings.groupPlaceholder': 'Nombre del grupo',
   'settings.exportImport': 'Exportar / Importar',
   'settings.copyData': 'Exportar al Portapapeles',
   'settings.exportFile': 'Exportar a Archivo',
@@ -169,6 +171,7 @@ const es: Translations = {
   'playerStats.empty': 'A\u00fan no hay partidos puntuados',
   'playerStats.games': '{count} partido{s}',
   'playerStats.sitOuts': '{count} descanso{s}',
+  'playerStats.group': 'Grupo: {group}',
   'playerStats.partners': 'Compa\u00f1eros',
   'playerStats.opponents': 'Rivales',
 

@@ -4,6 +4,7 @@ import type { Tournament } from '@padel/common';
 export interface PlayerStats {
   playerId: string;
   playerName: string;
+  playerGroup?: string;
   gamesPlayed: number;
   sitOuts: number;
   partners: { name: string; count: number }[];
@@ -79,6 +80,7 @@ export function usePlayerStats(tournament: Tournament | null): PlayerStats[] {
       return {
         playerId: p.id,
         playerName: p.name,
+        playerGroup: p.group,
         gamesPlayed: s.gamesPlayed,
         sitOuts: s.sitOuts,
         partners: sortedEntries(s.partners),

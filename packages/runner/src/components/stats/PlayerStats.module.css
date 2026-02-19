@@ -29,6 +29,15 @@
   font-size: var(--text-base);
 }
 
+.group {
+  font-size: var(--text-xs);
+  padding: 1px 8px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-secondary);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
 .summary {
   font-size: var(--text-sm);
   color: var(--color-text-muted);

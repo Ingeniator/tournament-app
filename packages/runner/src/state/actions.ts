@@ -7,6 +7,7 @@ export type TournamentAction =
   | { type: 'ADD_PLAYERS_BULK'; payload: { names: string[] } }
   | { type: 'REMOVE_PLAYER'; payload: { playerId: string } }
   | { type: 'UPDATE_PLAYER'; payload: { playerId: string; name: string } }
+  | { type: 'UPDATE_PLAYER_GROUP'; payload: { playerId: string; group: string } }
   | { type: 'TOGGLE_PLAYER_AVAILABILITY'; payload: { playerId: string } }
   | { type: 'REPLACE_PLAYER'; payload: { oldPlayerId: string; newPlayerName: string } }
   | { type: 'ADD_PLAYER_LIVE'; payload: { name: string } }

@@ -104,6 +104,19 @@ export function tournamentReducer(
       };
     }
 
+    case 'UPDATE_PLAYER_GROUP': {
+      if (!state) return state;
+      const { playerId: gpId, group: gpGroup } = action.payload;
+      const trimmedGroup = gpGroup.trim() || undefined;
+      return {
+        ...state,
+        players: state.players.map(p =>
+          p.id === gpId ? { ...p, group: trimmedGroup } : p
+        ),
+        updatedAt: Date.now(),
+      };
+    }
+
     case 'TOGGLE_PLAYER_AVAILABILITY': {
       if (!state) return state;
       const { playerId: toggleId } = action.payload;

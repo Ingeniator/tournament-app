@@ -15,6 +15,7 @@ export function SettingsScreen() {
   const { toastMessage, showToast } = useToast();
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [editPlayerName, setEditPlayerName] = useState('');
+  const [editPlayerGroup, setEditPlayerGroup] = useState('');
   const [replacingPlayerId, setReplacingPlayerId] = useState<string | null>(null);
   const [replacePlayerName, setReplacePlayerName] = useState('');
   const [addPlayerName, setAddPlayerName] = useState('');
@@ -29,10 +30,20 @@ export function SettingsScreen() {
 
   if (!tournament) return null;
 
+  const isMexicano = tournament.config.format === 'mexicano';
+  const hasAnyGroup = tournament.players.some(p => p.group);
+
   const handleRenameSave = (playerId: string) => {
     const trimmed = editPlayerName.trim();
     if (trimmed && trimmed !== tournament.players.find(p => p.id === playerId)?.name) {
       dispatch({ type: 'UPDATE_PLAYER', payload: { playerId, name: trimmed } });
+    }
+    if (isMexicano) {
+      const player = tournament.players.find(p => p.id === playerId);
+      const trimmedGroup = editPlayerGroup.trim();
+      if (trimmedGroup !== (player?.group ?? '')) {
+        dispatch({ type: 'UPDATE_PLAYER_GROUP', payload: { playerId, group: trimmedGroup } });
+      }
     }
     setEditingPlayerId(null);
   };
@@ -354,6 +365,20 @@ export function SettingsScreen() {
                       onBlur={() => handleRenameSave(player.id)}
                       autoFocus
                     />
+                    {isMexicano && (
+                      <input
+                        className={styles.editInput}
+                        type="text"
+                        value={editPlayerGroup}
+                        placeholder={t('settings.groupPlaceholder')}
+                        onChange={e => setEditPlayerGroup(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') handleRenameSave(player.id);
+                          if (e.key === 'Escape') setEditingPlayerId(null);
+                        }}
+                        onBlur={() => handleRenameSave(player.id)}
+                      />
+                    )}
                     <button
                       className={`${styles.availabilityToggle} ${player.unavailable ? styles.toggleUnavailable : styles.toggleAvailable}`}
                       onMouseDown={e => e.preventDefault()}
@@ -412,13 +437,16 @@ export function SettingsScreen() {
                     {...(tournament.phase !== 'completed' ? {
                       role: 'button' as const,
                       tabIndex: 0,
-                      onClick: () => { setEditPlayerName(player.name); setEditingPlayerId(player.id); },
-                      onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setEditPlayerName(player.name); setEditingPlayerId(player.id); } },
+                      onClick: () => { setEditPlayerName(player.name); setEditPlayerGroup(player.group ?? ''); setEditingPlayerId(player.id); },
+                      onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setEditPlayerName(player.name); setEditPlayerGroup(player.group ?? ''); setEditingPlayerId(player.id); } },
                     } : {})}
                   >
                     <span className={`${styles.playerName} ${player.unavailable ? styles.playerInactive : ''}`}>
                       {player.name}
                     </span>
+                    {hasAnyGroup && player.group && (
+                      <span className={styles.groupBadge}>{player.group}</span>
+                    )}
                     {player.unavailable && (
                       <span className={styles.statusBadge}>{t('settings.out')}</span>
                     )}

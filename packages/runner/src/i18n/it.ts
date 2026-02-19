@@ -119,6 +119,8 @@ const it: Translations = {
   'settings.add': 'Aggiungi',
   'settings.addPlayer': '+ Aggiungi Giocatore',
   'settings.out': 'fuori',
+  'settings.group': 'Gruppo',
+  'settings.groupPlaceholder': 'Nome del gruppo',
   'settings.exportImport': 'Esporta / Importa',
   'settings.copyData': 'Esporta negli Appunti',
   'settings.exportFile': 'Esporta su File',
@@ -171,6 +173,7 @@ const it: Translations = {
   'playerStats.empty': 'Nessuna partita registrata',
   'playerStats.games': '{count} partita{s}',
   'playerStats.sitOuts': '{count} riposo{s}',
+  'playerStats.group': 'Gruppo: {group}',
   'playerStats.partners': 'Compagni',
   'playerStats.opponents': 'Avversari',
 

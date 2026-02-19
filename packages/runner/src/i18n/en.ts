@@ -117,6 +117,8 @@ const en: Translations = {
   'settings.add': 'Add',
   'settings.addPlayer': '+ Add Player',
   'settings.out': 'out',
+  'settings.group': 'Group',
+  'settings.groupPlaceholder': 'Group name',
   'settings.exportImport': 'Export / Import',
   'settings.copyData': 'Export to Clipboard',
   'settings.exportFile': 'Export to File',
@@ -169,6 +171,7 @@ const en: Translations = {
   'playerStats.empty': 'No scored matches yet',
   'playerStats.games': '{count} game{s}',
   'playerStats.sitOuts': '{count} sit-out{s}',
+  'playerStats.group': 'Group: {group}',
   'playerStats.partners': 'Partners',
   'playerStats.opponents': 'Opponents',
 
