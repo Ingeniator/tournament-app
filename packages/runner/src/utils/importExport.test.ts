@@ -51,6 +51,169 @@ describe('exportTournament', () => {
     expect(result.tournament).not.toBeNull();
     expect(result.tournament!.id).toBe('t1');
   });
+
+  it('roundtrips a full tournament with scores, rounds, and optional fields', () => {
+    const tournament: Tournament = {
+      id: 'full-1',
+      name: 'Full Tournament',
+      config: {
+        format: 'americano',
+        pointsPerMatch: 32,
+        courts: [
+          { id: 'c1', name: 'Court A' },
+          { id: 'c2', name: 'Court B', unavailable: true },
+        ],
+        maxRounds: 8,
+        targetDuration: 90,
+      },
+      phase: 'in-progress',
+      players: [
+        { id: 'p1', name: 'Alice' },
+        { id: 'p2', name: 'Bob' },
+        { id: 'p3', name: 'Carol' },
+        { id: 'p4', name: 'Dave' },
+        { id: 'p5', name: 'Eve', unavailable: true },
+      ],
+      rounds: [
+        {
+          id: 'r1',
+          roundNumber: 1,
+          matches: [
+            {
+              id: 'm1',
+              courtId: 'c1',
+              team1: ['p1', 'p2'],
+              team2: ['p3', 'p4'],
+              score: { team1Points: 18, team2Points: 14 },
+            },
+          ],
+          sitOuts: ['p5'],
+        },
+        {
+          id: 'r2',
+          roundNumber: 2,
+          matches: [
+            {
+              id: 'm2',
+              courtId: 'c1',
+              team1: ['p1', 'p3'],
+              team2: ['p2', 'p4'],
+              score: null,
+            },
+          ],
+          sitOuts: ['p5'],
+        },
+      ],
+      teams: [
+        { id: 'team1', player1Id: 'p1', player2Id: 'p2', name: 'Team Alpha' },
+      ],
+      plannerTournamentId: 'planner-xyz',
+      createdAt: 1000,
+      updatedAt: 2000,
+    };
+
+    const json = exportTournament(tournament);
+    const result = validateImport(json);
+
+    expect(result.error).toBeNull();
+    const imported = result.tournament!;
+
+    // Core fields
+    expect(imported.id).toBe('full-1');
+    expect(imported.name).toBe('Full Tournament');
+    expect(imported.phase).toBe('in-progress');
+
+    // Config with optional fields
+    expect(imported.config.format).toBe('americano');
+    expect(imported.config.pointsPerMatch).toBe(32);
+    expect(imported.config.maxRounds).toBe(8);
+    expect(imported.config.targetDuration).toBe(90);
+    expect(imported.config.courts).toHaveLength(2);
+    expect(imported.config.courts[1].unavailable).toBe(true);
+
+    // Players with unavailable flag
+    expect(imported.players).toHaveLength(5);
+    expect(imported.players[4].unavailable).toBe(true);
+
+    // Rounds with scored and unscored matches
+    expect(imported.rounds).toHaveLength(2);
+    expect(imported.rounds[0].matches[0].score).toEqual({ team1Points: 18, team2Points: 14 });
+    expect(imported.rounds[1].matches[0].score).toBeNull();
+    expect(imported.rounds[0].sitOuts).toEqual(['p5']);
+
+    // Team tuples
+    expect(imported.rounds[0].matches[0].team1).toEqual(['p1', 'p2']);
+    expect(imported.rounds[0].matches[0].team2).toEqual(['p3', 'p4']);
+
+    // Optional fields
+    expect(imported.teams).toHaveLength(1);
+    expect(imported.teams![0].name).toBe('Team Alpha');
+    expect(imported.plannerTournamentId).toBe('planner-xyz');
+
+    // Timestamps
+    expect(imported.createdAt).toBe(1000);
+    expect(imported.updatedAt).toBe(2000);
+  });
+
+  it('roundtrips a completed tournament with nominations', () => {
+    const tournament: Tournament = {
+      id: 'completed-1',
+      name: 'Finished Cup',
+      config: {
+        format: 'mexicano',
+        pointsPerMatch: 24,
+        courts: [{ id: 'c1', name: 'Court 1' }],
+        maxRounds: null,
+      },
+      phase: 'completed',
+      players: [
+        { id: 'p1', name: 'Alice' },
+        { id: 'p2', name: 'Bob' },
+        { id: 'p3', name: 'Carol' },
+        { id: 'p4', name: 'Dave' },
+      ],
+      rounds: [
+        {
+          id: 'r1',
+          roundNumber: 1,
+          matches: [{
+            id: 'm1',
+            courtId: 'c1',
+            team1: ['p1', 'p2'],
+            team2: ['p3', 'p4'],
+            score: { team1Points: 15, team2Points: 9 },
+          }],
+          sitOuts: [],
+        },
+      ],
+      nominations: [
+        { id: 'n1', title: 'MVP', emoji: '⭐', description: 'Most points', playerNames: ['Alice'], stat: '15 pts', tier: 'legendary' },
+      ],
+      ceremonyCompleted: true,
+      createdAt: 1000,
+      updatedAt: 3000,
+    };
+
+    const json = exportTournament(tournament);
+    const result = validateImport(json);
+
+    expect(result.error).toBeNull();
+    const imported = result.tournament!;
+
+    expect(imported.phase).toBe('completed');
+    expect(imported.config.format).toBe('mexicano');
+    expect(imported.nominations).toHaveLength(1);
+    expect(imported.nominations![0].title).toBe('MVP');
+    expect(imported.nominations![0].tier).toBe('legendary');
+    expect(imported.ceremonyCompleted).toBe(true);
+  });
+
+  it('exported JSON is deep-equal to input tournament', () => {
+    const tournament = makeTournament();
+    const json = exportTournament(tournament);
+    const result = validateImport(json);
+    expect(result.tournament).toEqual(tournament);
+  });
 });
 
 describe('validateImport', () => {
