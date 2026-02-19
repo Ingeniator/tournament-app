@@ -1,7 +1,7 @@
 import type { TournamentStrategy, ScheduleResult } from './types';
 import type { Player, TournamentConfig, Round, Match, Tournament } from '@padel/common';
 import { generateId } from '@padel/common';
-import { shuffle, partnerKey, commonValidateSetup, commonValidateScore, calculateCompetitorStandings, seedFromRounds, selectSitOuts } from './shared';
+import { shuffle, partnerKey, commonValidateSetup, commonValidateScore, calculateCompetitorStandings, calculateIndividualStandings, seedFromRounds, selectSitOuts } from './shared';
 
 type Pairing = [[string, string], [string, string]];
 
@@ -39,7 +39,8 @@ function scoreGrouping(
   groups: string[][],
   partnerCounts: Map<string, number>,
   opponentCounts: Map<string, number>,
-  courtMates?: Set<string>
+  courtMates?: Set<string>,
+  rankMap?: Map<string, number>
 ): number {
   let total = 0;
   for (const group of groups) {
@@ -57,6 +58,15 @@ function scoreGrouping(
           }
         }
       }
+    }
+
+    // Standings proximity: prefer groups where players have similar rankings.
+    // Weight 0.5 per spread point — acts as a tiebreaker, never overrides
+    // partner repeats (×100) or significant opponent imbalance.
+    if (rankMap) {
+      const ranks = group.map(id => rankMap.get(id) ?? 0);
+      const spread = Math.max(...ranks) - Math.min(...ranks);
+      total += spread * 0.5;
     }
   }
   return total;
@@ -140,7 +150,8 @@ function generateRounds(
   gamesPlayed: Map<string, number>,
   courtCounts: Map<string, number>,
   courtMates: Set<string>,
-  lastSitOutRound: Map<string, number>
+  lastSitOutRound: Map<string, number>,
+  rankMap?: Map<string, number>
 ): { rounds: Round[]; warnings: string[] } {
   const warnings: string[] = [];
   const n = players.length;
@@ -175,7 +186,7 @@ function generateRounds(
       // Exhaustive: evaluate every unique partition, then tiebreak by court balance + coverage
       let tied: string[][][] = [];
       for (const groups of allGroupPartitions(activeIds)) {
-        const score = scoreGrouping(groups, partnerCounts, opponentCounts);
+        const score = scoreGrouping(groups, partnerCounts, opponentCounts, undefined, rankMap);
         if (score < bestScore) {
           bestScore = score;
           tied = [groups];
@@ -245,7 +256,7 @@ function generateRounds(
         for (let i = 0; i < numCourts; i++) {
           groups.push(shuffled.slice(i * 4, i * 4 + 4));
         }
-        const score = scoreGrouping(groups, partnerCounts, opponentCounts, courtMates);
+        const score = scoreGrouping(groups, partnerCounts, opponentCounts, courtMates, rankMap);
         if (score < bestScore) {
           bestScore = score;
           bestGroups = groups;
@@ -417,6 +428,7 @@ function generateRoundsWithRetry(
   seedCourtMates: Set<string>,
   seedLastSitOutRound: Map<string, number>,
   timeBudgetMs: number,
+  rankMap?: Map<string, number>,
 ): ScheduleResult {
   let bestResult: ScheduleResult | null = null;
   let bestScore: [number, number, number, number] = [Infinity, Infinity, Infinity, Infinity];
@@ -426,6 +438,7 @@ function generateRoundsWithRetry(
     const result = generateRounds(
       players, config, count, startRoundNumber,
       new Map(seedPartnerCounts), new Map(seedOpponentCounts), new Map(seedGamesPlayed), new Map(seedCourtCounts), new Set(seedCourtMates), new Map(seedLastSitOutRound),
+      rankMap,
     );
     const score = scoreSchedule(result.rounds, seedPartnerCounts);
     if (isBetterScore(score, bestScore)) {
@@ -465,13 +478,22 @@ export const americanoStrategy: TournamentStrategy = {
     return generateRoundsWithRetry(players, config, totalRounds, 1, new Map(), new Map(), gamesPlayed, new Map(), new Set(), lastSitOutRound, 500);
   },
 
-  generateAdditionalRounds(players: Player[], config: TournamentConfig, existingRounds: Round[], count: number, excludePlayerIds?: string[], timeBudgetMs?: number): ScheduleResult {
+  generateAdditionalRounds(players: Player[], config: TournamentConfig, existingRounds: Round[], count: number, excludePlayerIds?: string[], timeBudgetMs?: number, tournament?: Tournament): ScheduleResult {
     const activePlayers = excludePlayerIds?.length
       ? players.filter(p => !excludePlayerIds.includes(p.id))
       : players;
     const { partnerCounts, opponentCounts, gamesPlayed, courtCounts, courtMates, lastSitOutRound } = seedFromRounds(existingRounds, activePlayers);
     const startRoundNumber = existingRounds.length + 1;
     const budget = timeBudgetMs ?? (count > 1 ? 500 : 0);
-    return generateRoundsWithRetry(activePlayers, config, count, startRoundNumber, partnerCounts, opponentCounts, gamesPlayed, courtCounts, courtMates, lastSitOutRound, budget);
+
+    // Build rank map from current standings so additional rounds
+    // prefer grouping similarly-ranked players together
+    let rankMap: Map<string, number> | undefined;
+    if (tournament) {
+      const standings = calculateIndividualStandings(tournament);
+      rankMap = new Map(standings.map((s, i) => [s.playerId, i]));
+    }
+
+    return generateRoundsWithRetry(activePlayers, config, count, startRoundNumber, partnerCounts, opponentCounts, gamesPlayed, courtCounts, courtMates, lastSitOutRound, budget, rankMap);
   },
 };
