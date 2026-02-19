@@ -1,5 +1,5 @@
 import type { TournamentConfig, TournamentFormat, Court } from '@padel/common';
-import { Button, generateId, useTranslation } from '@padel/common';
+import { Button, generateId, useTranslation, getKotcCourtNames, getKotcDefaultBonusPoints } from '@padel/common';
 import { resolveConfigDefaults, computeSitOutInfo } from '../../utils/resolveConfigDefaults';
 import styles from './TournamentConfigForm.module.css';
 
@@ -52,11 +52,23 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
 
   const addCourt = () => {
     if (config.courts.length >= maxCourts) return;
-    const newCourt: Court = {
-      id: generateId(),
-      name: `Court ${config.courts.length + 1}`,
-    };
-    onUpdate({ courts: [...config.courts, newCourt] });
+    const newIndex = config.courts.length;
+    if (config.format === 'kotc') {
+      const names = getKotcCourtNames(newIndex + 1);
+      const newCourt: Court = {
+        id: generateId(),
+        name: names[newIndex] ?? `Court ${newIndex + 1}`,
+        subname: `Court ${newIndex + 1}`,
+        bonusPoints: getKotcDefaultBonusPoints(newIndex, newIndex + 1),
+      };
+      onUpdate({ courts: [...config.courts, newCourt] });
+    } else {
+      const newCourt: Court = {
+        id: generateId(),
+        name: `Court ${newIndex + 1}`,
+      };
+      onUpdate({ courts: [...config.courts, newCourt] });
+    }
   };
 
   const removeCourt = (courtId: string) => {
@@ -78,34 +90,88 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
           id="config-format"
           className={styles.input}
           value={config.format}
-          onChange={e => onUpdate({ format: e.target.value as TournamentFormat })}
+          onChange={e => {
+            const format = e.target.value as TournamentFormat;
+            if (format === 'kotc') {
+              const names = getKotcCourtNames(config.courts.length);
+              const courts: Court[] = config.courts.map((c, i) => ({
+                ...c,
+                name: names[i] ?? c.name,
+                subname: `Court ${i + 1}`,
+                bonusPoints: getKotcDefaultBonusPoints(i, config.courts.length),
+              }));
+              onUpdate({ format, courts });
+            } else {
+              onUpdate({ format });
+            }
+          }}
         >
           <option value="americano">{t('config.formatAmericano')}</option>
           <option value="team-americano">{t('config.formatTeamAmericano')}</option>
           <option value="mexicano">{t('config.formatMexicano')}</option>
+          <option value="mixicano">{t('config.formatMixicano')}</option>
+          <option value="kotc">{t('config.formatKotc')}</option>
         </select>
       </div>
 
       <div className={styles.field}>
         <label className={styles.label} id="courts-label">{t('config.courts')}</label>
         <div className={styles.courtList} role="group" aria-labelledby="courts-label">
-          {config.courts.map(court => (
-            <div key={court.id} className={styles.courtRow}>
-              <input
-                className={styles.courtInput}
-                type="text"
-                value={court.name}
-                onChange={e => updateCourtName(court.id, e.target.value)}
-                aria-label={`Court ${config.courts.indexOf(court) + 1} name`}
-              />
-              {config.courts.length > 1 && (
-                <button
-                  className={styles.removeCourt}
-                  onClick={() => removeCourt(court.id)}
-                  aria-label={t('config.removeCourt')}
-                >
-                  ✕
-                </button>
+          {config.courts.map((court, idx) => (
+            <div key={court.id} className={config.format === 'kotc' ? styles.courtRowKotc : styles.courtRow}>
+              <div className={styles.courtMainRow}>
+                <input
+                  className={styles.courtInput}
+                  type="text"
+                  value={court.name}
+                  onChange={e => updateCourtName(court.id, e.target.value)}
+                  aria-label={`Court ${idx + 1} name`}
+                />
+                {config.courts.length > 1 && (
+                  <button
+                    className={styles.removeCourt}
+                    onClick={() => removeCourt(court.id)}
+                    aria-label={t('config.removeCourt')}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              {config.format === 'kotc' && (
+                <div className={styles.courtKotcFields}>
+                  <input
+                    className={styles.courtSubnameInput}
+                    type="text"
+                    value={court.subname ?? ''}
+                    onChange={e => {
+                      onUpdate({
+                        courts: config.courts.map(c =>
+                          c.id === court.id ? { ...c, subname: e.target.value } : c
+                        ),
+                      });
+                    }}
+                    placeholder={t('config.courtSubname')}
+                    aria-label={`Court ${idx + 1} subname`}
+                  />
+                  <label className={styles.courtBonusLabel}>
+                    {t('config.courtBonusPoints')}
+                    <input
+                      className={styles.courtBonusInput}
+                      type="number"
+                      min={0}
+                      value={court.bonusPoints ?? 0}
+                      onChange={e => {
+                        const v = parseInt(e.target.value, 10);
+                        onUpdate({
+                          courts: config.courts.map(c =>
+                            c.id === court.id ? { ...c, bonusPoints: isNaN(v) ? 0 : Math.max(0, v) } : c
+                          ),
+                        });
+                      }}
+                      aria-label={`Court ${idx + 1} bonus points`}
+                    />
+                  </label>
+                </div>
               )}
             </div>
           ))}

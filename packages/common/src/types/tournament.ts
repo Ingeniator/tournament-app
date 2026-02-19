@@ -1,7 +1,7 @@
 import type { Player } from './player';
 import type { Nomination } from './nomination';
 
-export type TournamentFormat = 'americano' | 'mexicano' | 'team-americano' | 'round-robin';
+export type TournamentFormat = 'americano' | 'mexicano' | 'team-americano' | 'round-robin' | 'mixicano' | 'kotc';
 
 export type TournamentPhase = 'setup' | 'team-pairing' | 'in-progress' | 'completed';
 
@@ -22,6 +22,8 @@ export interface Court {
   id: string;
   name: string;
   unavailable?: boolean;
+  subname?: string;
+  bonusPoints?: number;
 }
 
 export interface TournamentConfig {

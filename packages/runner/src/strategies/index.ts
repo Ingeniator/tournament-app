@@ -25,3 +25,5 @@ export function getStrategy(format: TournamentFormat): TournamentStrategy {
 registerStrategy('americano', americanoStrategy);
 registerStrategy('mexicano', mexicanoStrategy);
 registerStrategy('team-americano', teamAmericanoStrategy);
+registerStrategy('mixicano', mexicanoStrategy);
+registerStrategy('kotc', americanoStrategy);
