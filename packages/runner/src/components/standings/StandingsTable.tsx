@@ -1,5 +1,6 @@
 import type { StandingsEntry } from '@padel/common';
 import { useTranslation } from '@padel/common';
+import { GroupBadge } from '../GroupBadge';
 import styles from './StandingsTable.module.css';
 
 interface StandingsTableProps {
@@ -48,7 +49,12 @@ export function StandingsTable({ standings, plannedGames }: StandingsTableProps)
           return (
             <tr key={entry.playerId}>
               <td className={`${styles.rank} ${rankClass}`}>{entry.rank}</td>
-              <td className={styles.name}>{entry.playerName}</td>
+              <td className={styles.name}>
+                <span className={styles.nameInner}>
+                  {entry.playerName}
+                  {entry.group && <GroupBadge group={entry.group} />}
+                </span>
+              </td>
               <td className={`${styles.right} ${styles.points}`}>{entry.totalPoints}</td>
               {plannedGames && (
                 <td className={`${styles.right} ${styles.gamesCol} ${planned === 0 ? styles.noPlanned : ''}`}>

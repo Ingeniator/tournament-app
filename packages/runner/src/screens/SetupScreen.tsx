@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useTournament } from '../hooks/useTournament';
 import { getStrategy } from '../strategies';
 import { resolveConfigDefaults } from '../utils/resolveConfigDefaults';
+import { getGroupWarnings } from '../utils/groupWarnings';
 import { AppShell } from '../components/layout/AppShell';
 import { PlayerInput } from '../components/setup/PlayerInput';
 import { PlayerList } from '../components/setup/PlayerList';
@@ -20,9 +21,15 @@ export function SetupScreen() {
     return strategy.validateSetup(tournament.players, resolvedConfig);
   }, [tournament]);
 
+  const groupWarnings = useMemo(() => {
+    if (!tournament) return [];
+    return getGroupWarnings(tournament.players, tournament.config.format, t);
+  }, [tournament, t]);
+
   if (!tournament) return null;
 
   const strategy = getStrategy(tournament.config.format);
+  const isMexicano = tournament.config.format === 'mexicano';
 
   const handleGenerate = () => {
     if (errors.length > 0) return;
@@ -75,7 +82,18 @@ export function SetupScreen() {
           onRemove={playerId =>
             dispatch({ type: 'REMOVE_PLAYER', payload: { playerId } })
           }
+          showGroups={isMexicano}
+          onSetGroup={(playerId, group) =>
+            dispatch({ type: 'SET_PLAYER_GROUP', payload: { playerId, group } })
+          }
         />
+        {groupWarnings.length > 0 && (
+          <div className={styles.warnings}>
+            {groupWarnings.map((w, i) => (
+              <div key={i} className={styles.warning}>{w}</div>
+            ))}
+          </div>
+        )}
       </div>
 
       <Card>

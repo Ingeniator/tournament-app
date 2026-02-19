@@ -1,0 +1,26 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: var(--radius-full);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.groupA {
+  background-color: var(--color-group-a-tint, rgba(59, 130, 246, 0.15));
+  color: var(--color-group-a, #3b82f6);
+}
+
+.groupB {
+  background-color: var(--color-group-b-tint, rgba(244, 114, 182, 0.15));
+  color: var(--color-group-b, #f472b6);
+}
+
+.groupDefault {
+  background-color: var(--color-secondary);
+  color: var(--color-text-secondary);
+}

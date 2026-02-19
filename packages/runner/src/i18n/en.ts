@@ -269,6 +269,12 @@ const en: Translations = {
   'import.missingArrays': 'Missing players or rounds data',
   'import.invalidConfig': 'Missing or invalid tournament config',
 
+  // Groups (Mixicano)
+  'groups.playersWithoutGroup': '{count} player(s) have no group assigned',
+  'groups.unequalGroups': 'Unequal groups ({distribution}) \u2014 you can still play, but with less variety in matchups',
+  'groups.needTwoGroups': 'Assign players to at least 2 groups for mixed play',
+  'settings.group': 'Group',
+
   // Common
   'common.cancel': 'Cancel',
   'common.save': 'Save',

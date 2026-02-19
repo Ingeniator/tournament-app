@@ -8,4 +8,5 @@ export interface StandingsEntry {
   matchesDraw: number;
   pointDiff: number;
   rank: number;
+  group?: string;
 }

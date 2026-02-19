@@ -43,6 +43,9 @@ export function renderStandingsImage(
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d')!;
 
+  // Check if any entry has a group (mixicano mode)
+  const hasGroups = standings.some(e => !!e.group);
+
   // Layout constants
   const padding = s(20);
   const headerHeight = s(36);
@@ -146,11 +149,37 @@ export function renderStandingsImage(
         : t.textMuted;
     ctx.fillText(String(entry.rank), tableX + colRank, textY);
 
-    // Name (truncated if too long)
+    // Name (truncated if too long) + optional group badge
     ctx.font = `600 ${s(12)}px ${FONT}`;
     ctx.fillStyle = t.text;
-    const displayName = truncateText(ctx, entry.playerName, nameMaxWidth);
+    const badgeSpace = hasGroups ? s(20) : 0;
+    const displayName = truncateText(ctx, entry.playerName, nameMaxWidth - badgeSpace);
     ctx.fillText(displayName, tableX + colName, textY);
+
+    if (entry.group) {
+      // Draw group badge pill after the name
+      const nameWidth = ctx.measureText(displayName).width;
+      const badgeX = tableX + colName + nameWidth + s(4);
+      const badgeText = entry.group;
+      ctx.font = `bold ${s(8)}px ${FONT}`;
+      const badgeTextWidth = ctx.measureText(badgeText).width;
+      const badgeW = badgeTextWidth + s(6);
+      const badgeH = s(12);
+      const badgeY = textY - s(9);
+      const badgeR = s(6);
+
+      // Badge background
+      const isA = entry.group === 'A';
+      ctx.fillStyle = isA ? 'rgba(59, 130, 246, 0.20)' : 'rgba(244, 114, 182, 0.20)';
+      roundRect(ctx, badgeX, badgeY, badgeW, badgeH, badgeR);
+      ctx.fill();
+
+      // Badge text
+      ctx.fillStyle = isA ? '#3b82f6' : '#f472b6';
+      ctx.textAlign = 'center';
+      ctx.fillText(badgeText, badgeX + badgeW / 2, textY - s(1));
+      ctx.textAlign = 'left';
+    }
 
     // Points
     ctx.textAlign = 'right';

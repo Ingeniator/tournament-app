@@ -66,6 +66,12 @@
   text-overflow: ellipsis;
 }
 
+.nameInner {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .points {
   font-weight: 700;
   color: var(--color-primary);

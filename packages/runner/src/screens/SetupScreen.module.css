@@ -47,6 +47,19 @@
   border-radius: var(--radius-sm);
 }
 
+.warnings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+}
+
+.warning {
+  font-size: var(--text-xs);
+  color: var(--color-warning, #f0a500);
+  padding: var(--space-xs) 0;
+}
+
 .footer {
   margin-top: var(--space-lg);
 }

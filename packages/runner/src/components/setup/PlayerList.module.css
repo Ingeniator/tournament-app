@@ -28,6 +28,16 @@
 .left {
   display: flex;
   align-items: center;
+  gap: var(--space-xs);
+  min-width: 0;
+  flex: 1;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-shrink: 0;
 }
 
 .removeBtn {
@@ -50,4 +60,42 @@
   color: var(--color-text-muted);
   padding: var(--space-xl) 0;
   font-size: var(--text-sm);
+}
+
+/* Group selector buttons */
+.groupButtons {
+  display: flex;
+  gap: 2px;
+}
+
+.groupBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background-color: transparent;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s;
+}
+
+.groupBtn:active {
+  opacity: 0.7;
+}
+
+.groupBtnActiveA {
+  background-color: var(--color-group-a-tint, rgba(59, 130, 246, 0.15));
+  color: var(--color-group-a, #3b82f6);
+  border-color: var(--color-group-a, #3b82f6);
+}
+
+.groupBtnActiveB {
+  background-color: var(--color-group-b-tint, rgba(244, 114, 182, 0.15));
+  color: var(--color-group-b, #f472b6);
+  border-color: var(--color-group-b, #f472b6);
 }

@@ -119,6 +119,21 @@ export function tournamentReducer(
       return { ...state, players: togglePlayers, rounds: newRounds, updatedAt: Date.now() };
     }
 
+    case 'SET_PLAYER_GROUP': {
+      if (!state) return state;
+      const { playerId: groupPlayerId, group } = action.payload;
+      const groupPlayers = state.players.map(p =>
+        p.id === groupPlayerId ? { ...p, group } : p
+      );
+
+      if (state.phase !== 'in-progress') {
+        return { ...state, players: groupPlayers, updatedAt: Date.now() };
+      }
+
+      const newRounds = regenerateUnscoredRounds(state, groupPlayers, state.config);
+      return { ...state, players: groupPlayers, rounds: newRounds, updatedAt: Date.now() };
+    }
+
     case 'REPLACE_PLAYER': {
       if (!state || state.phase !== 'in-progress') return state;
       const { oldPlayerId, newPlayerName } = action.payload;

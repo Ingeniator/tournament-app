@@ -1,9 +1,11 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { ref, push, set } from 'firebase/database';
 import { useTournament } from '../hooks/useTournament';
 import { EditableField } from '../components/settings/EditableField';
+import { GroupBadge } from '../components/GroupBadge';
 import { copyToClipboard } from '../utils/clipboard';
 import { exportTournament, exportTournamentToFile, validateImport } from '../utils/importExport';
+import { getGroupWarnings } from '../utils/groupWarnings';
 import { db } from '../firebase';
 import { computeSitOutInfo } from '../utils/resolveConfigDefaults';
 import { Button, Card, FeedbackModal, AppFooter, Toast, useToast, useTranslation } from '@padel/common';
@@ -27,7 +29,14 @@ export function SettingsScreen() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const groupWarnings = useMemo(() => {
+    if (!tournament) return [];
+    return getGroupWarnings(tournament.players.filter(p => !p.unavailable), tournament.config.format, t);
+  }, [tournament, t]);
+
   if (!tournament) return null;
+
+  const isMexicano = tournament.config.format === 'mexicano';
 
   const handleRenameSave = (playerId: string) => {
     const trimmed = editPlayerName.trim();
@@ -366,6 +375,33 @@ export function SettingsScreen() {
                     >
                       {player.unavailable ? t('settings.unavailable') : t('settings.available')}
                     </button>
+                    {isMexicano && (
+                      <div className={styles.groupSelector}>
+                        <span className={styles.groupLabel}>{t('settings.group')}</span>
+                        <div className={styles.groupButtons}>
+                          <button
+                            className={`${styles.groupBtn} ${player.group === 'A' ? styles.groupBtnActiveA : ''}`}
+                            onMouseDown={e => e.preventDefault()}
+                            onClick={() => dispatch({
+                              type: 'SET_PLAYER_GROUP',
+                              payload: { playerId: player.id, group: player.group === 'A' ? undefined : 'A' },
+                            })}
+                          >
+                            A
+                          </button>
+                          <button
+                            className={`${styles.groupBtn} ${player.group === 'B' ? styles.groupBtnActiveB : ''}`}
+                            onMouseDown={e => e.preventDefault()}
+                            onClick={() => dispatch({
+                              type: 'SET_PLAYER_GROUP',
+                              payload: { playerId: player.id, group: player.group === 'B' ? undefined : 'B' },
+                            })}
+                          >
+                            B
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     {tournament.phase === 'in-progress' && (
                       <button
                         className={styles.replaceBtn}
@@ -419,6 +455,7 @@ export function SettingsScreen() {
                     <span className={`${styles.playerName} ${player.unavailable ? styles.playerInactive : ''}`}>
                       {player.name}
                     </span>
+                    {player.group && <GroupBadge group={player.group} />}
                     {player.unavailable && (
                       <span className={styles.statusBadge}>{t('settings.out')}</span>
                     )}
@@ -428,6 +465,14 @@ export function SettingsScreen() {
             );
           })}
         </div>
+
+        {isMexicano && groupWarnings.length > 0 && (
+          <div className={styles.groupWarnings}>
+            {groupWarnings.map((w, i) => (
+              <div key={i} className={styles.groupWarning}>{w}</div>
+            ))}
+          </div>
+        )}
 
         {tournament.phase === 'completed' ? null : showAddPlayer ? (
           <div className={styles.addPlayerPanel}>
