@@ -109,6 +109,17 @@
   color: var(--color-danger);
 }
 
+.groupBadge {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: 1px 5px;
+  margin-left: 4px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary-tint, rgba(233, 69, 96, 0.15));
+  color: var(--color-primary);
+  vertical-align: middle;
+}
+
 .empty {
   text-align: center;
   padding: var(--space-xl);

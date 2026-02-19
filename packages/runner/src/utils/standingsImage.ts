@@ -38,6 +38,7 @@ function s(px: number): number {
 export function renderStandingsImage(
   tournamentName: string,
   standings: StandingsEntry[],
+  playerGroups?: Map<string, string>,
 ): HTMLCanvasElement {
   const t = getThemeColors();
   const canvas = document.createElement('canvas');
@@ -149,8 +150,32 @@ export function renderStandingsImage(
     // Name (truncated if too long)
     ctx.font = `600 ${s(12)}px ${FONT}`;
     ctx.fillStyle = t.text;
-    const displayName = truncateText(ctx, entry.playerName, nameMaxWidth);
+    const group = playerGroups?.get(entry.playerId);
+    const nameReserve = group ? s(24) : 0; // reserve space for group badge
+    const displayName = truncateText(ctx, entry.playerName, nameMaxWidth - nameReserve);
     ctx.fillText(displayName, tableX + colName, textY);
+
+    // Group badge (small pill after name)
+    if (group) {
+      const nameWidth = ctx.measureText(displayName).width;
+      const badgeX = tableX + colName + nameWidth + s(4);
+      const badgeFont = `bold ${s(8)}px ${FONT}`;
+      ctx.font = badgeFont;
+      const badgeTextW = ctx.measureText(group).width;
+      const badgePadH = s(4);
+      const badgePadV = s(2);
+      const badgeW = badgeTextW + badgePadH * 2;
+      const badgeH = s(12);
+      const badgeY = textY - badgeH + badgePadV;
+
+      ctx.fillStyle = t.primary + '26'; // ~15% opacity
+      roundRect(ctx, badgeX, badgeY, badgeW, badgeH, s(6));
+      ctx.fill();
+      ctx.fillStyle = t.primary;
+      ctx.textAlign = 'left';
+      ctx.fillText(group, badgeX + badgePadH, textY - s(1));
+      ctx.font = `600 ${s(12)}px ${FONT}`;
+    }
 
     // Points
     ctx.textAlign = 'right';
@@ -357,12 +382,13 @@ export async function shareStandingsImage(
   tournamentName: string,
   standings: StandingsEntry[],
   nominations: Nomination[] = [],
+  playerGroups?: Map<string, string>,
 ): Promise<ShareImageResult> {
   let standingsCanvas: HTMLCanvasElement;
   let nominationCanvases: HTMLCanvasElement[];
 
   try {
-    standingsCanvas = renderStandingsImage(tournamentName, standings);
+    standingsCanvas = renderStandingsImage(tournamentName, standings, playerGroups);
     nominationCanvases = nominations.map(n => renderNominationImage(tournamentName, n));
   } catch {
     return { status: 'failed' };

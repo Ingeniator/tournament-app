@@ -8,6 +8,7 @@ export type TournamentAction =
   | { type: 'REMOVE_PLAYER'; payload: { playerId: string } }
   | { type: 'UPDATE_PLAYER'; payload: { playerId: string; name: string } }
   | { type: 'TOGGLE_PLAYER_AVAILABILITY'; payload: { playerId: string } }
+  | { type: 'SET_PLAYER_GROUP'; payload: { playerId: string; group: string } }
   | { type: 'REPLACE_PLAYER'; payload: { oldPlayerId: string; newPlayerName: string } }
   | { type: 'ADD_PLAYER_LIVE'; payload: { name: string } }
   | { type: 'REGENERATE_FUTURE_ROUNDS'; payload?: { timeBudgetMs?: number } }

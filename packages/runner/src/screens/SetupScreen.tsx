@@ -72,8 +72,12 @@ export function SetupScreen() {
         />
         <PlayerList
           players={tournament.players}
+          format={tournament.config.format}
           onRemove={playerId =>
             dispatch({ type: 'REMOVE_PLAYER', payload: { playerId } })
+          }
+          onGroupChange={(playerId, group) =>
+            dispatch({ type: 'SET_PLAYER_GROUP', payload: { playerId, group } })
           }
         />
       </div>

@@ -108,6 +108,8 @@ const it: Translations = {
   'settings.trySitOut': 'Prova {suggestions} turni per riposi equi.',
   'settings.unavailable': 'Non disponibile',
   'settings.available': 'Disponibile',
+  'settings.group': 'Gruppo',
+  'settings.unequalGroups': 'Gruppi non equilibrati ({counts}) \u2014 il gioco funziona ma con meno variet\u00e0',
   'settings.replaceWith': 'Sostituisci con...',
   'settings.replaceLabel': 'Sostituisci {name} con:',
   'settings.newCourtPlaceholder': 'Nuovo nome campo',
@@ -158,6 +160,8 @@ const it: Translations = {
 
   // PlayerList
   'playerList.empty': 'Nessun giocatore aggiunto',
+  'playerList.groupAssignment': 'Gruppi',
+  'playerList.unequalGroups': 'Gruppi non equilibrati \u2014 il gioco funziona ma con meno variet\u00e0',
 
   // StandingsTable
   'standings.empty': 'Nessun punteggio inserito',
@@ -225,6 +229,7 @@ const it: Translations = {
   'config.formatAmericano': 'Americano',
   'config.formatTeamAmericano': 'Team Americano',
   'config.formatMexicano': 'Mexicano',
+  'config.formatMixicano': 'Mixicano',
   'config.courts': 'Campi',
   'config.removeCourt': 'Rimuovi campo',
   'config.addCourt': '+ Aggiungi campo',

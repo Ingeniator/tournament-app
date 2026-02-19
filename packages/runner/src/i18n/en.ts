@@ -106,6 +106,8 @@ const en: Translations = {
   'settings.trySitOut': 'Try {suggestions} rounds for equal sit-outs.',
   'settings.unavailable': 'Unavailable',
   'settings.available': 'Available',
+  'settings.group': 'Group',
+  'settings.unequalGroups': 'Unequal groups ({counts}) — game works but with less variety',
   'settings.replaceWith': 'Replace with...',
   'settings.replaceLabel': 'Replace {name} with:',
   'settings.newCourtPlaceholder': 'New court name',
@@ -156,6 +158,8 @@ const en: Translations = {
 
   // PlayerList
   'playerList.empty': 'No players added yet',
+  'playerList.groupAssignment': 'Groups',
+  'playerList.unequalGroups': 'Unequal groups — game works but with less variety',
 
   // StandingsTable
   'standings.empty': 'No scores entered yet',
@@ -223,6 +227,7 @@ const en: Translations = {
   'config.formatAmericano': 'Americano',
   'config.formatTeamAmericano': 'Team Americano',
   'config.formatMexicano': 'Mexicano',
+  'config.formatMixicano': 'Mixicano',
   'config.courts': 'Courts',
   'config.removeCourt': 'Remove court',
   'config.addCourt': '+ Add court',

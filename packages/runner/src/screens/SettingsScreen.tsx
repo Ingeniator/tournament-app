@@ -366,6 +366,27 @@ export function SettingsScreen() {
                     >
                       {player.unavailable ? t('settings.unavailable') : t('settings.available')}
                     </button>
+                    {tournament.config.format === 'mixicano' && (
+                      <div className={styles.groupSelectorRow}>
+                        <span className={styles.groupSelectorLabel}>{t('settings.group')}</span>
+                        <div className={styles.groupSelectorBtns}>
+                          {(() => {
+                            const groups = [...new Set(tournament.players.map(p => p.group).filter(Boolean))].sort() as string[];
+                            const groupNames = groups.length >= 2 ? groups : ['A', 'B'];
+                            return groupNames.map(g => (
+                              <button
+                                key={g}
+                                className={`${styles.groupToggleBtn} ${(player.group || groupNames[0]) === g ? styles.groupToggleBtnActive : ''}`}
+                                onMouseDown={e => e.preventDefault()}
+                                onClick={() => dispatch({ type: 'SET_PLAYER_GROUP', payload: { playerId: player.id, group: g } })}
+                              >
+                                {g}
+                              </button>
+                            ));
+                          })()}
+                        </div>
+                      </div>
+                    )}
                     {tournament.phase === 'in-progress' && (
                       <button
                         className={styles.replaceBtn}
@@ -419,6 +440,9 @@ export function SettingsScreen() {
                     <span className={`${styles.playerName} ${player.unavailable ? styles.playerInactive : ''}`}>
                       {player.name}
                     </span>
+                    {tournament.config.format === 'mixicano' && player.group && (
+                      <span className={styles.groupBadge}>{player.group}</span>
+                    )}
                     {player.unavailable && (
                       <span className={styles.statusBadge}>{t('settings.out')}</span>
                     )}
@@ -428,6 +452,24 @@ export function SettingsScreen() {
             );
           })}
         </div>
+
+        {tournament.config.format === 'mixicano' && (() => {
+          const activePlrs = tournament.players.filter(p => !p.unavailable);
+          const groups = [...new Set(activePlrs.map(p => p.group).filter(Boolean))].sort() as string[];
+          const groupNames = groups.length >= 2 ? groups : ['A', 'B'];
+          const counts = new Map<string, number>();
+          for (const p of activePlrs) {
+            const g = p.group || groupNames[0];
+            counts.set(g, (counts.get(g) ?? 0) + 1);
+          }
+          const entries = [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+          const isUnequal = entries.length >= 2 && !entries.every(([, c]) => c === entries[0][1]);
+          return isUnequal ? (
+            <div className={styles.sitOutWarning}>
+              {t('settings.unequalGroups', { counts: entries.map(([g, c]) => `${g}: ${c}`).join(', ') })}
+            </div>
+          ) : null;
+        })()}
 
         {tournament.phase === 'completed' ? null : showAddPlayer ? (
           <div className={styles.addPlayerPanel}>

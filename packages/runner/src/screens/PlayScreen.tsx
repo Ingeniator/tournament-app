@@ -34,6 +34,14 @@ export function PlayScreen() {
     }
     return map;
   }, [tournament]);
+  const playerGroups = useMemo(() => {
+    if (!tournament || tournament.config.format !== 'mixicano') return undefined;
+    const map = new Map<string, string>();
+    for (const p of tournament.players) {
+      if (p.group) map.set(p.id, p.group);
+    }
+    return map.size > 0 ? map : undefined;
+  }, [tournament]);
   const { buildMessengerText } = useShareText(tournament, standings, nominations);
   const [showStandings, setShowStandings] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
@@ -119,7 +127,7 @@ export function PlayScreen() {
       showToast(ok ? t('play.copied') : t('play.failedCopy'));
     };
     const handleShareImage = async () => {
-      const result = await shareStandingsImage(tournament.name, standings, nominations);
+      const result = await shareStandingsImage(tournament.name, standings, nominations, playerGroups);
       if (result.status === 'shared') showToast(t('play.shared'));
       else if (result.status === 'downloaded') showToast(t('play.imageSaved'));
       else if (result.status === 'preview') setPreviewImages(result.dataUrls);
@@ -134,7 +142,7 @@ export function PlayScreen() {
         <Carousel>
           {[
             <div key="standings" className={styles.completedStandings}>
-              <StandingsTable standings={standings} />
+              <StandingsTable standings={standings} playerGroups={playerGroups} />
             </div>,
             ...nominations.map((nom, i) => (
               <NominationCard key={nom.id} nomination={nom} cardRef={setNomRef(i)} minHeight={nomMinHeight || undefined} />
@@ -394,7 +402,7 @@ export function PlayScreen() {
 
       {/* Standings overlay */}
       <Modal open={showStandings} title={t('play.standingsTitle')} onClose={() => setShowStandings(false)}>
-        <StandingsTable standings={standings} plannedGames={plannedGames} />
+        <StandingsTable standings={standings} plannedGames={plannedGames} playerGroups={playerGroups} />
       </Modal>
 
       <Toast message={toastMessage} />

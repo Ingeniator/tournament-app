@@ -108,6 +108,8 @@ const pt: Translations = {
   'settings.trySitOut': 'Experimente {suggestions} rondas para descansos iguais.',
   'settings.unavailable': 'Indisponível',
   'settings.available': 'Disponível',
+  'settings.group': 'Grupo',
+  'settings.unequalGroups': 'Grupos desiguais ({counts}) \u2014 o jogo funciona mas com menos variedade',
   'settings.replaceWith': 'Substituir por...',
   'settings.replaceLabel': 'Substituir {name} por:',
   'settings.newCourtPlaceholder': 'Nome do novo campo',
@@ -158,6 +160,8 @@ const pt: Translations = {
 
   // PlayerList
   'playerList.empty': 'Ainda sem jogadores adicionados',
+  'playerList.groupAssignment': 'Grupos',
+  'playerList.unequalGroups': 'Grupos desiguais \u2014 o jogo funciona mas com menos variedade',
 
   // StandingsTable
   'standings.empty': 'Ainda sem resultados registados',
@@ -225,6 +229,7 @@ const pt: Translations = {
   'config.formatAmericano': 'Americano',
   'config.formatTeamAmericano': 'Team Americano',
   'config.formatMexicano': 'Mexicano',
+  'config.formatMixicano': 'Mixicano',
   'config.courts': 'Campos',
   'config.removeCourt': 'Remover campo',
   'config.addCourt': '+ Adicionar campo',

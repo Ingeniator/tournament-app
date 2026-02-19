@@ -5,9 +5,10 @@ import styles from './StandingsTable.module.css';
 interface StandingsTableProps {
   standings: StandingsEntry[];
   plannedGames?: Map<string, number>;
+  playerGroups?: Map<string, string>;
 }
 
-export function StandingsTable({ standings, plannedGames }: StandingsTableProps) {
+export function StandingsTable({ standings, plannedGames, playerGroups }: StandingsTableProps) {
   const { t } = useTranslation();
 
   if (standings.length === 0) {
@@ -44,11 +45,15 @@ export function StandingsTable({ standings, plannedGames }: StandingsTableProps)
               ? styles.negative
               : '';
           const planned = plannedGames?.get(entry.playerId) ?? 0;
+          const group = playerGroups?.get(entry.playerId);
 
           return (
             <tr key={entry.playerId}>
               <td className={`${styles.rank} ${rankClass}`}>{entry.rank}</td>
-              <td className={styles.name}>{entry.playerName}</td>
+              <td className={styles.name}>
+                {entry.playerName}
+                {group && <span className={styles.groupBadge}>{group}</span>}
+              </td>
               <td className={`${styles.right} ${styles.points}`}>{entry.totalPoints}</td>
               {plannedGames && (
                 <td className={`${styles.right} ${styles.gamesCol} ${planned === 0 ? styles.noPlanned : ''}`}>
