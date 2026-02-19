@@ -169,6 +169,10 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
 
   if (!tournament) return null;
 
+  const strategy = getStrategy(tournament.config.format);
+  const allRoundsScored = tournament.rounds.every(r => r.matches.every(m => m.score !== null));
+  const hideAddRound = strategy.isDynamic && !allRoundsScored;
+
   const handleScore = (roundId: string, matchId: string, score: { team1Points: number; team2Points: number }) => {
     const round = tournament.rounds.find(r => r.id === roundId);
     const match = round?.matches.find(m => m.id === matchId);
@@ -236,13 +240,15 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
 
       {(tournament.phase === 'in-progress' || tournament.phase === 'completed') && (
         <div className={styles.footerActions}>
-          <Button
-            variant="secondary"
-            fullWidth
-            onClick={() => dispatch({ type: 'ADD_ROUNDS', payload: { count: 1 } })}
-          >
-            {t('log.addRound')}
-          </Button>
+          {!hideAddRound && (
+            <Button
+              variant="secondary"
+              fullWidth
+              onClick={() => dispatch({ type: 'ADD_ROUNDS', payload: { count: 1 } })}
+            >
+              {t('log.addRound')}
+            </Button>
+          )}
           {tournament.phase === 'in-progress' && (
             <Button
               variant="secondary"
@@ -265,7 +271,9 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
         {distributionStats && (
           <DistributionStats
             data={distributionStats}
+            isDynamic={strategy.isDynamic}
             canReshuffle={
+              !strategy.isDynamic &&
               tournament.phase === 'in-progress' &&
               tournament.rounds.some(r => r.matches.every(m => !m.score))
             }

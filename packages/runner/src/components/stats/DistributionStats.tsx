@@ -5,6 +5,7 @@ import styles from './DistributionStats.module.css';
 
 interface Props {
   data: DistributionData;
+  isDynamic?: boolean;
   canReshuffle: boolean;
   onReshuffle: () => void;
   onOptimize: () => void;
@@ -46,7 +47,7 @@ function formatRange(min: number, max: number): string {
   return min === max ? `${min}` : `${min}\u2013${max}`;
 }
 
-export function DistributionStats({ data, canReshuffle, onReshuffle, onOptimize, onCancelOptimize, optimizeElapsed, hasOptimalBackup, onRevertOptimal, onPlay }: Props) {
+export function DistributionStats({ data, isDynamic, canReshuffle, onReshuffle, onOptimize, onCancelOptimize, optimizeElapsed, hasOptimalBackup, onRevertOptimal, onPlay }: Props) {
   const { t } = useTranslation();
   const [isPending, startTransition] = useTransition();
   const isOptimizing = optimizeElapsed !== null;
@@ -80,89 +81,91 @@ export function DistributionStats({ data, canReshuffle, onReshuffle, onOptimize,
 
   return (
     <div className={styles.section}>
-      {/* Priority 1: Partner Repeats (weight 3) */}
-      <div className={styles.row}>
-        <span className={styles.indicator}>{repeatPartnersOk ? '\u2705' : '\u26A0\uFE0F'}</span>
-        <div className={styles.content}>
-          <div className={styles.labelRow}>
-            <span className={styles.label}>{t('distribution.partnerRepeats')}</span>
-            <InfoButton hint={t('distribution.hintPartners')} />
-          </div>
-          <div className={styles.detail}>
-            {t('distribution.pairs', { count: data.repeatPartners.length, s: data.repeatPartners.length !== 1 ? 's' : '' })}
-            {' '}
-            <span className={styles.ideal}>
-              {data.idealRepeatPartners === 0 ? t('distribution.idealZero') : t('distribution.idealMax', { max: data.idealRepeatPartners })}
-            </span>
-          </div>
-          {data.repeatPartners.length > 0 && (
-            <div className={styles.pairList}>
-              {data.repeatPartners.map((p, i) => (
-                <span key={i} className={styles.pair}>
-                  {p.names[0]} & {p.names[1]} \u00d7{p.count}
-                </span>
-              ))}
+      {!isDynamic && (<>
+        {/* Priority 1: Partner Repeats (weight 3) */}
+        <div className={styles.row}>
+          <span className={styles.indicator}>{repeatPartnersOk ? '\u2705' : '\u26A0\uFE0F'}</span>
+          <div className={styles.content}>
+            <div className={styles.labelRow}>
+              <span className={styles.label}>{t('distribution.partnerRepeats')}</span>
+              <InfoButton hint={t('distribution.hintPartners')} />
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Priority 2: Opponent Balance (weight 2) */}
-      <div className={styles.row}>
-        <span className={styles.indicator}>{isBalanced ? '\u2705' : '\u26A0\uFE0F'}</span>
-        <div className={styles.content}>
-          <div className={styles.labelRow}>
-            <span className={styles.label}>{t('distribution.opponentBalance')}</span>
-            <InfoButton hint={t('distribution.hintOpponents')} />
-          </div>
-          <div className={styles.detail}>
-            {data.opponentSpread
-              ? <>
-                  {t('distribution.minMax', { min: data.opponentSpread.min, max: data.opponentSpread.max })}
-                  {' '}
-                  <span className={styles.ideal}>
-                    {t('distribution.idealRange', {
-                      range: data.idealOpponentSpread.min === data.idealOpponentSpread.max
-                        ? String(data.idealOpponentSpread.min)
-                        : `${data.idealOpponentSpread.min}\u2013${data.idealOpponentSpread.max}`
-                    })}
-                  </span>
-                </>
-              : t('distribution.noData')}
-          </div>
-        </div>
-      </div>
-
-      {/* Priority 3: Never Shared Court (weight 1) */}
-      <div className={styles.row}>
-        <span className={styles.indicator}>{neverPlayedOk ? '\u2705' : '\u26A0\uFE0F'}</span>
-        <div className={styles.content}>
-          <div className={styles.labelRow}>
-            <span className={styles.label}>{t('distribution.neverSharedCourt')}</span>
-            <InfoButton hint={t('distribution.hintCourt')} />
-          </div>
-          {hasNeverPlayed ? (
-            <>
-              <div className={styles.detail}>
-                {t('distribution.pairs', { count: data.neverPlayed.length, s: data.neverPlayed.length !== 1 ? 's' : '' })}
-                {' '}
-                <span className={styles.ideal}>
-                  {data.idealNeverPlayed === 0 ? t('distribution.idealZero') : t('distribution.idealMax', { max: data.idealNeverPlayed })}
-                </span>
-              </div>
+            <div className={styles.detail}>
+              {t('distribution.pairs', { count: data.repeatPartners.length, s: data.repeatPartners.length !== 1 ? 's' : '' })}
+              {' '}
+              <span className={styles.ideal}>
+                {data.idealRepeatPartners === 0 ? t('distribution.idealZero') : t('distribution.idealMax', { max: data.idealRepeatPartners })}
+              </span>
+            </div>
+            {data.repeatPartners.length > 0 && (
               <div className={styles.pairList}>
-                {data.neverPlayed.map((pair, i) => (
+                {data.repeatPartners.map((p, i) => (
                   <span key={i} className={styles.pair}>
-                    {pair[0]} & {pair[1]}
+                    {p.names[0]} & {p.names[1]} \u00d7{p.count}
                   </span>
                 ))}
               </div>
-            </>
-          ) : (
-            <div className={styles.detail}>{t('distribution.allPlayersMet')}</div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+
+        {/* Priority 2: Opponent Balance (weight 2) */}
+        <div className={styles.row}>
+          <span className={styles.indicator}>{isBalanced ? '\u2705' : '\u26A0\uFE0F'}</span>
+          <div className={styles.content}>
+            <div className={styles.labelRow}>
+              <span className={styles.label}>{t('distribution.opponentBalance')}</span>
+              <InfoButton hint={t('distribution.hintOpponents')} />
+            </div>
+            <div className={styles.detail}>
+              {data.opponentSpread
+                ? <>
+                    {t('distribution.minMax', { min: data.opponentSpread.min, max: data.opponentSpread.max })}
+                    {' '}
+                    <span className={styles.ideal}>
+                      {t('distribution.idealRange', {
+                        range: data.idealOpponentSpread.min === data.idealOpponentSpread.max
+                          ? String(data.idealOpponentSpread.min)
+                          : `${data.idealOpponentSpread.min}\u2013${data.idealOpponentSpread.max}`
+                      })}
+                    </span>
+                  </>
+                : t('distribution.noData')}
+            </div>
+          </div>
+        </div>
+
+        {/* Priority 3: Never Shared Court (weight 1) */}
+        <div className={styles.row}>
+          <span className={styles.indicator}>{neverPlayedOk ? '\u2705' : '\u26A0\uFE0F'}</span>
+          <div className={styles.content}>
+            <div className={styles.labelRow}>
+              <span className={styles.label}>{t('distribution.neverSharedCourt')}</span>
+              <InfoButton hint={t('distribution.hintCourt')} />
+            </div>
+            {hasNeverPlayed ? (
+              <>
+                <div className={styles.detail}>
+                  {t('distribution.pairs', { count: data.neverPlayed.length, s: data.neverPlayed.length !== 1 ? 's' : '' })}
+                  {' '}
+                  <span className={styles.ideal}>
+                    {data.idealNeverPlayed === 0 ? t('distribution.idealZero') : t('distribution.idealMax', { max: data.idealNeverPlayed })}
+                  </span>
+                </div>
+                <div className={styles.pairList}>
+                  {data.neverPlayed.map((pair, i) => (
+                    <span key={i} className={styles.pair}>
+                      {pair[0]} & {pair[1]}
+                    </span>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className={styles.detail}>{t('distribution.allPlayersMet')}</div>
+            )}
+          </div>
+        </div>
+      </>)}
 
       {/* Informational: Rest Balance */}
       <div className={styles.row}>
