@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, type ClipboardEvent, type ReactNode } from 'react';
 import { ref, push, set } from 'firebase/database';
-import { Button, Card, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation } from '@padel/common';
+import { Button, Card, Modal, FeedbackModal, AppFooter, Toast, useToast, SkinPicker, useTranslation } from '@padel/common';
 import type { TournamentFormat, Court } from '@padel/common';
 import { generateId, parsePlayerList } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
@@ -33,7 +33,7 @@ function CollapsibleSection({ title, summary, defaultOpen, children }: {
 }
 
 export function OrganizerScreen() {
-  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerTelegram, deleteTournament, completedAt, undoComplete, uid } = usePlanner();
+  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerTelegram, deleteTournament, completedAt, undoComplete, uid, skin, setSkin } = usePlanner();
   const { startedBy, showWarning, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
   const { t, locale } = useTranslation();
   const { toastMessage, showToast } = useToast();
@@ -74,6 +74,7 @@ export function OrganizerScreen() {
           <div className={styles.nameRow}>
             <h1 className={styles.name}>{tournament.name}</h1>
           </div>
+          <SkinPicker skin={skin} onSelect={setSkin} />
         </header>
         <main>
           <Card>
@@ -226,6 +227,7 @@ export function OrganizerScreen() {
             </button>
           </div>
         )}
+        <SkinPicker skin={skin} onSelect={setSkin} />
       </header>
       <main>
       {userName && (

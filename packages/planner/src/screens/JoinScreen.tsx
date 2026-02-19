@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Button, Card, Toast, useToast, useTranslation } from '@padel/common';
+import { Button, Card, Toast, useToast, SkinPicker, useTranslation } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import { downloadICS } from '../utils/icsExport';
@@ -9,7 +9,7 @@ import { StartWarningModal } from '../components/StartWarningModal';
 import styles from './JoinScreen.module.css';
 
 export function JoinScreen() {
-  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, isRegistered, setScreen, organizerName, userName, telegramUser, completedAt } = usePlanner();
+  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, isRegistered, setScreen, organizerName, userName, telegramUser, completedAt, skin, setSkin } = usePlanner();
   const { startedBy, showWarning, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
   const { t } = useTranslation();
   const [name, setName] = useState(userName ?? telegramUser?.displayName ?? '');
@@ -51,6 +51,7 @@ export function JoinScreen() {
         <header className={styles.header}>
           <button className={styles.backBtn} onClick={() => setScreen('home')} aria-label={t('join.back')}>&larr;</button>
           <h1 className={styles.title}>{tournament.name}</h1>
+          <SkinPicker skin={skin} onSelect={setSkin} />
         </header>
         <main>
           {(tournament.date || tournament.place || organizerName) && (
@@ -176,6 +177,7 @@ export function JoinScreen() {
       <header className={styles.header}>
         <button className={styles.backBtn} onClick={handleBack} aria-label={t('join.back')}>&larr;</button>
         <h1 className={styles.title}>{tournament.name}</h1>
+        <SkinPicker skin={skin} onSelect={setSkin} />
       </header>
 
       <main>
