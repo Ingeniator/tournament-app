@@ -8,6 +8,7 @@ export interface PlayerStats {
   sitOuts: number;
   partners: { name: string; count: number }[];
   opponents: { name: string; count: number }[];
+  courts: { name: string; count: number }[];
 }
 
 export function usePlayerStats(tournament: Tournament | null): PlayerStats[] {
@@ -16,16 +17,19 @@ export function usePlayerStats(tournament: Tournament | null): PlayerStats[] {
 
     const nameOf = (id: string) => tournament.players.find(p => p.id === id)?.name ?? '?';
 
+    const courtNameMap = new Map(tournament.config.courts.map(c => [c.id, c.name]));
+
     const statsMap = new Map<string, {
       gamesPlayed: number;
       sitOuts: number;
       partners: Map<string, number>;
       opponents: Map<string, number>;
+      courts: Map<string, number>;
     }>();
 
     const ensure = (id: string) => {
       if (!statsMap.has(id)) {
-        statsMap.set(id, { gamesPlayed: 0, sitOuts: 0, partners: new Map(), opponents: new Map() });
+        statsMap.set(id, { gamesPlayed: 0, sitOuts: 0, partners: new Map(), opponents: new Map(), courts: new Map() });
       }
       return statsMap.get(id)!;
     };
@@ -44,7 +48,9 @@ export function usePlayerStats(tournament: Tournament | null): PlayerStats[] {
       for (const match of round.matches) {
         const allPlayers = [...match.team1, ...match.team2];
         for (const id of allPlayers) {
-          ensure(id).gamesPlayed++;
+          const s = ensure(id);
+          s.gamesPlayed++;
+          s.courts.set(match.courtId, (s.courts.get(match.courtId) ?? 0) + 1);
         }
 
         // Partners: teammates
@@ -74,6 +80,11 @@ export function usePlayerStats(tournament: Tournament | null): PlayerStats[] {
         .map(([id, count]) => ({ name: nameOf(id), count }))
         .sort((a, b) => b.count - a.count);
 
+    const sortedCourtEntries = (map: Map<string, number>) =>
+      [...map.entries()]
+        .map(([courtId, count]) => ({ name: courtNameMap.get(courtId) ?? courtId, count }))
+        .sort((a, b) => b.count - a.count);
+
     return tournament.players.map(p => {
       const s = statsMap.get(p.id)!;
       return {
@@ -83,6 +94,7 @@ export function usePlayerStats(tournament: Tournament | null): PlayerStats[] {
         sitOuts: s.sitOuts,
         partners: sortedEntries(s.partners),
         opponents: sortedEntries(s.opponents),
+        courts: sortedCourtEntries(s.courts),
       };
     });
   }, [tournament]);
