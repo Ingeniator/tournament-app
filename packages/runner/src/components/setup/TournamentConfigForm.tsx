@@ -1,5 +1,5 @@
 import type { TournamentConfig, TournamentFormat, Court } from '@padel/common';
-import { Button, generateId, useTranslation, getKotcCourtNames, getKotcDefaultBonusPoints } from '@padel/common';
+import { Button, generateId, useTranslation, getKotcDefaultBonusPoints } from '@padel/common';
 import { resolveConfigDefaults, computeSitOutInfo } from '../../utils/resolveConfigDefaults';
 import { randomRankLabels } from '../../utils/courtRankLabels';
 import styles from './TournamentConfigForm.module.css';
