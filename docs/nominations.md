@@ -22,6 +22,8 @@ The final output is an ordered array:
 | 2 | Runner-up | 🥈 | Rank 2 |
 | 3 | Third Place | 🥉 | Rank 3 |
 
+**King of the Court format**: The champion entry uses 👑 emoji and title "King of the Court" instead of 🥇 "Champion". Runner-up and Third Place are unchanged.
+
 Podium slots are skipped when ranks don't match position (e.g., ties).
 
 ### Non-Podium Awards (up to 23 possible)
