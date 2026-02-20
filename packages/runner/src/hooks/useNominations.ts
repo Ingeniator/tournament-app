@@ -34,6 +34,9 @@ const AWARD_TIERS: Record<string, AwardTier> = {
   'wall-pair': 'common',
   'rubber-match': 'common',
   'peacemaker': 'rare',
+  'court-climber': 'rare',
+  'social-butterfly': 'common',
+  'underdog': 'legendary',
 };
 
 interface PlayerMatchInfo {
@@ -260,7 +263,33 @@ export function useNominations(
       }
     }
 
-    // 3. POINT MACHINE - Most total points scored (only if != rank 1)
+    // 3. UNDERDOG - Bottom-half competitor with highest win rate
+    {
+      const halfPoint = Math.ceil(competitorCount / 2);
+      let bestUnderdog: { id: string; rank: number; winRate: number; wins: number; total: number } | null = null;
+      for (const [cid, matches] of competitorMatches) {
+        const rank = rankOf(cid);
+        if (rank <= halfPoint || matches.length < 2) continue;
+        const wins = matches.filter(m => m.won).length;
+        const winRate = wins / matches.length;
+        if (winRate > 0.5 && (!bestUnderdog || winRate > bestUnderdog.winRate ||
+            (winRate === bestUnderdog.winRate && matches.length > bestUnderdog.total))) {
+          bestUnderdog = { id: cid, rank, winRate, wins, total: matches.length };
+        }
+      }
+      if (bestUnderdog) {
+        awards.push({
+          id: 'underdog',
+          title: 'Underdog',
+          emoji: '🐺',
+          description: 'Bottom half of standings, top half in wins',
+          playerNames: [competitorNameOf(bestUnderdog.id)],
+          stat: `Rank #${bestUnderdog.rank} · ${bestUnderdog.wins}/${bestUnderdog.total} wins`,
+        });
+      }
+    }
+
+    // 4. POINT MACHINE - Most total points scored (only if != rank 1)
     let bestPointsCompetitor: { id: string; total: number } | null = null;
     for (const [cid, matches] of competitorMatches) {
       if (matches.length === 0) continue;
@@ -565,6 +594,52 @@ export function useNominations(
       }
     }
 
+    // COURT CLIMBER (KOTC only) - Most promotions to higher courts
+    if (tournament.config.format === 'king-of-the-court') {
+      const availableCourts = tournament.config.courts.filter(c => !c.unavailable);
+      const courtIndexMap = new Map<string, number>();
+      availableCourts.forEach((c, i) => courtIndexMap.set(c.id, i));
+
+      const playerCourtHistory = new Map<string, Array<{ roundNumber: number; courtIndex: number }>>();
+      for (const round of tournament.rounds) {
+        for (const match of round.matches) {
+          if (!match.score) continue;
+          const courtIdx = courtIndexMap.get(match.courtId) ?? -1;
+          if (courtIdx < 0) continue;
+          for (const pid of [...match.team1, ...match.team2]) {
+            if (!playerCourtHistory.has(pid)) playerCourtHistory.set(pid, []);
+            playerCourtHistory.get(pid)!.push({ roundNumber: round.roundNumber, courtIndex: courtIdx });
+          }
+        }
+      }
+
+      let bestClimber: { id: string; promotions: number } | null = null;
+      for (const [pid, history] of playerCourtHistory) {
+        if (history.length < 3) continue;
+        const sorted = [...history].sort((a, b) => a.roundNumber - b.roundNumber);
+        let promotions = 0;
+        for (let i = 1; i < sorted.length; i++) {
+          if (sorted[i].courtIndex < sorted[i - 1].courtIndex) {
+            promotions++;
+          }
+        }
+        if (promotions >= 2 && (!bestClimber || promotions > bestClimber.promotions)) {
+          bestClimber = { id: pid, promotions };
+        }
+      }
+
+      if (bestClimber) {
+        awards.push({
+          id: 'court-climber',
+          title: 'Court Climber',
+          emoji: '🧗',
+          description: 'Most promotions to higher courts',
+          playerNames: [nameOf(bestClimber.id)],
+          stat: `${bestClimber.promotions} promotions`,
+        });
+      }
+    }
+
     // Pair/duo awards — only make sense when partners rotate
     if (!strategy.hasFixedPartners) {
     // 16. TEAM STATS - Build pair data for team awards
@@ -669,6 +744,41 @@ export function useNominations(
         playerNames: bestStreakDuo.ids.map(nameOf),
         stat: `${bestStreakDuo.streak} wins in a row`,
       });
+    }
+
+    // SOCIAL BUTTERFLY - Most unique partners
+    {
+      let bestSocial: { id: string; uniquePartners: number } | null = null;
+      let minPartners = Infinity;
+      for (const pid of tournament.players.filter(p => !p.unavailable).map(p => p.id)) {
+        const partners = new Set<string>();
+        for (const match of allScored) {
+          const inT1 = match.team1.includes(pid);
+          const inT2 = match.team2.includes(pid);
+          if (inT1) {
+            for (const p of match.team1) { if (p !== pid) partners.add(p); }
+          } else if (inT2) {
+            for (const p of match.team2) { if (p !== pid) partners.add(p); }
+          }
+        }
+        if (partners.size > 0) {
+          minPartners = Math.min(minPartners, partners.size);
+          if (partners.size >= 3 && (!bestSocial || partners.size > bestSocial.uniquePartners)) {
+            bestSocial = { id: pid, uniquePartners: partners.size };
+          }
+        }
+      }
+      // Only award if there's variation (not everyone has the same count)
+      if (bestSocial && bestSocial.uniquePartners > minPartners) {
+        awards.push({
+          id: 'social-butterfly',
+          title: 'Social Butterfly',
+          emoji: '🦋',
+          description: 'Played with the most different partners',
+          playerNames: [nameOf(bestSocial.id)],
+          stat: `${bestSocial.uniquePartners} unique partners`,
+        });
+      }
     }
 
     // 17. NEMESIS - Player who beat the same opponent the most times
