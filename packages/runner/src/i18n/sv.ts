@@ -171,6 +171,7 @@ const sv: Translations = {
   'playerStats.sitOuts': '{count} vila/vilor',
   'playerStats.partners': 'Partners',
   'playerStats.opponents': 'Motståndare',
+  'playerStats.courts': 'Banor',
 
   // DistributionStats
   'distribution.hintRest': 'Visar hur jämnt matcher och vilor är fördelade. Idealet är ±1.',

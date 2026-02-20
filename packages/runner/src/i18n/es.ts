@@ -171,6 +171,7 @@ const es: Translations = {
   'playerStats.sitOuts': '{count} descanso{s}',
   'playerStats.partners': 'Compa\u00f1eros',
   'playerStats.opponents': 'Rivales',
+  'playerStats.courts': 'Pistas',
 
   // DistributionStats
   'distribution.hintRest': 'Muestra c\u00f3mo se distribuyen los partidos y descansos. Lo ideal es \u00b11.',

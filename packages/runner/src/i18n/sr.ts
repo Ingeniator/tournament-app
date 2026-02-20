@@ -171,6 +171,7 @@ const sr: Translations = {
   'playerStats.sitOuts': '{count} pauza',
   'playerStats.partners': 'Partneri',
   'playerStats.opponents': 'Protivnici',
+  'playerStats.courts': 'Tereni',
 
   // DistributionStats
   'distribution.hintRest': 'Prikazuje koliko su ravnomerno raspoređene igre i pauze. Idealno je ±1.',

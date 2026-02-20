@@ -173,6 +173,7 @@ const it: Translations = {
   'playerStats.sitOuts': '{count} riposo{s}',
   'playerStats.partners': 'Compagni',
   'playerStats.opponents': 'Avversari',
+  'playerStats.courts': 'Campi',
 
   // DistributionStats
   'distribution.hintRest': 'Mostra quanto equamente sono distribuite le partite e i riposi. L\'ideale \u00e8 \u00b11.',

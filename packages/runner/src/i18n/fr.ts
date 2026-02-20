@@ -171,6 +171,7 @@ const fr: Translations = {
   'playerStats.sitOuts': '{count} repos',
   'playerStats.partners': 'Partenaires',
   'playerStats.opponents': 'Adversaires',
+  'playerStats.courts': 'Terrains',
 
   // DistributionStats
   'distribution.hintRest': 'Montre la répartition des matchs et des repos. L\'idéal est ±1.',

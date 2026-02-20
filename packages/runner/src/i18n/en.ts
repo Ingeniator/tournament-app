@@ -171,6 +171,7 @@ const en: Translations = {
   'playerStats.sitOuts': '{count} sit-out{s}',
   'playerStats.partners': 'Partners',
   'playerStats.opponents': 'Opponents',
+  'playerStats.courts': 'Courts',
 
   // DistributionStats
   'distribution.hintRest': 'Shows how evenly games and sit-outs are distributed. Ideal is \u00b11.',
