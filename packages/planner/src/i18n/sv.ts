@@ -96,6 +96,7 @@ const sv: Translations = {
   'organizer.durationPlaceholder': '120',
   'organizer.courts': 'Banor ({count})',
   'organizer.addCourt': '+ Lägg till',
+  'organizer.courtBonusAuto': 'bonuspoäng',
   'organizer.extraSpots': 'Extraplatser',
   'organizer.totalSpots': 'Totalt platser: {total} ({courts} × 4{extra})',
   'organizer.extraSuffix': ' + {count}',

@@ -1,4 +1,4 @@
-import type { Match, MatchScore, Player, Court } from '@padel/common';
+import type { Match, MatchScore, Player, Court, TournamentFormat } from '@padel/common';
 import { ScoreInput } from './ScoreInput';
 import styles from './MatchCard.module.css';
 
@@ -8,20 +8,31 @@ interface MatchCardProps {
   courts: Court[];
   pointsPerMatch: number;
   readOnly?: boolean;
+  format?: TournamentFormat;
   onScore: (score: MatchScore) => void;
   onClear: () => void;
   onTapScore?: () => void;
 }
 
-export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, onScore, onClear, onTapScore }: MatchCardProps) {
+export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, format, onScore, onClear, onTapScore }: MatchCardProps) {
   const name = (id: string) => players.find(p => p.id === id)?.name ?? '?';
-  const courtName = courts.find(c => c.id === match.courtId)?.name ?? match.courtId;
+  const isKOTC = format === 'king-of-the-court';
+  const availableCourts = isKOTC ? courts.filter(c => !c.unavailable) : courts;
+  const courtIndex = availableCourts.findIndex(c => c.id === match.courtId);
+  const bonus = isKOTC && courtIndex >= 0 ? availableCourts.length - 1 - courtIndex : 0;
+  const rawCourtName = courts.find(c => c.id === match.courtId)?.name ?? match.courtId;
+  const courtName = isKOTC && courtIndex === 0 ? `\u{1F451} ${rawCourtName}` : rawCourtName;
   const team1Won = match.score && match.score.team1Points > match.score.team2Points;
   const team2Won = match.score && match.score.team2Points > match.score.team1Points;
 
   return (
     <div className={`${styles.match} ${match.score ? styles.scored : ''}`}>
-      <div className={styles.courtLabel}>{courtName}</div>
+      <div className={styles.courtLabel}>
+        {courtName}
+        {isKOTC && bonus > 0 && (
+          <span className={styles.courtBonus}> (+{bonus} bonus pts)</span>
+        )}
+      </div>
       <div className={styles.court}>
         {/* Row 1: first players with & */}
         <div className={`${styles.playerCell} ${styles.topLeft} ${team1Won ? styles.winner : ''}`} title={name(match.team1[0])}>

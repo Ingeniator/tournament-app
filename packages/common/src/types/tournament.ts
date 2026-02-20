@@ -22,7 +22,6 @@ export interface Court {
   id: string;
   name: string;
   unavailable?: boolean;
-  bonus?: number;
 }
 
 export interface TournamentConfig {

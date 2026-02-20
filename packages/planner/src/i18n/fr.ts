@@ -96,6 +96,7 @@ const fr: Translations = {
   'organizer.durationPlaceholder': '120',
   'organizer.courts': 'Terrains ({count})',
   'organizer.addCourt': '+ Ajouter',
+  'organizer.courtBonusAuto': 'pts bonus',
   'organizer.extraSpots': 'Places supplémentaires',
   'organizer.totalSpots': 'Places totales : {total} ({courts} × 4{extra})',
   'organizer.extraSuffix': ' + {count}',

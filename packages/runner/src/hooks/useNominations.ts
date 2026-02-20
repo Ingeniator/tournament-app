@@ -185,8 +185,9 @@ export function useNominations(
     const rankOf = (id: string) => standings.find(s => s.playerId === id)?.rank ?? 999;
 
     // PODIUM - Top 3 places
+    const isKOTC = tournament.config.format === 'king-of-the-court';
     const MEDALS: Array<{ emoji: string; title: string; description: string }> = [
-      { emoji: '🥇', title: 'Champion', description: 'Tournament winner' },
+      { emoji: isKOTC ? '👑' : '🥇', title: isKOTC ? 'King of the Court' : 'Champion', description: 'Tournament winner' },
       { emoji: '🥈', title: 'Runner-up', description: 'Second place' },
       { emoji: '🥉', title: 'Third Place', description: 'Bronze medal finish' },
     ];

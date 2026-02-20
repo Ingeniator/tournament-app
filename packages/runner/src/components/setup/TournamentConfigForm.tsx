@@ -1,4 +1,4 @@
-import type { TournamentConfig, TournamentFormat, Court } from '@padel/common';
+import type { TournamentConfig, TournamentFormat } from '@padel/common';
 import { Button, generateId, useTranslation } from '@padel/common';
 import { resolveConfigDefaults, computeSitOutInfo } from '../../utils/resolveConfigDefaults';
 import styles from './TournamentConfigForm.module.css';
@@ -55,28 +55,18 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
   const addCourt = () => {
     if (config.courts.length >= maxCourts) return;
     const newIndex = config.courts.length;
-    const newCourt: Court = {
-      id: generateId(),
-      name: `Court ${newIndex + 1}`,
-      ...(isKOTC ? { bonus: newIndex === 0 ? 2 : newIndex === 1 ? 1 : 0 } : {}),
-    };
-    onUpdate({ courts: [...config.courts, newCourt] });
+    onUpdate({ courts: [...config.courts, { id: generateId(), name: `Court ${newIndex + 1}` }] });
   };
 
   const removeCourt = (courtId: string) => {
     if (config.courts.length <= 1) return;
+    if (isKOTC && config.courts.length <= 2) return;
     onUpdate({ courts: config.courts.filter(c => c.id !== courtId) });
   };
 
   const updateCourtName = (courtId: string, name: string) => {
     onUpdate({
       courts: config.courts.map(c => (c.id === courtId ? { ...c, name } : c)),
-    });
-  };
-
-  const updateCourtBonus = (courtId: string, bonus: number) => {
-    onUpdate({
-      courts: config.courts.map(c => (c.id === courtId ? { ...c, bonus: bonus || undefined } : c)),
     });
   };
 
@@ -89,23 +79,7 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
           className={styles.input}
           value={config.format}
           onChange={e => {
-            const newFormat = e.target.value as TournamentFormat;
-            if (newFormat === 'king-of-the-court' && config.format !== 'king-of-the-court') {
-              onUpdate({
-                format: newFormat,
-                courts: config.courts.map((c, i) => ({
-                  ...c,
-                  bonus: i === 0 ? 2 : i === 1 ? 1 : 0,
-                })),
-              });
-            } else if (newFormat !== 'king-of-the-court' && config.format === 'king-of-the-court') {
-              onUpdate({
-                format: newFormat,
-                courts: config.courts.map(c => ({ ...c, bonus: undefined })),
-              });
-            } else {
-              onUpdate({ format: newFormat });
-            }
+            onUpdate({ format: e.target.value as TournamentFormat });
           }}
         >
           <option value="americano">{t('config.formatAmericano')}</option>
@@ -164,7 +138,7 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
                   onChange={e => updateCourtName(court.id, e.target.value)}
                   aria-label={`Court ${courtIdx + 1} name`}
                 />
-                {config.courts.length > 1 && (
+                {config.courts.length > 1 && !(isKOTC && config.courts.length <= 2) && (
                   <button
                     className={styles.removeCourt}
                     onClick={() => removeCourt(court.id)}
@@ -176,18 +150,9 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
               </div>
               {isKOTC && (
                 <div className={styles.courtKotcFields}>
-                  <label className={styles.courtBonusLabel}>
-                    {t('config.courtBonus')}
-                    <input
-                      className={styles.courtBonusInput}
-                      type="number"
-                      min={0}
-                      value={court.bonus ?? ''}
-                      placeholder="0"
-                      onChange={e => updateCourtBonus(court.id, parseInt(e.target.value) || 0)}
-                      aria-label={`${t('config.courtBonus')} ${court.name}`}
-                    />
-                  </label>
+                  <span className={styles.courtBonusLabel}>
+                    +{config.courts.length - 1 - courtIdx} {t('config.courtBonus')}
+                  </span>
                 </div>
               )}
             </div>
@@ -197,6 +162,9 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
           <Button variant="ghost" size="small" onClick={addCourt}>
             {t('config.addCourt')}
           </Button>
+        )}
+        {isKOTC && (
+          <span className={styles.hint}>{t('config.kotcBonusInfo')}</span>
         )}
         <span className={styles.hint}>
           {t('config.maxCourts', { max: maxCourts, players: playerCount })}
@@ -226,7 +194,7 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
           id="config-points"
           className={styles.input}
           type="number"
-          min={1}
+          min={isKOTC ? 24 : 1}
           value={config.pointsPerMatch || ''}
           placeholder={String(suggestedPoints)}
           onChange={e => {

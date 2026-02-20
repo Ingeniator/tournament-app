@@ -1,7 +1,52 @@
 import type { TournamentStrategy, ScheduleResult } from './types';
 import type { Player, TournamentConfig, Round, Match, Tournament } from '@padel/common';
 import { generateId } from '@padel/common';
-import { shuffle, partnerKey, commonValidateSetup, commonValidateScore, seedFromRounds, selectSitOuts } from './shared';
+import { shuffle, partnerKey, commonValidateScore, seedFromRounds, selectSitOuts } from './shared';
+
+function validateKOTCSetup(players: Player[], config: TournamentConfig): string[] {
+  const errors: string[] = [];
+  if (players.length < 8) {
+    errors.push('King of the Court requires at least 8 players');
+  }
+  const availableCourts = config.courts.filter(c => !c.unavailable);
+  if (availableCourts.length < 2) {
+    errors.push('King of the Court requires at least 2 courts');
+  }
+  if (config.pointsPerMatch < 24) {
+    errors.push('King of the Court requires at least 24 points per match');
+  }
+  const maxCourts = Math.floor(players.length / 4);
+  if (availableCourts.length > maxCourts && players.length >= 4) {
+    errors.push(`Too many courts: ${players.length} players need at most ${maxCourts} court(s)`);
+  }
+  // Warning: >25% sitting out
+  if (players.length >= 8 && availableCourts.length >= 2) {
+    const playersPerRound = Math.min(availableCourts.length, Math.floor(players.length / 4)) * 4;
+    const sitOutCount = players.length - playersPerRound;
+    if (sitOutCount > 0 && sitOutCount / players.length > 0.25) {
+      errors.push(`Warning: ${sitOutCount} of ${players.length} players (${Math.round(sitOutCount / players.length * 100)}%) will sit out each round. Consider adding more courts.`);
+    }
+  }
+  return errors;
+}
+
+/**
+ * Find the court index a player was last assigned to, searching rounds in reverse.
+ */
+function getLastCourtIndex(
+  playerId: string,
+  allRounds: Round[],
+  courtIndexMap: Map<string, number>,
+): number | undefined {
+  for (let r = allRounds.length - 1; r >= 0; r--) {
+    for (const match of allRounds[r].matches) {
+      if (match.team1.includes(playerId) || match.team2.includes(playerId)) {
+        return courtIndexMap.get(match.courtId);
+      }
+    }
+  }
+  return undefined;
+}
 
 /**
  * Build promotion/relegation groups from the previous round's results.
@@ -16,6 +61,7 @@ function buildPromotionGroups(
   availableCourts: { id: string }[],
   standings: Map<string, number>,
   roundPlayerIds: Set<string>,
+  allPriorRounds: Round[],
 ): string[][] {
   const numCourts = availableCourts.length;
 
@@ -86,19 +132,42 @@ function buildPromotionGroups(
     }
   }
 
-  // Handle players returning from sit-out or otherwise unassigned — enter at lowest court
+  // Handle players returning from sit-out or otherwise unassigned — try their previous court
   const assigned = new Set(courtGroups.flat());
   const unassigned = [...roundPlayerIds].filter(pid => !assigned.has(pid));
   // Sort unassigned by standings (worst first, so they go to lowest court)
   unassigned.sort((a, b) => (standings.get(b) ?? 999) - (standings.get(a) ?? 999));
   for (const pid of unassigned) {
-    // Find the lowest court that has room (< 4 players), or just push to lowest
     let placed = false;
-    for (let ci = numCourts - 1; ci >= 0; ci--) {
-      if (courtGroups[ci].length < 4) {
-        courtGroups[ci].push(pid);
+    // Try to place at the player's most recent court position
+    const lastCi = getLastCourtIndex(pid, allPriorRounds, courtIndex);
+    if (lastCi !== undefined) {
+      // Try the exact court first
+      if (courtGroups[lastCi].length < 4) {
+        courtGroups[lastCi].push(pid);
         placed = true;
-        break;
+      } else {
+        // Try adjacent courts (lower first, then higher)
+        for (let offset = 1; offset < numCourts && !placed; offset++) {
+          for (const dir of [1, -1]) {
+            const ci = lastCi + dir * offset;
+            if (ci >= 0 && ci < numCourts && courtGroups[ci].length < 4) {
+              courtGroups[ci].push(pid);
+              placed = true;
+              break;
+            }
+          }
+        }
+      }
+    }
+    if (!placed) {
+      // Fall back to lowest court with room
+      for (let ci = numCourts - 1; ci >= 0; ci--) {
+        if (courtGroups[ci].length < 4) {
+          courtGroups[ci].push(pid);
+          placed = true;
+          break;
+        }
       }
     }
     if (!placed) {
@@ -200,6 +269,7 @@ function generateKOTCRounds(
         availableCourts.slice(0, numCourts),
         standingsMap,
         roundPlayerIds,
+        [...existingRounds, ...rounds],
       );
     }
 
@@ -288,11 +358,13 @@ function calculateKOTCStandingsInternal(
   rounds: Round[],
   config: TournamentConfig,
 ) {
-  // Build a court bonus map
+  // Auto-derive court bonus from position: Court 0 (King) gets highest bonus
+  const availableCourts = config.courts.filter(c => !c.unavailable);
   const courtBonusMap = new Map<string, number>();
-  for (const court of config.courts) {
-    if (court.bonus && court.bonus > 0) {
-      courtBonusMap.set(court.id, court.bonus);
+  for (let i = 0; i < availableCourts.length; i++) {
+    const bonus = availableCourts.length - 1 - i;
+    if (bonus > 0) {
+      courtBonusMap.set(availableCourts[i].id, bonus);
     }
   }
 
@@ -403,7 +475,7 @@ function calculateKOTCStandingsInternal(
 export const kingOfTheCourtStrategy: TournamentStrategy = {
   isDynamic: true,
   hasFixedPartners: false,
-  validateSetup: commonValidateSetup,
+  validateSetup: validateKOTCSetup,
   validateScore: commonValidateScore,
 
   calculateStandings(tournament: Tournament) {

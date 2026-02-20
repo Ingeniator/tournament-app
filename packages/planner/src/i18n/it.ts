@@ -96,6 +96,7 @@ const it: Translations = {
   'organizer.durationPlaceholder': '120',
   'organizer.courts': 'Campi ({count})',
   'organizer.addCourt': '+ Aggiungi',
+  'organizer.courtBonusAuto': 'pti bonus',
   'organizer.extraSpots': 'Posti extra',
   'organizer.totalSpots': 'Posti totali: {total} ({courts} \u00d7 4{extra})',
   'organizer.extraSuffix': ' + {count}',

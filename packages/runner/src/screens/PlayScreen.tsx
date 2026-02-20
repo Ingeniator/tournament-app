@@ -273,6 +273,7 @@ export function PlayScreen() {
           players={tournament.players}
           courts={tournament.config.courts}
           pointsPerMatch={tournament.config.pointsPerMatch}
+          format={tournament.config.format}
           onScore={(matchId, score) =>
             dispatch({
               type: 'SET_MATCH_SCORE',

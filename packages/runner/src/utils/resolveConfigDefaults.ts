@@ -50,6 +50,7 @@ export function computeSitOutInfo(playerCount: number, courtCount: number, round
 }
 
 export function resolveConfigDefaults(config: TournamentConfig, playerCount: number): TournamentConfig {
+  const minPoints = config.format === 'king-of-the-court' ? 24 : MIN_POINTS_PER_MATCH;
   const durationMinutes = config.targetDuration ?? DEFAULT_DURATION_MINUTES;
   const courtCount = config.courts.length;
   const playersPerRound = Math.min(courtCount * 4, playerCount);
@@ -78,10 +79,10 @@ export function resolveConfigDefaults(config: TournamentConfig, playerCount: num
     const rawPts = effectiveRounds > 0
       ? Math.floor((durationMinutes / effectiveRounds - CHANGEOVER_MINUTES) / MINUTES_PER_POINT)
       : PREFERRED_POINTS;
-    effectivePoints = Math.min(PREFERRED_POINTS, Math.max(MIN_POINTS_PER_MATCH, rawPts));
+    effectivePoints = Math.min(PREFERRED_POINTS, Math.max(minPoints, rawPts));
   } else {
     // Neither set — find best (rounds, points) combo to fill target duration
-    const result = findBestConfig(durationMinutes, playerCount, courtCount, baseRounds);
+    const result = findBestConfig(durationMinutes, playerCount, courtCount, baseRounds, minPoints);
     effectiveRounds = result.rounds;
     effectivePoints = result.points;
   }
@@ -100,15 +101,16 @@ function findBestConfig(
   playerCount: number,
   courtCount: number,
   baseRounds: number,
+  minPointsPerMatch: number = MIN_POINTS_PER_MATCH,
 ): { rounds: number; points: number } {
   const maxRoundDur = Math.round(PREFERRED_POINTS * MINUTES_PER_POINT + CHANGEOVER_MINUTES);
-  const minRoundDur = Math.round(MIN_POINTS_PER_MATCH * MINUTES_PER_POINT + CHANGEOVER_MINUTES);
+  const minRoundDur = Math.round(minPointsPerMatch * MINUTES_PER_POINT + CHANGEOVER_MINUTES);
 
   const minRounds = Math.max(1, Math.ceil(durationMinutes / maxRoundDur));
   const maxRounds = Math.floor(durationMinutes / minRoundDur);
 
   if (maxRounds < 1) {
-    return { rounds: 1, points: MIN_POINTS_PER_MATCH };
+    return { rounds: 1, points: minPointsPerMatch };
   }
 
   let bestRounds = minRounds;
@@ -117,7 +119,7 @@ function findBestConfig(
 
   for (let r = minRounds; r <= maxRounds; r++) {
     const rawPts = Math.floor((durationMinutes / r - CHANGEOVER_MINUTES) / MINUTES_PER_POINT);
-    const pts = Math.min(PREFERRED_POINTS, Math.max(MIN_POINTS_PER_MATCH, rawPts));
+    const pts = Math.min(PREFERRED_POINTS, Math.max(minPointsPerMatch, rawPts));
     const roundDur = Math.round(pts * MINUTES_PER_POINT + CHANGEOVER_MINUTES);
     const estimate = r * roundDur;
     const diff = durationMinutes - estimate;

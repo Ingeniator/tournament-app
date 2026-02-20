@@ -96,6 +96,7 @@ const sr: Translations = {
   'organizer.durationPlaceholder': '120',
   'organizer.courts': 'Tereni ({count})',
   'organizer.addCourt': '+ Dodaj',
+  'organizer.courtBonusAuto': 'bonus poeni',
   'organizer.extraSpots': 'Dodatna mesta',
   'organizer.totalSpots': 'Ukupno mesta: {total} ({courts} × 4{extra})',
   'organizer.extraSuffix': ' + {count}',

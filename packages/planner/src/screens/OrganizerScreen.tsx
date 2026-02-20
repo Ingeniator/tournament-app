@@ -148,34 +148,20 @@ export function OrganizerScreen() {
   };
 
   const handleFormatChange = (format: TournamentFormat) => {
-    if (format === 'king-of-the-court') {
-      const courts: Court[] = tournament.courts.map((c, i) => ({
-        ...c,
-        bonus: i === 0 ? 2 : i === 1 ? 1 : 0,
-      }));
-      updateTournament({ format, courts });
-    } else {
-      updateTournament({ format });
-    }
+    updateTournament({ format });
   };
 
   const handleAddCourt = async () => {
     const newIndex = tournament.courts.length;
-    if (tournament.format === 'king-of-the-court') {
-      const courts: Court[] = [...tournament.courts, {
-        id: generateId(),
-        name: `Court ${newIndex + 1}`,
-        bonus: newIndex === 0 ? 2 : newIndex === 1 ? 1 : 0,
-      }];
-      await updateTournament({ courts });
-    } else {
-      const courts: Court[] = [...tournament.courts, { id: generateId(), name: `Court ${newIndex + 1}` }];
-      await updateTournament({ courts });
-    }
+    const courts: Court[] = [...tournament.courts, { id: generateId(), name: `Court ${newIndex + 1}` }];
+    await updateTournament({ courts });
   };
+
+  const isKOTC = tournament.format === 'king-of-the-court';
 
   const handleRemoveCourt = async (courtId: string) => {
     if (tournament.courts.length <= 1) return;
+    if (isKOTC && tournament.courts.length <= 2) return;
     const courts = tournament.courts.filter(c => c.id !== courtId);
     await updateTournament({ courts });
   };
@@ -356,8 +342,8 @@ export function OrganizerScreen() {
             <span>{t('organizer.courts', { count: tournament.courts.length })}</span>
             <Button variant="ghost" size="small" onClick={handleAddCourt}>{t('organizer.addCourt')}</Button>
           </div>
-          {tournament.courts.map(court => (
-            <div key={court.id} className={tournament.format === 'king-of-the-court' ? styles.courtItemKotc : styles.courtItem}>
+          {tournament.courts.map((court, courtIdx) => (
+            <div key={court.id} className={isKOTC ? styles.courtItemKotc : styles.courtItem}>
               <div className={styles.courtMainRow}>
                 <input
                   className={styles.courtNameInput}
@@ -369,7 +355,7 @@ export function OrganizerScreen() {
                     updateTournament({ courts });
                   }}
                 />
-                {tournament.courts.length > 1 && (
+                {tournament.courts.length > 1 && !(isKOTC && tournament.courts.length <= 2) && (
                   <button
                     className={styles.removeBtn}
                     onClick={() => handleRemoveCourt(court.id)}
@@ -378,24 +364,11 @@ export function OrganizerScreen() {
                   </button>
                 )}
               </div>
-              {tournament.format === 'king-of-the-court' && (
+              {isKOTC && (
                 <div className={styles.courtKotcFields}>
-                  <label className={styles.courtBonusLabel}>
-                    {t('organizer.courtBonusPoints')}
-                    <input
-                      className={styles.courtBonusInput}
-                      type="number"
-                      min={0}
-                      value={court.bonus ?? 0}
-                      onChange={e => {
-                        const v = parseInt(e.target.value, 10);
-                        const courts = tournament.courts.map(c =>
-                          c.id === court.id ? { ...c, bonus: isNaN(v) ? 0 : Math.max(0, v) } : c
-                        );
-                        updateTournament({ courts });
-                      }}
-                    />
-                  </label>
+                  <span className={styles.courtBonusLabel}>
+                    +{tournament.courts.length - 1 - courtIdx} {t('organizer.courtBonusAuto')}
+                  </span>
                 </div>
               )}
             </div>
