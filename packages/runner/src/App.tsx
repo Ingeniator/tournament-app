@@ -14,6 +14,7 @@ import { Button, ErrorBoundary, SkinPicker, I18nProvider, useTranslation } from 
 import { useRunnerTheme } from './state/ThemeContext';
 import { translations } from './i18n';
 import { saveUIState, loadUIState } from './state/persistence';
+import { getStrategy } from './strategies';
 
 function AppContent() {
   const { tournament, dispatch, saveError } = useTournament();
@@ -53,8 +54,13 @@ function AppContent() {
     prevPhaseRef.current = curPhase;
 
     if ((prevPhase === 'setup' || prevPhase === 'team-pairing') && curPhase === 'in-progress') {
-      setActiveTab('log');
-      setShowStatsOnMount(true);
+      const isDynamic = tournament ? getStrategy(tournament.config.format).isDynamic : false;
+      if (isDynamic) {
+        setActiveTab('play');
+      } else {
+        setActiveTab('log');
+        setShowStatsOnMount(true);
+      }
     }
   }, [tournament?.phase]);
 
