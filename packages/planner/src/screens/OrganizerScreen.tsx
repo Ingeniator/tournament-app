@@ -2,10 +2,10 @@ import { useState, useMemo, useRef, type ClipboardEvent, type ReactNode } from '
 import { ref, push, set } from 'firebase/database';
 import { Button, Card, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation } from '@padel/common';
 import type { TournamentFormat, Court } from '@padel/common';
-import { generateId, parsePlayerList } from '@padel/common';
+import { generateId, parsePlayerList, getKotcCourtNames, getKotcDefaultBonusPoints } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { db } from '../firebase';
-import { buildRunnerTournament } from '../utils/exportToRunner';
+import { exportRunnerTournamentJSON } from '../utils/exportToRunner';
 import { useStartGuard } from '../hooks/useStartGuard';
 import { StartWarningModal } from '../components/StartWarningModal';
 import { getPlayerStatuses } from '../utils/playerStatus';
@@ -130,7 +130,7 @@ export function OrganizerScreen() {
   };
 
   const handleCopyExport = async () => {
-    const json = JSON.stringify(buildRunnerTournament(tournament, players), null, 2);
+    const json = exportRunnerTournamentJSON(tournament, players);
     try {
       await navigator.clipboard.writeText(json);
       showToast(t('organizer.jsonCopied'));
@@ -148,12 +148,35 @@ export function OrganizerScreen() {
   };
 
   const handleFormatChange = (format: TournamentFormat) => {
-    updateTournament({ format });
+    if (format === 'king-of-the-court') {
+      const names = getKotcCourtNames(tournament.courts.length);
+      const courts: Court[] = tournament.courts.map((c, i) => ({
+        ...c,
+        name: names[i] ?? c.name,
+        rankLabel: `Court ${i + 1}`,
+        bonus: getKotcDefaultBonusPoints(i, tournament.courts.length),
+      }));
+      updateTournament({ format, courts });
+    } else {
+      updateTournament({ format });
+    }
   };
 
   const handleAddCourt = async () => {
-    const courts: Court[] = [...tournament.courts, { id: generateId(), name: `Court ${tournament.courts.length + 1}` }];
-    await updateTournament({ courts });
+    const newIndex = tournament.courts.length;
+    if (tournament.format === 'king-of-the-court') {
+      const names = getKotcCourtNames(newIndex + 1);
+      const courts: Court[] = [...tournament.courts, {
+        id: generateId(),
+        name: names[newIndex] ?? `Court ${newIndex + 1}`,
+        rankLabel: `Court ${newIndex + 1}`,
+        bonus: getKotcDefaultBonusPoints(newIndex, newIndex + 1),
+      }];
+      await updateTournament({ courts });
+    } else {
+      const courts: Court[] = [...tournament.courts, { id: generateId(), name: `Court ${newIndex + 1}` }];
+      await updateTournament({ courts });
+    }
   };
 
   const handleRemoveCourt = async (courtId: string) => {
@@ -318,6 +341,7 @@ export function OrganizerScreen() {
             <option value="team-americano">{t('organizer.formatTeamAmericano')}</option>
             <option value="mexicano">{t('organizer.formatMexicano')}</option>
             <option value="team-mexicano">{t('organizer.formatTeamMexicano')}</option>
+            <option value="mixicano">{t('organizer.formatMixicano')}</option>
             <option value="king-of-the-court">{t('organizer.formatKingOfTheCourt')}</option>
           </select>
           {showFormatInfo && (
@@ -326,6 +350,7 @@ export function OrganizerScreen() {
               <p><strong>{t('organizer.teamAmericanoDesc')}</strong></p>
               <p><strong>{t('organizer.mexicanoDesc')}</strong></p>
               <p><strong>{t('organizer.teamMexicanoDesc')}</strong></p>
+              <p><strong>{t('organizer.mixicanoDesc')}</strong></p>
               <p><strong>{t('organizer.kingOfTheCourtDesc')}</strong></p>
             </div>
           )}
@@ -337,24 +362,57 @@ export function OrganizerScreen() {
             <Button variant="ghost" size="small" onClick={handleAddCourt}>{t('organizer.addCourt')}</Button>
           </div>
           {tournament.courts.map(court => (
-            <div key={court.id} className={styles.courtItem}>
-              <input
-                className={styles.courtNameInput}
-                value={court.name}
-                onChange={e => {
-                  const courts = tournament.courts.map(c =>
-                    c.id === court.id ? { ...c, name: e.target.value } : c
-                  );
-                  updateTournament({ courts });
-                }}
-              />
-              {tournament.courts.length > 1 && (
-                <button
-                  className={styles.removeBtn}
-                  onClick={() => handleRemoveCourt(court.id)}
-                >
-                  &times;
-                </button>
+            <div key={court.id} className={tournament.format === 'king-of-the-court' ? styles.courtItemKotc : styles.courtItem}>
+              <div className={styles.courtMainRow}>
+                <input
+                  className={styles.courtNameInput}
+                  value={court.name}
+                  onChange={e => {
+                    const courts = tournament.courts.map(c =>
+                      c.id === court.id ? { ...c, name: e.target.value } : c
+                    );
+                    updateTournament({ courts });
+                  }}
+                />
+                {tournament.courts.length > 1 && (
+                  <button
+                    className={styles.removeBtn}
+                    onClick={() => handleRemoveCourt(court.id)}
+                  >
+                    &times;
+                  </button>
+                )}
+              </div>
+              {tournament.format === 'king-of-the-court' && (
+                <div className={styles.courtKotcFields}>
+                  <input
+                    className={styles.courtSubnameInput}
+                    value={court.rankLabel ?? ''}
+                    onChange={e => {
+                      const courts = tournament.courts.map(c =>
+                        c.id === court.id ? { ...c, rankLabel: e.target.value } : c
+                      );
+                      updateTournament({ courts });
+                    }}
+                    placeholder={t('organizer.courtSubname')}
+                  />
+                  <label className={styles.courtBonusLabel}>
+                    {t('organizer.courtBonusPoints')}
+                    <input
+                      className={styles.courtBonusInput}
+                      type="number"
+                      min={0}
+                      value={court.bonus ?? 0}
+                      onChange={e => {
+                        const v = parseInt(e.target.value, 10);
+                        const courts = tournament.courts.map(c =>
+                          c.id === court.id ? { ...c, bonus: isNaN(v) ? 0 : Math.max(0, v) } : c
+                        );
+                        updateTournament({ courts });
+                      }}
+                    />
+                  </label>
+                </div>
               )}
             </div>
           ))}
