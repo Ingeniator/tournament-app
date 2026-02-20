@@ -101,7 +101,7 @@ const en: Translations = {
   'settings.rounds': 'Rounds',
   'settings.roundsHint': '(min {min} scored)',
   'settings.pts': '{count} pts',
-  'settings.roundCount': '{count} rounds',
+  'settings.roundCount': '{count} round(s)',
   'settings.sitOutWarning': 'Sit-outs are not equal with {rounds} rounds.',
   'settings.trySitOut': 'Try {suggestions} rounds for equal sit-outs.',
   'settings.unavailable': 'Unavailable',
