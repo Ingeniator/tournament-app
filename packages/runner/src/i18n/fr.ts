@@ -140,6 +140,7 @@ const fr: Translations = {
   'settings.tournamentImported': 'Tournoi importé !',
   'settings.newPlayerNamePlaceholder': 'Nom du nouveau joueur',
   'settings.storageWarning': 'Impossible de sauvegarder — le stockage est peut-être plein. Votre progression pourrait être perdue si vous fermez cette page.',
+  'settings.groupWarning': 'Groupes inégaux ({a} vs {b}) — moins de variété dans les matchs',
 
   // BottomNav
   'nav.play': 'Jouer',

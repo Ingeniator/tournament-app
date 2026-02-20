@@ -2,12 +2,18 @@ import type { StandingsEntry } from '@padel/common';
 import { useTranslation } from '@padel/common';
 import styles from './StandingsTable.module.css';
 
+export interface GroupInfo {
+  labels: [string, string];
+  map: Map<string, 'A' | 'B'>;
+}
+
 interface StandingsTableProps {
   standings: StandingsEntry[];
   plannedGames?: Map<string, number>;
+  groupInfo?: GroupInfo;
 }
 
-export function StandingsTable({ standings, plannedGames }: StandingsTableProps) {
+export function StandingsTable({ standings, plannedGames, groupInfo }: StandingsTableProps) {
   const { t } = useTranslation();
 
   if (standings.length === 0) {
@@ -48,7 +54,14 @@ export function StandingsTable({ standings, plannedGames }: StandingsTableProps)
           return (
             <tr key={entry.playerId}>
               <td className={`${styles.rank} ${rankClass}`}>{entry.rank}</td>
-              <td className={styles.name}>{entry.playerName}</td>
+              <td className={styles.name}>
+                {entry.playerName}
+                {groupInfo && groupInfo.map.has(entry.playerId) && (
+                  <span className={`${styles.groupBadge} ${groupInfo.map.get(entry.playerId) === 'A' ? styles.groupA : styles.groupB}`}>
+                    {groupInfo.map.get(entry.playerId) === 'A' ? groupInfo.labels[0] : groupInfo.labels[1]}
+                  </span>
+                )}
+              </td>
               <td className={`${styles.right} ${styles.points}`}>{entry.totalPoints}</td>
               {plannedGames && (
                 <td className={`${styles.right} ${styles.gamesCol} ${planned === 0 ? styles.noPlanned : ''}`}>

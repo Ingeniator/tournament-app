@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { ref, push, set } from 'firebase/database';
 import { useTournament } from '../hooks/useTournament';
 import { EditableField } from '../components/settings/EditableField';
@@ -27,6 +27,19 @@ export function SettingsScreen() {
   const [importError, setImportError] = useState<string | null>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [editPlayerGroup, setEditPlayerGroup] = useState<'A' | 'B'>('A');
+
+  const isMixicano = tournament?.config.format === 'mixicano';
+
+  const groupWarning = useMemo(() => {
+    if (!tournament || !isMixicano) return null;
+    const groupA = tournament.players.filter(p => p.group === 'A' && !p.unavailable);
+    const groupB = tournament.players.filter(p => p.group === 'B' && !p.unavailable);
+    if (groupA.length >= 2 && groupB.length >= 2 && groupA.length !== groupB.length) {
+      return t('settings.groupWarning', { a: String(groupA.length), b: String(groupB.length) });
+    }
+    return null;
+  }, [tournament, isMixicano, t]);
 
   if (!tournament) return null;
 
@@ -356,6 +369,34 @@ export function SettingsScreen() {
                       onBlur={() => handleRenameSave(player.id)}
                       autoFocus
                     />
+                    {isMixicano && (
+                      <div className={styles.groupSelector}>
+                        <button
+                          className={`${styles.groupBtn} ${editPlayerGroup === 'A' ? styles.groupBtnActive : ''}`}
+                          onMouseDown={e => e.preventDefault()}
+                          onClick={() => {
+                            setEditPlayerGroup('A');
+                            if (player.group !== 'A') {
+                              dispatch({ type: 'SET_PLAYER_GROUP', payload: { playerId: player.id, group: 'A' } });
+                            }
+                          }}
+                        >
+                          {tournament.config.groupLabels?.[0] || t('config.groupLabelAPlaceholder')}
+                        </button>
+                        <button
+                          className={`${styles.groupBtn} ${editPlayerGroup === 'B' ? styles.groupBtnActive : ''}`}
+                          onMouseDown={e => e.preventDefault()}
+                          onClick={() => {
+                            setEditPlayerGroup('B');
+                            if (player.group !== 'B') {
+                              dispatch({ type: 'SET_PLAYER_GROUP', payload: { playerId: player.id, group: 'B' } });
+                            }
+                          }}
+                        >
+                          {tournament.config.groupLabels?.[1] || t('config.groupLabelBPlaceholder')}
+                        </button>
+                      </div>
+                    )}
                     <button
                       className={`${styles.availabilityToggle} ${player.unavailable ? styles.toggleUnavailable : styles.toggleAvailable}`}
                       onMouseDown={e => e.preventDefault()}
@@ -414,13 +455,18 @@ export function SettingsScreen() {
                     {...(tournament.phase !== 'completed' ? {
                       role: 'button' as const,
                       tabIndex: 0,
-                      onClick: () => { setEditPlayerName(player.name); setEditingPlayerId(player.id); },
-                      onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setEditPlayerName(player.name); setEditingPlayerId(player.id); } },
+                      onClick: () => { setEditPlayerName(player.name); setEditPlayerGroup(player.group ?? 'A'); setEditingPlayerId(player.id); },
+                      onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setEditPlayerName(player.name); setEditPlayerGroup(player.group ?? 'A'); setEditingPlayerId(player.id); } },
                     } : {})}
                   >
                     <span className={`${styles.playerName} ${player.unavailable ? styles.playerInactive : ''}`}>
                       {player.name}
                     </span>
+                    {isMixicano && player.group && (
+                      <span className={`${styles.groupBadge} ${player.group === 'A' ? styles.groupBadgeA : styles.groupBadgeB}`}>
+                        {player.group === 'A' ? (tournament.config.groupLabels?.[0] || 'A') : (tournament.config.groupLabels?.[1] || 'B')}
+                      </span>
+                    )}
                     {player.unavailable && (
                       <span className={styles.statusBadge}>{t('settings.out')}</span>
                     )}
@@ -480,6 +526,9 @@ export function SettingsScreen() {
           >
             {t('settings.addPlayer')}
           </Button>
+        )}
+        {groupWarning && (
+          <div className={styles.groupWarning}>{groupWarning}</div>
         )}
       </Card>
 

@@ -15,18 +15,13 @@ interface MatchCardProps {
 
 export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, onScore, onClear, onTapScore }: MatchCardProps) {
   const name = (id: string) => players.find(p => p.id === id)?.name ?? '?';
-  const court = courts.find(c => c.id === match.courtId);
-  const courtName = court?.name ?? match.courtId;
-  const rankLabel = court?.rankLabel;
+  const courtName = courts.find(c => c.id === match.courtId)?.name ?? match.courtId;
   const team1Won = match.score && match.score.team1Points > match.score.team2Points;
   const team2Won = match.score && match.score.team2Points > match.score.team1Points;
 
   return (
     <div className={`${styles.match} ${match.score ? styles.scored : ''}`}>
-      <div className={styles.courtLabel}>
-        {courtName}
-        {rankLabel && <span className={styles.rankLabel}>{rankLabel}</span>}
-      </div>
+      <div className={styles.courtLabel}>{courtName}</div>
       <div className={styles.court}>
         {/* Row 1: first players with & */}
         <div className={`${styles.playerCell} ${styles.topLeft} ${team1Won ? styles.winner : ''}`} title={name(match.team1[0])}>

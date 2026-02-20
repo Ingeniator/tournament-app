@@ -142,6 +142,7 @@ const it: Translations = {
   'settings.tournamentImported': 'Torneo importato!',
   'settings.newPlayerNamePlaceholder': 'Nuovo nome giocatore',
   'settings.storageWarning': 'Impossibile salvare \u2014 lo spazio potrebbe essere esaurito. I progressi potrebbero andare persi se chiudi questa pagina.',
+  'settings.groupWarning': 'Gruppi disuguali ({a} vs {b}) — meno varietà negli abbinamenti',
 
   // BottomNav
   'nav.play': 'Gioca',

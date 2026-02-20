@@ -18,7 +18,6 @@ export type { PlannerTournament, PlannerRegistration, TournamentSummary, Tournam
 export { generateId } from './utils/id';
 export { parsePlayerList } from './utils/parsePlayerList';
 export { groupSupporters } from './utils/groupSupporters';
-export { getKotcCourtNames, getKotcDefaultBonusPoints } from './utils/courtThemes';
 export { Button } from './components/Button';
 export { Card } from './components/Card';
 export { Modal } from './components/Modal';

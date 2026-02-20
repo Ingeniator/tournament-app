@@ -47,6 +47,14 @@
   border-radius: var(--radius-sm);
 }
 
+.warning {
+  font-size: var(--text-sm);
+  color: var(--color-warning, #f0a500);
+  padding: var(--space-sm) var(--space-md);
+  background-color: var(--color-warning-tint, rgba(240, 165, 0, 0.1));
+  border-radius: var(--radius-sm);
+}
+
 .footer {
   margin-top: var(--space-lg);
 }

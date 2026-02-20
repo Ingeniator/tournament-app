@@ -140,6 +140,7 @@ const en: Translations = {
   'settings.tournamentImported': 'Tournament imported!',
   'settings.newPlayerNamePlaceholder': 'New player name',
   'settings.storageWarning': 'Could not save \u2014 storage may be full. Your progress may be lost if you close this page.',
+  'settings.groupWarning': 'Groups are unequal ({a} vs {b}) — less variety in matchups',
 
   // BottomNav
   'nav.play': 'Play',

@@ -105,13 +105,20 @@ export function tournamentReducer(
     }
 
     case 'SET_PLAYER_GROUP': {
-      if (!state || state.phase !== 'setup') return state;
+      if (!state || (state.phase !== 'setup' && state.phase !== 'in-progress')) return state;
       const { playerId: gpId, group } = action.payload;
+      const gpPlayers = state.players.map(p =>
+        p.id === gpId ? { ...p, group } : p
+      );
+
+      if (state.phase === 'in-progress') {
+        const newRounds = regenerateUnscoredRounds(state, gpPlayers, state.config);
+        return { ...state, players: gpPlayers, rounds: newRounds, updatedAt: Date.now() };
+      }
+
       return {
         ...state,
-        players: state.players.map(p =>
-          p.id === gpId ? { ...p, group } : p
-        ),
+        players: gpPlayers,
         updatedAt: Date.now(),
       };
     }

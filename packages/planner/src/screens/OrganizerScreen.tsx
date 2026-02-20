@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, type ClipboardEvent, type ReactNode } from '
 import { ref, push, set } from 'firebase/database';
 import { Button, Card, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation } from '@padel/common';
 import type { TournamentFormat, Court } from '@padel/common';
-import { generateId, parsePlayerList, getKotcCourtNames, getKotcDefaultBonusPoints } from '@padel/common';
+import { generateId, parsePlayerList } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { db } from '../firebase';
 import { exportRunnerTournamentJSON } from '../utils/exportToRunner';
@@ -149,12 +149,9 @@ export function OrganizerScreen() {
 
   const handleFormatChange = (format: TournamentFormat) => {
     if (format === 'king-of-the-court') {
-      const names = getKotcCourtNames(tournament.courts.length);
       const courts: Court[] = tournament.courts.map((c, i) => ({
         ...c,
-        name: names[i] ?? c.name,
-        rankLabel: `Court ${i + 1}`,
-        bonus: getKotcDefaultBonusPoints(i, tournament.courts.length),
+        bonus: i === 0 ? 2 : i === 1 ? 1 : 0,
       }));
       updateTournament({ format, courts });
     } else {
@@ -165,12 +162,10 @@ export function OrganizerScreen() {
   const handleAddCourt = async () => {
     const newIndex = tournament.courts.length;
     if (tournament.format === 'king-of-the-court') {
-      const names = getKotcCourtNames(newIndex + 1);
       const courts: Court[] = [...tournament.courts, {
         id: generateId(),
-        name: names[newIndex] ?? `Court ${newIndex + 1}`,
-        rankLabel: `Court ${newIndex + 1}`,
-        bonus: getKotcDefaultBonusPoints(newIndex, newIndex + 1),
+        name: `Court ${newIndex + 1}`,
+        bonus: newIndex === 0 ? 2 : newIndex === 1 ? 1 : 0,
       }];
       await updateTournament({ courts });
     } else {
@@ -385,17 +380,6 @@ export function OrganizerScreen() {
               </div>
               {tournament.format === 'king-of-the-court' && (
                 <div className={styles.courtKotcFields}>
-                  <input
-                    className={styles.courtSubnameInput}
-                    value={court.rankLabel ?? ''}
-                    onChange={e => {
-                      const courts = tournament.courts.map(c =>
-                        c.id === court.id ? { ...c, rankLabel: e.target.value } : c
-                      );
-                      updateTournament({ courts });
-                    }}
-                    placeholder={t('organizer.courtSubname')}
-                  />
                   <label className={styles.courtBonusLabel}>
                     {t('organizer.courtBonusPoints')}
                     <input

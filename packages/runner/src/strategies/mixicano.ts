@@ -29,10 +29,6 @@ function validateMixicanoSetup(players: Player[], config: TournamentConfig): str
   if (groupB.length < 2) {
     errors.push('Group B needs at least 2 players');
   }
-  if (groupA.length !== groupB.length && unassigned.length === 0) {
-    errors.push(`Groups must be equal size (Group A: ${groupA.length}, Group B: ${groupB.length})`);
-  }
-
   const maxCourts = Math.floor(Math.min(groupA.length, groupB.length) / 2);
   if (availableCourts.length > maxCourts && groupA.length >= 2 && groupB.length >= 2) {
     errors.push(`Too many courts: need at most ${maxCourts} court(s) for ${groupA.length}+${groupB.length} players`);
@@ -191,6 +187,15 @@ export const mixicanoStrategy: TournamentStrategy = {
   isDynamic: true,
   hasFixedPartners: false,
   validateSetup: validateMixicanoSetup,
+  validateWarnings(players: Player[], _config: TournamentConfig): string[] {
+    const warnings: string[] = [];
+    const groupA = players.filter(p => p.group === 'A');
+    const groupB = players.filter(p => p.group === 'B');
+    if (groupA.length >= 2 && groupB.length >= 2 && groupA.length !== groupB.length) {
+      warnings.push(`Groups are unequal (${groupA.length} vs ${groupB.length}) — less variety in matchups`);
+    }
+    return warnings;
+  },
   validateScore: commonValidateScore,
 
   calculateStandings(tournament: Tournament) {

@@ -3,7 +3,7 @@ import { useTournament } from '../hooks/useTournament';
 import { useStandings } from '../hooks/useStandings';
 import { useNominations } from '../hooks/useNominations';
 import { RoundCard } from '../components/rounds/RoundCard';
-import { StandingsTable } from '../components/standings/StandingsTable';
+import { StandingsTable, type GroupInfo } from '../components/standings/StandingsTable';
 import { NominationCard } from '../components/nominations/NominationCard';
 import { Carousel } from '../components/carousel/Carousel';
 import { CeremonyScreen } from '../components/ceremony/CeremonyScreen';
@@ -33,6 +33,19 @@ export function PlayScreen() {
       }
     }
     return map;
+  }, [tournament]);
+  const groupInfo = useMemo<GroupInfo | undefined>(() => {
+    if (!tournament || tournament.config.format !== 'mixicano') return undefined;
+    const map = new Map<string, 'A' | 'B'>();
+    for (const p of tournament.players) {
+      if (p.group) map.set(p.id, p.group);
+    }
+    if (map.size === 0) return undefined;
+    const labels: [string, string] = [
+      tournament.config.groupLabels?.[0] || 'A',
+      tournament.config.groupLabels?.[1] || 'B',
+    ];
+    return { labels, map };
   }, [tournament]);
   const { buildMessengerText } = useShareText(tournament, standings, nominations);
   const [showStandings, setShowStandings] = useState(false);
@@ -119,7 +132,7 @@ export function PlayScreen() {
       showToast(ok ? t('play.copied') : t('play.failedCopy'));
     };
     const handleShareImage = async () => {
-      const result = await shareStandingsImage(tournament.name, standings, nominations);
+      const result = await shareStandingsImage(tournament.name, standings, nominations, groupInfo);
       if (result.status === 'shared') showToast(t('play.shared'));
       else if (result.status === 'downloaded') showToast(t('play.imageSaved'));
       else if (result.status === 'preview') setPreviewImages(result.dataUrls);
@@ -134,7 +147,7 @@ export function PlayScreen() {
         <Carousel>
           {[
             <div key="standings" className={styles.completedStandings}>
-              <StandingsTable standings={standings} />
+              <StandingsTable standings={standings} groupInfo={groupInfo} />
             </div>,
             ...nominations.map((nom, i) => (
               <NominationCard key={nom.id} nomination={nom} cardRef={setNomRef(i)} minHeight={nomMinHeight || undefined} />
@@ -394,7 +407,7 @@ export function PlayScreen() {
 
       {/* Standings overlay */}
       <Modal open={showStandings} title={t('play.standingsTitle')} onClose={() => setShowStandings(false)}>
-        <StandingsTable standings={standings} plannedGames={plannedGames} />
+        <StandingsTable standings={standings} plannedGames={plannedGames} groupInfo={groupInfo} />
       </Modal>
 
       <Toast message={toastMessage} />

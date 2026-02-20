@@ -140,6 +140,7 @@ const sr: Translations = {
   'settings.tournamentImported': 'Turnir uvezen!',
   'settings.newPlayerNamePlaceholder': 'Ime novog igrača',
   'settings.storageWarning': 'Nije moguće sačuvati — skladište je možda puno. Vaš napredak može biti izgubljen ako zatvorite ovu stranicu.',
+  'settings.groupWarning': 'Grupe su nejednake ({a} vs {b}) — manje raznovrsnosti u mečevima',
 
   // BottomNav
   'nav.play': 'Igra',

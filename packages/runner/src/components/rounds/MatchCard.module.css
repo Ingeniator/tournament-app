@@ -137,18 +137,6 @@
   color: var(--color-text);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-
-.rankLabel {
-  font-size: var(--text-xs);
-  font-weight: 500;
-  color: var(--color-text-muted);
-  font-style: italic;
-  text-transform: none;
-  letter-spacing: normal;
 }
 
 .winner {

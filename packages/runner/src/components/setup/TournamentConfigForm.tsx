@@ -1,7 +1,6 @@
 import type { TournamentConfig, TournamentFormat, Court } from '@padel/common';
-import { Button, generateId, useTranslation, getKotcDefaultBonusPoints } from '@padel/common';
+import { Button, generateId, useTranslation } from '@padel/common';
 import { resolveConfigDefaults, computeSitOutInfo } from '../../utils/resolveConfigDefaults';
-import { randomRankLabels } from '../../utils/courtRankLabels';
 import styles from './TournamentConfigForm.module.css';
 
 const MINUTES_PER_POINT = 0.5;
@@ -59,7 +58,7 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
     const newCourt: Court = {
       id: generateId(),
       name: `Court ${newIndex + 1}`,
-      ...(isKOTC ? { rankLabel: randomRankLabels(newIndex + 1)[newIndex], bonus: getKotcDefaultBonusPoints(newIndex, newIndex + 1) } : {}),
+      ...(isKOTC ? { bonus: newIndex === 0 ? 2 : newIndex === 1 ? 1 : 0 } : {}),
     };
     onUpdate({ courts: [...config.courts, newCourt] });
   };
@@ -81,12 +80,6 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
     });
   };
 
-  const updateCourtRankLabel = (courtId: string, rankLabel: string) => {
-    onUpdate({
-      courts: config.courts.map(c => (c.id === courtId ? { ...c, rankLabel: rankLabel || undefined } : c)),
-    });
-  };
-
   return (
     <div className={styles.form}>
       <div className={styles.field}>
@@ -98,19 +91,17 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
           onChange={e => {
             const newFormat = e.target.value as TournamentFormat;
             if (newFormat === 'king-of-the-court' && config.format !== 'king-of-the-court') {
-              const labels = randomRankLabels(config.courts.length);
               onUpdate({
                 format: newFormat,
                 courts: config.courts.map((c, i) => ({
                   ...c,
-                  rankLabel: labels[i],
-                  bonus: getKotcDefaultBonusPoints(i, config.courts.length),
+                  bonus: i === 0 ? 2 : i === 1 ? 1 : 0,
                 })),
               });
             } else if (newFormat !== 'king-of-the-court' && config.format === 'king-of-the-court') {
               onUpdate({
                 format: newFormat,
-                courts: config.courts.map(c => ({ ...c, rankLabel: undefined, bonus: undefined })),
+                courts: config.courts.map(c => ({ ...c, bonus: undefined })),
               });
             } else {
               onUpdate({ format: newFormat });
@@ -185,14 +176,6 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
               </div>
               {isKOTC && (
                 <div className={styles.courtKotcFields}>
-                  <input
-                    className={styles.courtSubnameInput}
-                    type="text"
-                    value={court.rankLabel ?? ''}
-                    placeholder={`#${courtIdx + 1}`}
-                    onChange={e => updateCourtRankLabel(court.id, e.target.value)}
-                    aria-label={`Rank label for ${court.name}`}
-                  />
                   <label className={styles.courtBonusLabel}>
                     {t('config.courtBonus')}
                     <input

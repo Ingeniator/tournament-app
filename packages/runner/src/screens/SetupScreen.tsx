@@ -20,6 +20,13 @@ export function SetupScreen() {
     return strategy.validateSetup(tournament.players, resolvedConfig);
   }, [tournament]);
 
+  const warnings = useMemo(() => {
+    if (!tournament) return [];
+    const strategy = getStrategy(tournament.config.format);
+    const resolvedConfig = resolveConfigDefaults(tournament.config, tournament.players.length);
+    return strategy.validateWarnings?.(tournament.players, resolvedConfig) ?? [];
+  }, [tournament]);
+
   if (!tournament) return null;
 
   const strategy = getStrategy(tournament.config.format);
@@ -93,6 +100,15 @@ export function SetupScreen() {
       </Card>
 
       <div className={styles.footer}>
+        {warnings.length > 0 && (
+          <div className={styles.errors}>
+            {warnings.map((warn, i) => (
+              <div key={i} className={styles.warning}>
+                {warn}
+              </div>
+            ))}
+          </div>
+        )}
         {errors.length > 0 && (
           <div className={styles.errors}>
             {errors.map((err, i) => (

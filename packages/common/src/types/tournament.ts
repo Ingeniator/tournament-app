@@ -23,7 +23,6 @@ export interface Court {
   name: string;
   unavailable?: boolean;
   bonus?: number;
-  rankLabel?: string;
 }
 
 export interface TournamentConfig {
