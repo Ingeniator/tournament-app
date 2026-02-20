@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { kingOfTheCourtStrategy } from './kingOfTheCourt';
-import { makePlayers, makeConfig, simulateDynamic, analyzeSchedule } from './simulation-helpers';
+import { makePlayers, makeConfig, simulateDynamic, analyzeSchedule, assertRoundInvariants } from './simulation-helpers';
 
 const TRIALS = 10;
 
@@ -10,38 +10,34 @@ describe('king-of-the-court simulation', () => {
     const config = makeConfig('king-of-the-court', 2);
     const numRounds = 7;
 
-    it('games = 7 each, no sit-outs', () => {
+    it('games = 7 each, no sit-outs, winners promote to higher court', () => {
       for (let t = 0; t < TRIALS; t++) {
         const rounds = simulateDynamic(kingOfTheCourtStrategy, players, config, numRounds);
         expect(rounds).toHaveLength(numRounds);
+        assertRoundInvariants(players, rounds);
 
         const stats = analyzeSchedule(players, rounds);
         expect(stats.gamesMin).toBe(7);
         expect(stats.gamesMax).toBe(7);
         expect(stats.sitMin).toBe(0);
         expect(stats.sitMax).toBe(0);
+
+        // After deterministic scoring (lower ID = stronger), stronger players
+        // should cluster on court c1 (king court) by the last round.
+        const lastRound = rounds[rounds.length - 1];
+        const court1Match = lastRound.matches.find(m => m.courtId === 'c1');
+        const court2Match = lastRound.matches.find(m => m.courtId === 'c2');
+        expect(court1Match).toBeDefined();
+        expect(court2Match).toBeDefined();
+
+        const avgRank = (match: typeof court1Match) => {
+          if (!match) return 999;
+          const ids = [...match.team1, ...match.team2];
+          return ids.reduce((sum, id) => sum + parseInt(id.replace(/\D/g, '')), 0) / ids.length;
+        };
+
+        expect(avgRank(court1Match)).toBeLessThan(avgRank(court2Match));
       }
-    });
-
-    it('winners promote to higher court, losers relegate', () => {
-      const rounds = simulateDynamic(kingOfTheCourtStrategy, players, config, numRounds);
-
-      // After several rounds of deterministic scoring (lower ID = stronger),
-      // stronger players should cluster on court c1 (king court).
-      // Check the last round: average player rank on c1 should be lower than c2.
-      const lastRound = rounds[rounds.length - 1];
-      const court1Match = lastRound.matches.find(m => m.courtId === 'c1');
-      const court2Match = lastRound.matches.find(m => m.courtId === 'c2');
-      expect(court1Match).toBeDefined();
-      expect(court2Match).toBeDefined();
-
-      const avgRank = (match: typeof court1Match) => {
-        if (!match) return 999;
-        const ids = [...match.team1, ...match.team2];
-        return ids.reduce((sum, id) => sum + parseInt(id.replace(/\D/g, '')), 0) / ids.length;
-      };
-
-      expect(avgRank(court1Match)).toBeLessThan(avgRank(court2Match));
     });
   });
 
@@ -54,6 +50,7 @@ describe('king-of-the-court simulation', () => {
       for (let t = 0; t < TRIALS; t++) {
         const rounds = simulateDynamic(kingOfTheCourtStrategy, players, config, numRounds);
         expect(rounds).toHaveLength(numRounds);
+        assertRoundInvariants(players, rounds);
 
         const stats = analyzeSchedule(players, rounds);
         expect(stats.gamesMin).toBe(7);
@@ -75,6 +72,7 @@ describe('king-of-the-court simulation', () => {
       for (let t = 0; t < TRIALS; t++) {
         const rounds = simulateDynamic(kingOfTheCourtStrategy, players, config, numRounds);
         expect(rounds).toHaveLength(numRounds);
+        assertRoundInvariants(players, rounds);
 
         const stats = analyzeSchedule(players, rounds);
         worstSitSpread = Math.max(worstSitSpread, stats.sitMax - stats.sitMin);

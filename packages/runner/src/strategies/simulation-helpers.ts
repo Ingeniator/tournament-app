@@ -186,6 +186,83 @@ export function analyzeTeamSchedule(
   };
 }
 
+/** Verify structural correctness of generated rounds. */
+export function assertRoundInvariants(players: Player[], rounds: Round[]): void {
+  const playerIds = new Set(players.map(p => p.id));
+
+  for (let i = 0; i < rounds.length; i++) {
+    const round = rounds[i];
+
+    // Round numbers must be sequential starting at 1
+    if (round.roundNumber !== i + 1) {
+      throw new Error(
+        `Round ${i} has roundNumber ${round.roundNumber}, expected ${i + 1}`,
+      );
+    }
+
+    // No player appears in multiple matches within the same round
+    const inMatch = new Set<string>();
+    for (const match of round.matches) {
+      for (const pid of [...match.team1, ...match.team2]) {
+        if (inMatch.has(pid)) {
+          throw new Error(
+            `Player ${pid} appears in multiple matches in round ${round.roundNumber}`,
+          );
+        }
+        inMatch.add(pid);
+      }
+    }
+
+    // No player is both playing and sitting out
+    for (const pid of round.sitOuts) {
+      if (inMatch.has(pid)) {
+        throw new Error(
+          `Player ${pid} both playing and sitting out in round ${round.roundNumber}`,
+        );
+      }
+    }
+
+    // Every player is either playing or sitting out
+    const accounted = new Set([...inMatch, ...round.sitOuts]);
+    for (const pid of playerIds) {
+      if (!accounted.has(pid)) {
+        throw new Error(
+          `Player ${pid} not accounted for in round ${round.roundNumber}`,
+        );
+      }
+    }
+  }
+}
+
+/** Verify each match side contains two players from the same pre-defined team. */
+export function assertTeamIntegrity(teams: Team[], rounds: Round[]): void {
+  const playerTeam = new Map<string, string>();
+  for (const t of teams) {
+    playerTeam.set(t.player1Id, t.id);
+    playerTeam.set(t.player2Id, t.id);
+  }
+
+  for (const round of rounds) {
+    for (const match of round.matches) {
+      const t1a = playerTeam.get(match.team1[0]);
+      const t1b = playerTeam.get(match.team1[1]);
+      if (t1a !== t1b) {
+        throw new Error(
+          `team1 has players from different teams (${t1a}, ${t1b}) in round ${round.roundNumber}`,
+        );
+      }
+
+      const t2a = playerTeam.get(match.team2[0]);
+      const t2b = playerTeam.get(match.team2[1]);
+      if (t2a !== t2b) {
+        throw new Error(
+          `team2 has players from different teams (${t2a}, ${t2b}) in round ${round.roundNumber}`,
+        );
+      }
+    }
+  }
+}
+
 /** Simulate a full dynamic tournament: generate round, score it, generate next, repeat. */
 export function simulateDynamic(
   strategy: TournamentStrategy,

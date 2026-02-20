@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mexicanoStrategy } from './mexicano';
-import { makePlayers, makeConfig, simulateDynamic, analyzeSchedule } from './simulation-helpers';
+import { makePlayers, makeConfig, simulateDynamic, analyzeSchedule, assertRoundInvariants } from './simulation-helpers';
 
 const TRIALS = 10;
 
@@ -16,6 +16,7 @@ describe('mexicano simulation', () => {
       for (let t = 0; t < TRIALS; t++) {
         const rounds = simulateDynamic(mexicanoStrategy, players, config, numRounds);
         expect(rounds).toHaveLength(numRounds);
+        assertRoundInvariants(players, rounds);
 
         const stats = analyzeSchedule(players, rounds);
         expect(stats.gamesMin).toBe(7);
@@ -43,6 +44,7 @@ describe('mexicano simulation', () => {
       for (let t = 0; t < TRIALS; t++) {
         const rounds = simulateDynamic(mexicanoStrategy, players, config, numRounds);
         expect(rounds).toHaveLength(numRounds);
+        assertRoundInvariants(players, rounds);
 
         const stats = analyzeSchedule(players, rounds);
         worstGameSpread = Math.max(worstGameSpread, stats.gamesMax - stats.gamesMin);
@@ -66,6 +68,7 @@ describe('mexicano simulation', () => {
       for (let t = 0; t < TRIALS; t++) {
         const rounds = simulateDynamic(mexicanoStrategy, players, config, numRounds);
         expect(rounds).toHaveLength(numRounds);
+        assertRoundInvariants(players, rounds);
 
         const stats = analyzeSchedule(players, rounds);
         worstGameSpread = Math.max(worstGameSpread, stats.gamesMax - stats.gamesMin);
@@ -86,6 +89,7 @@ describe('mexicano simulation', () => {
       for (let t = 0; t < TRIALS; t++) {
         const rounds = simulateDynamic(mexicanoStrategy, players, config, numRounds);
         expect(rounds).toHaveLength(numRounds);
+        assertRoundInvariants(players, rounds);
 
         const stats = analyzeSchedule(players, rounds);
         expect(stats.gamesMin).toBe(7);

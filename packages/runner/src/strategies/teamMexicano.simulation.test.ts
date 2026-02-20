@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { teamMexicanoStrategy } from './teamMexicano';
-import { makePlayers, makeTeams, makeConfig, simulateDynamic, analyzeTeamSchedule } from './simulation-helpers';
+import { makePlayers, makeTeams, makeConfig, simulateDynamic, analyzeTeamSchedule, assertRoundInvariants, assertTeamIntegrity } from './simulation-helpers';
 
 const TRIALS = 10;
 
@@ -11,12 +11,14 @@ describe('team-mexicano simulation', () => {
     const config = makeConfig('team-mexicano', 2);
     const numRounds = 7;
 
-    it('all teams play every round', () => {
+    it('all teams play every round, team integrity maintained', () => {
       for (let t = 0; t < TRIALS; t++) {
         const rounds = simulateDynamic(
           teamMexicanoStrategy, players, config, numRounds, { teams },
         );
         expect(rounds).toHaveLength(numRounds);
+        assertRoundInvariants(players, rounds);
+        assertTeamIntegrity(teams, rounds);
 
         const stats = analyzeTeamSchedule(teams, rounds);
         expect(stats.gamesMin).toBe(7);
@@ -33,7 +35,7 @@ describe('team-mexicano simulation', () => {
     const config = makeConfig('team-mexicano', 1);
     const numRounds = 5;
 
-    it('team sit-outs spread ≤ 1', () => {
+    it('team sit-outs spread ≤ 1, team integrity maintained', () => {
       let worstSitSpread = 0;
 
       for (let t = 0; t < TRIALS; t++) {
@@ -41,6 +43,8 @@ describe('team-mexicano simulation', () => {
           teamMexicanoStrategy, players, config, numRounds, { teams },
         );
         expect(rounds).toHaveLength(numRounds);
+        assertRoundInvariants(players, rounds);
+        assertTeamIntegrity(teams, rounds);
 
         const stats = analyzeTeamSchedule(teams, rounds);
         worstSitSpread = Math.max(worstSitSpread, stats.sitMax - stats.sitMin);
@@ -56,7 +60,7 @@ describe('team-mexicano simulation', () => {
     const config = makeConfig('team-mexicano', 2);
     const numRounds = 5;
 
-    it('games spread ≤ 1, sit-outs spread ≤ 1', () => {
+    it('games spread ≤ 1, sit-outs spread ≤ 1, team integrity maintained', () => {
       let worstGameSpread = 0;
       let worstSitSpread = 0;
 
@@ -65,6 +69,8 @@ describe('team-mexicano simulation', () => {
           teamMexicanoStrategy, players, config, numRounds, { teams },
         );
         expect(rounds).toHaveLength(numRounds);
+        assertRoundInvariants(players, rounds);
+        assertTeamIntegrity(teams, rounds);
 
         const stats = analyzeTeamSchedule(teams, rounds);
         worstGameSpread = Math.max(worstGameSpread, stats.gamesMax - stats.gamesMin);
