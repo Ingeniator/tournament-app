@@ -26,10 +26,12 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       tournament.plannerTournamentId &&
       db
     ) {
-      signIn().then(() => {
+      signIn().then(async () => {
         const base = `tournaments/${tournament.plannerTournamentId}`;
-        set(ref(db!, `${base}/completedAt`), Date.now()).catch(() => {});
-        set(ref(db!, `${base}/runnerData`), tournament).catch(() => {});
+        // Write runnerData first so it's available when the planner's
+        // real-time listener fires on completedAt
+        await set(ref(db!, `${base}/runnerData`), tournament);
+        await set(ref(db!, `${base}/completedAt`), Date.now());
       }).catch(() => {});
     }
   }, [tournament?.phase, tournament?.plannerTournamentId]);
