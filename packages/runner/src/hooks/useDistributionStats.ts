@@ -147,21 +147,24 @@ export function useDistributionStats(tournament: Tournament | null): Distributio
 
     const totalPairs = (activeList.length * (activeList.length - 1)) / 2;
 
-    // Theoretical ideal: total opponent encounters spread evenly across all pairs
-    const totalMatches = rounds.reduce((sum, r) => sum + r.matches.length, 0);
-    const totalEncounters = totalMatches * 4; // 4 opponent pairs per match
-    const idealAvg = totalPairs > 0 ? totalEncounters / totalPairs : 0;
-    const idealOpponentSpread = {
-      min: Math.floor(idealAvg),
-      max: Math.ceil(idealAvg),
-    };
-
     // Rest balance: games + sit-outs min/max/ideal
     const availableCourts = tournament.config.courts.filter(c => !c.unavailable);
     const numCourts = Math.min(availableCourts.length, Math.floor(activePlayers.length / 4));
     const totalRounds = rounds.length;
     const activePCount = activePlayers.length;
     const sitOutsPerRound = activePCount - numCourts * 4;
+
+    // Theoretical ideal: total opponent encounters spread evenly across all pairs
+    const totalMatches = rounds.reduce((sum, r) => sum + r.matches.length, 0);
+    const totalEncounters = totalMatches * 4; // 4 opponent pairs per match
+    const idealAvg = totalPairs > 0 ? totalEncounters / totalPairs : 0;
+    // With sit-outs, pairs have unequal numbers of "both active" rounds,
+    // making perfectly balanced opponent encounters structurally harder.
+    // Widen the ideal range by +1 to reflect this constraint.
+    const idealOpponentSpread = {
+      min: Math.floor(idealAvg),
+      max: Math.ceil(idealAvg) + (sitOutsPerRound > 0 ? 1 : 0),
+    };
 
     let gamesMin = Infinity, gamesMax = -Infinity;
     let sitMin = Infinity, sitMax = -Infinity;

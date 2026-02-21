@@ -85,9 +85,15 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
     // Ideal never-played: each match creates C(4,2)=6 pair slots
     const idealNeverPlayed = Math.max(0, totalPairs - totalRounds * numCourts * 6);
 
+    // Ideal opponent spread: with sit-outs, 0-count pairs widen scoreSchedule's spread
+    const sitOutsPerRound = active.length - numCourts * 4;
+    const totalEncounters = totalRounds * numCourts * 4;
+    const idealAvg = totalPairs > 0 ? totalEncounters / totalPairs : 0;
+    const idealOpponentMax = Math.ceil(idealAvg) + (sitOutsPerRound > 0 ? 1 : 0);
+
     // Early stop when all quality gates are green
     const isAllGreen = (s: [number, number, number, number]) =>
-      s[0] <= idealRepeats && s[1] <= 2 && s[2] <= idealNeverPlayed;
+      s[0] <= idealRepeats && s[1] <= idealOpponentMax && s[2] <= idealNeverPlayed;
 
     // Score current schedule as baseline
     const currentUnscored = tournament.rounds.filter(r => r.matches.every(m => !m.score));

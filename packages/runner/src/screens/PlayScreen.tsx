@@ -13,6 +13,7 @@ import { shareStandingsImage } from '../utils/standingsImage';
 import { ref, push, set } from 'firebase/database';
 import { db, firebaseConfigured } from '../firebase';
 import { Button, FeedbackModal, Modal, SupportOverlay, Toast, useToast, useTranslation } from '@padel/common';
+import { getStrategy } from '../strategies';
 import styles from './PlayScreen.module.css';
 
 export function PlayScreen() {
@@ -56,11 +57,17 @@ export function PlayScreen() {
   const [roundCompleteNum, setRoundCompleteNum] = useState<number | null>(null);
   const prevActiveRoundIdRef = useRef<string | null>(null);
 
+  const strategy = tournament ? getStrategy(tournament.config.format) : null;
   const totalMatches = tournament?.rounds.reduce((n, r) => n + r.matches.length, 0) ?? 0;
   const scoredMatches = tournament?.rounds.reduce(
     (n, r) => n + r.matches.filter(m => m.score).length, 0
   ) ?? 0;
   const scoredRounds = tournament?.rounds.filter(r => r.matches.every(m => m.score)).length ?? 0;
+  const plannedRounds = tournament
+    ? (strategy?.isDynamic
+        ? (tournament.config.maxRounds ?? tournament.players.length - 1)
+        : tournament.rounds.length)
+    : 0;
 
   // Find active round: first round with any unscored matches
   const activeRoundIndex = tournament?.rounds.findIndex(r => r.matches.some(m => !m.score)) ?? -1;
@@ -263,7 +270,7 @@ export function PlayScreen() {
     <div className={styles.container}>
       {/* Progress line */}
       <div className={styles.progress}>
-        {t('play.progress', { current: scoredRounds + 1, total: tournament.rounds.length, scored: scoredMatches, totalMatches })}
+        {t('play.progress', { current: scoredRounds + 1, total: plannedRounds, scored: scoredMatches, totalMatches })}
       </div>
 
       {/* Active round */}
