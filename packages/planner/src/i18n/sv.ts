@@ -114,6 +114,9 @@ const sv: Translations = {
   'organizer.completed': 'Turnering Avslutad',
   'organizer.completedOn': 'Avslutad {date}',
   'organizer.undoComplete': 'Öppna Turnering Igen',
+  'organizer.viewResults': 'Visa Resultat',
+  'organizer.loadingResults': 'Laddar resultat...',
+  'organizer.noBackupData': 'Resultat ej tillgängliga',
 
   // JoinScreen
   'join.back': 'Tillbaka',

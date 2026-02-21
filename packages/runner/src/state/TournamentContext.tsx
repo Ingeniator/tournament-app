@@ -27,7 +27,9 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       db
     ) {
       signIn().then(() => {
-        set(ref(db!, `tournaments/${tournament.plannerTournamentId}/completedAt`), Date.now()).catch(() => {});
+        const base = `tournaments/${tournament.plannerTournamentId}`;
+        set(ref(db!, `${base}/completedAt`), Date.now()).catch(() => {});
+        set(ref(db!, `${base}/runnerData`), tournament).catch(() => {});
       }).catch(() => {});
     }
   }, [tournament?.phase, tournament?.plannerTournamentId]);

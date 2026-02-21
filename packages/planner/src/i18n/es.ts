@@ -114,6 +114,9 @@ const es: Translations = {
   'organizer.completed': 'Torneo Completado',
   'organizer.completedOn': 'Completado el {date}',
   'organizer.undoComplete': 'Reabrir Torneo',
+  'organizer.viewResults': 'Ver Resultados',
+  'organizer.loadingResults': 'Cargando resultados...',
+  'organizer.noBackupData': 'Resultados no disponibles',
 
   // JoinScreen
   'join.back': 'Volver',

@@ -6,6 +6,7 @@ import { generateId, parsePlayerList } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { db } from '../firebase';
 import { exportRunnerTournamentJSON } from '../utils/exportToRunner';
+import { restoreFromBackup } from '../utils/restoreFromBackup';
 import { useStartGuard } from '../hooks/useStartGuard';
 import { StartWarningModal } from '../components/StartWarningModal';
 import { getPlayerStatuses } from '../utils/playerStatus';
@@ -79,6 +80,12 @@ export function OrganizerScreen() {
           <Card>
             <h2 className={styles.sectionTitle}>{t('organizer.completed')}</h2>
             <p>{t('organizer.completedOn', { date: new Date(completedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) })}</p>
+            <Button fullWidth onClick={async () => {
+              const ok = await restoreFromBackup(tournament.id);
+              if (!ok) showToast(t('organizer.noBackupData'));
+            }}>
+              {t('organizer.viewResults')}
+            </Button>
             <Button variant="secondary" fullWidth onClick={undoComplete}>
               {t('organizer.undoComplete')}
             </Button>

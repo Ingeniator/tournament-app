@@ -114,6 +114,9 @@ const sr: Translations = {
   'organizer.completed': 'Turnir Završen',
   'organizer.completedOn': 'Završen {date}',
   'organizer.undoComplete': 'Ponovo Otvori Turnir',
+  'organizer.viewResults': 'Pogledaj Rezultate',
+  'organizer.loadingResults': 'Učitavanje rezultata...',
+  'organizer.noBackupData': 'Rezultati nisu dostupni',
 
   // JoinScreen
   'join.back': 'Nazad',

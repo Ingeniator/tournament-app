@@ -4,6 +4,7 @@ import { usePlanner } from '../state/PlannerContext';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import { downloadICS } from '../utils/icsExport';
 import { exportRunnerTournamentJSON } from '../utils/exportToRunner';
+import { restoreFromBackup } from '../utils/restoreFromBackup';
 import { useStartGuard } from '../hooks/useStartGuard';
 import { StartWarningModal } from '../components/StartWarningModal';
 import styles from './JoinScreen.module.css';
@@ -18,6 +19,7 @@ export function JoinScreen() {
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const [showCalendarPrompt, setShowCalendarPrompt] = useState(false);
+  const [restoreFailed, setRestoreFailed] = useState(false);
   const { toastMessage, showToast } = useToast();
   const registeringRef = useRef(false);
 
@@ -43,9 +45,18 @@ export function JoinScreen() {
     return reservePlayers.findIndex(p => p.id === myRegistration.id) + 1;
   }, [myStatus, myRegistration, players, capacity]);
 
+  // Auto-restore from Firebase backup when tournament is completed
+  useEffect(() => {
+    if (!completedAt || restoreFailed || !tournament) return;
+    restoreFromBackup(tournament.id).then(ok => {
+      if (!ok) setRestoreFailed(true);
+    });
+  }, [completedAt, tournament?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!tournament) return null;
 
   if (completedAt) {
+    if (!restoreFailed) return null; // loading / redirecting
     return (
       <div className={styles.container}>
         <header className={styles.header}>
