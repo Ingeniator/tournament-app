@@ -88,8 +88,9 @@ function getTeamStandings(
     },
   );
 
+  // Use rank (shared for ties) so draws get randomized via pre-shuffle in callers
   const rankMap = new Map<string, number>();
-  standings.forEach((entry, i) => rankMap.set(entry.playerId, i));
+  standings.forEach(entry => rankMap.set(entry.playerId, entry.rank));
   return rankMap;
 }
 
@@ -103,7 +104,8 @@ function generateStandingsRound(
   numCourts: number,
 ): Match[] {
   const rankMap = getTeamStandings(activeTeams, existingRounds, allTeams, players);
-  const ranked = [...activeTeams].sort(
+  // Pre-shuffle so tied teams (e.g. after a draw) get randomized matchups
+  const ranked = shuffle([...activeTeams]).sort(
     (a, b) => (rankMap.get(a.id) ?? 999) - (rankMap.get(b.id) ?? 999)
   );
 

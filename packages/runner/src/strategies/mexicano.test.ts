@@ -155,6 +155,40 @@ describe('mexicano strategy', () => {
       expect(new Set(allIds).size).toBe(4);
     });
 
+    it('does not repeat the same pairing after a draw', () => {
+      const players = makePlayers(4);
+      const config: TournamentConfig = { ...makeConfig(1), pointsPerMatch: 24 };
+      // Round 1: draw — all 4 players end up with identical stats
+      const r1: Round = {
+        id: 'r1', roundNumber: 1,
+        matches: [{
+          id: 'm1', courtId: 'c1',
+          team1: ['p1', 'p2'] as [string, string],
+          team2: ['p3', 'p4'] as [string, string],
+          score: { team1Points: 12, team2Points: 12 },
+        }],
+        sitOuts: [] as string[],
+      };
+
+      // Run many times — at least once the pairing should differ from R1
+      let sawDifferentPairing = false;
+      for (let i = 0; i < 20; i++) {
+        const { rounds } = mexicanoStrategy.generateAdditionalRounds(players, config, [r1], 1);
+        const m = rounds[0].matches[0];
+        const r1Team1 = new Set(r1.matches[0].team1);
+        const r2Team1 = new Set(m.team1);
+        // Check if team1 in R2 differs from team1 (or team2) in R1
+        const sameAsT1 = [...r2Team1].every(id => r1Team1.has(id));
+        const r1Team2 = new Set(r1.matches[0].team2);
+        const sameAsT2 = [...r2Team1].every(id => r1Team2.has(id));
+        if (!sameAsT1 && !sameAsT2) {
+          sawDifferentPairing = true;
+          break;
+        }
+      }
+      expect(sawDifferentPairing).toBe(true);
+    });
+
     it('returns empty rounds when not enough players', () => {
       const players = makePlayers(3);
       const config = makeConfig(1);

@@ -132,12 +132,13 @@ function generateMixicanoRounds(
         rounds: allRoundsForStandings,
       } as Tournament);
 
-      const standingsMap = new Map(standings.map((s, i) => [s.playerId, i]));
-      const rankedA = [...activeA].sort(
-        (a, b) => (standingsMap.get(a.id) ?? 999) - (standingsMap.get(b.id) ?? 999)
+      // Use rank (shared for ties) and pre-shuffle so draws get randomized
+      const rankMap = new Map(standings.map(s => [s.playerId, s.rank]));
+      const rankedA = shuffle([...activeA]).sort(
+        (a, b) => (rankMap.get(a.id) ?? 999) - (rankMap.get(b.id) ?? 999)
       );
-      const rankedB = [...activeB].sort(
-        (a, b) => (standingsMap.get(a.id) ?? 999) - (standingsMap.get(b.id) ?? 999)
+      const rankedB = shuffle([...activeB]).sort(
+        (a, b) => (rankMap.get(a.id) ?? 999) - (rankMap.get(b.id) ?? 999)
       );
 
       matches = [];
