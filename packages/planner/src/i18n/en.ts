@@ -29,6 +29,7 @@ const en: Translations = {
   'home.failedCreate': 'Failed to create tournament',
   'home.expired': 'Expired',
   'home.completed': 'Completed',
+  'home.groupTournaments': 'Group Tournaments',
 
   // Footer & Options
   'footer.freeOpenSource': 'Free & open source',

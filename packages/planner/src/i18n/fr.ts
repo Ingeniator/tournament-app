@@ -29,6 +29,7 @@ const fr: Translations = {
   'home.failedCreate': 'Échec de la création du tournoi',
   'home.expired': 'Expiré',
   'home.completed': 'Terminé',
+  'home.groupTournaments': 'Tournois du Groupe',
 
   // Footer & Options
   'footer.freeOpenSource': 'Gratuit et open source',

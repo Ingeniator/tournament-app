@@ -29,6 +29,7 @@ const sr: Translations = {
   'home.failedCreate': 'Kreiranje turnira neuspešno',
   'home.expired': 'Istekao',
   'home.completed': 'Završen',
+  'home.groupTournaments': 'Turniri Grupe',
 
   // Footer & Options
   'footer.freeOpenSource': 'Besplatno i otvorenog koda',

@@ -29,6 +29,7 @@ const sv: Translations = {
   'home.failedCreate': 'Kunde inte skapa turnering',
   'home.expired': 'Utgången',
   'home.completed': 'Avslutad',
+  'home.groupTournaments': 'Gruppturneringar',
 
   // Footer & Options
   'footer.freeOpenSource': 'Gratis och öppen källkod',

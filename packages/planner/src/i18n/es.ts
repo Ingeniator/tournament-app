@@ -29,6 +29,7 @@ const es: Translations = {
   'home.failedCreate': 'Error al crear el torneo',
   'home.expired': 'Expirado',
   'home.completed': 'Completado',
+  'home.groupTournaments': 'Torneos del Grupo',
 
   // Footer & Options
   'footer.freeOpenSource': 'Gratuito y de código abierto',

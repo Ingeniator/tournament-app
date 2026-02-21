@@ -11,6 +11,8 @@ import { useMyTournaments } from '../hooks/useMyTournaments';
 import { useRegisteredTournaments } from '../hooks/useRegisteredTournaments';
 import { useTelegram, type TelegramUser } from '../hooks/useTelegram';
 import { useTelegramSync } from '../hooks/useTelegramSync';
+import { useChatRoomTournaments } from '../hooks/useChatRoomTournaments';
+import { linkTournamentToChat } from '../utils/chatRoom';
 
 export type Screen = 'loading' | 'home' | 'organizer' | 'join' | 'supporters';
 
@@ -47,6 +49,9 @@ export interface PlannerContextValue {
   undoComplete: () => Promise<void>;
   deleteTournament: () => Promise<void>;
   telegramUser: TelegramUser | null;
+  chatInstance: string | null;
+  chatRoomTournaments: TournamentSummary[];
+  chatRoomLoading: boolean;
   skin: SkinId;
   setSkin: (skin: SkinId) => void;
 }
@@ -107,9 +112,10 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     try { localStorage.setItem(SKIN_KEY, s); } catch {}
   }, [rawSetSkin, updateUserSkin]);
 
-  const telegramUser = useTelegram();
+  const { user: telegramUser, chatInstance } = useTelegram();
   const { tournaments: myTournaments, loading: myLoading } = useMyTournaments(uid);
   const { tournaments: registeredTournaments, loading: regLoading } = useRegisteredTournaments(uid);
+  const { tournaments: chatRoomTournaments, loading: chatRoomLoading } = useChatRoomTournaments(chatInstance);
 
   const listingsLoading = myLoading || regLoading;
 
@@ -143,6 +149,15 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     });
   }, [uid, telegramUser, players, claimOrphanRegistration]);
 
+  // Auto-link tournament to chat room when opened from a Telegram group
+  const linkedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!tournamentId || !chatInstance || !uid) return;
+    if (linkedRef.current === tournamentId) return;
+    linkedRef.current = tournamentId;
+    linkTournamentToChat(tournamentId, chatInstance, uid).catch(() => {});
+  }, [tournamentId, chatInstance, uid]);
+
   // Fetch organizer name for active tournament
   const [organizerName, setOrganizerName] = useState<string | null>(null);
   useEffect(() => {
@@ -168,7 +183,10 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     const id = await createInDb(name, uid, locale, telegramUser?.username);
     setTournamentId(id);
     setScreen('organizer');
-  }, [uid, locale, telegramUser, createInDb]);
+    if (chatInstance) {
+      linkTournamentToChat(id, chatInstance, uid).catch(() => {});
+    }
+  }, [uid, locale, telegramUser, chatInstance, createInDb]);
 
   const loadByCode = useCallback(async (code: string): Promise<boolean> => {
     const id = await loadByCodeFromDb(code);
@@ -269,6 +287,9 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       undoComplete,
       deleteTournament,
       telegramUser,
+      chatInstance,
+      chatRoomTournaments,
+      chatRoomLoading,
       skin,
       setSkin,
     }}>

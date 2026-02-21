@@ -35,6 +35,7 @@ export function HomeScreen() {
     createTournament, loadByCode, setScreen,
     userName, userNameLoading, updateUserName,
     myTournaments, registeredTournaments, listingsLoading,
+    chatRoomTournaments, chatRoomLoading,
     openTournament, skin, setSkin,
   } = usePlanner();
   const { t } = useTranslation();
@@ -97,6 +98,13 @@ export function HomeScreen() {
       await updateUserName(trimmed);
     }
     setEditingUserName(false);
+  };
+
+  const handleOpenGroupTournament = async (code: string) => {
+    const found = await loadByCode(code);
+    if (found) {
+      setScreen('join');
+    }
   };
 
   const handleFeedback = async (message: string) => {
@@ -263,6 +271,31 @@ export function HomeScreen() {
           </Button>
         )}
       </div>
+
+      {/* Group Tournaments */}
+      {!chatRoomLoading && chatRoomTournaments.length > 0 && (
+        <Card>
+          <h2 className={styles.sectionTitle}>{t('home.groupTournaments')}</h2>
+          <div className={styles.tournamentList}>
+            {chatRoomTournaments.map(ct => (
+              <div
+                key={ct.id}
+                className={styles.tournamentItem}
+                role="button"
+                tabIndex={0}
+                onClick={() => handleOpenGroupTournament(ct.code)}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleOpenGroupTournament(ct.code); } }}
+              >
+                <span className={styles.tournamentName}>{ct.name}</span>
+                <span className={styles.tournamentMeta}>
+                  {ct.date && <span>{formatDate(ct.date)}</span>}
+                  {ct.organizerName && <span>by {ct.organizerName}</span>}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* My Tournaments */}
       {!listingsLoading && (

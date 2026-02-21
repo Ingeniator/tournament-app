@@ -11,6 +11,7 @@ interface TelegramWebApp {
   initDataUnsafe: {
     user?: TelegramWebAppUser;
     start_param?: string;
+    chat_instance?: string;
   };
   ready(): void;
   expand(): void;

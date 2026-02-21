@@ -70,6 +70,17 @@
         ".validate": "newData.hasChildren(['message', 'source', 'createdAt']) && newData.child('message').isString() && newData.child('message').val().length >= 1 && newData.child('message').val().length <= 500 && newData.child('source').isString() && (newData.child('source').val() === 'runner' || newData.child('source').val() === 'planner') && newData.child('createdAt').isNumber()"
       }
     },
+    "chatRooms": {
+      "$chatInstance": {
+        "tournaments": {
+          ".read": true,
+          "$tournamentId": {
+            ".write": "auth != null",
+            ".validate": "newData.hasChildren(['name', 'code', 'linkedAt', 'linkedBy'])"
+          }
+        }
+      }
+    },
     "telegramUsers": {
       "$username": {
         ".read": "auth != null",
