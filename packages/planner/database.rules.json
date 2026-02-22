@@ -1,6 +1,7 @@
 {
   "rules": {
     "tournaments": {
+      ".read": "auth != null",
       "$tournamentId": {
         ".read": true,
         ".write": "auth != null && (!data.exists() || data.child('organizerId').val() === auth.uid || root.child('users').child(auth.uid).child('telegramUsername').exists() && root.child('users').child(auth.uid).child('telegramUsername').val() === root.child('users').child(data.child('organizerId').val()).child('telegramUsername').val())",
