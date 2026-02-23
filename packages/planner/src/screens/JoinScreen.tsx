@@ -27,7 +27,7 @@ export function JoinScreen() {
   useEffect(() => {
     if (!name) {
       const prefill = userName ?? telegramUser?.displayName;
-      if (prefill) queueMicrotask(() => setName(prefill));
+      if (prefill) setName(prefill);
     }
   }, [userName, telegramUser]); // eslint-disable-line react-hooks/exhaustive-deps
 

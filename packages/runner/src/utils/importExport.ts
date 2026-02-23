@@ -1,4 +1,5 @@
 import type { Tournament } from '@padel/common';
+import { getRegisteredFormats } from '../strategies';
 
 export const EXPORT_FORMAT = 'padel-tournament-v1';
 
@@ -72,8 +73,7 @@ export function validateImport(text: string): { tournament: Tournament; error: n
     return { tournament: null, error: { key: 'import.invalidConfig' } };
   }
 
-  const knownFormats = ['americano', 'mexicano', 'mixicano', 'team-americano', 'team-mexicano', 'king-of-the-court'];
-  if (typeof config.format !== 'string' || !knownFormats.includes(config.format)) {
+  if (typeof config.format !== 'string' || !getRegisteredFormats().includes(config.format as Tournament['config']['format'])) {
     return { tournament: null, error: { key: 'import.invalidConfig' } };
   }
 

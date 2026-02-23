@@ -187,42 +187,4 @@ describe('usePlayers', () => {
     });
   });
 
-  describe('claimRegistration', () => {
-    it('moves player record from old UID to new UID atomically', async () => {
-      const playerData = { name: 'Alice', timestamp: 1000, telegramUsername: 'alice_tg' };
-      store = {
-        tournaments: { t1: { players: { 'old-uid': playerData } } },
-        users: { 'old-uid': { registrations: { t1: true } } },
-      };
-
-      const { result } = renderHook(() => usePlayers('t1'));
-
-      await act(async () => {
-        await result.current.claimRegistration('old-uid', 'new-uid', 'alice_tg');
-      });
-
-      const updateArg = mockUpdate.mock.calls[0][1];
-      expect(updateArg).toEqual({
-        'tournaments/t1/players/old-uid': null,
-        'tournaments/t1/players/new-uid': { ...playerData, telegramUsername: 'alice_tg' },
-        'users/old-uid/registrations/t1': null,
-        'users/new-uid/registrations/t1': true,
-      });
-    });
-
-    it('does nothing when old player record does not exist', async () => {
-      store = {
-        tournaments: { t1: { players: {} } },
-      };
-
-      const { result } = renderHook(() => usePlayers('t1'));
-
-      await act(async () => {
-        await result.current.claimRegistration('old-uid', 'new-uid', 'alice_tg');
-      });
-
-      // Only get was called, no update
-      expect(mockUpdate).not.toHaveBeenCalled();
-    });
-  });
 });

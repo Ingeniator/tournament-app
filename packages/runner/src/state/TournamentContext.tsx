@@ -12,7 +12,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const ok = saveTournament(tournament);
-    queueMicrotask(() => setSaveError(!ok));
+    setSaveError(!ok);
   }, [tournament]);
 
   // Write completedAt to Firebase when tournament transitions to completed

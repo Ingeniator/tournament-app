@@ -11,7 +11,7 @@ export function useUserProfile(uid: string | null) {
 
   useEffect(() => {
     if (!uid || !db) return;
-    queueMicrotask(() => setLoading(true));
+    setLoading(true);
     const unsubscribe = onValue(ref(db, `users/${uid}/name`), (snapshot) => {
       setName(snapshot.val() as string | null);
       setLoading(false);

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { teamMexicanoStrategy } from './teamMexicano';
-import { makePlayers, makeTeams, makeConfig, simulateDynamic, analyzeTeamSchedule, assertRoundInvariants, assertTeamIntegrity } from './simulation-helpers';
+import { makePlayers, makeTeams, makeConfig, simulateDynamic, analyzeTeamSchedule, assertRoundInvariants, assertTeamIntegrity } from './simulation-helpers.test-utils';
 
 const TRIALS = 10;
 

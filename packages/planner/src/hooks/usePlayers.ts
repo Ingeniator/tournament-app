@@ -10,7 +10,7 @@ export function usePlayers(tournamentId: string | null) {
 
   useEffect(() => {
     if (!tournamentId || !db) return;
-    queueMicrotask(() => setLoading(true));
+    setLoading(true);
     const unsubscribe = onValue(ref(db, `tournaments/${tournamentId}/players`), (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -117,27 +117,6 @@ export function usePlayers(tournamentId: string | null) {
     });
   }, [tournamentId]);
 
-  /**
-   * Claim a registration from an old UID to a new UID (cross-device sync).
-   * Atomically moves the player record and cleans up the old device's index.
-   */
-  const claimRegistration = useCallback(async (oldUid: string, newUid: string, telegramUsername: string) => {
-    if (!tournamentId || !db) return;
-    const playerSnap = await get(ref(db, `tournaments/${tournamentId}/players/${oldUid}`));
-    if (!playerSnap.exists()) return;
-
-    const playerData = playerSnap.val();
-    await update(ref(db), {
-      // Move player record from old UID to new UID
-      [`tournaments/${tournamentId}/players/${oldUid}`]: null,
-      [`tournaments/${tournamentId}/players/${newUid}`]: { ...playerData, telegramUsername },
-      // Clean old device index, write new device index
-      [`users/${oldUid}/registrations/${tournamentId}`]: null,
-      [`users/${newUid}/registrations/${tournamentId}`]: true,
-      // Telegram index stays the same (tournament was already indexed)
-    });
-  }, [tournamentId]);
-
   const updatePlayerName = useCallback(async (playerId: string, name: string) => {
     if (!tournamentId || !db) return;
     await update(ref(db, `tournaments/${tournamentId}/players/${playerId}`), { name });
@@ -184,5 +163,5 @@ export function usePlayers(tournamentId: string | null) {
     return players.some(p => p.id === uid);
   }, [players]);
 
-  return { players, loading, registerPlayer, removePlayer, updateConfirmed, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, isRegistered, claimRegistration, claimOrphanRegistration };
+  return { players, loading, registerPlayer, removePlayer, updateConfirmed, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, isRegistered, claimOrphanRegistration };
 }

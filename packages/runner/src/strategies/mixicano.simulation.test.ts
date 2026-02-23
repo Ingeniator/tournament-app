@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mixicanoStrategy } from './mixicano';
-import { makeMixicanoPlayers, makeConfig, simulateDynamic, analyzeSchedule, assertRoundInvariants } from './simulation-helpers';
+import { makeMixicanoPlayers, makeConfig, simulateDynamic, analyzeSchedule, assertRoundInvariants } from './simulation-helpers.test-utils';
 import type { Round } from '@padel/common';
 
 const TRIALS = 10;

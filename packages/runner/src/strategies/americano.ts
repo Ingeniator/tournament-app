@@ -1,7 +1,7 @@
 import type { TournamentStrategy, ScheduleResult } from './types';
 import type { Player, TournamentConfig, Round, Match, Tournament } from '@padel/common';
 import { generateId } from '@padel/common';
-import { shuffle, partnerKey, commonValidateSetup, commonValidateScore, calculateCompetitorStandings, calculateIndividualStandings, seedFromRounds, selectSitOuts } from './shared';
+import { shuffle, partnerKey, commonValidateSetup, commonValidateScore, calculateCompetitorStandings, calculateIndividualStandings, seedFromRounds, selectSitOuts, scoreSchedule } from './shared';
 
 type Pairing = [[string, string], [string, string]];
 
@@ -335,75 +335,6 @@ function generateRounds(
   }
 
   return { rounds, warnings };
-}
-
-/** Score a schedule: [partnerRepeats, opponentSpread, neverPlayed, courtSpread]. Lower is better. */
-export function scoreSchedule(rounds: Round[], seedPartnerCounts?: Map<string, number>): [number, number, number, number] {
-  const pc = new Map<string, number>(seedPartnerCounts);
-  const oc = new Map<string, number>();
-  // Track per-court per-player counts: key = "playerId:courtId"
-  const cc = new Map<string, number>();
-  const courtIds = new Set<string>();
-  const playerIds = new Set<string>();
-  for (const round of rounds) {
-    for (const match of round.matches) {
-      const k1 = partnerKey(match.team1[0], match.team1[1]);
-      const k2 = partnerKey(match.team2[0], match.team2[1]);
-      pc.set(k1, (pc.get(k1) ?? 0) + 1);
-      pc.set(k2, (pc.get(k2) ?? 0) + 1);
-      for (const a of match.team1) {
-        for (const b of match.team2) {
-          const ok = partnerKey(a, b);
-          oc.set(ok, (oc.get(ok) ?? 0) + 1);
-        }
-      }
-      courtIds.add(match.courtId);
-      for (const pid of [...match.team1, ...match.team2]) {
-        playerIds.add(pid);
-        const ck = `${pid}:${match.courtId}`;
-        cc.set(ck, (cc.get(ck) ?? 0) + 1);
-      }
-    }
-    for (const pid of round.sitOuts) playerIds.add(pid);
-  }
-  let repeats = 0;
-  for (const c of pc.values()) if (c > 1) repeats += c - 1;
-
-  const totalPairs = playerIds.size * (playerIds.size - 1) / 2;
-
-  let min = Infinity;
-  let max = -Infinity;
-  for (const c of oc.values()) {
-    if (c < min) min = c;
-    if (c > max) max = c;
-  }
-  // Account for player pairs that never met as opponents (opponent count = 0).
-  // With sit-outs (odd player counts), some pairs may share a court only as
-  // partners but never face each other. The spread must reflect these 0-count pairs.
-  if (oc.size < totalPairs && oc.size > 0) {
-    min = 0;
-  }
-  const spread = max === -Infinity ? 0 : max - min;
-
-  // Never played: pairs who never shared a court (as partner or opponent)
-  const courtMates = new Set<string>([...pc.keys(), ...oc.keys()]);
-  const neverPlayed = totalPairs - courtMates.size;
-
-  // Court spread: max spread across all courts
-  let courtSpread = 0;
-  if (courtIds.size > 1) {
-    for (const courtId of courtIds) {
-      let cMin = Infinity, cMax = -Infinity;
-      for (const pid of playerIds) {
-        const cnt = cc.get(`${pid}:${courtId}`) ?? 0;
-        if (cnt < cMin) cMin = cnt;
-        if (cnt > cMax) cMax = cnt;
-      }
-      if (cMax - cMin > courtSpread) courtSpread = cMax - cMin;
-    }
-  }
-
-  return [repeats, spread, neverPlayed, courtSpread];
 }
 
 /** Compare 4-tuple scores lexicographically. Returns true if a is strictly better (lower) than b. */

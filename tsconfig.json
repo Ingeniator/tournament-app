@@ -3,6 +3,7 @@
   "references": [
     { "path": "./packages/common" },
     { "path": "./packages/runner" },
-    { "path": "./packages/planner" }
+    { "path": "./packages/planner" },
+    { "path": "./packages/landing" }
   ]
 }

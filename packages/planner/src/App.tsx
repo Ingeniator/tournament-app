@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { firebaseConfigured } from './firebase';
-import { ErrorBoundary, I18nProvider, useTranslation } from '@padel/common';
+import { ErrorBoundary, I18nProvider, useTranslation, type Locale } from '@padel/common';
 import { PlannerProvider } from './state/PlannerContext';
 import { usePlanner } from './state/PlannerContext';
 import { HomeScreen } from './screens/HomeScreen';
@@ -10,7 +10,7 @@ import { translations } from './i18n';
 import styles from './App.module.css';
 
 const LOCALE_KEY = 'padel-locale';
-const SUPPORTED_LOCALES = ['en', 'es', 'it', 'pt'];
+const SUPPORTED_LOCALES = ['en', 'es', 'it', 'pt', 'sr', 'fr', 'sv'];
 
 function preSeedLocaleFromUrl() {
   try {
@@ -44,7 +44,7 @@ function AppContent() {
     if (!tournament?.locale) return;
     try {
       if (!localStorage.getItem(LOCALE_KEY)) {
-        setLocale(tournament.locale as 'en' | 'es' | 'it' | 'pt');
+        setLocale(tournament.locale as Locale);
       }
     } catch {}
   }, [tournament?.locale, setLocale]);

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { kingOfTheCourtStrategy } from './kingOfTheCourt';
-import { makePlayers, makeConfig, simulateDynamic, analyzeSchedule, assertRoundInvariants } from './simulation-helpers';
+import { makePlayers, makeConfig, simulateDynamic, analyzeSchedule, assertRoundInvariants } from './simulation-helpers.test-utils';
 
 const TRIALS = 10;
 

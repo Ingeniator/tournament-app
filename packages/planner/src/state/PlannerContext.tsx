@@ -86,13 +86,13 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     completedAt,
     loading: tournamentLoading,
     createTournament: createInDb,
-    updateTournament: updateInDb,
+    updateTournament,
     loadByCode: loadByCodeFromDb,
     deleteTournament: deleteInDb,
     undoComplete,
   } = usePlannerTournament(tournamentId);
 
-  const { players, registerPlayer: registerInDb, removePlayer: removeInDb, updateConfirmed: updateConfirmedInDb, addPlayer: addPlayerInDb, bulkAddPlayers: bulkAddPlayersInDb, toggleConfirmed: toggleConfirmedInDb, updatePlayerName: updatePlayerNameInDb, updatePlayerTelegram: updatePlayerTelegramInDb, isRegistered: checkRegistered, claimOrphanRegistration } = usePlayers(tournamentId);
+  const { players, registerPlayer: registerInDb, removePlayer, updateConfirmed: updateConfirmedInDb, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, isRegistered: checkRegistered, claimOrphanRegistration } = usePlayers(tournamentId);
 
   const { name: userName, skin: userSkin, loading: userNameLoading, updateName: updateUserName, updateSkin: updateUserSkin, updateTelegramId, updateTelegramUsername } = useUserProfile(uid);
 
@@ -164,7 +164,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     if (!tournament || !db) return;
     // If current user is organizer, use their profile name
     if (tournament.organizerId === uid && userName) {
-      queueMicrotask(() => setOrganizerName(userName));
+      setOrganizerName(userName);
       return;
     }
     let cancelled = false;
@@ -197,10 +197,6 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     return false;
   }, [loadByCodeFromDb]);
 
-  const updateTournament = useCallback(async (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'pointsPerMatch' | 'courts' | 'maxRounds' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description'>>) => {
-    await updateInDb(updates);
-  }, [updateInDb]);
-
   const registerPlayer = useCallback(async (name: string) => {
     if (!uid) return;
     await registerInDb(name, uid, telegramUser?.username);
@@ -209,30 +205,6 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       await updateUserName(name);
     }
   }, [uid, userName, telegramUser, registerInDb, updateUserName]);
-
-  const removePlayer = useCallback(async (playerId: string) => {
-    await removeInDb(playerId);
-  }, [removeInDb]);
-
-  const addPlayer = useCallback(async (name: string, telegramUsername?: string) => {
-    await addPlayerInDb(name, telegramUsername);
-  }, [addPlayerInDb]);
-
-  const bulkAddPlayers = useCallback(async (names: string[]) => {
-    await bulkAddPlayersInDb(names);
-  }, [bulkAddPlayersInDb]);
-
-  const toggleConfirmed = useCallback(async (playerId: string, currentConfirmed: boolean) => {
-    await toggleConfirmedInDb(playerId, currentConfirmed);
-  }, [toggleConfirmedInDb]);
-
-  const updatePlayerName = useCallback(async (playerId: string, name: string) => {
-    await updatePlayerNameInDb(playerId, name);
-  }, [updatePlayerNameInDb]);
-
-  const updatePlayerTelegram = useCallback(async (playerId: string, telegramUsername: string | null) => {
-    await updatePlayerTelegramInDb(playerId, telegramUsername);
-  }, [updatePlayerTelegramInDb]);
 
   const updateConfirmed = useCallback(async (confirmed: boolean) => {
     if (!uid) return;
