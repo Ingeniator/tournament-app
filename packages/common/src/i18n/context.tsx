@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useCallback, type ReactNode } from
 import type { Locale, TranslationMap } from './types';
 
 const STORAGE_KEY = 'padel-locale';
-const SUPPORTED_LOCALES: Locale[] = ['en', 'es', 'it', 'pt'];
+const SUPPORTED_LOCALES: Locale[] = ['en', 'es', 'it', 'pt', 'sr', 'fr', 'sv'];
 
 function detectLocale(): Locale {
   try {

@@ -22,9 +22,11 @@ The final output is an ordered array:
 | 2 | Runner-up | 🥈 | Rank 2 |
 | 3 | Third Place | 🥉 | Rank 3 |
 
+**King of the Court format**: The champion entry uses 👑 emoji and title "King of the Court" instead of 🥇 "Champion". Runner-up and Third Place are unchanged.
+
 Podium slots are skipped when ranks don't match position (e.g., ties).
 
-### Non-Podium Awards (up to 23 possible)
+### Non-Podium Awards (up to 26 possible)
 
 Awards are evaluated against tournament data. Each has qualification criteria — not all will qualify in every tournament. In a typical tournament, 8–15 may qualify; up to 7 are shown.
 
@@ -34,37 +36,45 @@ Awards are evaluated against tournament data. Each has qualification criteria �
 |---|-----|-------|-------|------|----------|
 | 1 | `undefeated` | Undefeated | ⭐ | Legendary | Won every match (min 2 played) |
 | 2 | `giant-slayer` | Giant Slayer | ⚔️ | Legendary | Lowest-ranked competitor who beat #1 (rank > 3) |
-| 3 | `comeback-king` | Comeback King | 👑 | Legendary | Win rate improved >30% from first to second half, going from <50% to >50% (min 4 matches) |
-| 4 | `point-machine` | Point Machine | 💥 | Common | Most total points scored (excluded if rank #1) |
-| 5 | `iron-wall` | Iron Wall | 🛡️ | Rare | Lowest avg points conceded per game (min 2 games) |
-| 6 | `quick-strike` | Quick Strike | ⚡ | Common | Largest single-game victory margin |
-| 7 | `consistency-champion` | Consistency Champion | 🎯 | Rare | Smallest score variance (std dev of margins, min 3 games, non-negative avg margin) |
-| 8 | `clutch-player` | Clutch Player | 🧊 | Rare | Best win rate in close games (margin ≤ threshold, min 2 close games) |
-| 9 | `see-saw` | See-Saw Specialist | ⚖️ | Common | Most close games played (min 2) |
-| 10 | `competitive-game` | Instant Classic | 🔥 | Common | Closest match score in the tournament (margin ≤ threshold) |
-| 11 | `nearly-there` | Nearly There | 🥈 | Rare | Rank 2 within tight gap of #1 (≤10 pts or ≤5% of leader's total) |
-| 12 | `battle-tested` | Battle Tested | 🫡 | Common | Most close games lost (min 2) |
-| 13 | `warrior` | Warrior | 💪 | Common | Most games played (only if variation exists, max 2 recipients) |
-| 14 | `dominator` | Dominator | 🔥 | Rare | Longest winning streak (min 3 consecutive wins) |
-| 15 | `offensive-powerhouse` | Offensive Powerhouse | 💣 | Common | Highest scoring average per game (excluded if rank #1 or same as Iron Wall winner) |
-| 16 | `peacemaker` | Peacemaker | 🕊️ | Rare | Most drawn matches (min 2 draws, >45% draw rate if 4+ games played, max 2 recipients) |
+| 3 | `underdog` | Underdog | 🐺 | Legendary | Bottom-half competitor with >50% win rate (min 2 matches) |
+| 4 | `comeback-king` | Comeback King | 👑 | Legendary | Win rate improved >30% from first to second half, going from <50% to >50% (min 4 matches) |
+| 5 | `point-machine` | Point Machine | 💥 | Common | Most total points scored (excluded if rank #1) |
+| 6 | `iron-wall` | Iron Wall | 🛡️ | Rare | Lowest avg points conceded per game (min 2 games) |
+| 7 | `quick-strike` | Quick Strike | ⚡ | Common | Largest single-game victory margin |
+| 8 | `consistency-champion` | Consistency Champion | 🎯 | Rare | Smallest score variance (std dev of margins, min 3 games, non-negative avg margin) |
+| 9 | `clutch-player` | Clutch Player | 🧊 | Rare | Best win rate in close games (margin ≤ threshold, min 2 close games) |
+| 10 | `see-saw` | See-Saw Specialist | ⚖️ | Common | Most close games played (min 2) |
+| 11 | `competitive-game` | Instant Classic | 🔥 | Common | Closest match score in the tournament (margin ≤ threshold) |
+| 12 | `nearly-there` | Nearly There | 🥈 | Rare | Rank 2 within tight gap of #1 (≤10 pts or ≤5% of leader's total) |
+| 13 | `battle-tested` | Battle Tested | 🫡 | Common | Most close games lost (min 2) |
+| 14 | `warrior` | Warrior | 💪 | Common | Most games played (only if variation exists, max 2 recipients) |
+| 15 | `dominator` | Dominator | 🔥 | Rare | Longest winning streak (min 3 consecutive wins) |
+| 16 | `offensive-powerhouse` | Offensive Powerhouse | 💣 | Common | Highest scoring average per game (excluded if rank #1 or same as Iron Wall winner) |
+| 17 | `peacemaker` | Peacemaker | 🕊️ | Rare | Most drawn matches (min 2 draws, >45% draw rate if 4+ games played, max 2 recipients) |
+
+#### Format-Specific
+
+| # | ID | Title | Emoji | Tier | Criteria |
+|---|-----|-------|-------|------|----------|
+| 18 | `court-climber` | Court Climber | 🧗 | Rare | KOTC only: most promotions to higher courts (min 2 promotions, min 3 rounds played) |
 
 #### Pair / Duo (only when partners rotate, i.e. `!strategy.hasFixedPartners`)
 
 | # | ID | Title | Emoji | Tier | Criteria |
 |---|-----|-------|-------|------|----------|
-| 17 | `best-duo` | Best Duo | 🤝 | Rare | Pair with highest win % together (min 2 games) |
-| 18 | `offensive-duo` | Offensive Duo | 🚀 | Common | Pair with highest avg points scored (min 2, excluded if same as Best Duo) |
-| 19 | `wall-pair` | Defensive Duo | 🏰 | Common | Pair with lowest avg points conceded (min 2 games) |
-| 20 | `hot-streak-duo` | Hot Streak Duo | 🔥 | Rare | Pair with longest winning streak (min 3) |
+| 19 | `best-duo` | Best Duo | 🤝 | Rare | Pair with highest win % together (min 2 games) |
+| 20 | `offensive-duo` | Offensive Duo | 🚀 | Common | Pair with highest avg points scored (min 2, excluded if same as Best Duo) |
+| 21 | `wall-pair` | Defensive Duo | 🏰 | Common | Pair with lowest avg points conceded (min 2 games) |
+| 22 | `hot-streak-duo` | Hot Streak Duo | 🔥 | Rare | Pair with longest winning streak (min 3) |
+| 23 | `social-butterfly` | Social Butterfly | 🦋 | Common | Most unique partners across all matches (min 3, only if variation exists) |
 
 #### Head-to-Head (only when partners rotate)
 
 | # | ID | Title | Emoji | Tier | Criteria |
 |---|-----|-------|-------|------|----------|
-| 21 | `nemesis` | Nemesis | 😈 | Legendary | Beat same opponent 3+ times with 0 losses |
-| 22 | `rubber-match` | Rubber Match | 🔄 | Common | Same team pair played multiple times with split results |
-| 23 | `gatekeeper` | Gatekeeper | 🚧 | Rare | Beat all lower-ranked, lost to all higher-ranked (min 3 games, not rank 1 or last) |
+| 24 | `nemesis` | Nemesis | 😈 | Legendary | Beat same opponent 3+ times with 0 losses |
+| 25 | `rubber-match` | Rubber Match | 🔄 | Common | Same team pair played multiple times with split results |
+| 26 | `gatekeeper` | Gatekeeper | 🚧 | Rare | Beat all lower-ranked, lost to all higher-ranked (min 3 games, not rank 1 or last) |
 
 ### Lucky Award (always shown, 1)
 
@@ -105,9 +115,9 @@ Every non-podium award is assigned a tier that controls how often it appears acr
 
 | Tier | Awards | Selection Weight | Appearance Feel |
 |------|--------|-----------------|-----------------|
-| **Legendary** | Undefeated, Giant Slayer, Comeback King, Nemesis | 15% of slots | Rare sighting — collectible |
-| **Rare** | Dominator, Clutch Player, Iron Wall, Consistency Champion, Gatekeeper, Best Duo, Hot Streak Duo, Nearly There, Peacemaker | 30% of slots | Moderately unusual |
-| **Common** | Point Machine, Quick Strike, See-Saw, Instant Classic, Battle Tested, Warrior, Offensive Powerhouse, Offensive Duo, Defensive Duo, Rubber Match | 55% of slots | Appear most tournaments |
+| **Legendary** | Undefeated, Giant Slayer, Underdog, Comeback King, Nemesis | 15% of slots | Rare sighting — collectible |
+| **Rare** | Dominator, Clutch Player, Iron Wall, Consistency Champion, Gatekeeper, Best Duo, Hot Streak Duo, Nearly There, Peacemaker, Court Climber | 30% of slots | Moderately unusual |
+| **Common** | Point Machine, Quick Strike, See-Saw, Instant Classic, Battle Tested, Warrior, Offensive Powerhouse, Offensive Duo, Defensive Duo, Rubber Match, Social Butterfly | 55% of slots | Appear most tournaments |
 
 Tier assignment reflects both the difficulty of the statistical achievement and the specificity of the conditions required. Legendary awards require rare tournament conditions (someone winning every game, a massive comeback from a losing start, etc.).
 

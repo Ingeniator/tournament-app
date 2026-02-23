@@ -26,12 +26,16 @@ export async function addFourPlayers(page: Page) {
   }
 }
 
-/** Click "Generate Schedule" and wait for Round 1 to appear. */
+/** Click "Generate Schedule" and close the Statistics overlay if it appears. */
 export async function generateSchedule(page: Page) {
   await page.getByRole('button', { name: 'Generate Schedule' }).click();
-  // After generating, the app switches to Log tab and auto-opens Statistics overlay.
-  // Wait for the overlay then close it.
-  await closeOverlay(page);
+  // After generating, the app switches to Log tab and may auto-open Statistics overlay.
+  // Some formats (e.g. Mexicano) don't show the overlay, so handle both cases.
+  try {
+    await closeOverlay(page);
+  } catch {
+    // No overlay appeared
+  }
 }
 
 /** Close any open modal/overlay by clicking the ✕ button. */
@@ -193,16 +197,34 @@ export async function scoreAllMatches(page: Page, team1Score = 15) {
 
 /**
  * Create a completed tournament: in-progress → score all matches → finish.
- * Ends on the Play tab in completed state.
+ * Uses 3 rounds to keep the setup fast. Ends on the Play tab in completed state.
  */
 export async function createCompletedTournament(page: Page) {
-  await createInProgressTournament(page);
+  await clearState(page);
+  await createTournament(page);
+  await addFourPlayers(page);
+
+  // Cap rounds to 3 so scoring finishes quickly
+  const roundsInput = page.locator('#config-rounds');
+  await roundsInput.fill('3');
+
+  await generateSchedule(page);
   await navigateToTab(page, 'Play');
   await scoreAllMatches(page);
 
   // Finish the tournament
   page.on('dialog', dialog => dialog.accept());
   await page.getByRole('button', { name: 'Finish Tournament' }).click();
+
+  // Skip the post-tournament ceremony/awards screen if it appears
+  const skipBtn = page.getByRole('button', { name: 'Skip' });
+  try {
+    await skipBtn.waitFor({ timeout: 3000 });
+    await skipBtn.click();
+  } catch {
+    // No ceremony screen
+  }
+
   // Completed view shows "Share Results as Text" button
   await page.getByRole('button', { name: 'Share Results as Text' }).waitFor();
 }

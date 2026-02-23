@@ -22,6 +22,7 @@ test.describe('Play Screen', () => {
     await page.getByRole('button', { name: 'Standings' }).click();
 
     await expect(page.getByRole('heading', { name: 'Standings' })).toBeVisible();
+    await expect(page).toHaveScreenshot('play-standings-modal.png');
 
     // Close modal
     await page.getByRole('button', { name: '✕' }).click();
@@ -35,6 +36,7 @@ test.describe('Play Screen', () => {
 
     // The picker grid should appear with a Cancel button
     await expect(page.getByRole('button', { name: 'Cancel' })).toBeVisible();
+    await expect(page).toHaveScreenshot('play-score-picker.png');
 
     // Click Cancel
     await page.getByRole('button', { name: 'Cancel' }).click();
@@ -46,6 +48,7 @@ test.describe('Play Screen', () => {
   test('progress line updates on scoring', async ({ page }) => {
     // Verify initial progress shows 0 matches scored
     await expect(page.getByText(/0\/\d+ matches/)).toBeVisible();
+    await expect(page).toHaveScreenshot('play-initial-unscored.png');
 
     // Score one match
     await scoreMatch(page);
@@ -60,6 +63,7 @@ test.describe('Play Screen', () => {
 
     await expect(page.getByText('All rounds scored!')).toBeVisible();
     await expect(page.getByRole('button', { name: '+ Add Round' })).toBeVisible();
+    await expect(page).toHaveScreenshot('play-all-scored.png');
 
     await page.getByRole('button', { name: '+ Add Round' }).click();
 

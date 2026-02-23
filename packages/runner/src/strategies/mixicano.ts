@@ -29,10 +29,6 @@ function validateMixicanoSetup(players: Player[], config: TournamentConfig): str
   if (groupB.length < 2) {
     errors.push('Group B needs at least 2 players');
   }
-  if (groupA.length !== groupB.length && unassigned.length === 0) {
-    errors.push(`Groups must be equal size (Group A: ${groupA.length}, Group B: ${groupB.length})`);
-  }
-
   const maxCourts = Math.floor(Math.min(groupA.length, groupB.length) / 2);
   if (availableCourts.length > maxCourts && groupA.length >= 2 && groupB.length >= 2) {
     errors.push(`Too many courts: need at most ${maxCourts} court(s) for ${groupA.length}+${groupB.length} players`);
@@ -69,7 +65,7 @@ function generateMixicanoRounds(
   const playersPerGroupPerRound = numCourts * 2;
   const sitOutCountA = groupAPlayers.length - playersPerGroupPerRound;
   const sitOutCountB = groupBPlayers.length - playersPerGroupPerRound;
-  const { gamesPlayed, partnerCounts } = seedFromRounds(existingRounds, activePlayers);
+  const { gamesPlayed, partnerCounts, lastSitOutRound } = seedFromRounds(existingRounds, activePlayers);
 
   if ((sitOutCountA > 0 || sitOutCountB > 0) && existingRounds.length === 0) {
     warnings.push(`${sitOutCountA + sitOutCountB} player(s) will sit out each round`);
@@ -80,8 +76,8 @@ function generateMixicanoRounds(
 
   for (let r = 0; r < count; r++) {
     // Group-balanced sit-outs
-    const { sitOutIds: sitOutA } = selectSitOuts(groupAPlayers, sitOutCountA, gamesPlayed);
-    const { sitOutIds: sitOutB } = selectSitOuts(groupBPlayers, sitOutCountB, gamesPlayed);
+    const { sitOutIds: sitOutA } = selectSitOuts(groupAPlayers, sitOutCountA, gamesPlayed, lastSitOutRound);
+    const { sitOutIds: sitOutB } = selectSitOuts(groupBPlayers, sitOutCountB, gamesPlayed, lastSitOutRound);
     const sitOutIds = new Set([...sitOutA, ...sitOutB]);
 
     const activeA = groupAPlayers.filter(p => !sitOutIds.has(p.id));
@@ -136,12 +132,13 @@ function generateMixicanoRounds(
         rounds: allRoundsForStandings,
       } as Tournament);
 
-      const standingsMap = new Map(standings.map((s, i) => [s.playerId, i]));
-      const rankedA = [...activeA].sort(
-        (a, b) => (standingsMap.get(a.id) ?? 999) - (standingsMap.get(b.id) ?? 999)
+      // Use rank (shared for ties) and pre-shuffle so draws get randomized
+      const rankMap = new Map(standings.map(s => [s.playerId, s.rank]));
+      const rankedA = shuffle([...activeA]).sort(
+        (a, b) => (rankMap.get(a.id) ?? 999) - (rankMap.get(b.id) ?? 999)
       );
-      const rankedB = [...activeB].sort(
-        (a, b) => (standingsMap.get(a.id) ?? 999) - (standingsMap.get(b.id) ?? 999)
+      const rankedB = shuffle([...activeB]).sort(
+        (a, b) => (rankMap.get(a.id) ?? 999) - (rankMap.get(b.id) ?? 999)
       );
 
       matches = [];
@@ -176,9 +173,15 @@ function generateMixicanoRounds(
       }
     }
 
+    // Update sit-out tracking for multi-round fairness
+    const roundNum = startRoundNumber + r;
+    for (const id of sitOutIds) {
+      lastSitOutRound.set(id, roundNum);
+    }
+
     rounds.push({
       id: generateId(),
-      roundNumber: startRoundNumber + r,
+      roundNumber: roundNum,
       matches,
       sitOuts: [...sitOutIds],
     });
@@ -191,6 +194,15 @@ export const mixicanoStrategy: TournamentStrategy = {
   isDynamic: true,
   hasFixedPartners: false,
   validateSetup: validateMixicanoSetup,
+  validateWarnings(players: Player[], _config: TournamentConfig): string[] {
+    const warnings: string[] = [];
+    const groupA = players.filter(p => p.group === 'A');
+    const groupB = players.filter(p => p.group === 'B');
+    if (groupA.length >= 2 && groupB.length >= 2 && groupA.length !== groupB.length) {
+      warnings.push(`Groups are unequal (${groupA.length} vs ${groupB.length}) — less variety in matchups`);
+    }
+    return warnings;
+  },
   validateScore: commonValidateScore,
 
   calculateStandings(tournament: Tournament) {

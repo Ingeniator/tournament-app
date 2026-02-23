@@ -57,6 +57,8 @@ const it: Translations = {
   'play.previousRound': 'Precedente \u2014 Turno {num}',
   'play.upNextRound': 'Prossimo \u2014 Turno {num}',
   'play.sit': 'Riposo: {names}',
+  'play.editScore': 'Modifica punteggio',
+  'play.enterScore': 'Inserisci punteggio',
   'play.standings': 'Classifica',
   'play.roundComplete': 'Turno {num} completato!',
   'play.getReady': 'Preparatevi per il prossimo turno',
@@ -142,6 +144,7 @@ const it: Translations = {
   'settings.tournamentImported': 'Torneo importato!',
   'settings.newPlayerNamePlaceholder': 'Nuovo nome giocatore',
   'settings.storageWarning': 'Impossibile salvare \u2014 lo spazio potrebbe essere esaurito. I progressi potrebbero andare persi se chiudi questa pagina.',
+  'settings.groupWarning': 'Gruppi disuguali ({a} vs {b}) — meno varietà negli abbinamenti',
 
   // BottomNav
   'nav.play': 'Gioca',
@@ -173,6 +176,7 @@ const it: Translations = {
   'playerStats.sitOuts': '{count} riposo{s}',
   'playerStats.partners': 'Compagni',
   'playerStats.opponents': 'Avversari',
+  'playerStats.courts': 'Campi',
 
   // DistributionStats
   'distribution.hintRest': 'Mostra quanto equamente sono distribuite le partite e i riposi. L\'ideale \u00e8 \u00b11.',
@@ -224,8 +228,12 @@ const it: Translations = {
   'config.format': 'Formato',
   'config.formatAmericano': 'Americano',
   'config.formatTeamAmericano': 'Team Americano',
+  'config.formatTeamMexicano': 'Team Mexicano',
   'config.formatMexicano': 'Mexicano',
   'config.formatMixicano': 'Mixicano',
+  'config.formatKingOfTheCourt': 'Re del Campo',
+  'config.courtBonus': 'pti bonus',
+  'config.kotcBonusInfo': 'I campi più alti guadagnano punti bonus aggiunti alla classifica',
   'config.groupLabels': 'Gruppi',
   'config.groupLabelA': 'Nome Gruppo A',
   'config.groupLabelB': 'Nome Gruppo B',
@@ -267,6 +275,15 @@ const it: Translations = {
   'ceremony.tapToReveal': 'Tocca per rivelare',
   'ceremony.tapForNext': 'Tocca per il prossimo premio',
   'ceremony.tapToFinish': 'Tocca per vedere i risultati',
+
+  // Import validation errors
+  'import.invalidJson': 'JSON non valido — assicurati di aver incollato tutto il testo esportato',
+  'import.invalidFormat': 'Formato non valido — previsto un oggetto di esportazione torneo',
+  'import.unknownFormat': 'Formato sconosciuto "{found}" — previsto "{expected}". Assicurati di aver esportato dall\'app.',
+  'import.missingTournament': 'Dati del torneo mancanti',
+  'import.missingField': 'Campo mancante o non valido: {field}',
+  'import.missingArrays': 'Dati di giocatori o turni mancanti',
+  'import.invalidConfig': 'Configurazione del torneo mancante o non valida',
 
   // Common
   'common.cancel': 'Annulla',

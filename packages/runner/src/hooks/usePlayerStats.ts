@@ -8,6 +8,7 @@ export interface PlayerStats {
   sitOuts: number;
   partners: { name: string; count: number }[];
   opponents: { name: string; count: number }[];
+  courts: { name: string; count: number }[];
 }
 
 export function usePlayerStats(tournament: Tournament | null): PlayerStats[] {
@@ -21,11 +22,12 @@ export function usePlayerStats(tournament: Tournament | null): PlayerStats[] {
       sitOuts: number;
       partners: Map<string, number>;
       opponents: Map<string, number>;
+      courts: Map<string, number>;
     }>();
 
     const ensure = (id: string) => {
       if (!statsMap.has(id)) {
-        statsMap.set(id, { gamesPlayed: 0, sitOuts: 0, partners: new Map(), opponents: new Map() });
+        statsMap.set(id, { gamesPlayed: 0, sitOuts: 0, partners: new Map(), opponents: new Map(), courts: new Map() });
       }
       return statsMap.get(id)!;
     };
@@ -66,12 +68,26 @@ export function usePlayerStats(tournament: Tournament | null): PlayerStats[] {
             sb.opponents.set(a, (sb.opponents.get(a) ?? 0) + 1);
           }
         }
+
+        // Courts
+        for (const id of allPlayers) {
+          const s = ensure(id);
+          s.courts.set(match.courtId, (s.courts.get(match.courtId) ?? 0) + 1);
+        }
       }
     }
 
     const sortedEntries = (map: Map<string, number>) =>
       [...map.entries()]
         .map(([id, count]) => ({ name: nameOf(id), count }))
+        .sort((a, b) => b.count - a.count);
+
+    const courtNameOf = (courtId: string) =>
+      tournament.config.courts.find(c => c.id === courtId)?.name ?? courtId;
+
+    const sortedCourtEntries = (map: Map<string, number>) =>
+      [...map.entries()]
+        .map(([courtId, count]) => ({ name: courtNameOf(courtId), count }))
         .sort((a, b) => b.count - a.count);
 
     return tournament.players.map(p => {
@@ -83,6 +99,7 @@ export function usePlayerStats(tournament: Tournament | null): PlayerStats[] {
         sitOuts: s.sitOuts,
         partners: sortedEntries(s.partners),
         opponents: sortedEntries(s.opponents),
+        courts: sortedCourtEntries(s.courts),
       };
     });
   }, [tournament]);

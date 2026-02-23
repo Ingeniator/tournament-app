@@ -39,6 +39,7 @@ test.describe('Team Americano Flow', () => {
     await page.getByRole('button', { name: 'Standings' }).click();
 
     await expect(page.getByText('The Aces')).toBeVisible();
+    await expect(page).toHaveScreenshot('team-americano-standings.png');
   });
 
   test('scoring updates standings', async ({ page }) => {
@@ -53,6 +54,7 @@ test.describe('Team Americano Flow', () => {
 
     // At least one team should have points > 0 in the standings table
     await expect(page.getByRole('cell', { name: '15' }).first()).toBeVisible();
+    await expect(page).toHaveScreenshot('team-americano-scored-standings.png');
   });
 
   test('persists across reload', async ({ page }) => {

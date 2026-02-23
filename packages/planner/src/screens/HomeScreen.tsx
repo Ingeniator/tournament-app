@@ -3,7 +3,7 @@ import { ref, push, set } from 'firebase/database';
 import { Button, Card, SkinPicker, FeedbackModal, AppFooter, useTranslation } from '@padel/common';
 import type { TournamentSummary } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
-import { db } from '../firebase';
+import { auth, db } from '../firebase';
 import { randomTournamentName } from '../utils/tournamentNames';
 import styles from './HomeScreen.module.css';
 
@@ -35,6 +35,7 @@ export function HomeScreen() {
     createTournament, loadByCode, setScreen,
     userName, userNameLoading, updateUserName,
     myTournaments, registeredTournaments, listingsLoading,
+    chatRoomTournaments, chatRoomLoading,
     openTournament, skin, setSkin,
   } = usePlanner();
   const { t } = useTranslation();
@@ -97,6 +98,13 @@ export function HomeScreen() {
       await updateUserName(trimmed);
     }
     setEditingUserName(false);
+  };
+
+  const handleOpenGroupTournament = async (code: string) => {
+    const found = await loadByCode(code);
+    if (found) {
+      setScreen('join');
+    }
   };
 
   const handleFeedback = async (message: string) => {
@@ -264,6 +272,31 @@ export function HomeScreen() {
         )}
       </div>
 
+      {/* Group Tournaments */}
+      {!chatRoomLoading && chatRoomTournaments.length > 0 && (
+        <Card>
+          <h2 className={styles.sectionTitle}>{t('home.groupTournaments')}</h2>
+          <div className={styles.tournamentList}>
+            {chatRoomTournaments.map(ct => (
+              <div
+                key={ct.id}
+                className={styles.tournamentItem}
+                role="button"
+                tabIndex={0}
+                onClick={() => handleOpenGroupTournament(ct.code)}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleOpenGroupTournament(ct.code); } }}
+              >
+                <span className={styles.tournamentName}>{ct.name}</span>
+                <span className={styles.tournamentMeta}>
+                  {ct.date && <span>{formatDate(ct.date)}</span>}
+                  {ct.organizerName && <span>by {ct.organizerName}</span>}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
       {/* My Tournaments */}
       {!listingsLoading && (
         <Card>
@@ -272,7 +305,7 @@ export function HomeScreen() {
             <p className={styles.empty}>{t('home.noTournamentsCreated')}</p>
           ) : (
             <div className={styles.tournamentList}>
-              {myTournaments.map(t => renderTournamentItem(t, 'organizer'))}
+              {myTournaments.map(ti => renderTournamentItem(ti, 'organizer'))}
             </div>
           )}
         </Card>
@@ -286,7 +319,7 @@ export function HomeScreen() {
             <p className={styles.empty}>{t('home.noTournamentsJoined')}</p>
           ) : (
             <div className={styles.tournamentList}>
-              {registeredTournaments.map(t => renderTournamentItem(t, 'join'))}
+              {registeredTournaments.map(ti => renderTournamentItem(ti, 'join'))}
             </div>
           )}
         </Card>
@@ -296,6 +329,7 @@ export function HomeScreen() {
 
       <AppFooter
         onFeedbackClick={() => setFeedbackOpen(true)}
+        auth={auth}
       />
 
       <FeedbackModal

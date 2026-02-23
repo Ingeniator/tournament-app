@@ -13,5 +13,6 @@ export interface TournamentStrategy {
   generateAdditionalRounds(players: Player[], config: TournamentConfig, existingRounds: Round[], count: number, excludePlayerIds?: string[], timeBudgetMs?: number, tournament?: Tournament): ScheduleResult;
   calculateStandings(tournament: Tournament): StandingsEntry[];
   validateSetup(players: Player[], config: TournamentConfig): string[];
+  validateWarnings?(players: Player[], config: TournamentConfig): string[];
   validateScore(score: MatchScore, config: TournamentConfig): string | null;
 }

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ref, onValue, set } from 'firebase/database';
 import type { SkinId } from '@padel/common';
-import { isValidSkin, DEFAULT_SKIN } from '@padel/common';
+import { isValidSkin } from '@padel/common';
 import { db } from '../firebase';
 
 export function useUserProfile(uid: string | null) {
@@ -11,7 +11,7 @@ export function useUserProfile(uid: string | null) {
 
   useEffect(() => {
     if (!uid || !db) return;
-    queueMicrotask(() => setLoading(true));
+    setLoading(true);
     const unsubscribe = onValue(ref(db, `users/${uid}/name`), (snapshot) => {
       setName(snapshot.val() as string | null);
       setLoading(false);
@@ -25,8 +25,6 @@ export function useUserProfile(uid: string | null) {
       const val = snapshot.val() as string | null;
       if (val && isValidSkin(val)) {
         setSkinState(val);
-      } else {
-        setSkinState(DEFAULT_SKIN);
       }
     });
     return unsubscribe;

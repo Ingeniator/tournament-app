@@ -1,7 +1,7 @@
 import type { TournamentStrategy, ScheduleResult } from './types';
 import type { Player, TournamentConfig, Round, Match, Tournament } from '@padel/common';
 import { generateId } from '@padel/common';
-import { shuffle, partnerKey, commonValidateSetup, commonValidateScore, calculateCompetitorStandings, seedFromRounds, selectSitOuts } from './shared';
+import { shuffle, partnerKey, commonValidateSetup, commonValidateScore, calculateCompetitorStandings, calculateIndividualStandings, seedFromRounds, selectSitOuts, scoreSchedule } from './shared';
 
 type Pairing = [[string, string], [string, string]];
 
@@ -39,7 +39,8 @@ function scoreGrouping(
   groups: string[][],
   partnerCounts: Map<string, number>,
   opponentCounts: Map<string, number>,
-  courtMates?: Set<string>
+  courtMates?: Set<string>,
+  rankMap?: Map<string, number>
 ): number {
   let total = 0;
   for (const group of groups) {
@@ -57,6 +58,15 @@ function scoreGrouping(
           }
         }
       }
+    }
+
+    // Standings proximity: prefer groups where players have similar rankings.
+    // Weight 0.5 per spread point — acts as a tiebreaker, never overrides
+    // partner repeats (×100) or significant opponent imbalance.
+    if (rankMap) {
+      const ranks = group.map(id => rankMap.get(id) ?? 0);
+      const spread = Math.max(...ranks) - Math.min(...ranks);
+      total += spread * 0.5;
     }
   }
   return total;
@@ -140,7 +150,8 @@ function generateRounds(
   gamesPlayed: Map<string, number>,
   courtCounts: Map<string, number>,
   courtMates: Set<string>,
-  lastSitOutRound: Map<string, number>
+  lastSitOutRound: Map<string, number>,
+  rankMap?: Map<string, number>
 ): { rounds: Round[]; warnings: string[] } {
   const warnings: string[] = [];
   const n = players.length;
@@ -175,7 +186,7 @@ function generateRounds(
       // Exhaustive: evaluate every unique partition, then tiebreak by court balance + coverage
       let tied: string[][][] = [];
       for (const groups of allGroupPartitions(activeIds)) {
-        const score = scoreGrouping(groups, partnerCounts, opponentCounts);
+        const score = scoreGrouping(groups, partnerCounts, opponentCounts, undefined, rankMap);
         if (score < bestScore) {
           bestScore = score;
           tied = [groups];
@@ -245,7 +256,7 @@ function generateRounds(
         for (let i = 0; i < numCourts; i++) {
           groups.push(shuffled.slice(i * 4, i * 4 + 4));
         }
-        const score = scoreGrouping(groups, partnerCounts, opponentCounts, courtMates);
+        const score = scoreGrouping(groups, partnerCounts, opponentCounts, courtMates, rankMap);
         if (score < bestScore) {
           bestScore = score;
           bestGroups = groups;
@@ -326,75 +337,6 @@ function generateRounds(
   return { rounds, warnings };
 }
 
-/** Score a schedule: [partnerRepeats, opponentSpread, neverPlayed, courtSpread]. Lower is better. */
-export function scoreSchedule(rounds: Round[], seedPartnerCounts?: Map<string, number>): [number, number, number, number] {
-  const pc = new Map<string, number>(seedPartnerCounts);
-  const oc = new Map<string, number>();
-  // Track per-court per-player counts: key = "playerId:courtId"
-  const cc = new Map<string, number>();
-  const courtIds = new Set<string>();
-  const playerIds = new Set<string>();
-  for (const round of rounds) {
-    for (const match of round.matches) {
-      const k1 = partnerKey(match.team1[0], match.team1[1]);
-      const k2 = partnerKey(match.team2[0], match.team2[1]);
-      pc.set(k1, (pc.get(k1) ?? 0) + 1);
-      pc.set(k2, (pc.get(k2) ?? 0) + 1);
-      for (const a of match.team1) {
-        for (const b of match.team2) {
-          const ok = partnerKey(a, b);
-          oc.set(ok, (oc.get(ok) ?? 0) + 1);
-        }
-      }
-      courtIds.add(match.courtId);
-      for (const pid of [...match.team1, ...match.team2]) {
-        playerIds.add(pid);
-        const ck = `${pid}:${match.courtId}`;
-        cc.set(ck, (cc.get(ck) ?? 0) + 1);
-      }
-    }
-    for (const pid of round.sitOuts) playerIds.add(pid);
-  }
-  let repeats = 0;
-  for (const c of pc.values()) if (c > 1) repeats += c - 1;
-
-  const totalPairs = playerIds.size * (playerIds.size - 1) / 2;
-
-  let min = Infinity;
-  let max = -Infinity;
-  for (const c of oc.values()) {
-    if (c < min) min = c;
-    if (c > max) max = c;
-  }
-  // Account for player pairs that never met as opponents (opponent count = 0).
-  // With sit-outs (odd player counts), some pairs may share a court only as
-  // partners but never face each other. The spread must reflect these 0-count pairs.
-  if (oc.size < totalPairs && oc.size > 0) {
-    min = 0;
-  }
-  const spread = max === -Infinity ? 0 : max - min;
-
-  // Never played: pairs who never shared a court (as partner or opponent)
-  const courtMates = new Set<string>([...pc.keys(), ...oc.keys()]);
-  const neverPlayed = totalPairs - courtMates.size;
-
-  // Court spread: max spread across all courts
-  let courtSpread = 0;
-  if (courtIds.size > 1) {
-    for (const courtId of courtIds) {
-      let cMin = Infinity, cMax = -Infinity;
-      for (const pid of playerIds) {
-        const cnt = cc.get(`${pid}:${courtId}`) ?? 0;
-        if (cnt < cMin) cMin = cnt;
-        if (cnt > cMax) cMax = cnt;
-      }
-      if (cMax - cMin > courtSpread) courtSpread = cMax - cMin;
-    }
-  }
-
-  return [repeats, spread, neverPlayed, courtSpread];
-}
-
 /** Compare 4-tuple scores lexicographically. Returns true if a is strictly better (lower) than b. */
 function isBetterScore(a: [number, number, number, number], b: [number, number, number, number]): boolean {
   for (let i = 0; i < 4; i++) {
@@ -417,6 +359,7 @@ function generateRoundsWithRetry(
   seedCourtMates: Set<string>,
   seedLastSitOutRound: Map<string, number>,
   timeBudgetMs: number,
+  rankMap?: Map<string, number>,
 ): ScheduleResult {
   let bestResult: ScheduleResult | null = null;
   let bestScore: [number, number, number, number] = [Infinity, Infinity, Infinity, Infinity];
@@ -426,6 +369,7 @@ function generateRoundsWithRetry(
     const result = generateRounds(
       players, config, count, startRoundNumber,
       new Map(seedPartnerCounts), new Map(seedOpponentCounts), new Map(seedGamesPlayed), new Map(seedCourtCounts), new Set(seedCourtMates), new Map(seedLastSitOutRound),
+      rankMap,
     );
     const score = scoreSchedule(result.rounds, seedPartnerCounts);
     if (isBetterScore(score, bestScore)) {
@@ -465,13 +409,22 @@ export const americanoStrategy: TournamentStrategy = {
     return generateRoundsWithRetry(players, config, totalRounds, 1, new Map(), new Map(), gamesPlayed, new Map(), new Set(), lastSitOutRound, 500);
   },
 
-  generateAdditionalRounds(players: Player[], config: TournamentConfig, existingRounds: Round[], count: number, excludePlayerIds?: string[], timeBudgetMs?: number): ScheduleResult {
+  generateAdditionalRounds(players: Player[], config: TournamentConfig, existingRounds: Round[], count: number, excludePlayerIds?: string[], timeBudgetMs?: number, tournament?: Tournament): ScheduleResult {
     const activePlayers = excludePlayerIds?.length
       ? players.filter(p => !excludePlayerIds.includes(p.id))
       : players;
     const { partnerCounts, opponentCounts, gamesPlayed, courtCounts, courtMates, lastSitOutRound } = seedFromRounds(existingRounds, activePlayers);
     const startRoundNumber = existingRounds.length + 1;
     const budget = timeBudgetMs ?? (count > 1 ? 500 : 0);
-    return generateRoundsWithRetry(activePlayers, config, count, startRoundNumber, partnerCounts, opponentCounts, gamesPlayed, courtCounts, courtMates, lastSitOutRound, budget);
+
+    // Build rank map from current standings so additional rounds
+    // prefer grouping similarly-ranked players together
+    let rankMap: Map<string, number> | undefined;
+    if (tournament) {
+      const standings = calculateIndividualStandings(tournament);
+      rankMap = new Map(standings.map((s, i) => [s.playerId, i]));
+    }
+
+    return generateRoundsWithRetry(activePlayers, config, count, startRoundNumber, partnerCounts, opponentCounts, gamesPlayed, courtCounts, courtMates, lastSitOutRound, budget, rankMap);
   },
 };

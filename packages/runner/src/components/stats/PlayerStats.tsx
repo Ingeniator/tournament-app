@@ -42,6 +42,14 @@ export function PlayerStats({ stats }: Props) {
               </span>
             </div>
           )}
+          {player.courts.length > 0 && (
+            <div className={styles.row}>
+              <span className={styles.label}>{t('playerStats.courts')}</span>
+              <span className={styles.values}>
+                {player.courts.map(c => `${c.name} \u00d7${c.count}`).join(', ')}
+              </span>
+            </div>
+          )}
         </div>
       ))}
     </div>

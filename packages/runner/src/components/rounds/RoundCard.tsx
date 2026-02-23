@@ -1,4 +1,4 @@
-import type { Round, Player, Court, MatchScore } from '@padel/common';
+import type { Round, Player, Court, MatchScore, TournamentFormat } from '@padel/common';
 import { useTranslation } from '@padel/common';
 import { MatchCard } from './MatchCard';
 import styles from './RoundCard.module.css';
@@ -10,13 +10,14 @@ interface RoundCardProps {
   pointsPerMatch: number;
   readOnly?: boolean;
   editingMatchId?: string;
+  format?: TournamentFormat;
   onStartEdit?: (matchId: string) => void;
   onTapUnscored?: (matchId: string) => void;
   onScore: (matchId: string, score: MatchScore) => void;
   onClear: (matchId: string) => void;
 }
 
-export function RoundCard({ round, players, courts, pointsPerMatch, readOnly, editingMatchId, onStartEdit, onTapUnscored, onScore, onClear }: RoundCardProps) {
+export function RoundCard({ round, players, courts, pointsPerMatch, readOnly, editingMatchId, format, onStartEdit, onTapUnscored, onScore, onClear }: RoundCardProps) {
   const { t } = useTranslation();
   const name = (id: string) => players.find(p => p.id === id)?.name ?? '?';
   const scoredCount = round.matches.filter(m => m.score).length;
@@ -41,6 +42,7 @@ export function RoundCard({ round, players, courts, pointsPerMatch, readOnly, ed
               courts={courts}
               pointsPerMatch={pointsPerMatch}
               readOnly={readOnly && !isEditing}
+              format={format}
               onScore={score => onScore(match.id, score)}
               onClear={() => onClear(match.id)}
               onTapScore={

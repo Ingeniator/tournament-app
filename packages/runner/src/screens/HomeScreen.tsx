@@ -4,7 +4,7 @@ import { useTournament } from '../hooks/useTournament';
 import { useRunnerTheme } from '../state/ThemeContext';
 import { validateImport } from '../utils/importExport';
 import { randomTournamentName } from '../utils/tournamentNames';
-import { db } from '../firebase';
+import { auth, db } from '../firebase';
 import { Button, FeedbackModal, AppFooter, generateId, SkinPicker, useTranslation } from '@padel/common';
 import styles from './HomeScreen.module.css';
 
@@ -44,7 +44,7 @@ export function HomeScreen() {
   const loadTournament = (text: string) => {
     const result = validateImport(text);
     if (result.error || !result.tournament) {
-      setImportError(result.error ?? 'Unknown error');
+      setImportError(result.error ? t(result.error.key, result.error.params) : t('import.invalidJson'));
       return;
     }
     setImportError(null);
@@ -152,6 +152,7 @@ export function HomeScreen() {
 
       <AppFooter
         onFeedbackClick={() => setFeedbackOpen(true)}
+        auth={auth}
       />
 
       <FeedbackModal

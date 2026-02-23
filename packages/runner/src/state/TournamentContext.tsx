@@ -12,7 +12,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const ok = saveTournament(tournament);
-    queueMicrotask(() => setSaveError(!ok));
+    setSaveError(!ok);
   }, [tournament]);
 
   // Write completedAt to Firebase when tournament transitions to completed
@@ -26,8 +26,12 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       tournament.plannerTournamentId &&
       db
     ) {
-      signIn().then(() => {
-        set(ref(db!, `tournaments/${tournament.plannerTournamentId}/completedAt`), Date.now()).catch(() => {});
+      signIn().then(async () => {
+        const base = `tournaments/${tournament.plannerTournamentId}`;
+        // Write runnerData first so it's available when the planner's
+        // real-time listener fires on completedAt
+        await set(ref(db!, `${base}/runnerData`), tournament);
+        await set(ref(db!, `${base}/completedAt`), Date.now());
       }).catch(() => {});
     }
   }, [tournament?.phase, tournament?.plannerTournamentId]);

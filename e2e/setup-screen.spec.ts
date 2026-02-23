@@ -17,6 +17,7 @@ test.describe('Setup Screen', () => {
   test('remove player from list', async ({ page }) => {
     await addFourPlayers(page);
     await expect(page.getByText('4 player(s) added')).toBeVisible();
+    await expect(page).toHaveScreenshot('setup-four-players.png');
 
     // Remove Alice using aria-label
     await page.getByRole('button', { name: 'Remove Alice' }).click();
@@ -78,5 +79,6 @@ test.describe('Setup Screen', () => {
     const pointsInput = page.locator('#config-points');
     await pointsInput.fill('16');
     await expect(pointsInput).toHaveValue('16');
+    await expect(page).toHaveScreenshot('setup-custom-config.png');
   });
 });

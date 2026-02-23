@@ -31,6 +31,15 @@ export function useDistributionStats(tournament: Tournament | null): Distributio
   return useMemo(() => {
     if (!tournament || tournament.rounds.length === 0) return null;
 
+    const strategy = getStrategy(tournament.config.format);
+
+    // For dynamic tournaments, only include scored (completed) rounds in statistics
+    const rounds = strategy.isDynamic
+      ? tournament.rounds.filter(r => r.matches.every(m => m.score !== null))
+      : tournament.rounds;
+
+    if (rounds.length === 0) return null;
+
     const activePlayers = tournament.players.filter(p => !p.unavailable);
     if (activePlayers.length < 4) return null;
 
@@ -51,7 +60,7 @@ export function useDistributionStats(tournament: Tournament | null): Distributio
       courtCountsPerPlayer.set(id, new Map());
     }
 
-    for (const round of tournament.rounds) {
+    for (const round of rounds) {
       for (const id of round.sitOuts) {
         if (activeIds.has(id)) {
           sitOutsPerPlayer.set(id, (sitOutsPerPlayer.get(id) ?? 0) + 1);
@@ -90,7 +99,6 @@ export function useDistributionStats(tournament: Tournament | null): Distributio
 
     // Repeat partners (count > 1, both players still active)
     // For fixed-partner formats, exclude fixed pair repeats — those are expected
-    const strategy = getStrategy(tournament.config.format);
     const fixedPairKeys = new Set<string>();
     if (strategy.hasFixedPartners) {
       for (const comp of strategy.getCompetitors(tournament)) {
@@ -139,21 +147,24 @@ export function useDistributionStats(tournament: Tournament | null): Distributio
 
     const totalPairs = (activeList.length * (activeList.length - 1)) / 2;
 
-    // Theoretical ideal: total opponent encounters spread evenly across all pairs
-    const totalMatches = tournament.rounds.reduce((sum, r) => sum + r.matches.length, 0);
-    const totalEncounters = totalMatches * 4; // 4 opponent pairs per match
-    const idealAvg = totalPairs > 0 ? totalEncounters / totalPairs : 0;
-    const idealOpponentSpread = {
-      min: Math.floor(idealAvg),
-      max: Math.ceil(idealAvg),
-    };
-
     // Rest balance: games + sit-outs min/max/ideal
     const availableCourts = tournament.config.courts.filter(c => !c.unavailable);
     const numCourts = Math.min(availableCourts.length, Math.floor(activePlayers.length / 4));
-    const totalRounds = tournament.rounds.length;
+    const totalRounds = rounds.length;
     const activePCount = activePlayers.length;
     const sitOutsPerRound = activePCount - numCourts * 4;
+
+    // Theoretical ideal: total opponent encounters spread evenly across all pairs
+    const totalMatches = rounds.reduce((sum, r) => sum + r.matches.length, 0);
+    const totalEncounters = totalMatches * 4; // 4 opponent pairs per match
+    const idealAvg = totalPairs > 0 ? totalEncounters / totalPairs : 0;
+    // With sit-outs, pairs have unequal numbers of "both active" rounds,
+    // making perfectly balanced opponent encounters structurally harder.
+    // Widen the ideal range by +1 to reflect this constraint.
+    const idealOpponentSpread = {
+      min: Math.floor(idealAvg),
+      max: Math.ceil(idealAvg) + (sitOutsPerRound > 0 ? 1 : 0),
+    };
 
     let gamesMin = Infinity, gamesMax = -Infinity;
     let sitMin = Infinity, sitMax = -Infinity;
@@ -178,7 +189,7 @@ export function useDistributionStats(tournament: Tournament | null): Distributio
     const courtIds = availableCourts.slice(0, numCourts).map(c => c.id);
     const courtBalance = courtIds.map(courtId => {
       let cMin = Infinity, cMax = -Infinity;
-      const totalMatchesOnCourt = tournament.rounds.reduce(
+      const totalMatchesOnCourt = rounds.reduce(
         (sum, r) => sum + r.matches.filter(m => m.courtId === courtId).length, 0
       );
       const idealAvg = activePCount > 0 ? (totalMatchesOnCourt * 4) / activePCount : 0;

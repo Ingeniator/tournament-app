@@ -3,7 +3,8 @@ import { Button, Card, Toast, useToast, useTranslation } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import { downloadICS } from '../utils/icsExport';
-import { buildRunnerTournament } from '../utils/exportToRunner';
+import { exportRunnerTournamentJSON } from '../utils/exportToRunner';
+import { restoreFromBackup } from '../utils/restoreFromBackup';
 import { useStartGuard } from '../hooks/useStartGuard';
 import { StartWarningModal } from '../components/StartWarningModal';
 import styles from './JoinScreen.module.css';
@@ -18,6 +19,7 @@ export function JoinScreen() {
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const [showCalendarPrompt, setShowCalendarPrompt] = useState(false);
+  const [restoreFailed, setRestoreFailed] = useState(false);
   const { toastMessage, showToast } = useToast();
   const registeringRef = useRef(false);
 
@@ -25,7 +27,7 @@ export function JoinScreen() {
   useEffect(() => {
     if (!name) {
       const prefill = userName ?? telegramUser?.displayName;
-      if (prefill) queueMicrotask(() => setName(prefill));
+      if (prefill) setName(prefill);
     }
   }, [userName, telegramUser]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -43,9 +45,18 @@ export function JoinScreen() {
     return reservePlayers.findIndex(p => p.id === myRegistration.id) + 1;
   }, [myStatus, myRegistration, players, capacity]);
 
+  // Auto-restore from Firebase backup when tournament is completed
+  useEffect(() => {
+    if (!completedAt || restoreFailed || !tournament) return;
+    restoreFromBackup(tournament.id).then(ok => {
+      if (!ok) setRestoreFailed(true);
+    });
+  }, [completedAt, tournament?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!tournament) return null;
 
   if (completedAt) {
+    if (!restoreFailed) return null; // loading / redirecting
     return (
       <div className={styles.container}>
         <header className={styles.header}>
@@ -158,7 +169,7 @@ export function JoinScreen() {
   };
 
   const handleCopyExport = async () => {
-    const json = JSON.stringify(buildRunnerTournament(tournament!, players), null, 2);
+    const json = exportRunnerTournamentJSON(tournament!, players);
     try {
       await navigator.clipboard.writeText(json);
       showToast(t('join.jsonCopied'));
@@ -191,7 +202,7 @@ export function JoinScreen() {
             )}
             {tournament.duration && (
               <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Duration</span>
+                <span className={styles.detailLabel}>{t('join.duration')}</span>
                 <span>{tournament.duration >= 60 ? `${Math.floor(tournament.duration / 60)}h${tournament.duration % 60 ? ` ${tournament.duration % 60}min` : ''}` : `${tournament.duration}min`}</span>
               </div>
             )}

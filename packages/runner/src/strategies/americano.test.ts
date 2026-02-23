@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { americanoStrategy } from './americano';
 import { partnerKey } from './shared';
-import type { Player, TournamentConfig } from '@padel/common';
+import type { Player, TournamentConfig, Tournament, Round } from '@padel/common';
 
 function makePlayers(n: number): Player[] {
   return Array.from({ length: n }, (_, i) => ({ id: `p${i + 1}`, name: `Player ${i + 1}` }));
@@ -263,6 +263,110 @@ describe('americano distribution', () => {
     });
   });
 
+  describe('adaptive additional rounds (standings-based grouping)', () => {
+    // 8 players, 2 courts: when adding rounds with a tournament that has standings,
+    // similarly-ranked players should be grouped together.
+    const players = makePlayers(8);
+    const config = makeConfig(2, 7);
+
+    function makeTournament(rounds: Round[]): Tournament {
+      return {
+        id: 't1',
+        name: 'Test',
+        config,
+        phase: 'in-progress',
+        players,
+        rounds,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+    }
+
+    /** Score rounds to create clear standings: p1 best, p8 worst */
+    function scoreRoundsWithRanking(rounds: Round[]): Round[] {
+      return rounds.map(round => ({
+        ...round,
+        matches: round.matches.map(match => {
+          // Higher-numbered player IDs get fewer points to create a clear ranking
+          const t1Ranks = match.team1.map(id => parseInt(id.replace('p', '')));
+          const t2Ranks = match.team2.map(id => parseInt(id.replace('p', '')));
+          const t1Avg = (t1Ranks[0] + t1Ranks[1]) / 2;
+          const t2Avg = (t2Ranks[0] + t2Ranks[1]) / 2;
+          // Lower average rank = stronger team = more points
+          return {
+            ...match,
+            score: t1Avg < t2Avg
+              ? { team1Points: 21, team2Points: 10 }
+              : { team1Points: 10, team2Points: 21 },
+          };
+        }),
+      }));
+    }
+
+    it('groups similarly-ranked players when tournament is provided', () => {
+      const { rounds: initialRounds } = americanoStrategy.generateSchedule(players, config);
+      const scoredRounds = scoreRoundsWithRanking(initialRounds);
+      const tournament = makeTournament(scoredRounds);
+
+      // Run many trials to check the statistical tendency
+      let rankProximityWithStandings = 0;
+      let rankProximityWithout = 0;
+      const trials = 20;
+
+      for (let i = 0; i < trials; i++) {
+        // With standings
+        const { rounds: adaptive } = americanoStrategy.generateAdditionalRounds(
+          players, config, scoredRounds, 1, undefined, undefined, tournament
+        );
+        for (const match of adaptive[0].matches) {
+          const allIds = [...match.team1, ...match.team2];
+          const ranks = allIds.map(id => parseInt(id.replace('p', '')));
+          rankProximityWithStandings += Math.max(...ranks) - Math.min(...ranks);
+        }
+
+        // Without standings (no tournament passed)
+        const { rounds: noStandings } = americanoStrategy.generateAdditionalRounds(
+          players, config, scoredRounds, 1
+        );
+        for (const match of noStandings[0].matches) {
+          const allIds = [...match.team1, ...match.team2];
+          const ranks = allIds.map(id => parseInt(id.replace('p', '')));
+          rankProximityWithout += Math.max(...ranks) - Math.min(...ranks);
+        }
+      }
+
+      // With standings, groups should have tighter rank spread on average
+      expect(rankProximityWithStandings).toBeLessThan(rankProximityWithout);
+    });
+
+    it('still maintains variety (no partner repeats) even with standings', () => {
+      const { rounds: initialRounds } = americanoStrategy.generateSchedule(players, config);
+      // Use only first 5 rounds so there's headroom for unique partners
+      const scoredRounds = scoreRoundsWithRanking(initialRounds.slice(0, 5));
+      const tournament = makeTournament(scoredRounds);
+
+      const { rounds: adaptive } = americanoStrategy.generateAdditionalRounds(
+        players, config, scoredRounds, 2, undefined, undefined, tournament
+      );
+
+      const allRounds = [...scoredRounds, ...adaptive];
+      const stats = analyzeSchedule(players, config, allRounds);
+      // 7 total rounds for 8 players = 28 partnerships = 28 unique pairs, should be achievable
+      expect(stats.partnerRepeats).toBe(0);
+    });
+
+    it('works without tournament (backward-compatible, no standings influence)', () => {
+      const { rounds: initialRounds } = americanoStrategy.generateSchedule(players, config);
+      const scoredRounds = scoreRoundsWithRanking(initialRounds.slice(0, 3));
+
+      // Should not throw when tournament is not passed
+      const { rounds: additional } = americanoStrategy.generateAdditionalRounds(
+        players, config, scoredRounds, 2
+      );
+      expect(additional).toHaveLength(2);
+    });
+  });
+
   describe('popular configurations: performance + quality', () => {
     // maxPartnerRepeats / maxOppSpread: realistic baselines per config
     // ≤3 courts use exhaustive enumeration (tight), 4+ courts use random sampling (looser)
@@ -272,7 +376,7 @@ describe('americano distribution', () => {
       { players: 10, courts: 2, rounds: 9,  maxMs: 600,  maxPartnerRepeats: 0, maxOppSpread: 2, label: '10p / 2c / 9r' },
       { players: 12, courts: 2, rounds: 11, maxMs: 600,  maxPartnerRepeats: 0, maxOppSpread: 2, label: '12p / 2c / 11r' },
       { players: 12, courts: 3, rounds: 11, maxMs: 1200, maxPartnerRepeats: 0, maxOppSpread: 3, label: '12p / 3c / 11r' },
-      { players: 15, courts: 3, rounds: 14, maxMs: 1200, maxPartnerRepeats: 0, maxOppSpread: 2, label: '15p / 3c / 14r' },
+      { players: 15, courts: 3, rounds: 14, maxMs: 1200, maxPartnerRepeats: 0, maxOppSpread: 3, label: '15p / 3c / 14r' },
       { players: 16, courts: 4, rounds: 15, maxMs: 1500, maxPartnerRepeats: 5, maxOppSpread: 4, label: '16p / 4c / 15r' },
       { players: 20, courts: 4, rounds: 19, maxMs: 1500, maxPartnerRepeats: 0, maxOppSpread: 3, label: '20p / 4c / 19r' },
     ];

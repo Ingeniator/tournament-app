@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ref, set, get, onValue, update as firebaseUpdate } from 'firebase/database';
-import type { PlannerTournament, Court, TournamentFormat } from '@padel/common';
+import type { PlannerTournament, TournamentFormat } from '@padel/common';
 import { generateId } from '@padel/common';
 import { db } from '../firebase';
 import { generateUniqueCode } from '../utils/shortCode';
@@ -41,7 +41,7 @@ export function usePlannerTournament(tournamentId: string | null) {
   // Real-time subscription
   useEffect(() => {
     if (!tournamentId || !db) return;
-    queueMicrotask(() => setLoading(true));
+    setLoading(true);
     const unsubscribe = onValue(ref(db, `tournaments/${tournamentId}`), (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -95,11 +95,6 @@ export function usePlannerTournament(tournamentId: string | null) {
     await firebaseUpdate(ref(db), pathUpdates);
   }, [tournamentId]);
 
-  const updateCourts = useCallback(async (courts: Court[]) => {
-    if (!tournamentId || !db) return;
-    await set(ref(db, `tournaments/${tournamentId}/courts`), courts);
-  }, [tournamentId]);
-
   const loadByCode = useCallback(async (code: string): Promise<string | null> => {
     if (!db) return null;
     const codeSnapshot = await get(ref(db, `codes/${code.toUpperCase()}`));
@@ -136,5 +131,5 @@ export function usePlannerTournament(tournamentId: string | null) {
     await set(ref(db, `tournaments/${tournamentId}/completedAt`), null);
   }, [tournamentId]);
 
-  return { tournament, completedAt, loading, createTournament, updateTournament, updateCourts, loadByCode, deleteTournament, undoComplete };
+  return { tournament, completedAt, loading, createTournament, updateTournament, loadByCode, deleteTournament, undoComplete };
 }

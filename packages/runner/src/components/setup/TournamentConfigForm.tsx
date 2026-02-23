@@ -1,4 +1,4 @@
-import type { TournamentConfig, TournamentFormat, Court } from '@padel/common';
+import type { TournamentConfig, TournamentFormat } from '@padel/common';
 import { Button, generateId, useTranslation } from '@padel/common';
 import { resolveConfigDefaults, computeSitOutInfo } from '../../utils/resolveConfigDefaults';
 import styles from './TournamentConfigForm.module.css';
@@ -50,17 +50,17 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
   // Check if sit-outs are distributed equally
   const sitOutInfo = computeSitOutInfo(playerCount, config.courts.length, effectiveRounds);
 
+  const isKOTC = config.format === 'king-of-the-court';
+
   const addCourt = () => {
     if (config.courts.length >= maxCourts) return;
-    const newCourt: Court = {
-      id: generateId(),
-      name: `Court ${config.courts.length + 1}`,
-    };
-    onUpdate({ courts: [...config.courts, newCourt] });
+    const newIndex = config.courts.length;
+    onUpdate({ courts: [...config.courts, { id: generateId(), name: `Court ${newIndex + 1}` }] });
   };
 
   const removeCourt = (courtId: string) => {
     if (config.courts.length <= 1) return;
+    if (isKOTC && config.courts.length <= 2) return;
     onUpdate({ courts: config.courts.filter(c => c.id !== courtId) });
   };
 
@@ -78,12 +78,22 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
           id="config-format"
           className={styles.input}
           value={config.format}
-          onChange={e => onUpdate({ format: e.target.value as TournamentFormat })}
+          onChange={e => {
+            const newFormat = e.target.value as TournamentFormat;
+            const update: Partial<TournamentConfig> = { format: newFormat };
+            // KOTC requires at least 2 courts
+            if (newFormat === 'king-of-the-court' && config.courts.length < 2) {
+              update.courts = [...config.courts, { id: generateId(), name: `Court ${config.courts.length + 1}` }];
+            }
+            onUpdate(update);
+          }}
         >
           <option value="americano">{t('config.formatAmericano')}</option>
           <option value="team-americano">{t('config.formatTeamAmericano')}</option>
           <option value="mexicano">{t('config.formatMexicano')}</option>
+          <option value="team-mexicano">{t('config.formatTeamMexicano')}</option>
           <option value="mixicano">{t('config.formatMixicano')}</option>
+          <option value="king-of-the-court">{t('config.formatKingOfTheCourt')}</option>
         </select>
       </div>
 
@@ -124,23 +134,32 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
       <div className={styles.field}>
         <label className={styles.label} id="courts-label">{t('config.courts')}</label>
         <div className={styles.courtList} role="group" aria-labelledby="courts-label">
-          {config.courts.map(court => (
-            <div key={court.id} className={styles.courtRow}>
-              <input
-                className={styles.courtInput}
-                type="text"
-                value={court.name}
-                onChange={e => updateCourtName(court.id, e.target.value)}
-                aria-label={`Court ${config.courts.indexOf(court) + 1} name`}
-              />
-              {config.courts.length > 1 && (
-                <button
-                  className={styles.removeCourt}
-                  onClick={() => removeCourt(court.id)}
-                  aria-label={t('config.removeCourt')}
-                >
-                  ✕
-                </button>
+          {config.courts.map((court, courtIdx) => (
+            <div key={court.id} className={isKOTC ? styles.courtRowKotc : styles.courtRow}>
+              <div className={isKOTC ? styles.courtMainRow : styles.courtRow}>
+                <input
+                  className={styles.courtInput}
+                  type="text"
+                  value={court.name}
+                  onChange={e => updateCourtName(court.id, e.target.value)}
+                  aria-label={`Court ${courtIdx + 1} name`}
+                />
+                {config.courts.length > 1 && !(isKOTC && config.courts.length <= 2) && (
+                  <button
+                    className={styles.removeCourt}
+                    onClick={() => removeCourt(court.id)}
+                    aria-label={t('config.removeCourt')}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              {isKOTC && (
+                <div className={styles.courtKotcFields}>
+                  <span className={styles.courtBonusLabel}>
+                    +{config.courts.length - 1 - courtIdx} {t('config.courtBonus')}
+                  </span>
+                </div>
               )}
             </div>
           ))}
@@ -149,6 +168,9 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
           <Button variant="ghost" size="small" onClick={addCourt}>
             {t('config.addCourt')}
           </Button>
+        )}
+        {isKOTC && (
+          <span className={styles.hint}>{t('config.kotcBonusInfo')}</span>
         )}
         <span className={styles.hint}>
           {t('config.maxCourts', { max: maxCourts, players: playerCount })}
@@ -178,7 +200,7 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
           id="config-points"
           className={styles.input}
           type="number"
-          min={1}
+          min={isKOTC ? 12 : 1}
           value={config.pointsPerMatch || ''}
           placeholder={String(suggestedPoints)}
           onChange={e => {

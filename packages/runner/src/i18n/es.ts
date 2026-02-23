@@ -55,6 +55,8 @@ const es: Translations = {
   'play.previousRound': 'Anterior \u2014 Ronda {num}',
   'play.upNextRound': 'Siguiente \u2014 Ronda {num}',
   'play.sit': 'Descansan: {names}',
+  'play.editScore': 'Editar puntuación',
+  'play.enterScore': 'Introducir puntuación',
   'play.standings': 'Clasificaci\u00f3n',
   'play.roundComplete': '\u00a1Ronda {num} completada!',
   'play.getReady': 'Prep\u00e1rate para la siguiente ronda',
@@ -140,6 +142,7 @@ const es: Translations = {
   'settings.tournamentImported': '\u00a1Torneo importado!',
   'settings.newPlayerNamePlaceholder': 'Nombre del nuevo jugador',
   'settings.storageWarning': 'No se pudo guardar \u2014 el almacenamiento puede estar lleno. Tu progreso podr\u00eda perderse si cierras esta p\u00e1gina.',
+  'settings.groupWarning': 'Grupos desiguales ({a} vs {b}) — menos variedad en los emparejamientos',
 
   // BottomNav
   'nav.play': 'Jugar',
@@ -171,6 +174,7 @@ const es: Translations = {
   'playerStats.sitOuts': '{count} descanso{s}',
   'playerStats.partners': 'Compa\u00f1eros',
   'playerStats.opponents': 'Rivales',
+  'playerStats.courts': 'Pistas',
 
   // DistributionStats
   'distribution.hintRest': 'Muestra c\u00f3mo se distribuyen los partidos y descansos. Lo ideal es \u00b11.',
@@ -222,8 +226,12 @@ const es: Translations = {
   'config.format': 'Formato',
   'config.formatAmericano': 'Americano',
   'config.formatTeamAmericano': 'Team Americano',
+  'config.formatTeamMexicano': 'Team Mexicano',
   'config.formatMexicano': 'Mexicano',
   'config.formatMixicano': 'Mixicano',
+  'config.formatKingOfTheCourt': 'Rey de la Pista',
+  'config.courtBonus': 'pts bonus',
+  'config.kotcBonusInfo': 'Las pistas más altas otorgan puntos bonus que se suman a la clasificación',
   'config.groupLabels': 'Grupos',
   'config.groupLabelA': 'Nombre Grupo A',
   'config.groupLabelB': 'Nombre Grupo B',
@@ -265,6 +273,15 @@ const es: Translations = {
   'ceremony.tapToReveal': 'Toca para revelar',
   'ceremony.tapForNext': 'Toca para el siguiente premio',
   'ceremony.tapToFinish': 'Toca para ver resultados',
+
+  // Import validation errors
+  'import.invalidJson': 'JSON inválido — asegúrate de haber pegado el texto completo de exportación',
+  'import.invalidFormat': 'Formato inválido — se esperaba un objeto de exportación de torneo',
+  'import.unknownFormat': 'Formato desconocido "{found}" — se esperaba "{expected}". Asegúrate de haber exportado desde la app.',
+  'import.missingTournament': 'Faltan los datos del torneo',
+  'import.missingField': 'Campo faltante o inválido: {field}',
+  'import.missingArrays': 'Faltan los datos de jugadores o rondas',
+  'import.invalidConfig': 'Configuración del torneo faltante o inválida',
 
   // Common
   'common.cancel': 'Cancelar',

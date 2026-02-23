@@ -6,17 +6,28 @@ export interface TelegramUser {
   username?: string;
 }
 
-export function useTelegram(): TelegramUser | null {
+export interface TelegramContext {
+  user: TelegramUser | null;
+  chatInstance: string | null;
+}
+
+export function useTelegram(): TelegramContext {
   return useMemo(() => {
     const tg = window.Telegram?.WebApp;
     const user = tg?.initDataUnsafe?.user;
-    console.log('[TG] WebApp:', !!tg, 'initData:', tg?.initData, 'initDataUnsafe:', JSON.stringify(tg?.initDataUnsafe));
-    if (!tg || !user) return null;
+    const chatInstance = tg?.initDataUnsafe?.chat_instance ?? null;
+    if (import.meta.env.DEV) {
+      console.log('[TG] WebApp:', !!tg, 'initData:', tg?.initData, 'initDataUnsafe:', JSON.stringify(tg?.initDataUnsafe));
+    }
+    if (!tg || !user) return { user: null, chatInstance };
 
     tg.ready();
     tg.expand();
 
     const displayName = [user.first_name, user.last_name].filter(Boolean).join(' ');
-    return { telegramId: user.id, displayName, username: user.username };
+    return {
+      user: { telegramId: user.id, displayName, username: user.username },
+      chatInstance,
+    };
   }, []);
 }

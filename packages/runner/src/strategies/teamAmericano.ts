@@ -1,7 +1,7 @@
 import type { TournamentStrategy, ScheduleResult } from './types';
 import type { Player, TournamentConfig, Round, Match, Tournament, Team } from '@padel/common';
 import { generateId } from '@padel/common';
-import { shuffle, commonValidateScore, calculateCompetitorStandings } from './shared';
+import { shuffle, commonValidateScore, calculateCompetitorStandings, findTeamByPair, selectTeamSitOuts } from './shared';
 
 /**
  * Team Americano: fixed teams compete against each other.
@@ -13,26 +13,6 @@ function teamKey(a: string, b: string): string {
   return a < b ? `${a}:${b}` : `${b}:${a}`;
 }
 
-/** Select which teams sit out: those with most games, tiebreak by recency */
-function selectTeamSitOuts(
-  teams: Team[],
-  sitOutCount: number,
-  gamesPlayed: Map<string, number>,
-  lastSitOutRound: Map<string, number>,
-): { sitOutTeams: Set<string>; activeTeams: Team[] } {
-  if (sitOutCount <= 0) {
-    return { sitOutTeams: new Set(), activeTeams: [...teams] };
-  }
-  const sortedForSitOut = shuffle([...teams]).sort((a, b) => {
-    const gamesDiff = (gamesPlayed.get(b.id) ?? 0) - (gamesPlayed.get(a.id) ?? 0);
-    if (gamesDiff !== 0) return gamesDiff;
-    // Tiebreak: prefer those who haven't sat out recently
-    return (lastSitOutRound.get(a.id) ?? -Infinity) - (lastSitOutRound.get(b.id) ?? -Infinity);
-  });
-  const sitOutTeams = new Set(sortedForSitOut.slice(0, sitOutCount).map(t => t.id));
-  const activeTeams = teams.filter(t => !sitOutTeams.has(t.id));
-  return { sitOutTeams, activeTeams };
-}
 
 /** Generate rounds for team americano */
 function generateTeamRounds(
@@ -128,14 +108,6 @@ function generateTeamRounds(
   }
 
   return { rounds, warnings };
-}
-
-/** Find a team that contains both players of a match side */
-function findTeamByPair(teams: Team[], pair: [string, string]): Team | undefined {
-  return teams.find(t =>
-    (t.player1Id === pair[0] && t.player2Id === pair[1]) ||
-    (t.player1Id === pair[1] && t.player2Id === pair[0])
-  );
 }
 
 function teamAmericanoValidateSetup(players: Player[], config: TournamentConfig): string[] {

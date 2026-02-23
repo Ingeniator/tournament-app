@@ -11,8 +11,10 @@ import { useMyTournaments } from '../hooks/useMyTournaments';
 import { useRegisteredTournaments } from '../hooks/useRegisteredTournaments';
 import { useTelegram, type TelegramUser } from '../hooks/useTelegram';
 import { useTelegramSync } from '../hooks/useTelegramSync';
+import { useChatRoomTournaments } from '../hooks/useChatRoomTournaments';
+import { linkTournamentToChat } from '../utils/chatRoom';
 
-export type Screen = 'loading' | 'home' | 'organizer' | 'join' | 'supporters';
+export type Screen = 'loading' | 'home' | 'organizer' | 'join';
 
 export interface PlannerContextValue {
   uid: string | null;
@@ -47,6 +49,9 @@ export interface PlannerContextValue {
   undoComplete: () => Promise<void>;
   deleteTournament: () => Promise<void>;
   telegramUser: TelegramUser | null;
+  chatInstance: string | null;
+  chatRoomTournaments: TournamentSummary[];
+  chatRoomLoading: boolean;
   skin: SkinId;
   setSkin: (skin: SkinId) => void;
 }
@@ -81,13 +86,13 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     completedAt,
     loading: tournamentLoading,
     createTournament: createInDb,
-    updateTournament: updateInDb,
+    updateTournament,
     loadByCode: loadByCodeFromDb,
     deleteTournament: deleteInDb,
     undoComplete,
   } = usePlannerTournament(tournamentId);
 
-  const { players, registerPlayer: registerInDb, removePlayer: removeInDb, updateConfirmed: updateConfirmedInDb, addPlayer: addPlayerInDb, bulkAddPlayers: bulkAddPlayersInDb, toggleConfirmed: toggleConfirmedInDb, updatePlayerName: updatePlayerNameInDb, updatePlayerTelegram: updatePlayerTelegramInDb, isRegistered: checkRegistered, claimOrphanRegistration } = usePlayers(tournamentId);
+  const { players, registerPlayer: registerInDb, removePlayer, updateConfirmed: updateConfirmedInDb, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, isRegistered: checkRegistered, claimOrphanRegistration } = usePlayers(tournamentId);
 
   const { name: userName, skin: userSkin, loading: userNameLoading, updateName: updateUserName, updateSkin: updateUserSkin, updateTelegramId, updateTelegramUsername } = useUserProfile(uid);
 
@@ -107,9 +112,10 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     try { localStorage.setItem(SKIN_KEY, s); } catch {}
   }, [rawSetSkin, updateUserSkin]);
 
-  const telegramUser = useTelegram();
+  const { user: telegramUser, chatInstance } = useTelegram();
   const { tournaments: myTournaments, loading: myLoading } = useMyTournaments(uid);
   const { tournaments: registeredTournaments, loading: regLoading } = useRegisteredTournaments(uid);
+  const { tournaments: chatRoomTournaments, loading: chatRoomLoading } = useChatRoomTournaments(chatInstance);
 
   const listingsLoading = myLoading || regLoading;
 
@@ -143,13 +149,22 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     });
   }, [uid, telegramUser, players, claimOrphanRegistration]);
 
+  // Auto-link tournament to chat room when opened from a Telegram group
+  const linkedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!tournamentId || !chatInstance || !uid) return;
+    if (linkedRef.current === tournamentId) return;
+    linkedRef.current = tournamentId;
+    linkTournamentToChat(tournamentId, chatInstance, uid).catch(() => {});
+  }, [tournamentId, chatInstance, uid]);
+
   // Fetch organizer name for active tournament
   const [organizerName, setOrganizerName] = useState<string | null>(null);
   useEffect(() => {
     if (!tournament || !db) return;
     // If current user is organizer, use their profile name
     if (tournament.organizerId === uid && userName) {
-      queueMicrotask(() => setOrganizerName(userName));
+      setOrganizerName(userName);
       return;
     }
     let cancelled = false;
@@ -168,7 +183,10 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     const id = await createInDb(name, uid, locale, telegramUser?.username);
     setTournamentId(id);
     setScreen('organizer');
-  }, [uid, locale, telegramUser, createInDb]);
+    if (chatInstance) {
+      linkTournamentToChat(id, chatInstance, uid).catch(() => {});
+    }
+  }, [uid, locale, telegramUser, chatInstance, createInDb]);
 
   const loadByCode = useCallback(async (code: string): Promise<boolean> => {
     const id = await loadByCodeFromDb(code);
@@ -179,10 +197,6 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     return false;
   }, [loadByCodeFromDb]);
 
-  const updateTournament = useCallback(async (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'pointsPerMatch' | 'courts' | 'maxRounds' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description'>>) => {
-    await updateInDb(updates);
-  }, [updateInDb]);
-
   const registerPlayer = useCallback(async (name: string) => {
     if (!uid) return;
     await registerInDb(name, uid, telegramUser?.username);
@@ -191,30 +205,6 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       await updateUserName(name);
     }
   }, [uid, userName, telegramUser, registerInDb, updateUserName]);
-
-  const removePlayer = useCallback(async (playerId: string) => {
-    await removeInDb(playerId);
-  }, [removeInDb]);
-
-  const addPlayer = useCallback(async (name: string, telegramUsername?: string) => {
-    await addPlayerInDb(name, telegramUsername);
-  }, [addPlayerInDb]);
-
-  const bulkAddPlayers = useCallback(async (names: string[]) => {
-    await bulkAddPlayersInDb(names);
-  }, [bulkAddPlayersInDb]);
-
-  const toggleConfirmed = useCallback(async (playerId: string, currentConfirmed: boolean) => {
-    await toggleConfirmedInDb(playerId, currentConfirmed);
-  }, [toggleConfirmedInDb]);
-
-  const updatePlayerName = useCallback(async (playerId: string, name: string) => {
-    await updatePlayerNameInDb(playerId, name);
-  }, [updatePlayerNameInDb]);
-
-  const updatePlayerTelegram = useCallback(async (playerId: string, telegramUsername: string | null) => {
-    await updatePlayerTelegramInDb(playerId, telegramUsername);
-  }, [updatePlayerTelegramInDb]);
 
   const updateConfirmed = useCallback(async (confirmed: boolean) => {
     if (!uid) return;
@@ -269,6 +259,9 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       undoComplete,
       deleteTournament,
       telegramUser,
+      chatInstance,
+      chatRoomTournaments,
+      chatRoomLoading,
       skin,
       setSkin,
     }}>

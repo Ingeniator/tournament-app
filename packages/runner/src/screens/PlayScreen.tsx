@@ -1,9 +1,9 @@
-import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useTournament } from '../hooks/useTournament';
 import { useStandings } from '../hooks/useStandings';
 import { useNominations } from '../hooks/useNominations';
 import { RoundCard } from '../components/rounds/RoundCard';
-import { StandingsTable } from '../components/standings/StandingsTable';
+import { StandingsTable, type GroupInfo } from '../components/standings/StandingsTable';
 import { NominationCard } from '../components/nominations/NominationCard';
 import { Carousel } from '../components/carousel/Carousel';
 import { CeremonyScreen } from '../components/ceremony/CeremonyScreen';
@@ -11,8 +11,9 @@ import { useShareText } from '../hooks/useShareText';
 import { copyToClipboard } from '../utils/clipboard';
 import { shareStandingsImage } from '../utils/standingsImage';
 import { ref, push, set } from 'firebase/database';
-import { db, firebaseConfigured } from '../firebase';
+import { auth, db, firebaseConfigured } from '../firebase';
 import { Button, FeedbackModal, Modal, SupportOverlay, Toast, useToast, useTranslation } from '@padel/common';
+import { getStrategy } from '../strategies';
 import styles from './PlayScreen.module.css';
 
 export function PlayScreen() {
@@ -32,7 +33,27 @@ export function PlayScreen() {
         }
       }
     }
+    // For team formats, standings entries use team IDs — aggregate player counts per team
+    if (tournament.teams) {
+      for (const team of tournament.teams) {
+        const count = Math.max(map.get(team.player1Id) ?? 0, map.get(team.player2Id) ?? 0);
+        map.set(team.id, count);
+      }
+    }
     return map;
+  }, [tournament]);
+  const groupInfo = useMemo<GroupInfo | undefined>(() => {
+    if (!tournament || tournament.config.format !== 'mixicano') return undefined;
+    const map = new Map<string, 'A' | 'B'>();
+    for (const p of tournament.players) {
+      if (p.group) map.set(p.id, p.group);
+    }
+    if (map.size === 0) return undefined;
+    const labels: [string, string] = [
+      tournament.config.groupLabels?.[0] || 'A',
+      tournament.config.groupLabels?.[1] || 'B',
+    ];
+    return { labels, map };
   }, [tournament]);
   const { buildMessengerText } = useShareText(tournament, standings, nominations);
   const [showStandings, setShowStandings] = useState(false);
@@ -43,11 +64,17 @@ export function PlayScreen() {
   const [roundCompleteNum, setRoundCompleteNum] = useState<number | null>(null);
   const prevActiveRoundIdRef = useRef<string | null>(null);
 
+  const strategy = tournament ? getStrategy(tournament.config.format) : null;
   const totalMatches = tournament?.rounds.reduce((n, r) => n + r.matches.length, 0) ?? 0;
   const scoredMatches = tournament?.rounds.reduce(
     (n, r) => n + r.matches.filter(m => m.score).length, 0
   ) ?? 0;
   const scoredRounds = tournament?.rounds.filter(r => r.matches.every(m => m.score)).length ?? 0;
+  const plannedRounds = tournament
+    ? (strategy?.isDynamic
+        ? (tournament.config.maxRounds ?? tournament.players.length - 1)
+        : tournament.rounds.length)
+    : 0;
 
   // Find active round: first round with any unscored matches
   const activeRoundIndex = tournament?.rounds.findIndex(r => r.matches.some(m => !m.score)) ?? -1;
@@ -82,7 +109,7 @@ export function PlayScreen() {
     nomCardRefs.current[index] = el;
   }, []);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (nominations.length === 0) return;
     // Reset height to measure natural sizes
     setNomMinHeight(0);
@@ -119,7 +146,7 @@ export function PlayScreen() {
       showToast(ok ? t('play.copied') : t('play.failedCopy'));
     };
     const handleShareImage = async () => {
-      const result = await shareStandingsImage(tournament.name, standings, nominations);
+      const result = await shareStandingsImage(tournament.name, standings, nominations, groupInfo);
       if (result.status === 'shared') showToast(t('play.shared'));
       else if (result.status === 'downloaded') showToast(t('play.imageSaved'));
       else if (result.status === 'preview') setPreviewImages(result.dataUrls);
@@ -134,7 +161,7 @@ export function PlayScreen() {
         <Carousel>
           {[
             <div key="standings" className={styles.completedStandings}>
-              <StandingsTable standings={standings} />
+              <StandingsTable standings={standings} groupInfo={groupInfo} />
             </div>,
             ...nominations.map((nom, i) => (
               <NominationCard key={nom.id} nomination={nom} cardRef={setNomRef(i)} minHeight={nomMinHeight || undefined} />
@@ -205,7 +232,7 @@ export function PlayScreen() {
             </>
           )}
         </div>
-        <SupportOverlay open={showSupport} onClose={() => setShowSupport(false)} />
+        <SupportOverlay open={showSupport} onClose={() => setShowSupport(false)} auth={auth} />
         <FeedbackModal
           open={feedbackOpen}
           onClose={() => setFeedbackOpen(false)}
@@ -250,7 +277,7 @@ export function PlayScreen() {
     <div className={styles.container}>
       {/* Progress line */}
       <div className={styles.progress}>
-        {t('play.progress', { current: scoredRounds + 1, total: tournament.rounds.length, scored: scoredMatches, totalMatches })}
+        {t('play.progress', { current: scoredRounds + 1, total: plannedRounds, scored: scoredMatches, totalMatches })}
       </div>
 
       {/* Active round */}
@@ -260,6 +287,7 @@ export function PlayScreen() {
           players={tournament.players}
           courts={tournament.config.courts}
           pointsPerMatch={tournament.config.pointsPerMatch}
+          format={tournament.config.format}
           onScore={(matchId, score) =>
             dispatch({
               type: 'SET_MATCH_SCORE',
@@ -394,7 +422,7 @@ export function PlayScreen() {
 
       {/* Standings overlay */}
       <Modal open={showStandings} title={t('play.standingsTitle')} onClose={() => setShowStandings(false)}>
-        <StandingsTable standings={standings} plannedGames={plannedGames} />
+        <StandingsTable standings={standings} plannedGames={plannedGames} groupInfo={groupInfo} />
       </Modal>
 
       <Toast message={toastMessage} />

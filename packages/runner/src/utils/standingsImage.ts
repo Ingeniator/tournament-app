@@ -1,4 +1,5 @@
 import type { StandingsEntry } from '@padel/common';
+import type { GroupInfo } from '../components/standings/StandingsTable';
 import type { Nomination } from '../hooks/useNominations';
 
 const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
@@ -38,6 +39,7 @@ function s(px: number): number {
 export function renderStandingsImage(
   tournamentName: string,
   standings: StandingsEntry[],
+  groupInfo?: GroupInfo,
 ): HTMLCanvasElement {
   const t = getThemeColors();
   const canvas = document.createElement('canvas');
@@ -146,11 +148,34 @@ export function renderStandingsImage(
         : t.textMuted;
     ctx.fillText(String(entry.rank), tableX + colRank, textY);
 
-    // Name (truncated if too long)
+    // Name (truncated if too long) + optional group badge
     ctx.font = `600 ${s(12)}px ${FONT}`;
     ctx.fillStyle = t.text;
-    const displayName = truncateText(ctx, entry.playerName, nameMaxWidth);
+    const playerGroup = groupInfo?.map.get(entry.playerId);
+    const badgeLabel = playerGroup
+      ? (playerGroup === 'A' ? groupInfo!.labels[0] : groupInfo!.labels[1])
+      : null;
+    const badgeSpace = badgeLabel ? s(4) + ctx.measureText(badgeLabel).width + s(10) : 0;
+    const displayName = truncateText(ctx, entry.playerName, nameMaxWidth - badgeSpace);
     ctx.fillText(displayName, tableX + colName, textY);
+
+    if (badgeLabel && playerGroup) {
+      const nameWidth = ctx.measureText(displayName).width;
+      const badgeX = tableX + colName + nameWidth + s(4);
+      ctx.font = `bold ${s(8)}px ${FONT}`;
+      const measuredBadgeW = ctx.measureText(badgeLabel).width;
+      const pillW = measuredBadgeW + s(8);
+      const pillH = s(12);
+      const pillY = textY - s(9);
+      const pillColor = playerGroup === 'A' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(244, 114, 182, 0.2)';
+      const pillTextColor = playerGroup === 'A' ? '#60a5fa' : '#f472b6';
+      ctx.fillStyle = pillColor;
+      roundRect(ctx, badgeX, pillY, pillW, pillH, s(6));
+      ctx.fill();
+      ctx.fillStyle = pillTextColor;
+      ctx.textAlign = 'left';
+      ctx.fillText(badgeLabel, badgeX + s(4), textY - s(1));
+    }
 
     // Points
     ctx.textAlign = 'right';
@@ -357,12 +382,13 @@ export async function shareStandingsImage(
   tournamentName: string,
   standings: StandingsEntry[],
   nominations: Nomination[] = [],
+  groupInfo?: GroupInfo,
 ): Promise<ShareImageResult> {
   let standingsCanvas: HTMLCanvasElement;
   let nominationCanvases: HTMLCanvasElement[];
 
   try {
-    standingsCanvas = renderStandingsImage(tournamentName, standings);
+    standingsCanvas = renderStandingsImage(tournamentName, standings, groupInfo);
     nominationCanvases = nominations.map(n => renderNominationImage(tournamentName, n));
   } catch {
     return { status: 'failed' };

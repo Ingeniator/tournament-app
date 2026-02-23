@@ -62,9 +62,11 @@ function generateMexicanoRounds(
       } as Parameters<typeof calculateIndividualStandings>[0]);
 
       // Order active round players by their standings rank
-      const standingsMap = new Map(standings.map((s, i) => [s.playerId, i]));
-      const ranked = [...roundPlayers].sort(
-        (a, b) => (standingsMap.get(a.id) ?? 999) - (standingsMap.get(b.id) ?? 999)
+      // Use rank (shared for ties) instead of array index, and pre-shuffle
+      // so tied players (e.g. after a draw) get randomized groupings
+      const rankMap = new Map(standings.map(s => [s.playerId, s.rank]));
+      const ranked = shuffle([...roundPlayers]).sort(
+        (a, b) => (rankMap.get(a.id) ?? 999) - (rankMap.get(b.id) ?? 999)
       );
 
       // Group in chunks of 4 by rank

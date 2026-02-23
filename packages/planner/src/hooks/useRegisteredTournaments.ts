@@ -24,7 +24,7 @@ export function useRegisteredTournaments(uid: string | null) {
 
   useEffect(() => {
     if (!uid || !db) return;
-    queueMicrotask(() => setLoading(true));
+    setLoading(true);
     const unsubscribe = onValue(ref(db, `users/${uid}/registrations`), async (snapshot) => {
       const version = ++versionRef.current;
       const data = snapshot.val() as Record<string, boolean> | null;
@@ -37,26 +37,30 @@ export function useRegisteredTournaments(uid: string | null) {
       const ids = Object.keys(data);
       const results: TournamentSummary[] = [];
 
-      await Promise.all(ids.map(async (id) => {
-        const tSnap = await get(ref(db!, `tournaments/${id}`));
-        if (!tSnap.exists()) {
-          // Tournament deleted — lazy cleanup
-          remove(ref(db!, `users/${uid}/registrations/${id}`));
-          return;
-        }
-        const data = tSnap.val();
-        const t = data as PlannerTournament;
-        // Check player still registered
-        const playerSnap = await get(ref(db!, `tournaments/${id}/players/${uid}`));
-        if (!playerSnap.exists()) {
-          // Player removed — lazy cleanup
-          remove(ref(db!, `users/${uid}/registrations/${id}`));
-          return;
-        }
-        const nameSnap = await get(ref(db!, `users/${t.organizerId}/name`));
-        const orgName = nameSnap.exists() ? (nameSnap.val() as string) : undefined;
-        results.push(toSummary(id, t, orgName, typeof data.completedAt === 'number' ? data.completedAt : null));
-      }));
+      try {
+        await Promise.all(ids.map(async (id) => {
+          const tSnap = await get(ref(db!, `tournaments/${id}`));
+          if (!tSnap.exists()) {
+            // Tournament deleted — lazy cleanup
+            remove(ref(db!, `users/${uid}/registrations/${id}`));
+            return;
+          }
+          const data = tSnap.val();
+          const t = data as PlannerTournament;
+          // Check player still registered
+          const playerSnap = await get(ref(db!, `tournaments/${id}/players/${uid}`));
+          if (!playerSnap.exists()) {
+            // Player removed — lazy cleanup
+            remove(ref(db!, `users/${uid}/registrations/${id}`));
+            return;
+          }
+          const nameSnap = await get(ref(db!, `users/${t.organizerId}/name`));
+          const orgName = nameSnap.exists() ? (nameSnap.val() as string) : undefined;
+          results.push(toSummary(id, t, orgName, typeof data.completedAt === 'number' ? data.completedAt : null));
+        }));
+      } catch {
+        // Network or permission error — show whatever we have
+      }
 
       // Skip if a newer listener call has started (re-entrant from remove())
       if (version !== versionRef.current) return;

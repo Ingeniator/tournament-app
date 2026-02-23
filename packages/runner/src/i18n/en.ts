@@ -55,6 +55,8 @@ const en: Translations = {
   'play.previousRound': 'Previous \u2014 Round {num}',
   'play.upNextRound': 'Up Next \u2014 Round {num}',
   'play.sit': 'Sit: {names}',
+  'play.editScore': 'Edit score',
+  'play.enterScore': 'Enter score',
   'play.standings': 'Standings',
   'play.roundComplete': 'Round {num} complete!',
   'play.getReady': 'Get ready for the next round',
@@ -101,7 +103,7 @@ const en: Translations = {
   'settings.rounds': 'Rounds',
   'settings.roundsHint': '(min {min} scored)',
   'settings.pts': '{count} pts',
-  'settings.roundCount': '{count} rounds',
+  'settings.roundCount': '{count} round(s)',
   'settings.sitOutWarning': 'Sit-outs are not equal with {rounds} rounds.',
   'settings.trySitOut': 'Try {suggestions} rounds for equal sit-outs.',
   'settings.unavailable': 'Unavailable',
@@ -140,6 +142,7 @@ const en: Translations = {
   'settings.tournamentImported': 'Tournament imported!',
   'settings.newPlayerNamePlaceholder': 'New player name',
   'settings.storageWarning': 'Could not save \u2014 storage may be full. Your progress may be lost if you close this page.',
+  'settings.groupWarning': 'Groups are unequal ({a} vs {b}) — less variety in matchups',
 
   // BottomNav
   'nav.play': 'Play',
@@ -171,6 +174,7 @@ const en: Translations = {
   'playerStats.sitOuts': '{count} sit-out{s}',
   'playerStats.partners': 'Partners',
   'playerStats.opponents': 'Opponents',
+  'playerStats.courts': 'Courts',
 
   // DistributionStats
   'distribution.hintRest': 'Shows how evenly games and sit-outs are distributed. Ideal is \u00b11.',
@@ -222,8 +226,12 @@ const en: Translations = {
   'config.format': 'Format',
   'config.formatAmericano': 'Americano',
   'config.formatTeamAmericano': 'Team Americano',
+  'config.formatTeamMexicano': 'Team Mexicano',
   'config.formatMexicano': 'Mexicano',
   'config.formatMixicano': 'Mixicano',
+  'config.formatKingOfTheCourt': 'King of the Court',
+  'config.courtBonus': 'bonus pts',
+  'config.kotcBonusInfo': 'Higher courts earn bonus points added to standings',
   'config.groupLabels': 'Groups',
   'config.groupLabelA': 'Group A name',
   'config.groupLabelB': 'Group B name',
@@ -265,6 +273,15 @@ const en: Translations = {
   'ceremony.tapToReveal': 'Tap to reveal',
   'ceremony.tapForNext': 'Tap for next award',
   'ceremony.tapToFinish': 'Tap to see results',
+
+  // Import validation errors
+  'import.invalidJson': 'Invalid JSON — make sure you pasted the full export text',
+  'import.invalidFormat': 'Invalid format — expected a tournament export object',
+  'import.unknownFormat': 'Unknown format "{found}" — expected "{expected}". Make sure you exported from the app.',
+  'import.missingTournament': 'Missing tournament data',
+  'import.missingField': 'Missing or invalid field: {field}',
+  'import.missingArrays': 'Missing players or rounds data',
+  'import.invalidConfig': 'Missing or invalid tournament config',
 
   // Common
   'common.cancel': 'Cancel',

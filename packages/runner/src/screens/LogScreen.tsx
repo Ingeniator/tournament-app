@@ -29,12 +29,15 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
 
   useEffect(() => {
     if (autoShowStats) {
-      queueMicrotask(() => {
-        setShowStats(true);
-        onStatsShown?.();
-      });
+      setShowStats(true);
+      onStatsShown?.();
     }
   }, [autoShowStats, onStatsShown]);
+
+  // Cancel optimize loop on unmount
+  useEffect(() => {
+    return () => { optimizeCtrlRef.current.cancelled = true; };
+  }, []);
 
   const handleExportPlan = useCallback(() => {
     if (!tournament) return;
@@ -85,9 +88,15 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
     // Ideal never-played: each match creates C(4,2)=6 pair slots
     const idealNeverPlayed = Math.max(0, totalPairs - totalRounds * numCourts * 6);
 
+    // Ideal opponent spread: with sit-outs, 0-count pairs widen scoreSchedule's spread
+    const sitOutsPerRound = active.length - numCourts * 4;
+    const totalEncounters = totalRounds * numCourts * 4;
+    const idealAvg = totalPairs > 0 ? totalEncounters / totalPairs : 0;
+    const idealOpponentMax = Math.ceil(idealAvg) + (sitOutsPerRound > 0 ? 1 : 0);
+
     // Early stop when all quality gates are green
     const isAllGreen = (s: [number, number, number, number]) =>
-      s[0] <= idealRepeats && s[1] <= 2 && s[2] <= idealNeverPlayed;
+      s[0] <= idealRepeats && s[1] <= idealOpponentMax && s[2] <= idealNeverPlayed;
 
     // Score current schedule as baseline
     const currentUnscored = tournament.rounds.filter(r => r.matches.every(m => !m.score));
@@ -169,6 +178,10 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
 
   if (!tournament) return null;
 
+  const strategy = getStrategy(tournament.config.format);
+  const allRoundsScored = tournament.rounds.every(r => r.matches.every(m => m.score !== null));
+  const hideAddRound = strategy.isDynamic && !allRoundsScored;
+
   const handleScore = (roundId: string, matchId: string, score: { team1Points: number; team2Points: number }) => {
     const round = tournament.rounds.find(r => r.id === roundId);
     const match = round?.matches.find(m => m.id === matchId);
@@ -225,7 +238,8 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
           players={tournament.players}
           courts={tournament.config.courts}
           pointsPerMatch={tournament.config.pointsPerMatch}
-          readOnly={editingMatch?.roundId !== round.id || editingMatch?.matchId === undefined}
+          format={tournament.config.format}
+          readOnly={editingMatch?.roundId !== round.id}
           editingMatchId={editingMatch?.roundId === round.id ? editingMatch.matchId : undefined}
           onStartEdit={(matchId) => setEditingMatch({ roundId: round.id, matchId })}
           onTapUnscored={(matchId) => setEditingMatch({ roundId: round.id, matchId })}
@@ -236,13 +250,15 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
 
       {(tournament.phase === 'in-progress' || tournament.phase === 'completed') && (
         <div className={styles.footerActions}>
-          <Button
-            variant="secondary"
-            fullWidth
-            onClick={() => dispatch({ type: 'ADD_ROUNDS', payload: { count: 1 } })}
-          >
-            {t('log.addRound')}
-          </Button>
+          {!hideAddRound && (
+            <Button
+              variant="secondary"
+              fullWidth
+              onClick={() => dispatch({ type: 'ADD_ROUNDS', payload: { count: 1 } })}
+            >
+              {t('log.addRound')}
+            </Button>
+          )}
           {tournament.phase === 'in-progress' && (
             <Button
               variant="secondary"
@@ -265,7 +281,9 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
         {distributionStats && (
           <DistributionStats
             data={distributionStats}
+            isDynamic={strategy.isDynamic}
             canReshuffle={
+              !strategy.isDynamic &&
               tournament.phase === 'in-progress' &&
               tournament.rounds.some(r => r.matches.every(m => !m.score))
             }

@@ -57,6 +57,8 @@ const pt: Translations = {
   'play.previousRound': 'Anterior — Ronda {num}',
   'play.upNextRound': 'Seguinte — Ronda {num}',
   'play.sit': 'Descansam: {names}',
+  'play.editScore': 'Editar pontuação',
+  'play.enterScore': 'Inserir pontuação',
   'play.standings': 'Classificação',
   'play.roundComplete': 'Ronda {num} concluída!',
   'play.getReady': 'Preparem-se para a próxima ronda',
@@ -142,6 +144,7 @@ const pt: Translations = {
   'settings.tournamentImported': 'Torneio importado!',
   'settings.newPlayerNamePlaceholder': 'Nome do novo jogador',
   'settings.storageWarning': 'Não foi possível guardar — o armazenamento pode estar cheio. O seu progresso poderá ser perdido se fechar esta página.',
+  'settings.groupWarning': 'Grupos desiguais ({a} vs {b}) — menos variedade nos confrontos',
 
   // BottomNav
   'nav.play': 'Jogar',
@@ -173,6 +176,7 @@ const pt: Translations = {
   'playerStats.sitOuts': '{count} descanso{s}',
   'playerStats.partners': 'Parceiros',
   'playerStats.opponents': 'Adversários',
+  'playerStats.courts': 'Quadras',
 
   // DistributionStats
   'distribution.hintRest': 'Mostra quão uniformemente os jogos e descansos estão distribuídos. O ideal é ±1.',
@@ -224,8 +228,12 @@ const pt: Translations = {
   'config.format': 'Formato',
   'config.formatAmericano': 'Americano',
   'config.formatTeamAmericano': 'Team Americano',
+  'config.formatTeamMexicano': 'Team Mexicano',
   'config.formatMexicano': 'Mexicano',
   'config.formatMixicano': 'Mixicano',
+  'config.formatKingOfTheCourt': 'Rei do Campo',
+  'config.courtBonus': 'pts bónus',
+  'config.kotcBonusInfo': 'Campos superiores ganham pontos bónus adicionados à classificação',
   'config.groupLabels': 'Grupos',
   'config.groupLabelA': 'Nome Grupo A',
   'config.groupLabelB': 'Nome Grupo B',
@@ -267,6 +275,15 @@ const pt: Translations = {
   'ceremony.tapToReveal': 'Toque para revelar',
   'ceremony.tapForNext': 'Toque para o pr\u00f3ximo pr\u00e9mio',
   'ceremony.tapToFinish': 'Toque para ver resultados',
+
+  // Import validation errors
+  'import.invalidJson': 'JSON inválido — certifique-se de que colou o texto completo da exportação',
+  'import.invalidFormat': 'Formato inválido — esperado um objeto de exportação de torneio',
+  'import.unknownFormat': 'Formato desconhecido "{found}" — esperado "{expected}". Certifique-se de que exportou a partir da app.',
+  'import.missingTournament': 'Dados do torneio em falta',
+  'import.missingField': 'Campo em falta ou inválido: {field}',
+  'import.missingArrays': 'Dados de jogadores ou rondas em falta',
+  'import.invalidConfig': 'Configuração do torneio em falta ou inválida',
 
   // Common
   'common.cancel': 'Cancelar',
