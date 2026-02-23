@@ -7,8 +7,6 @@ import {
   makeInProgressTournament,
   makeCompletedTournament,
   scoreAllMatches,
-  makePlayers,
-  makeConfig,
 } from './helpers';
 
 describe('useStandings', () => {

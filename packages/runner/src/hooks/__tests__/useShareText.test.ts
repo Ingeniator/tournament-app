@@ -8,7 +8,7 @@ import {
   scoreAllMatches,
   makeStandings,
 } from './helpers';
-import type { Nomination, StandingsEntry } from '@padel/common';
+import type { Nomination } from '@padel/common';
 
 describe('useShareText', () => {
   describe('roundResults', () => {

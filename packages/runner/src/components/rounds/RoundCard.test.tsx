@@ -29,10 +29,11 @@ const players: Player[] = [
   { id: 'p5', name: 'Eve' },
 ];
 
-const courts: Court[] = [{ id: 'c1', name: 'Court 1', available: true }];
+const courts: Court[] = [{ id: 'c1', name: 'Court 1' }];
 
 function makeRound(overrides: Partial<Round> = {}): Round {
   return {
+    id: 'r1',
     roundNumber: 1,
     matches: [
       {

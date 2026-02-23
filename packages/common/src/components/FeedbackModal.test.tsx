@@ -5,6 +5,8 @@ import { FeedbackModal } from './FeedbackModal';
 import { I18nProvider } from '../i18n/context';
 import type { ReactNode } from 'react';
 
+import type { TranslationMap } from '../i18n/types';
+
 const translations = {
   en: {
     'feedback.title': 'Feedback',
@@ -12,7 +14,7 @@ const translations = {
     'feedback.send': 'Send',
     'feedback.sending': 'Sending...',
   } as Record<string, string>,
-};
+} as TranslationMap;
 
 function Wrapper({ children }: { children: ReactNode }) {
   return <I18nProvider translations={translations}>{children}</I18nProvider>;

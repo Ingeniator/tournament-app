@@ -19,6 +19,8 @@ vi.mock('./SupportOverlay', () => ({
 
 const { AppFooter } = await import('./AppFooter');
 
+import type { TranslationMap } from '../i18n/types';
+
 const translations = {
   en: {
     'footer.freeOpenSource': 'Free & Open Source',
@@ -27,7 +29,7 @@ const translations = {
     'footer.sendFeedback': 'Send Feedback',
     'footer.options': 'Options',
   } as Record<string, string>,
-};
+} as TranslationMap;
 
 function Wrapper({ children }: { children: ReactNode }) {
   return <I18nProvider translations={translations}>{children}</I18nProvider>;

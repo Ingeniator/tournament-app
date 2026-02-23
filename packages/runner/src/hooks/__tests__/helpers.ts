@@ -1,4 +1,4 @@
-import type { Player, Tournament, TournamentConfig, Round, Match, MatchScore, StandingsEntry } from '@padel/common';
+import type { Player, Tournament, TournamentConfig, MatchScore, StandingsEntry } from '@padel/common';
 import { getStrategy } from '../../strategies';
 
 export function makePlayers(n: number): Player[] {
