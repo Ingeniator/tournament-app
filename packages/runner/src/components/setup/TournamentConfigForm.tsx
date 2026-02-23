@@ -136,7 +136,7 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
         <div className={styles.courtList} role="group" aria-labelledby="courts-label">
           {config.courts.map((court, courtIdx) => (
             <div key={court.id} className={isKOTC ? styles.courtRowKotc : styles.courtRow}>
-              <div className={isKOTC ? styles.courtMainRow : undefined}>
+              <div className={isKOTC ? styles.courtMainRow : styles.courtRow}>
                 <input
                   className={styles.courtInput}
                   type="text"

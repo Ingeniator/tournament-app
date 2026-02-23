@@ -33,6 +33,13 @@ export function PlayScreen() {
         }
       }
     }
+    // For team formats, standings entries use team IDs — aggregate player counts per team
+    if (tournament.teams) {
+      for (const team of tournament.teams) {
+        const count = Math.max(map.get(team.player1Id) ?? 0, map.get(team.player2Id) ?? 0);
+        map.set(team.id, count);
+      }
+    }
     return map;
   }, [tournament]);
   const groupInfo = useMemo<GroupInfo | undefined>(() => {

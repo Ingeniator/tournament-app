@@ -101,7 +101,7 @@ export function DistributionStats({ data, isDynamic, canReshuffle, onReshuffle, 
               <div className={styles.pairList}>
                 {data.repeatPartners.map((p, i) => (
                   <span key={i} className={styles.pair}>
-                    {p.names[0]} & {p.names[1]} \u00d7{p.count}
+                    {p.names[0]} & {p.names[1]} x{p.count}
                   </span>
                 ))}
               </div>
