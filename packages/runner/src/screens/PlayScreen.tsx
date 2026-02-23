@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useTournament } from '../hooks/useTournament';
 import { useStandings } from '../hooks/useStandings';
 import { useNominations } from '../hooks/useNominations';
@@ -102,7 +102,7 @@ export function PlayScreen() {
     nomCardRefs.current[index] = el;
   }, []);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (nominations.length === 0) return;
     // Reset height to measure natural sizes
     setNomMinHeight(0);

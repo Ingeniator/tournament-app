@@ -79,7 +79,13 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
           className={styles.input}
           value={config.format}
           onChange={e => {
-            onUpdate({ format: e.target.value as TournamentFormat });
+            const newFormat = e.target.value as TournamentFormat;
+            const update: Partial<TournamentConfig> = { format: newFormat };
+            // KOTC requires at least 2 courts
+            if (newFormat === 'king-of-the-court' && config.courts.length < 2) {
+              update.courts = [...config.courts, { id: generateId(), name: `Court ${config.courts.length + 1}` }];
+            }
+            onUpdate(update);
           }}
         >
           <option value="americano">{t('config.formatAmericano')}</option>

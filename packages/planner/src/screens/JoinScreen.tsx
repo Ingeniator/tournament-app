@@ -202,7 +202,7 @@ export function JoinScreen() {
             )}
             {tournament.duration && (
               <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Duration</span>
+                <span className={styles.detailLabel}>{t('join.duration')}</span>
                 <span>{tournament.duration >= 60 ? `${Math.floor(tournament.duration / 60)}h${tournament.duration % 60 ? ` ${tournament.duration % 60}min` : ''}` : `${tournament.duration}min`}</span>
               </div>
             )}

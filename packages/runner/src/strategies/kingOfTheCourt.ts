@@ -19,15 +19,20 @@ function validateKOTCSetup(players: Player[], config: TournamentConfig): string[
   if (availableCourts.length > maxCourts && players.length >= 4) {
     errors.push(`Too many courts: ${players.length} players need at most ${maxCourts} court(s)`);
   }
-  // Warning: >25% sitting out
+  return errors;
+}
+
+function validateKOTCWarnings(players: Player[], config: TournamentConfig): string[] {
+  const warnings: string[] = [];
+  const availableCourts = config.courts.filter(c => !c.unavailable);
   if (players.length >= 8 && availableCourts.length >= 2) {
     const playersPerRound = Math.min(availableCourts.length, Math.floor(players.length / 4)) * 4;
     const sitOutCount = players.length - playersPerRound;
     if (sitOutCount > 0 && sitOutCount / players.length > 0.25) {
-      errors.push(`Warning: ${sitOutCount} of ${players.length} players (${Math.round(sitOutCount / players.length * 100)}%) will sit out each round. Consider adding more courts.`);
+      warnings.push(`${sitOutCount} of ${players.length} players (${Math.round(sitOutCount / players.length * 100)}%) will sit out each round. Consider adding more courts.`);
     }
   }
-  return errors;
+  return warnings;
 }
 
 /**
@@ -80,10 +85,10 @@ function buildPromotionGroups(
 
     const score = match.score;
     if (!score) {
-      // Unscored match: treat all as "staying"
+      // Unscored match: treat all as staying (both sides as "winners" so nobody promotes/relegates)
       courtResults.set(ci, {
-        winners: [...match.team1],
-        losers: [...match.team2],
+        winners: [...match.team1, ...match.team2],
+        losers: [],
       });
       continue;
     }
@@ -226,7 +231,7 @@ function generateKOTCRounds(
 
   const playersPerRound = numCourts * 4;
   const sitOutCount = n - playersPerRound;
-  const { gamesPlayed, partnerCounts } = seedFromRounds(existingRounds, activePlayers);
+  const { gamesPlayed, partnerCounts, lastSitOutRound } = seedFromRounds(existingRounds, activePlayers);
 
   if (sitOutCount > 0 && existingRounds.length === 0) {
     warnings.push(`${sitOutCount} player(s) will sit out each round`);
@@ -236,11 +241,12 @@ function generateKOTCRounds(
   const startRoundNumber = existingRounds.length + 1;
 
   for (let r = 0; r < count; r++) {
-    const { sitOutIds } = selectSitOuts(activePlayers, sitOutCount, gamesPlayed);
+    const { sitOutIds } = selectSitOuts(activePlayers, sitOutCount, gamesPlayed, lastSitOutRound);
     const roundPlayers = activePlayers.filter(p => !sitOutIds.has(p.id));
     const roundPlayerIds = new Set(roundPlayers.map(p => p.id));
 
     let groups: string[][];
+    let standingsMap: Map<string, number> | undefined;
 
     if (existingRounds.length + r === 0) {
       // Round 1: random grouping with basic partner-repeat avoidance
@@ -253,13 +259,13 @@ function generateKOTCRounds(
       // Subsequent rounds: promotion/relegation
       const allRoundsForStandings = [...existingRounds, ...rounds];
 
-      // Calculate standings for ranking
+      // Calculate standings once for both promotion groups and pairing
       const standingsEntries = calculateKOTCStandingsInternal(
         activePlayers,
         allRoundsForStandings,
         config,
       );
-      const standingsMap = new Map(standingsEntries.map((s, i) => [s.playerId, i]));
+      standingsMap = new Map(standingsEntries.map((s, i) => [s.playerId, i]));
 
       // Get previous round
       const prevRound = allRoundsForStandings[allRoundsForStandings.length - 1];
@@ -269,20 +275,8 @@ function generateKOTCRounds(
         availableCourts.slice(0, numCourts),
         standingsMap,
         roundPlayerIds,
-        [...existingRounds, ...rounds],
-      );
-    }
-
-    // Pre-compute standings once for pairing within court groups
-    let standingsMap: Map<string, number> | undefined;
-    if (existingRounds.length + r > 0) {
-      const allRoundsForStandings = [...existingRounds, ...rounds];
-      const standingsEntries = calculateKOTCStandingsInternal(
-        activePlayers,
         allRoundsForStandings,
-        config,
       );
-      standingsMap = new Map(standingsEntries.map((s, i) => [s.playerId, i]));
     }
 
     // Create matches: within each group, 1st+4th vs 2nd+3rd by standings
@@ -338,9 +332,15 @@ function generateKOTCRounds(
       }
     }
 
+    // Update sit-out tracking for multi-round fairness
+    const roundNum = startRoundNumber + r;
+    for (const id of sitOutIds) {
+      lastSitOutRound.set(id, roundNum);
+    }
+
     rounds.push({
       id: generateId(),
-      roundNumber: startRoundNumber + r,
+      roundNumber: roundNum,
       matches,
       sitOuts: [...sitOutIds],
     });
@@ -476,6 +476,7 @@ export const kingOfTheCourtStrategy: TournamentStrategy = {
   isDynamic: true,
   hasFixedPartners: false,
   validateSetup: validateKOTCSetup,
+  validateWarnings: validateKOTCWarnings,
   validateScore: commonValidateScore,
 
   calculateStandings(tournament: Tournament) {

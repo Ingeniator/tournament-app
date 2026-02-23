@@ -16,7 +16,9 @@ export function useTelegram(): TelegramContext {
     const tg = window.Telegram?.WebApp;
     const user = tg?.initDataUnsafe?.user;
     const chatInstance = tg?.initDataUnsafe?.chat_instance ?? null;
-    console.log('[TG] WebApp:', !!tg, 'initData:', tg?.initData, 'initDataUnsafe:', JSON.stringify(tg?.initDataUnsafe));
+    if (import.meta.env.DEV) {
+      console.log('[TG] WebApp:', !!tg, 'initData:', tg?.initData, 'initDataUnsafe:', JSON.stringify(tg?.initDataUnsafe));
+    }
     if (!tg || !user) return { user: null, chatInstance };
 
     tg.ready();

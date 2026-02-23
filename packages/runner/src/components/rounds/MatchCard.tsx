@@ -1,4 +1,5 @@
 import type { Match, MatchScore, Player, Court, TournamentFormat } from '@padel/common';
+import { useTranslation } from '@padel/common';
 import { ScoreInput } from './ScoreInput';
 import styles from './MatchCard.module.css';
 
@@ -15,11 +16,12 @@ interface MatchCardProps {
 }
 
 export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, format, onScore, onClear, onTapScore }: MatchCardProps) {
+  const { t } = useTranslation();
   const name = (id: string) => players.find(p => p.id === id)?.name ?? '?';
   const isKOTC = format === 'king-of-the-court';
-  const availableCourts = isKOTC ? courts.filter(c => !c.unavailable) : courts;
-  const courtIndex = availableCourts.findIndex(c => c.id === match.courtId);
-  const bonus = isKOTC && courtIndex >= 0 ? availableCourts.length - 1 - courtIndex : 0;
+  // Use full court list (not filtered by availability) for stable bonus display on historical matches
+  const courtIndex = isKOTC ? courts.findIndex(c => c.id === match.courtId) : -1;
+  const bonus = isKOTC && courtIndex >= 0 ? courts.length - 1 - courtIndex : 0;
   const rawCourtName = courts.find(c => c.id === match.courtId)?.name ?? match.courtId;
   const courtName = isKOTC && courtIndex === 0 ? `\u{1F451} ${rawCourtName}` : rawCourtName;
   const team1Won = match.score && match.score.team1Points > match.score.team2Points;
@@ -58,7 +60,7 @@ export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, fo
           <div
             className={`${styles.scoreCenter} ${onTapScore ? styles.tappable : ''}`}
             onClick={onTapScore}
-            {...(onTapScore ? { role: 'button', tabIndex: 0, onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTapScore(); } }, 'aria-label': 'Edit score' } : {})}
+            {...(onTapScore ? { role: 'button', tabIndex: 0, onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTapScore(); } }, 'aria-label': t('play.editScore') } : {})}
           >
             <span className={styles.scoreValue}>{match.score.team1Points}</span>
             <span className={styles.scoreSeparator}>:</span>
@@ -68,7 +70,7 @@ export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, fo
           <div
             className={`${styles.scoreCenter} ${onTapScore ? styles.tappable : ''}`}
             onClick={onTapScore}
-            {...(onTapScore ? { role: 'button', tabIndex: 0, onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTapScore(); } }, 'aria-label': 'Enter score' } : {})}
+            {...(onTapScore ? { role: 'button', tabIndex: 0, onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTapScore(); } }, 'aria-label': t('play.enterScore') } : {})}
           >
             <span className={styles.noScore}>–</span>
             <span className={styles.scoreSeparator}>:</span>

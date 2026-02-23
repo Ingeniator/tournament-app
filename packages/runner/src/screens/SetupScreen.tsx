@@ -18,14 +18,14 @@ export function SetupScreen() {
     const strategy = getStrategy(tournament.config.format);
     const resolvedConfig = resolveConfigDefaults(tournament.config, tournament.players.length);
     return strategy.validateSetup(tournament.players, resolvedConfig);
-  }, [tournament]);
+  }, [tournament?.players, tournament?.config]);
 
   const warnings = useMemo(() => {
     if (!tournament) return [];
     const strategy = getStrategy(tournament.config.format);
     const resolvedConfig = resolveConfigDefaults(tournament.config, tournament.players.length);
     return strategy.validateWarnings?.(tournament.players, resolvedConfig) ?? [];
-  }, [tournament]);
+  }, [tournament?.players, tournament?.config]);
 
   if (!tournament) return null;
 

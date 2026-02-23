@@ -36,6 +36,11 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
     }
   }, [autoShowStats, onStatsShown]);
 
+  // Cancel optimize loop on unmount
+  useEffect(() => {
+    return () => { optimizeCtrlRef.current.cancelled = true; };
+  }, []);
+
   const handleExportPlan = useCallback(() => {
     if (!tournament) return;
     const nameOf = (id: string) => tournament.players.find(p => p.id === id)?.name ?? '?';
@@ -236,7 +241,7 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
           courts={tournament.config.courts}
           pointsPerMatch={tournament.config.pointsPerMatch}
           format={tournament.config.format}
-          readOnly={editingMatch?.roundId !== round.id || editingMatch?.matchId === undefined}
+          readOnly={editingMatch?.roundId !== round.id}
           editingMatchId={editingMatch?.roundId === round.id ? editingMatch.matchId : undefined}
           onStartEdit={(matchId) => setEditingMatch({ roundId: round.id, matchId })}
           onTapUnscored={(matchId) => setEditingMatch({ roundId: round.id, matchId })}

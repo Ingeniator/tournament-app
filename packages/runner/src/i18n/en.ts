@@ -55,6 +55,8 @@ const en: Translations = {
   'play.previousRound': 'Previous \u2014 Round {num}',
   'play.upNextRound': 'Up Next \u2014 Round {num}',
   'play.sit': 'Sit: {names}',
+  'play.editScore': 'Edit score',
+  'play.enterScore': 'Enter score',
   'play.standings': 'Standings',
   'play.roundComplete': 'Round {num} complete!',
   'play.getReady': 'Get ready for the next round',

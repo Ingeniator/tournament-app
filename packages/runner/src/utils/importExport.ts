@@ -72,5 +72,10 @@ export function validateImport(text: string): { tournament: Tournament; error: n
     return { tournament: null, error: { key: 'import.invalidConfig' } };
   }
 
+  const knownFormats = ['americano', 'mexicano', 'mixicano', 'team-americano', 'team-mexicano', 'king-of-the-court'];
+  if (typeof config.format !== 'string' || !knownFormats.includes(config.format)) {
+    return { tournament: null, error: { key: 'import.invalidConfig' } };
+  }
+
   return { tournament: t as unknown as Tournament, error: null };
 }

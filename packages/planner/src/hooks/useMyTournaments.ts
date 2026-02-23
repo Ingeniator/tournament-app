@@ -37,16 +37,20 @@ export function useMyTournaments(uid: string | null) {
       const ids = Object.keys(data);
       const results: TournamentSummary[] = [];
 
-      await Promise.all(ids.map(async (id) => {
-        const tSnap = await get(ref(db!, `tournaments/${id}`));
-        if (!tSnap.exists()) {
-          // Tournament deleted — lazy cleanup
-          remove(ref(db!, `users/${uid}/organized/${id}`));
-          return;
-        }
-        const data = tSnap.val();
-        results.push(toSummary(id, data as PlannerTournament, typeof data.completedAt === 'number' ? data.completedAt : null));
-      }));
+      try {
+        await Promise.all(ids.map(async (id) => {
+          const tSnap = await get(ref(db!, `tournaments/${id}`));
+          if (!tSnap.exists()) {
+            // Tournament deleted — lazy cleanup
+            remove(ref(db!, `users/${uid}/organized/${id}`));
+            return;
+          }
+          const data = tSnap.val();
+          results.push(toSummary(id, data as PlannerTournament, typeof data.completedAt === 'number' ? data.completedAt : null));
+        }));
+      } catch {
+        // Network or permission error — show whatever we have
+      }
 
       // Skip if a newer listener call has started (re-entrant from remove())
       if (version !== versionRef.current) return;

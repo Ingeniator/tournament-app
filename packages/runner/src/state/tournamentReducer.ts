@@ -187,8 +187,9 @@ export function tournamentReducer(
       if (!state || state.phase !== 'in-progress') return state;
       const livePlayer: Player = { id: generateId(), name: action.payload.name, ...(action.payload.group ? { group: action.payload.group } : {}) };
       const updatedPlayers = deduplicateNames([...state.players, livePlayer]);
-      const newRounds = regenerateUnscoredRounds(state, updatedPlayers, state.config);
-      return { ...state, players: updatedPlayers, rounds: newRounds, updatedAt: Date.now() };
+      const intermediateState = { ...state, players: updatedPlayers };
+      const newRounds = regenerateUnscoredRounds(intermediateState, updatedPlayers, state.config);
+      return { ...intermediateState, rounds: newRounds, updatedAt: Date.now() };
     }
 
     case 'SET_FUTURE_ROUNDS': {
@@ -406,8 +407,9 @@ export function tournamentReducer(
         if (allScored && updatedRounds.length < totalTarget) {
           const active = state.players.filter(p => !p.unavailable);
           const excl = state.players.filter(p => p.unavailable).map(p => p.id);
-          const { rounds: next } = strategy.generateAdditionalRounds(active, state.config, updatedRounds, 1, excl, undefined, state);
-          return { ...state, rounds: [...updatedRounds, ...next], updatedAt: Date.now() };
+          const updatedState = { ...state, rounds: updatedRounds };
+          const { rounds: next } = strategy.generateAdditionalRounds(active, state.config, updatedRounds, 1, excl, undefined, updatedState);
+          return { ...updatedState, rounds: [...updatedRounds, ...next], updatedAt: Date.now() };
         }
       }
 

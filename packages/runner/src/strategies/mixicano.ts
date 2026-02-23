@@ -173,9 +173,15 @@ function generateMixicanoRounds(
       }
     }
 
+    // Update sit-out tracking for multi-round fairness
+    const roundNum = startRoundNumber + r;
+    for (const id of sitOutIds) {
+      lastSitOutRound.set(id, roundNum);
+    }
+
     rounds.push({
       id: generateId(),
-      roundNumber: startRoundNumber + r,
+      roundNumber: roundNum,
       matches,
       sitOuts: [...sitOutIds],
     });

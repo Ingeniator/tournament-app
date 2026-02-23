@@ -62,7 +62,7 @@ function AppContent() {
         setShowStatsOnMount(true);
       }
     }
-  }, [tournament?.phase]);
+  }, [tournament?.phase, tournament?.config.format]);
 
   // No tournament — show home
   if (!tournament) {

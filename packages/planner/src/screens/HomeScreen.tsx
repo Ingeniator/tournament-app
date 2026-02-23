@@ -305,7 +305,7 @@ export function HomeScreen() {
             <p className={styles.empty}>{t('home.noTournamentsCreated')}</p>
           ) : (
             <div className={styles.tournamentList}>
-              {myTournaments.map(t => renderTournamentItem(t, 'organizer'))}
+              {myTournaments.map(ti => renderTournamentItem(ti, 'organizer'))}
             </div>
           )}
         </Card>
@@ -319,7 +319,7 @@ export function HomeScreen() {
             <p className={styles.empty}>{t('home.noTournamentsJoined')}</p>
           ) : (
             <div className={styles.tournamentList}>
-              {registeredTournaments.map(t => renderTournamentItem(t, 'join'))}
+              {registeredTournaments.map(ti => renderTournamentItem(ti, 'join'))}
             </div>
           )}
         </Card>
