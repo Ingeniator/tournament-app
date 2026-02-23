@@ -34,6 +34,15 @@ test.describe('Mexicano Flow', () => {
     page.on('dialog', dialog => dialog.accept());
     await page.getByRole('button', { name: 'Finish Tournament' }).click();
 
+    // Skip ceremony screen if it appears
+    const skipBtn = page.getByRole('button', { name: 'Skip' });
+    try {
+      await skipBtn.waitFor({ timeout: 3000 });
+      await skipBtn.click();
+    } catch {
+      // No ceremony screen
+    }
+
     await expect(page.getByRole('button', { name: 'Share Results as Text' })).toBeVisible();
   });
 
@@ -48,6 +57,7 @@ test.describe('Mexicano Flow', () => {
 
     // Verify a scored value is visible in the standings table
     await expect(page.getByRole('cell', { name: '15' }).first()).toBeVisible();
+    await expect(page).toHaveScreenshot('mexicano-standings.png');
   });
 
   test('dynamic round generation after scoring', async ({ page }) => {

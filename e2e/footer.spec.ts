@@ -16,6 +16,7 @@ test.describe('AppFooter', () => {
       await expect(footer.getByRole('button', { name: 'Support us' })).toBeVisible();
       await expect(footer.getByRole('button', { name: 'Send feedback' })).toBeVisible();
       await expect(footer.getByRole('button', { name: 'Personalize' })).toBeVisible();
+      await expect(footer).toHaveScreenshot('footer-home.png');
     });
 
     test('Personalize opens modal with language selector', async ({ page }) => {
@@ -29,6 +30,7 @@ test.describe('AppFooter', () => {
       for (const lang of ['EN', 'ES', 'IT', 'PT']) {
         await expect(page.getByRole('button', { name: lang, exact: true })).toBeVisible();
       }
+      await expect(page).toHaveScreenshot('footer-personalize-modal.png');
     });
 
     test('Personalize modal closes on X button', async ({ page }) => {

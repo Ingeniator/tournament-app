@@ -11,7 +11,7 @@ import { useShareText } from '../hooks/useShareText';
 import { copyToClipboard } from '../utils/clipboard';
 import { shareStandingsImage } from '../utils/standingsImage';
 import { ref, push, set } from 'firebase/database';
-import { db, firebaseConfigured } from '../firebase';
+import { auth, db, firebaseConfigured } from '../firebase';
 import { Button, FeedbackModal, Modal, SupportOverlay, Toast, useToast, useTranslation } from '@padel/common';
 import { getStrategy } from '../strategies';
 import styles from './PlayScreen.module.css';
@@ -232,7 +232,7 @@ export function PlayScreen() {
             </>
           )}
         </div>
-        <SupportOverlay open={showSupport} onClose={() => setShowSupport(false)} />
+        <SupportOverlay open={showSupport} onClose={() => setShowSupport(false)} auth={auth} />
         <FeedbackModal
           open={feedbackOpen}
           onClose={() => setFeedbackOpen(false)}

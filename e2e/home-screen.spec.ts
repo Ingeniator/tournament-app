@@ -27,6 +27,7 @@ test.describe('Home Screen', () => {
 
   test('new play creates tournament', async ({ page }) => {
     await expect(page.getByRole('button', { name: 'New Play' })).toBeVisible();
+    await expect(page).toHaveScreenshot('home-empty-state.png');
     await createTournament(page);
 
     // Should be in setup screen
@@ -86,5 +87,6 @@ test.describe('Home Screen', () => {
 
     // Should show an error message
     await expect(page.locator('[class*="error"], [class*="Error"]').first()).toBeVisible();
+    await expect(page).toHaveScreenshot('home-import-error.png');
   });
 });

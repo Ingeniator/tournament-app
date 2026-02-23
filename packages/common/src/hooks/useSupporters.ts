@@ -9,7 +9,19 @@ const apiKey = import.meta.env.VITE_FIREBASE_API_KEY as string | undefined;
 const AUTH_KEY = 'supporter-auth';
 const NAME_KEY = 'supporter-name';
 
-async function getAuthToken(): Promise<string> {
+interface FirebaseAuth {
+  currentUser: { getIdToken: (forceRefresh?: boolean) => Promise<string> } | null;
+}
+
+async function getAuthToken(auth?: FirebaseAuth | null): Promise<string> {
+  // Prefer Firebase SDK auth if available
+  if (auth?.currentUser) {
+    return auth.currentUser.getIdToken(false);
+  }
+
+  // Fallback: raw REST API for environments without Firebase SDK
+  if (!apiKey) throw new Error('No auth available');
+
   const stored = localStorage.getItem(AUTH_KEY);
   if (stored) {
     try {
@@ -48,7 +60,7 @@ export function getSavedName(): string {
   return localStorage.getItem(NAME_KEY) ?? '';
 }
 
-export function useSupporters() {
+export function useSupporters(auth?: FirebaseAuth | null) {
   const [supporters, setSupporters] = useState<Supporter[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -80,8 +92,8 @@ export function useSupporters() {
   const grouped = useMemo(() => groupSupporters(supporters), [supporters]);
 
   const sayThanks = useCallback(async (name: string, amount: number, message?: string) => {
-    if (!dbUrl || !apiKey) return;
-    const token = await getAuthToken();
+    if (!dbUrl) return;
+    const token = await getAuthToken(auth);
     const id = generateId();
     const entry: Record<string, unknown> = { name, amount, timestamp: Date.now() };
     if (message) entry.message = message;
@@ -91,7 +103,7 @@ export function useSupporters() {
     });
     localStorage.setItem(NAME_KEY, name);
     await fetchSupporters();
-  }, [fetchSupporters]);
+  }, [auth, fetchSupporters]);
 
   return { supporters, grouped, loading, sayThanks };
 }

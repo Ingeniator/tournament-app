@@ -20,6 +20,7 @@ test.describe('Settings', () => {
     for (const name of ['Alice', 'Bob', 'Charlie', 'Diana']) {
       await expect(page.getByText(name)).toBeVisible();
     }
+    await expect(page).toHaveScreenshot('settings-overview.png');
   });
 
   test('rename tournament', async ({ page }) => {
@@ -78,6 +79,7 @@ test.describe('Settings', () => {
 
     // After toggling, Alice should show "Unavailable"
     await expect(page.locator('button', { hasText: /^Unavailable$/ })).toBeVisible();
+    await expect(page).toHaveScreenshot('settings-player-unavailable.png');
   });
 
   test('edit points per match', async ({ page }) => {

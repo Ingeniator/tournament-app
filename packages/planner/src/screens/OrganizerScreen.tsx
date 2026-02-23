@@ -1,14 +1,15 @@
-import { useState, useMemo, useRef, type ClipboardEvent, type ReactNode } from 'react';
+import { useState, useMemo, type ReactNode } from 'react';
 import { ref, push, set } from 'firebase/database';
-import { Button, Card, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation } from '@padel/common';
+import { Button, Card, FeedbackModal, AppFooter, Toast, useToast, useTranslation } from '@padel/common';
 import type { TournamentFormat, Court } from '@padel/common';
-import { generateId, parsePlayerList } from '@padel/common';
+import { generateId } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
-import { db } from '../firebase';
+import { auth, db } from '../firebase';
 import { exportRunnerTournamentJSON } from '../utils/exportToRunner';
 import { restoreFromBackup } from '../utils/restoreFromBackup';
 import { useStartGuard } from '../hooks/useStartGuard';
 import { StartWarningModal } from '../components/StartWarningModal';
+import { PlayerList } from '../components/organizer/PlayerList';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import styles from './OrganizerScreen.module.css';
 
@@ -40,13 +41,8 @@ export function OrganizerScreen() {
   const { toastMessage, showToast } = useToast();
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
-  const [newPlayerName, setNewPlayerName] = useState('');
-  const addingPlayer = useRef(false);
-  const addPlayerInputRef = useRef<HTMLInputElement>(null);
   const [showFormatInfo, setShowFormatInfo] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [linkingPlayer, setLinkingPlayer] = useState<{ id: string; name: string; telegramUsername?: string } | null>(null);
-  const [linkDraft, setLinkDraft] = useState('');
 
   const capacity = tournament ? tournament.courts.length * 4 + (tournament.extraSpots ?? 0) : 0;
   const statuses = useMemo(() => getPlayerStatuses(players, capacity), [players, capacity]);
@@ -106,7 +102,6 @@ export function OrganizerScreen() {
   }
 
   const confirmedCount = players.filter(p => p.confirmed !== false).length;
-  const reserveCount = [...statuses.values()].filter(s => s === 'reserve').length;
 
   const botName = import.meta.env.VITE_TELEGRAM_BOT_NAME as string | undefined;
   const isTelegram = !!window.Telegram?.WebApp?.initData;
@@ -444,113 +439,16 @@ export function OrganizerScreen() {
       </Card>
 
       {/* Player list */}
-      <Card>
-        <h2 className={styles.sectionTitle}>
-          {t('organizer.players', {
-            confirmed: confirmedCount,
-            capacity,
-            reserve: reserveCount > 0 ? t('organizer.reserveSuffix', { count: reserveCount }) : '',
-          })}
-        </h2>
-        {players.length === 0 ? (
-          <p className={styles.empty}>{t('organizer.noPlayersYet')}</p>
-        ) : (
-          <div className={styles.playerList}>
-            {players.map((player, i) => (
-              <div key={player.id} className={styles.playerItem}>
-                <span className={styles.playerNum}>{i + 1}</span>
-                <span className={styles.playerName}>
-                  {player.telegramUsername ? (
-                    <a
-                      href={`https://t.me/${player.telegramUsername}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={styles.playerLink}
-                    >
-                      {player.name}
-                    </a>
-                  ) : (
-                    player.name
-                  )}
-                  {statuses.get(player.id) === 'reserve' && (
-                    <span className={styles.reserveBadge}>{t('organizer.reserve')}</span>
-                  )}
-                </span>
-                <button
-                  className={player.telegramUsername ? styles.linkBtnActive : styles.linkBtn}
-                  onClick={() => {
-                    setLinkingPlayer({ id: player.id, name: player.name, telegramUsername: player.telegramUsername });
-                    setLinkDraft(player.telegramUsername ? `@${player.telegramUsername}` : '');
-                  }}
-                  title={t('organizer.linkProfile')}
-                >
-                  &#x1F517;
-                </button>
-                <button
-                  className={player.confirmed !== false ? styles.statusConfirmed : styles.statusCancelled}
-                  onClick={() => toggleConfirmed(player.id, player.confirmed !== false)}
-                  title={player.confirmed !== false ? t('organizer.markCancelled') : t('organizer.markConfirmed')}
-                >
-                  {player.confirmed !== false ? '\u2713' : '\u2717'}
-                </button>
-                <button
-                  className={styles.removeBtn}
-                  onClick={() => removePlayer(player.id)}
-                  title={t('organizer.removePlayer')}
-                >
-                  &times;
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-        <div className={styles.addPlayerRow}>
-          <input
-            ref={addPlayerInputRef}
-            className={styles.addPlayerInput}
-            type="text"
-            value={newPlayerName}
-            onChange={e => setNewPlayerName(e.target.value)}
-            placeholder={t('organizer.playerNamePlaceholder')}
-            onKeyDown={async e => {
-              if (e.key === 'Enter' && newPlayerName.trim() && !addingPlayer.current) {
-                addingPlayer.current = true;
-                const name = newPlayerName.trim();
-                setNewPlayerName('');
-                await addPlayer(name);
-                addingPlayer.current = false;
-                addPlayerInputRef.current?.focus();
-              }
-            }}
-            onPaste={(e: ClipboardEvent<HTMLInputElement>) => {
-              const text = e.clipboardData.getData('text');
-              if (!text.includes('\n')) return;
-              e.preventDefault();
-              const names = parsePlayerList(text);
-              if (names.length > 0) {
-                bulkAddPlayers(names);
-              }
-            }}
-          />
-          <Button
-            variant="ghost"
-            size="small"
-            onClick={async () => {
-              if (newPlayerName.trim() && !addingPlayer.current) {
-                addingPlayer.current = true;
-                const name = newPlayerName.trim();
-                setNewPlayerName('');
-                await addPlayer(name);
-                addingPlayer.current = false;
-                addPlayerInputRef.current?.focus();
-              }
-            }}
-            disabled={!newPlayerName.trim()}
-          >
-            {t('organizer.addPlayer')}
-          </Button>
-        </div>
-      </Card>
+      <PlayerList
+        players={players}
+        capacity={capacity}
+        addPlayer={addPlayer}
+        bulkAddPlayers={bulkAddPlayers}
+        removePlayer={removePlayer}
+        toggleConfirmed={toggleConfirmed}
+        updatePlayerTelegram={updatePlayerTelegram}
+        statuses={statuses}
+      />
 
       {/* Export */}
       {confirmedCount > 0 && confirmedCount < capacity && (() => {
@@ -595,6 +493,7 @@ export function OrganizerScreen() {
 
       <AppFooter
         onFeedbackClick={() => setFeedbackOpen(true)}
+        auth={auth}
       />
 
       <FeedbackModal
@@ -615,57 +514,6 @@ export function OrganizerScreen() {
         onProceed={() => proceedAnyway(tournament!, players)}
         onClose={dismissWarning}
       />
-
-      <Modal
-        open={!!linkingPlayer}
-        title={t('organizer.linkProfileTitle', { name: linkingPlayer?.name ?? '' })}
-        onClose={() => setLinkingPlayer(null)}
-      >
-        <div className={styles.linkForm}>
-          <label className={styles.linkLabel}>{t('organizer.telegramUsername')}</label>
-          <input
-            className={styles.linkInput}
-            type="text"
-            value={linkDraft}
-            onChange={e => setLinkDraft(e.target.value)}
-            placeholder={t('organizer.telegramPlaceholder')}
-            autoFocus
-            onKeyDown={e => {
-              if (e.key === 'Enter' && linkingPlayer) {
-                const username = linkDraft.trim().replace(/^@/, '') || null;
-                updatePlayerTelegram(linkingPlayer.id, username);
-                setLinkingPlayer(null);
-              }
-            }}
-          />
-          <div className={styles.linkActions}>
-            {linkingPlayer?.telegramUsername && (
-              <Button
-                variant="secondary"
-                size="small"
-                onClick={() => {
-                  updatePlayerTelegram(linkingPlayer.id, null);
-                  setLinkingPlayer(null);
-                }}
-              >
-                {t('organizer.removeLink')}
-              </Button>
-            )}
-            <Button
-              size="small"
-              onClick={() => {
-                if (!linkingPlayer) return;
-                const username = linkDraft.trim().replace(/^@/, '') || null;
-                updatePlayerTelegram(linkingPlayer.id, username);
-                setLinkingPlayer(null);
-              }}
-              disabled={!linkDraft.trim()}
-            >
-              {t('organizer.saveLink')}
-            </Button>
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 }

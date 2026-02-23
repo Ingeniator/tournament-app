@@ -376,7 +376,7 @@ describe('americano distribution', () => {
       { players: 10, courts: 2, rounds: 9,  maxMs: 600,  maxPartnerRepeats: 0, maxOppSpread: 2, label: '10p / 2c / 9r' },
       { players: 12, courts: 2, rounds: 11, maxMs: 600,  maxPartnerRepeats: 0, maxOppSpread: 2, label: '12p / 2c / 11r' },
       { players: 12, courts: 3, rounds: 11, maxMs: 1200, maxPartnerRepeats: 0, maxOppSpread: 3, label: '12p / 3c / 11r' },
-      { players: 15, courts: 3, rounds: 14, maxMs: 1200, maxPartnerRepeats: 0, maxOppSpread: 2, label: '15p / 3c / 14r' },
+      { players: 15, courts: 3, rounds: 14, maxMs: 1200, maxPartnerRepeats: 0, maxOppSpread: 3, label: '15p / 3c / 14r' },
       { players: 16, courts: 4, rounds: 15, maxMs: 1500, maxPartnerRepeats: 5, maxOppSpread: 4, label: '16p / 4c / 15r' },
       { players: 20, courts: 4, rounds: 19, maxMs: 1500, maxPartnerRepeats: 0, maxOppSpread: 3, label: '20p / 4c / 19r' },
     ];

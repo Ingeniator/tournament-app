@@ -6,9 +6,10 @@ import styles from './AppFooter.module.css';
 
 interface AppFooterProps {
   onFeedbackClick: () => void;
+  auth?: { currentUser: { getIdToken: (forceRefresh?: boolean) => Promise<string> } | null } | null;
 }
 
-export function AppFooter({ onFeedbackClick }: AppFooterProps) {
+export function AppFooter({ onFeedbackClick, auth }: AppFooterProps) {
   const { t } = useTranslation();
   const [optionsOpen, setOptionsOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
@@ -33,7 +34,7 @@ export function AppFooter({ onFeedbackClick }: AppFooterProps) {
         <div className={styles.version}>v.{__COMMIT_HASH__}</div>
       </footer>
       <OptionsModal open={optionsOpen} onClose={() => setOptionsOpen(false)} />
-      <SupportOverlay open={supportOpen} onClose={() => setSupportOpen(false)} />
+      <SupportOverlay open={supportOpen} onClose={() => setSupportOpen(false)} auth={auth} />
     </>
   );
 }

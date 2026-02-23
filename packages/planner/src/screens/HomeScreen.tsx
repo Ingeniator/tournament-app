@@ -3,7 +3,7 @@ import { ref, push, set } from 'firebase/database';
 import { Button, Card, SkinPicker, FeedbackModal, AppFooter, useTranslation } from '@padel/common';
 import type { TournamentSummary } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
-import { db } from '../firebase';
+import { auth, db } from '../firebase';
 import { randomTournamentName } from '../utils/tournamentNames';
 import styles from './HomeScreen.module.css';
 
@@ -329,6 +329,7 @@ export function HomeScreen() {
 
       <AppFooter
         onFeedbackClick={() => setFeedbackOpen(true)}
+        auth={auth}
       />
 
       <FeedbackModal

@@ -48,6 +48,7 @@ test.describe('Settings Advanced', () => {
     // The edit panel should show the availability toggle and replace button
     await expect(page.locator('button', { hasText: /^Available$/ })).toBeVisible();
     await expect(page.getByText('Replace with...')).toBeVisible();
+    await expect(page).toHaveScreenshot('settings-court-edit.png');
   });
 
   test('add court from settings with enough players', async ({ page }) => {

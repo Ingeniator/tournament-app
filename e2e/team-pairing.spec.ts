@@ -19,6 +19,7 @@ test.describe('Team Pairing', () => {
     for (const name of ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank']) {
       await expect(page.getByText(name)).toBeVisible();
     }
+    await expect(page).toHaveScreenshot('team-pairing-cards.png');
   });
 
   test('shuffle randomizes teams', async ({ page }) => {
@@ -81,5 +82,6 @@ test.describe('Team Pairing', () => {
 
     // Should see round content on the Log tab
     await expect(page.getByText('Round 1')).toBeVisible();
+    await expect(page).toHaveScreenshot('team-pairing-started.png');
   });
 });

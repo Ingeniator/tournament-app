@@ -18,6 +18,7 @@ test.describe('Tournament Flow', () => {
   test('home screen renders', async ({ page }) => {
     await expect(page.getByRole('heading', { name: 'Tournament Manager' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'New Play' })).toBeVisible();
+    await expect(page).toHaveScreenshot('flow-home-screen.png');
   });
 
   test('create tournament and add players', async ({ page }) => {
@@ -26,6 +27,7 @@ test.describe('Tournament Flow', () => {
 
     // Verify player count in setup footer
     await expect(page.getByText('4 player(s) added')).toBeVisible();
+    await expect(page).toHaveScreenshot('flow-setup-with-players.png');
 
     // Verify each player name appears
     for (const name of ['Alice', 'Bob', 'Charlie', 'Diana']) {

@@ -13,15 +13,17 @@ test.describe('Log Screen', () => {
   });
 
   test('displays all round cards', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: 'Round 1' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Round 2' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Round 3' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Round 1', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Round 2', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Round 3', exact: true })).toBeVisible();
+    await expect(page).toHaveScreenshot('log-round-cards.png');
   });
 
   test('statistics modal opens and closes', async ({ page }) => {
     await page.getByRole('button', { name: 'Statistics' }).click();
 
     await expect(page.getByRole('heading', { name: 'Statistics' })).toBeVisible();
+    await expect(page).toHaveScreenshot('log-statistics-modal.png');
 
     await page.getByRole('button', { name: '✕' }).click();
     await expect(page.getByRole('heading', { name: 'Statistics' })).not.toBeVisible();

@@ -15,11 +15,12 @@ const AMOUNTS = [
 interface SupportOverlayProps {
   open: boolean;
   onClose: () => void;
+  auth?: { currentUser: { getIdToken: (forceRefresh?: boolean) => Promise<string> } | null } | null;
 }
 
-export function SupportOverlay({ open, onClose }: SupportOverlayProps) {
+export function SupportOverlay({ open, onClose, auth }: SupportOverlayProps) {
   const { t } = useTranslation();
-  const { supporters, grouped, loading, sayThanks } = useSupporters();
+  const { supporters, grouped, loading, sayThanks } = useSupporters(auth);
   const [name, setName] = useState(() => getSavedName());
   const [amount, setAmount] = useState(0);
   const [message, setMessage] = useState('');
