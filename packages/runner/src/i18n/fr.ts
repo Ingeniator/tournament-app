@@ -55,6 +55,8 @@ const fr: Translations = {
   'play.previousRound': 'Précédent — Tour {num}',
   'play.upNextRound': 'Suivant — Tour {num}',
   'play.sit': 'Repos : {names}',
+  'play.editScore': 'Modifier le score',
+  'play.enterScore': 'Saisir le score',
   'play.standings': 'Classement',
   'play.roundComplete': 'Tour {num} terminé !',
   'play.getReady': 'Préparez-vous pour le prochain tour',

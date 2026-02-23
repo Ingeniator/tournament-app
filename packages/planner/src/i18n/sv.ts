@@ -122,6 +122,7 @@ const sv: Translations = {
   // JoinScreen
   'join.back': 'Tillbaka',
   'join.date': 'Datum',
+  'join.duration': 'Längd',
   'join.place': 'Plats',
   'join.organizer': 'Arrangör',
   'join.groupChat': 'Gruppchatt',

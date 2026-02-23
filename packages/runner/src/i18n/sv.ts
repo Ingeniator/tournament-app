@@ -55,6 +55,8 @@ const sv: Translations = {
   'play.previousRound': 'Föregående — Omgång {num}',
   'play.upNextRound': 'Nästa — Omgång {num}',
   'play.sit': 'Vilar: {names}',
+  'play.editScore': 'Redigera poäng',
+  'play.enterScore': 'Ange poäng',
   'play.standings': 'Ställning',
   'play.roundComplete': 'Omgång {num} klar!',
   'play.getReady': 'Gör dig redo för nästa omgång',

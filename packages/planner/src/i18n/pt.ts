@@ -122,6 +122,7 @@ const pt: Translations = {
   // JoinScreen
   'join.back': 'Voltar',
   'join.date': 'Data',
+  'join.duration': 'Duração',
   'join.place': 'Local',
   'join.organizer': 'Organizador',
   'join.groupChat': 'Chat de grupo',

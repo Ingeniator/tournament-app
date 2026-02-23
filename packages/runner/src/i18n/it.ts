@@ -57,6 +57,8 @@ const it: Translations = {
   'play.previousRound': 'Precedente \u2014 Turno {num}',
   'play.upNextRound': 'Prossimo \u2014 Turno {num}',
   'play.sit': 'Riposo: {names}',
+  'play.editScore': 'Modifica punteggio',
+  'play.enterScore': 'Inserisci punteggio',
   'play.standings': 'Classifica',
   'play.roundComplete': 'Turno {num} completato!',
   'play.getReady': 'Preparatevi per il prossimo turno',

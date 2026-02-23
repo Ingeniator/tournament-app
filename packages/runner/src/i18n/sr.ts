@@ -55,6 +55,8 @@ const sr: Translations = {
   'play.previousRound': 'Prethodna — Runda {num}',
   'play.upNextRound': 'Sledeća — Runda {num}',
   'play.sit': 'Pauza: {names}',
+  'play.editScore': 'Izmeni rezultat',
+  'play.enterScore': 'Unesi rezultat',
   'play.standings': 'Tabela',
   'play.roundComplete': 'Runda {num} završena!',
   'play.getReady': 'Pripremite se za sledeću rundu',

@@ -55,6 +55,8 @@ const es: Translations = {
   'play.previousRound': 'Anterior \u2014 Ronda {num}',
   'play.upNextRound': 'Siguiente \u2014 Ronda {num}',
   'play.sit': 'Descansan: {names}',
+  'play.editScore': 'Editar puntuación',
+  'play.enterScore': 'Introducir puntuación',
   'play.standings': 'Clasificaci\u00f3n',
   'play.roundComplete': '\u00a1Ronda {num} completada!',
   'play.getReady': 'Prep\u00e1rate para la siguiente ronda',
