@@ -76,10 +76,25 @@ export function usePlayers(tournamentId: string | null) {
 
   const updateConfirmed = useCallback(async (uid: string, confirmed: boolean) => {
     if (!tournamentId || !db) return;
+
+    // Read player to get telegramUsername for index management
+    const playerSnap = await get(ref(db, `tournaments/${tournamentId}/players/${uid}`));
+    const tgUsername = playerSnap.exists() ? playerSnap.val()?.telegramUsername : undefined;
+
+    // Update confirmed flag on player record
     await update(ref(db, `tournaments/${tournamentId}/players/${uid}`), {
       confirmed,
       ...(confirmed ? { timestamp: Date.now() } : {}),
     });
+
+    // Update registration indexes so the tournament appears/disappears from the list
+    const indexUpdates: Record<string, boolean | null> = {
+      [`users/${uid}/registrations/${tournamentId}`]: confirmed ? true : null,
+    };
+    if (tgUsername) {
+      indexUpdates[`telegramUsers/${tgUsername}/registrations/${tournamentId}`] = confirmed ? true : null;
+    }
+    await update(ref(db), indexUpdates);
   }, [tournamentId]);
 
   const addPlayer = useCallback(async (name: string, telegramUsername?: string) => {

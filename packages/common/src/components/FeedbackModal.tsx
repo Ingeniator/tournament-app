@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Modal } from './Modal';
 import { Button } from './Button';
+import { useTranslation } from '../i18n/context';
 import styles from './FeedbackModal.module.css';
 
 const MAX_LENGTH = 500;
@@ -12,6 +13,7 @@ interface FeedbackModalProps {
 }
 
 export function FeedbackModal({ open, onClose, onSubmit }: FeedbackModalProps) {
+  const { t } = useTranslation();
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
 
@@ -38,13 +40,13 @@ export function FeedbackModal({ open, onClose, onSubmit }: FeedbackModalProps) {
   };
 
   return (
-    <Modal open={open} title="Send Feedback" onClose={handleClose}>
+    <Modal open={open} title={t('feedback.title')} onClose={handleClose}>
       <div className={styles.form}>
         <textarea
           className={styles.textarea}
           value={message}
           onChange={e => setMessage(e.target.value)}
-          placeholder="Bug report, feature request, or just say thanks..."
+          placeholder={t('feedback.placeholder')}
           rows={5}
           autoFocus
         />
@@ -56,7 +58,7 @@ export function FeedbackModal({ open, onClose, onSubmit }: FeedbackModalProps) {
           onClick={handleSubmit}
           disabled={!trimmed || overLimit || sending}
         >
-          {sending ? 'Sending...' : 'Send'}
+          {sending ? t('feedback.sending') : t('feedback.send')}
         </Button>
       </div>
     </Modal>

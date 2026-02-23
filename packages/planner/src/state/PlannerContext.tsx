@@ -14,7 +14,7 @@ import { useTelegramSync } from '../hooks/useTelegramSync';
 import { useChatRoomTournaments } from '../hooks/useChatRoomTournaments';
 import { linkTournamentToChat } from '../utils/chatRoom';
 
-export type Screen = 'loading' | 'home' | 'organizer' | 'join' | 'supporters';
+export type Screen = 'loading' | 'home' | 'organizer' | 'join';
 
 export interface PlannerContextValue {
   uid: string | null;
