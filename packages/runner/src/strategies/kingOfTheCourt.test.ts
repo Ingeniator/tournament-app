@@ -60,13 +60,13 @@ describe('kingOfTheCourt validateSetup', () => {
     expect(errors).toContain('King of the Court requires at least 2 courts');
   });
 
-  it('requires at least 24 points per match', () => {
-    const errors = kingOfTheCourtStrategy.validateSetup(makePlayers(8), makeConfig(2, 20));
-    expect(errors).toContain('King of the Court requires at least 24 points per match');
+  it('requires at least 12 points per match', () => {
+    const errors = kingOfTheCourtStrategy.validateSetup(makePlayers(8), makeConfig(2, 10));
+    expect(errors).toContain('King of the Court requires at least 12 points per match');
   });
 
-  it('passes with 24 points per match', () => {
-    const errors = kingOfTheCourtStrategy.validateSetup(makePlayers(8), makeConfig(2, 24));
+  it('passes with 12 points per match', () => {
+    const errors = kingOfTheCourtStrategy.validateSetup(makePlayers(8), makeConfig(2, 12));
     expect(errors.find(e => e.includes('points'))).toBeUndefined();
   });
 

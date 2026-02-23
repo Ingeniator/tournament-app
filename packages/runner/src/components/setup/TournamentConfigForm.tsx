@@ -200,7 +200,7 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
           id="config-points"
           className={styles.input}
           type="number"
-          min={isKOTC ? 24 : 1}
+          min={isKOTC ? 12 : 1}
           value={config.pointsPerMatch || ''}
           placeholder={String(suggestedPoints)}
           onChange={e => {

@@ -16,7 +16,7 @@ KOTC has stricter setup constraints than other formats:
 |-----------|-------|--------|
 | Minimum players | 8 | Need enough for meaningful promotion/relegation across 2+ courts |
 | Minimum courts | 2 | Court hierarchy requires at least 2 levels |
-| Minimum points per match | 24 | Higher point totals reduce randomness in results |
+| Minimum points per match | 12 | Higher point totals reduce randomness in results |
 | Sit-out warning | >25% | Warns when more than 25% of players sit out each round |
 
 These are enforced by `validateKOTCSetup`, which replaces the common validation used by other formats.
@@ -122,7 +122,7 @@ Runner-up and Third Place remain unchanged.
 The runner and planner config forms show:
 - **Readonly bonus labels** — auto-derived, not editable (e.g., "+2 bonus pts")
 - **Minimum 2 courts** — remove button hidden when at 2 courts
-- **Minimum 24 points** — `min` attribute on points input
+- **Minimum 12 points** — `min` attribute on points input
 - **Info hint** — explains that higher courts earn bonus points
 
 ## File Map
@@ -134,6 +134,6 @@ The runner and planner config forms show:
 | `components/rounds/RoundCard.tsx` | Passes `format` prop to MatchCard |
 | `components/setup/TournamentConfigForm.tsx` | Readonly bonus labels, KOTC constraints |
 | `hooks/useNominations.ts` | KOTC-specific champion emoji/title |
-| `utils/resolveConfigDefaults.ts` | Format-dependent minimum points (24 for KOTC) |
+| `utils/resolveConfigDefaults.ts` | Format-dependent minimum points (12 for KOTC) |
 | `screens/PlayScreen.tsx` | Passes format to RoundCard |
 | `screens/LogScreen.tsx` | Passes format to RoundCard |

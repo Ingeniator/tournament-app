@@ -50,7 +50,7 @@ export function computeSitOutInfo(playerCount: number, courtCount: number, round
 }
 
 export function resolveConfigDefaults(config: TournamentConfig, playerCount: number): TournamentConfig {
-  const minPoints = config.format === 'king-of-the-court' ? 24 : MIN_POINTS_PER_MATCH;
+  const minPoints = config.format === 'king-of-the-court' ? 12 : MIN_POINTS_PER_MATCH;
   const durationMinutes = config.targetDuration ?? DEFAULT_DURATION_MINUTES;
   const courtCount = config.courts.length;
   const playersPerRound = Math.min(courtCount * 4, playerCount);

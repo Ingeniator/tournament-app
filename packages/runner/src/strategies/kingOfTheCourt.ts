@@ -12,8 +12,8 @@ function validateKOTCSetup(players: Player[], config: TournamentConfig): string[
   if (availableCourts.length < 2) {
     errors.push('King of the Court requires at least 2 courts');
   }
-  if (config.pointsPerMatch < 24) {
-    errors.push('King of the Court requires at least 24 points per match');
+  if (config.pointsPerMatch < 12) {
+    errors.push('King of the Court requires at least 12 points per match');
   }
   const maxCourts = Math.floor(players.length / 4);
   if (availableCourts.length > maxCourts && players.length >= 4) {
