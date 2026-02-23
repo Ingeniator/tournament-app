@@ -8,7 +8,6 @@ import {
   makeCompletedTournament,
   scoreAllMatches,
   makePlayersWithNames,
-  makeConfig,
 } from './helpers';
 import type { Tournament } from '@padel/common';
 
@@ -116,7 +115,7 @@ describe('usePlayerStats', () => {
   });
 
   it('counts sit-outs from rounds', () => {
-    const tournament = scoreAllMatches(makeInProgressTournament(8, 2));
+    scoreAllMatches(makeInProgressTournament(8, 2));
     // With 8 players and 2 courts (4 players per court = 8), there may not be sit-outs
     // With 5 players and 1 court, 1 player sits out per round
     const t5 = scoreAllMatches(makeInProgressTournament(5, 1));

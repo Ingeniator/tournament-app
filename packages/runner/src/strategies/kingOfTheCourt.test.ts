@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { kingOfTheCourtStrategy } from './kingOfTheCourt';
-import type { Player, TournamentConfig, Round, Tournament, Match } from '@padel/common';
+import type { Player, TournamentConfig, Round, Tournament } from '@padel/common';
 
 function makePlayers(n: number): Player[] {
   return Array.from({ length: n }, (_, i) => ({ id: `p${i + 1}`, name: `Player ${i + 1}` }));

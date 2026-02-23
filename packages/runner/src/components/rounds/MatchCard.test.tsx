@@ -23,8 +23,8 @@ const players: Player[] = [
 ];
 
 const courts: Court[] = [
-  { id: 'c1', name: 'Court 1', available: true },
-  { id: 'c2', name: 'Court 2', available: true },
+  { id: 'c1', name: 'Court 1' },
+  { id: 'c2', name: 'Court 2' },
 ];
 
 function makeMatch(overrides: Partial<Match> = {}): Match {
@@ -121,9 +121,9 @@ describe('MatchCard', () => {
 
   it('shows KOTC crown and bonus points for top court', () => {
     const threeCourts: Court[] = [
-      { id: 'c1', name: 'Court 1', available: true },
-      { id: 'c2', name: 'Court 2', available: true },
-      { id: 'c3', name: 'Court 3', available: true },
+      { id: 'c1', name: 'Court 1' },
+      { id: 'c2', name: 'Court 2' },
+      { id: 'c3', name: 'Court 3' },
     ];
     render(
       <MatchCard
@@ -146,9 +146,9 @@ describe('MatchCard KOTC with 3 courts', () => {
   afterEach(cleanup);
 
   const threeCourts: Court[] = [
-    { id: 'c1', name: 'Court 1', available: true },
-    { id: 'c2', name: 'Court 2', available: true },
-    { id: 'c3', name: 'Court 3', available: true },
+    { id: 'c1', name: 'Court 1' },
+    { id: 'c2', name: 'Court 2' },
+    { id: 'c3', name: 'Court 3' },
   ];
 
   it('shows crown for first (top) court', () => {

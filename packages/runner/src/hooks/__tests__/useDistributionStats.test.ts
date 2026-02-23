@@ -5,7 +5,6 @@ import { useDistributionStats } from '../useDistributionStats';
 import {
   makeSetupTournament,
   makeInProgressTournament,
-  makeCompletedTournament,
   scoreAllMatches,
   makePlayers,
   makeConfig,

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import type { Tournament, Round, Player, TournamentConfig, StandingsEntry, Nomination } from '@padel/common';
 
@@ -370,11 +370,6 @@ describe('PlayScreen', () => {
   });
 
   describe('completed state', () => {
-    const nominations: Nomination[] = [
-      { id: 'podium-1', title: 'Champion', emoji: '\uD83E\uDD47', description: 'Winner', playerNames: ['Player 1'], stat: '50 pts' },
-      { id: 'podium-2', title: 'Runner-up', emoji: '\uD83E\uDD48', description: 'Second', playerNames: ['Player 2'], stat: '40 pts' },
-    ];
-
     function makeCompletedTournament(overrides: Partial<Tournament> = {}): Tournament {
       return makeTournament({
         phase: 'completed',

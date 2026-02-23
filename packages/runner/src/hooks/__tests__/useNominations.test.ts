@@ -9,7 +9,7 @@ import {
   scoreAllMatches,
   makeStandings,
 } from './helpers';
-import type { StandingsEntry, Nomination } from '@padel/common';
+import type { Nomination } from '@padel/common';
 
 describe('useNominations', () => {
   it('returns empty array for null tournament', () => {

@@ -153,7 +153,7 @@ describe('computeIndividualAwards', () => {
   // === GIANT SLAYER ===
   describe('giant-slayer', () => {
     it('awards giant slayer when low-ranked player beats #1', () => {
-      const competitors = ['A', 'B', 'C', 'D', 'E'].map((id, i) => makeCompetitor(id, `P${id}`));
+      const competitors = ['A', 'B', 'C', 'D', 'E'].map((id) => makeCompetitor(id, `P${id}`));
       const standings = competitors.map((c, i) => makeStandingsEntry({
         playerId: c.id, playerName: c.name, rank: i + 1,
         matchesPlayed: 4, matchesWon: 4 - i, matchesLost: i, totalPoints: 60 - i * 10,
@@ -177,7 +177,7 @@ describe('computeIndividualAwards', () => {
     });
 
     it('does not award giant slayer if beater is top-3 ranked', () => {
-      const competitors = ['A', 'B', 'C'].map((id, i) => makeCompetitor(id, `P${id}`));
+      const competitors = ['A', 'B', 'C'].map((id) => makeCompetitor(id, `P${id}`));
       const standings = competitors.map((c, i) => makeStandingsEntry({
         playerId: c.id, playerName: c.name, rank: i + 1,
         matchesPlayed: 3, matchesWon: 3 - i, matchesLost: i, totalPoints: 50 - i * 10,
