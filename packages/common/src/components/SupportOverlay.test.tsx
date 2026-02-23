@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, cleanup, act } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
 import { I18nProvider } from '../i18n/context';
 import type { ReactNode } from 'react';
 
@@ -20,6 +20,8 @@ vi.mock('../hooks/useSupporters', () => ({
 // Must import after vi.mock
 const { SupportOverlay } = await import('./SupportOverlay');
 
+import type { TranslationMap } from '../i18n/types';
+
 const translations = {
   en: {
     'support.title': 'Support Us',
@@ -33,7 +35,7 @@ const translations = {
     'support.thankYou': 'Thank you!',
     'support.testingFlow': 'Testing flow',
   } as Record<string, string>,
-};
+} as TranslationMap;
 
 function Wrapper({ children }: { children: ReactNode }) {
   return <I18nProvider translations={translations}>{children}</I18nProvider>;
