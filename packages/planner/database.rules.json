@@ -75,7 +75,7 @@
         "tournaments": {
           ".read": true,
           "$tournamentId": {
-            ".write": "auth != null",
+            ".write": "auth != null && !data.exists()",
             ".validate": "newData.hasChildren(['name', 'code', 'linkedAt', 'linkedBy'])"
           }
         }
@@ -85,18 +85,18 @@
       "$username": {
         ".read": "auth != null",
         "currentUid": {
-          ".write": "auth != null",
+          ".write": "auth != null && root.child('users').child(auth.uid).child('telegramUsername').val() === $username",
           ".validate": "newData.isString() && newData.val().length < 128"
         },
         "registrations": {
           "$tournamentId": {
-            ".write": "auth != null",
+            ".write": "auth != null && root.child('users').child(auth.uid).child('telegramUsername').val() === $username",
             ".validate": "newData.isBoolean() || !newData.exists()"
           }
         },
         "organized": {
           "$tournamentId": {
-            ".write": "auth != null",
+            ".write": "auth != null && root.child('users').child(auth.uid).child('telegramUsername').val() === $username",
             ".validate": "newData.isBoolean() || !newData.exists()"
           }
         }
