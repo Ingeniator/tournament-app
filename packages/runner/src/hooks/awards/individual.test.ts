@@ -33,6 +33,7 @@ type MatchDef = { team1: [string, string]; team2: [string, string]; t1: number; 
 
 function makeRounds(matchDefs: MatchDef[][]) {
   return matchDefs.map((matches, i) => ({
+    id: `r${i + 1}`,
     roundNumber: i + 1,
     matches: matches.map((m, j) => ({
       id: `m${i + 1}-${j + 1}`,

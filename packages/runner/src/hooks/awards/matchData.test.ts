@@ -39,6 +39,7 @@ describe('buildMatchData', () => {
   it('skips unscored matches', () => {
     const t = makeTournament({
       rounds: [{
+        id: 'r1',
         roundNumber: 1,
         matches: [{
           id: 'm1', courtId: 'c1',
@@ -55,6 +56,7 @@ describe('buildMatchData', () => {
   it('correctly builds player match info for scored matches', () => {
     const t = makeTournament({
       rounds: [{
+        id: 'r1',
         roundNumber: 1,
         matches: [{
           id: 'm1', courtId: 'c1',
@@ -94,6 +96,7 @@ describe('buildMatchData', () => {
   it('handles draws (no winner or loser)', () => {
     const t = makeTournament({
       rounds: [{
+        id: 'r1',
         roundNumber: 1,
         matches: [{
           id: 'm1', courtId: 'c1',
@@ -114,11 +117,13 @@ describe('buildMatchData', () => {
     const t = makeTournament({
       rounds: [
         {
+          id: 'r1',
           roundNumber: 1,
           matches: [{ id: 'm1', courtId: 'c1', team1: ['p1', 'p2'], team2: ['p3', 'p4'], score: { team1Points: 14, team2Points: 10 } }],
           sitOuts: [],
         },
         {
+          id: 'r2',
           roundNumber: 2,
           matches: [{ id: 'm2', courtId: 'c1', team1: ['p1', 'p3'], team2: ['p2', 'p4'], score: { team1Points: 8, team2Points: 16 } }],
           sitOuts: [],
