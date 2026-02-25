@@ -170,7 +170,7 @@ const sr: Translations = {
 
   // PlayerStats
   'playerStats.empty': 'Još nema bodovanih mečeva',
-  'playerStats.games': '{count} meč{s}',
+  'playerStats.games': '{count} mečeva',
   'playerStats.sitOuts': '{count} pauza',
   'playerStats.partners': 'Partneri',
   'playerStats.opponents': 'Protivnici',
@@ -183,7 +183,7 @@ const sr: Translations = {
   'distribution.hintCourtBalance': 'Prikazuje koliko su ravnomerno igrači raspoređeni po terenima.',
   'distribution.hintCourt': 'Lista parova igrača koji se nikada ne pojavljuju u istom meču — ni kao saigrači ni kao protivnici. Manje praznina znači bolju pokrivenost.',
   'distribution.partnerRepeats': 'Ponavljanja Partnera',
-  'distribution.pairs': '{count} par(ova)',
+  'distribution.pairs': '{count} parova',
   'distribution.idealZero': '(idealno: 0)',
   'distribution.idealMax': '(idealno: ≤{max})',
   'distribution.opponentBalance': 'Balans Protivnika',
@@ -199,7 +199,7 @@ const sr: Translations = {
   'distribution.allCourtsBalanced': 'Svi tereni su balansirani',
   'distribution.play': 'Igra',
   'distribution.reshuffling': 'Premeštanje...',
-  'distribution.reshuffleUnscored': 'Premeši Nebodovane Runde',
+  'distribution.reshuffleUnscored': 'Premešaj Nebodovane Runde',
   'distribution.stopOptimization': 'Zaustavi Optimizaciju ({seconds}s)',
   'distribution.findOptimal': 'Pronađi Optimalnu Distribuciju',
   'distribution.revertOptimal': 'Vrati na Sačuvani Optimum',
@@ -273,6 +273,15 @@ const sr: Translations = {
   'ceremony.tapToReveal': 'Tapni za otkrivanje',
   'ceremony.tapForNext': 'Tapni za sledeću nagradu',
   'ceremony.tapToFinish': 'Tapni za rezultate',
+
+  // Import validation errors
+  'import.invalidJson': 'Neispravan JSON — proverite da ste nalepili ceo izvezeni tekst',
+  'import.invalidFormat': 'Neispravan format — očekivan je objekat izvezenog turnira',
+  'import.unknownFormat': 'Nepoznat format "{found}" — očekivan "{expected}". Proverite da ste izvezli iz aplikacije.',
+  'import.missingTournament': 'Nedostaju podaci turnira',
+  'import.missingField': 'Nedostaje ili neispravno polje: {field}',
+  'import.missingArrays': 'Nedostaju podaci o igračima ili rundama',
+  'import.invalidConfig': 'Nedostaje ili neispravna konfiguracija turnira',
 
   // Common
   'common.cancel': 'Otkaži',
