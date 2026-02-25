@@ -170,7 +170,7 @@ const sv: Translations = {
 
   // PlayerStats
   'playerStats.empty': 'Inga poängsatta matcher ännu',
-  'playerStats.games': '{count} match{s}',
+  'playerStats.games': '{count} matcher',
   'playerStats.sitOuts': '{count} vila/vilor',
   'playerStats.partners': 'Partners',
   'playerStats.opponents': 'Motståndare',
@@ -273,6 +273,15 @@ const sv: Translations = {
   'ceremony.tapToReveal': 'Tryck för att avslöja',
   'ceremony.tapForNext': 'Tryck för nästa pris',
   'ceremony.tapToFinish': 'Tryck för att se resultat',
+
+  // Import validation errors
+  'import.invalidJson': 'Ogiltig JSON — kontrollera att du klistrade in hela exporttexten',
+  'import.invalidFormat': 'Ogiltigt format — förväntade ett turneringsexportobjekt',
+  'import.unknownFormat': 'Okänt format "{found}" — förväntade "{expected}". Kontrollera att du exporterade från appen.',
+  'import.missingTournament': 'Turneringsdata saknas',
+  'import.missingField': 'Fält saknas eller ogiltigt: {field}',
+  'import.missingArrays': 'Spelar- eller omgångsdata saknas',
+  'import.invalidConfig': 'Turneringskonfiguration saknas eller ogiltig',
 
   // Common
   'common.cancel': 'Avbryt',

@@ -274,6 +274,15 @@ const fr: Translations = {
   'ceremony.tapForNext': 'Appuyez pour le prix suivant',
   'ceremony.tapToFinish': 'Appuyez pour voir les résultats',
 
+  // Import validation errors
+  'import.invalidJson': 'JSON invalide — assurez-vous d\'avoir collé le texte d\'export complet',
+  'import.invalidFormat': 'Format invalide — un objet d\'export de tournoi était attendu',
+  'import.unknownFormat': 'Format inconnu "{found}" — attendu "{expected}". Assurez-vous d\'avoir exporté depuis l\'app.',
+  'import.missingTournament': 'Données du tournoi manquantes',
+  'import.missingField': 'Champ manquant ou invalide : {field}',
+  'import.missingArrays': 'Données de joueurs ou de tours manquantes',
+  'import.invalidConfig': 'Configuration du tournoi manquante ou invalide',
+
   // Common
   'common.cancel': 'Annuler',
   'common.save': 'Enregistrer',

@@ -146,7 +146,7 @@ const pt: Translations = {
   'join.registering': 'A inscrever...',
   'join.register': 'Inscrever',
   'join.players': 'Jogadores ({confirmed} / {capacity})',
-  'join.spotsLeft': '{count} lugar{s} disponível',
+  'join.spotsLeft': '{count} lugares disponíveis',
   'join.fullReserve': 'Completo \u00b7 {count} na lista de reserva',
   'join.full': 'Completo',
   'join.courtInfo': '{courts} campo{s} \u00d7 4{extra}',

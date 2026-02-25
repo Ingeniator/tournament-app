@@ -172,8 +172,8 @@ const it: Translations = {
 
   // PlayerStats
   'playerStats.empty': 'Nessuna partita registrata',
-  'playerStats.games': '{count} partita{s}',
-  'playerStats.sitOuts': '{count} riposo{s}',
+  'playerStats.games': '{count} partite',
+  'playerStats.sitOuts': '{count} riposi',
   'playerStats.partners': 'Compagni',
   'playerStats.opponents': 'Avversari',
   'playerStats.courts': 'Campi',
@@ -185,7 +185,7 @@ const it: Translations = {
   'distribution.hintCourtBalance': 'Mostra quanto equamente i giocatori sono distribuiti tra i campi.',
   'distribution.hintCourt': 'Elenca le coppie di giocatori che non compaiono mai nella stessa partita \u2014 n\u00e9 come compagni n\u00e9 come avversari. Meno lacune significano una migliore copertura.',
   'distribution.partnerRepeats': 'Ripetizioni Compagni',
-  'distribution.pairs': '{count} coppia{s}',
+  'distribution.pairs': '{count} coppie',
   'distribution.idealZero': '(ideale: 0)',
   'distribution.idealMax': '(ideale: \u2264{max})',
   'distribution.opponentBalance': 'Equilibrio Avversari',
