@@ -146,7 +146,7 @@ const sv: Translations = {
   'join.registering': 'Registrerar...',
   'join.register': 'Registrera',
   'join.players': 'Spelare ({confirmed} / {capacity})',
-  'join.spotsLeft': '{count} plats{s} kvar',
+  'join.spotsLeft': '{count} platser kvar',
   'join.fullReserve': 'Fullt · {count} på reservlistan',
   'join.full': 'Fullt',
   'join.courtInfo': '{courts} bana/banor × 4{extra}',
