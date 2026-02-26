@@ -1,7 +1,7 @@
 import type { Player } from './player';
 import type { Nomination } from './nomination';
 
-export type TournamentFormat = 'americano' | 'mexicano' | 'mixicano' | 'team-americano' | 'team-mexicano' | 'round-robin' | 'king-of-the-court';
+export type TournamentFormat = 'americano' | 'mexicano' | 'mixicano' | 'team-americano' | 'team-mexicano' | 'round-robin' | 'king-of-the-court' | 'club-americano';
 
 export type TournamentPhase = 'setup' | 'team-pairing' | 'in-progress' | 'completed';
 
@@ -24,6 +24,11 @@ export interface Court {
   unavailable?: boolean;
 }
 
+export interface Club {
+  id: string;
+  name: string;
+}
+
 export interface TournamentConfig {
   format: TournamentFormat;
   pointsPerMatch: number;
@@ -31,6 +36,8 @@ export interface TournamentConfig {
   maxRounds: number | null;
   targetDuration?: number;
   groupLabels?: [string, string];
+  pairMode?: 'fixed' | 'rotating';
+  matchMode?: 'random' | 'standings' | 'slots';
 }
 
 export interface MatchScore {
@@ -61,6 +68,7 @@ export interface Tournament {
   players: Player[];
   rounds: Round[];
   teams?: Team[];
+  clubs?: Club[];
   plannerTournamentId?: string;
   nominations?: Nomination[];
   ceremonyCompleted?: boolean;

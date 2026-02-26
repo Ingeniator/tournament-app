@@ -26,7 +26,7 @@ The final output is an ordered array:
 
 Podium slots are skipped when ranks don't match position (e.g., ties).
 
-### Non-Podium Awards (up to 26 possible)
+### Non-Podium Awards (up to 30 possible)
 
 Awards are evaluated against tournament data. Each has qualification criteria — not all will qualify in every tournament. In a typical tournament, 8–15 may qualify; up to 7 are shown.
 
@@ -58,23 +58,32 @@ Awards are evaluated against tournament data. Each has qualification criteria �
 |---|-----|-------|-------|------|----------|
 | 18 | `court-climber` | Court Climber | 🧗 | Rare | KOTC only: most promotions to higher courts (min 2 promotions, min 3 rounds played) |
 
+#### Club (only for club-americano format)
+
+| # | ID | Title | Emoji | Tier | Criteria |
+|---|-----|-------|-------|------|----------|
+| 19 | `club-champion` | Club Champion | 🏆 | — (podium-style) | Club with the most aggregate points. Always shown after podium, not in the award lottery. |
+| 20 | `club-rivalry` | Club Rivalry | ⚔️ | Rare | Two clubs with the closest total points difference (gap ≤ 10% of leader's points) |
+| 21 | `club-mvp` | Club MVP | 🌟 | Rare | Pair that scored the highest percentage of their club's total points (club must have 2+ pairs) |
+| 22 | `club-solidarity` | Club Solidarity | 🤝 | Common | Club where the points spread between pairs is smallest (most even contributions, 2+ pairs) |
+
 #### Pair / Duo (only when partners rotate, i.e. `!strategy.hasFixedPartners`)
 
 | # | ID | Title | Emoji | Tier | Criteria |
 |---|-----|-------|-------|------|----------|
-| 19 | `best-duo` | Best Duo | 🤝 | Rare | Pair with highest win % together (min 2 games) |
-| 20 | `offensive-duo` | Offensive Duo | 🚀 | Common | Pair with highest avg points scored (min 2, excluded if same as Best Duo) |
-| 21 | `wall-pair` | Defensive Duo | 🏰 | Common | Pair with lowest avg points conceded (min 2 games) |
-| 22 | `hot-streak-duo` | Hot Streak Duo | 🔥 | Rare | Pair with longest winning streak (min 3) |
-| 23 | `social-butterfly` | Social Butterfly | 🦋 | Common | Most unique partners across all matches (min 3, only if variation exists) |
+| 23 | `best-duo` | Best Duo | 🤝 | Rare | Pair with highest win % together (min 2 games) |
+| 24 | `offensive-duo` | Offensive Duo | 🚀 | Common | Pair with highest avg points scored (min 2, excluded if same as Best Duo) |
+| 25 | `wall-pair` | Defensive Duo | 🏰 | Common | Pair with lowest avg points conceded (min 2 games) |
+| 26 | `hot-streak-duo` | Hot Streak Duo | 🔥 | Rare | Pair with longest winning streak (min 3) |
+| 27 | `social-butterfly` | Social Butterfly | 🦋 | Common | Most unique partners across all matches (min 3, only if variation exists) |
 
 #### Head-to-Head (only when partners rotate)
 
 | # | ID | Title | Emoji | Tier | Criteria |
 |---|-----|-------|-------|------|----------|
-| 24 | `nemesis` | Nemesis | 😈 | Legendary | Beat same opponent 3+ times with 0 losses |
-| 25 | `rubber-match` | Rubber Match | 🔄 | Common | Same team pair played multiple times with split results |
-| 26 | `gatekeeper` | Gatekeeper | 🚧 | Rare | Beat all lower-ranked, lost to all higher-ranked (min 3 games, not rank 1 or last) |
+| 28 | `nemesis` | Nemesis | 😈 | Legendary | Beat same opponent 3+ times with 0 losses |
+| 29 | `rubber-match` | Rubber Match | 🔄 | Common | Same team pair played multiple times with split results |
+| 30 | `gatekeeper` | Gatekeeper | 🚧 | Rare | Beat all lower-ranked, lost to all higher-ranked (min 3 games, not rank 1 or last) |
 
 ### Lucky Award (always shown, 1)
 
@@ -116,8 +125,8 @@ Every non-podium award is assigned a tier that controls how often it appears acr
 | Tier | Awards | Selection Weight | Appearance Feel |
 |------|--------|-----------------|-----------------|
 | **Legendary** | Undefeated, Giant Slayer, Underdog, Comeback King, Nemesis | 15% of slots | Rare sighting — collectible |
-| **Rare** | Dominator, Clutch Player, Iron Wall, Consistency Champion, Gatekeeper, Best Duo, Hot Streak Duo, Nearly There, Peacemaker, Court Climber | 30% of slots | Moderately unusual |
-| **Common** | Point Machine, Quick Strike, See-Saw, Instant Classic, Battle Tested, Warrior, Offensive Powerhouse, Offensive Duo, Defensive Duo, Rubber Match, Social Butterfly | 55% of slots | Appear most tournaments |
+| **Rare** | Dominator, Clutch Player, Iron Wall, Consistency Champion, Gatekeeper, Best Duo, Hot Streak Duo, Nearly There, Peacemaker, Court Climber, Club Rivalry, Club MVP | 30% of slots | Moderately unusual |
+| **Common** | Point Machine, Quick Strike, See-Saw, Instant Classic, Battle Tested, Warrior, Offensive Powerhouse, Offensive Duo, Defensive Duo, Rubber Match, Social Butterfly, Club Solidarity | 55% of slots | Appear most tournaments |
 
 Tier assignment reflects both the difficulty of the statistical achievement and the specificity of the conditions required. Legendary awards require rare tournament conditions (someone winning every game, a massive comeback from a losing start, etc.).
 
@@ -219,6 +228,7 @@ The tier is not included in the text format — it's a visual-only treatment.
 | File | Role |
 |------|------|
 | `hooks/useNominations.ts` | Core logic: award generation, tier assignment, weighted selection, soft cap |
+| `hooks/awards/club.ts` | Club-specific awards: Club Champion, Club Rivalry, Club MVP, Club Solidarity |
 | `components/nominations/NominationCard.tsx` | Card UI with tier badge and styling |
 | `components/nominations/NominationCard.module.css` | Tier-specific borders, glows, badge styles |
 | `utils/standingsImage.ts` | Canvas rendering for share images with tier visuals |

@@ -1,0 +1,138 @@
+.section {
+  margin-bottom: var(--space-lg);
+}
+
+.sectionTitle {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  margin-bottom: var(--space-md);
+}
+
+.clubList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.clubCard {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  border-left: 4px solid var(--club-color, var(--color-primary));
+}
+
+.clubHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.clubNameInput {
+  flex: 1;
+  font-size: var(--text-base);
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  padding: 0 0 var(--space-xs) 0;
+  color: var(--color-text);
+  outline: none;
+  min-height: 32px;
+}
+
+.clubNameInput:focus {
+  border-bottom-color: var(--color-primary);
+}
+
+.removeClub {
+  background: none;
+  border: none;
+  font-size: var(--text-base);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  min-height: 32px;
+  min-width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.removeClub:active {
+  background-color: var(--color-surface-raised);
+}
+
+.clubPlayers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-sm);
+}
+
+.playerTag {
+  font-size: var(--text-sm);
+  padding: 4px 10px;
+  background-color: var(--color-surface-raised);
+  border-radius: var(--radius-full);
+  color: var(--color-text);
+}
+
+.emptyClub {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.unassigned {
+  margin-top: var(--space-md);
+}
+
+.unassignedTitle {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-sm);
+}
+
+.unassignedList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.unassignedRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) 0;
+}
+
+.unassignedName {
+  flex: 1;
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.assignButtons {
+  display: flex;
+  gap: 4px;
+}
+
+.assignBtn {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--club-color, var(--color-border));
+  background: transparent;
+  color: var(--club-color, var(--color-text-muted));
+  cursor: pointer;
+  min-height: 28px;
+}
+
+.assignBtn:active {
+  opacity: 0.7;
+}

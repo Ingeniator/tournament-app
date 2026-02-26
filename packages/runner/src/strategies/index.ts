@@ -6,6 +6,7 @@ import { mixicanoStrategy } from './mixicano';
 import { teamAmericanoStrategy } from './teamAmericano';
 import { teamMexicanoStrategy } from './teamMexicano';
 import { kingOfTheCourtStrategy } from './kingOfTheCourt';
+import { clubAmericanoStrategy } from './clubAmericano';
 
 export type { TournamentStrategy, ScheduleResult } from './types';
 export { scoreSchedule } from './shared';
@@ -35,3 +36,4 @@ registerStrategy('mixicano', mixicanoStrategy);
 registerStrategy('team-americano', teamAmericanoStrategy);
 registerStrategy('team-mexicano', teamMexicanoStrategy);
 registerStrategy('king-of-the-court', kingOfTheCourtStrategy);
+registerStrategy('club-americano', clubAmericanoStrategy);

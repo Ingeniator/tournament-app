@@ -6,6 +6,7 @@ import { AppShell } from '../components/layout/AppShell';
 import { PlayerInput } from '../components/setup/PlayerInput';
 import { PlayerList } from '../components/setup/PlayerList';
 import { TournamentConfigForm } from '../components/setup/TournamentConfigForm';
+import { ClubSection } from '../components/setup/ClubSection';
 import { Button, Card, useTranslation } from '@padel/common';
 import styles from './SetupScreen.module.css';
 
@@ -89,6 +90,17 @@ export function SetupScreen() {
           }
         />
       </div>
+
+      {tournament.config.format === 'club-americano' && (
+        <ClubSection
+          clubs={tournament.clubs ?? []}
+          players={tournament.players}
+          onAddClub={name => dispatch({ type: 'ADD_CLUB', payload: { name } })}
+          onRemoveClub={clubId => dispatch({ type: 'REMOVE_CLUB', payload: { clubId } })}
+          onRenameClub={(clubId, name) => dispatch({ type: 'RENAME_CLUB', payload: { clubId, name } })}
+          onSetPlayerClub={(playerId, clubId) => dispatch({ type: 'SET_PLAYER_CLUB', payload: { playerId, clubId } })}
+        />
+      )}
 
       <Card>
         <h2 className={styles.sectionTitle}>{t('setup.settings')}</h2>

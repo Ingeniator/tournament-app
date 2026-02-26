@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTournament } from '../hooks/useTournament';
 import { AppShell } from '../components/layout/AppShell';
 import { Button, useTranslation } from '@padel/common';
 import styles from './TeamPairingScreen.module.css';
+
+const CLUB_COLORS = ['#3b82f6', '#ec4899', '#22c55e', '#f59e0b', '#a855f7'];
 
 export function TeamPairingScreen() {
   const { tournament, dispatch } = useTournament();
@@ -11,7 +13,34 @@ export function TeamPairingScreen() {
 
   if (!tournament || !tournament.teams) return null;
 
+  const isClubFormat = tournament.config.format === 'club-americano';
+  const clubs = tournament.clubs ?? [];
+
   const nameOf = (id: string) => tournament.players.find(p => p.id === id)?.name ?? '?';
+  const playerClub = (id: string) => tournament.players.find(p => p.id === id)?.clubId;
+
+  // Build club color map
+  const clubColorMap = useMemo(() => {
+    const map = new Map<string, string>();
+    clubs.forEach((c, i) => map.set(c.id, CLUB_COLORS[i % CLUB_COLORS.length]));
+    return map;
+  }, [clubs]);
+
+  // Group teams by club for club-americano
+  const teamsByClub = useMemo(() => {
+    if (!isClubFormat || clubs.length === 0) return null;
+    const grouped = new Map<string, typeof tournament.teams>();
+    for (const club of clubs) {
+      grouped.set(club.id, []);
+    }
+    for (const team of tournament.teams!) {
+      const clubId = playerClub(team.player1Id) ?? playerClub(team.player2Id);
+      if (clubId && grouped.has(clubId)) {
+        grouped.get(clubId)!.push(team);
+      }
+    }
+    return grouped;
+  }, [tournament.teams, tournament.players, clubs, isClubFormat]);
 
   const handlePlayerTap = (playerId: string) => {
     if (!selectedPlayerId) {
@@ -29,12 +58,21 @@ export function TeamPairingScreen() {
     const teamB = tournament.teams!.find(t => t.player1Id === playerId || t.player2Id === playerId);
 
     if (teamA && teamB && teamA.id === teamB.id) {
-      // Same team — deselect
       setSelectedPlayerId(null);
       return;
     }
 
-    // Different teams — swap
+    // Club constraint: only swap within same club
+    if (isClubFormat) {
+      const clubA = playerClub(selectedPlayerId);
+      const clubB = playerClub(playerId);
+      if (clubA !== clubB) {
+        // Different clubs — select the new player instead
+        setSelectedPlayerId(playerId);
+        return;
+      }
+    }
+
     dispatch({
       type: 'SWAP_PLAYERS',
       payload: { playerA: selectedPlayerId, playerB: playerId },
@@ -59,6 +97,31 @@ export function TeamPairingScreen() {
   const teamCount = tournament.teams.length;
   const playerCount = tournament.players.length;
 
+  const renderTeamCard = (team: typeof tournament.teams[0]) => (
+    <div key={team.id} className={styles.teamCard}>
+      <input
+        className={styles.teamNameInput}
+        value={team.name ?? ''}
+        placeholder={`${nameOf(team.player1Id)} & ${nameOf(team.player2Id)}`}
+        onChange={e => dispatch({ type: 'RENAME_TEAM', payload: { teamId: team.id, name: e.target.value } })}
+      />
+      <div className={styles.teamPlayers}>
+        <button
+          className={`${styles.playerChip} ${selectedPlayerId === team.player1Id ? styles.playerChipSelected : ''}`}
+          onClick={() => handlePlayerTap(team.player1Id)}
+        >
+          {nameOf(team.player1Id)}
+        </button>
+        <button
+          className={`${styles.playerChip} ${selectedPlayerId === team.player2Id ? styles.playerChipSelected : ''}`}
+          onClick={() => handlePlayerTap(team.player2Id)}
+        >
+          {nameOf(team.player2Id)}
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <AppShell
       title={t('teams.title')}
@@ -75,35 +138,32 @@ export function TeamPairingScreen() {
       </div>
 
       <div className={styles.hint}>
-        {t('teams.hint')}
+        {isClubFormat ? t('teams.hintClub') : t('teams.hint')}
       </div>
 
-      <div className={styles.teamList}>
-        {tournament.teams.map((team) => (
-          <div key={team.id} className={styles.teamCard}>
-            <input
-              className={styles.teamNameInput}
-              value={team.name ?? ''}
-              placeholder={`${nameOf(team.player1Id)} & ${nameOf(team.player2Id)}`}
-              onChange={e => dispatch({ type: 'RENAME_TEAM', payload: { teamId: team.id, name: e.target.value } })}
-            />
-            <div className={styles.teamPlayers}>
-              <button
-                className={`${styles.playerChip} ${selectedPlayerId === team.player1Id ? styles.playerChipSelected : ''}`}
-                onClick={() => handlePlayerTap(team.player1Id)}
-              >
-                {nameOf(team.player1Id)}
-              </button>
-              <button
-                className={`${styles.playerChip} ${selectedPlayerId === team.player2Id ? styles.playerChipSelected : ''}`}
-                onClick={() => handlePlayerTap(team.player2Id)}
-              >
-                {nameOf(team.player2Id)}
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+      {isClubFormat && teamsByClub ? (
+        <div className={styles.teamList}>
+          {clubs.map((club) => {
+            const clubTeams = teamsByClub.get(club.id) ?? [];
+            const color = clubColorMap.get(club.id) ?? CLUB_COLORS[0];
+            return (
+              <div key={club.id}>
+                <div
+                  className={styles.clubGroupHeader}
+                  style={{ color }}
+                >
+                  {club.name}
+                </div>
+                {clubTeams.map(renderTeamCard)}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className={styles.teamList}>
+          {tournament.teams.map(renderTeamCard)}
+        </div>
+      )}
 
       <div className={styles.actions}>
         <Button variant="secondary" fullWidth onClick={handleShuffle}>

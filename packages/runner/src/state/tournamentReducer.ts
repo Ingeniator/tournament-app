@@ -1,17 +1,21 @@
-import type { Tournament, Player, Court, TournamentConfig, Round, Team } from '@padel/common';
+import type { Tournament, Player, Court, TournamentConfig, Round, Team, Club } from '@padel/common';
 import type { TournamentAction } from './actions';
 import { generateId } from '@padel/common';
 import { getStrategy } from '../strategies';
 import { deduplicateNames } from '../utils/deduplicateNames';
 import { resolveConfigDefaults } from '../utils/resolveConfigDefaults';
 
-function createTeams(players: Player[]): Team[] {
-  // Shuffle and pair sequentially
-  const shuffled = [...players];
-  for (let i = shuffled.length - 1; i > 0; i--) {
+function shuffleArray<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    [a[i], a[j]] = [a[j], a[i]];
   }
+  return a;
+}
+
+function createTeams(players: Player[]): Team[] {
+  const shuffled = shuffleArray(players);
   const teams: Team[] = [];
   for (let i = 0; i < shuffled.length - 1; i += 2) {
     teams.push({
@@ -19,6 +23,21 @@ function createTeams(players: Player[]): Team[] {
       player1Id: shuffled[i].id,
       player2Id: shuffled[i + 1].id,
     });
+  }
+  return teams;
+}
+
+function createClubTeams(players: Player[], clubs: Club[]): Team[] {
+  const teams: Team[] = [];
+  for (const club of clubs) {
+    const clubPlayers = shuffleArray(players.filter(p => p.clubId === club.id));
+    for (let i = 0; i < clubPlayers.length - 1; i += 2) {
+      teams.push({
+        id: generateId(),
+        player1Id: clubPlayers[i].id,
+        player2Id: clubPlayers[i + 1].id,
+      });
+    }
   }
   return teams;
 }
@@ -142,7 +161,7 @@ export function tournamentReducer(
       if (!state || state.phase !== 'in-progress') return state;
       const { oldPlayerId, newPlayerName } = action.payload;
       const oldPlayer = state.players.find(p => p.id === oldPlayerId);
-      const replaceNew: Player = { id: generateId(), name: newPlayerName, ...(oldPlayer?.group ? { group: oldPlayer.group } : {}) };
+      const replaceNew: Player = { id: generateId(), name: newPlayerName, ...(oldPlayer?.group ? { group: oldPlayer.group } : {}), ...(oldPlayer?.clubId ? { clubId: oldPlayer.clubId } : {}) };
       const rawReplace = state.players.map(p =>
         p.id === oldPlayerId ? { ...p, unavailable: true } : p
       );
@@ -287,7 +306,9 @@ export function tournamentReducer(
     case 'SET_TEAMS': {
       if (!state || state.phase !== 'setup') return state;
       if (!getStrategy(state.config.format).hasFixedPartners) return state;
-      const teams = createTeams(state.players);
+      const teams = state.config.format === 'club-americano' && state.clubs?.length
+        ? createClubTeams(state.players, state.clubs)
+        : createTeams(state.players);
       return {
         ...state,
         teams,
@@ -298,7 +319,9 @@ export function tournamentReducer(
 
     case 'SHUFFLE_TEAMS': {
       if (!state || state.phase !== 'team-pairing') return state;
-      const teams = createTeams(state.players);
+      const teams = state.config.format === 'club-americano' && state.clubs?.length
+        ? createClubTeams(state.players, state.clubs)
+        : createTeams(state.players);
       return {
         ...state,
         teams,
@@ -405,9 +428,15 @@ export function tournamentReducer(
         const totalTarget = state.config.maxRounds ?? state.players.length - 1;
         const allScored = updatedRounds.every(r => r.matches.every(m => m.score !== null));
         if (allScored && updatedRounds.length < totalTarget) {
-          const active = state.players.filter(p => !p.unavailable);
-          const excl = state.players.filter(p => p.unavailable).map(p => p.id);
-          const updatedState = { ...state, rounds: updatedRounds };
+          // For rotating pair mode: regenerate intra-club pairs
+          let updatedTeams = state.teams;
+          let updatedPlayers = state.players;
+          if (state.config.format === 'club-americano' && state.config.pairMode === 'rotating' && state.clubs?.length) {
+            updatedTeams = createClubTeams(state.players, state.clubs);
+          }
+          const active = updatedPlayers.filter(p => !p.unavailable);
+          const excl = updatedPlayers.filter(p => p.unavailable).map(p => p.id);
+          const updatedState = { ...state, rounds: updatedRounds, teams: updatedTeams };
           const { rounds: next } = strategy.generateAdditionalRounds(active, state.config, updatedRounds, 1, excl, undefined, updatedState);
           return { ...updatedState, rounds: [...updatedRounds, ...next], updatedAt: Date.now() };
         }
@@ -508,6 +537,52 @@ export function tournamentReducer(
         ...state,
         nominations: action.payload.nominations,
         ceremonyCompleted: true,
+        updatedAt: Date.now(),
+      };
+    }
+
+    case 'ADD_CLUB': {
+      if (!state || state.phase !== 'setup') return state;
+      const newClub: Club = { id: generateId(), name: action.payload.name };
+      return {
+        ...state,
+        clubs: [...(state.clubs ?? []), newClub],
+        updatedAt: Date.now(),
+      };
+    }
+
+    case 'REMOVE_CLUB': {
+      if (!state || state.phase !== 'setup') return state;
+      const { clubId: removeClubId } = action.payload;
+      return {
+        ...state,
+        clubs: (state.clubs ?? []).filter(c => c.id !== removeClubId),
+        players: state.players.map(p =>
+          p.clubId === removeClubId ? { ...p, clubId: undefined } : p
+        ),
+        updatedAt: Date.now(),
+      };
+    }
+
+    case 'RENAME_CLUB': {
+      if (!state || state.phase !== 'setup') return state;
+      return {
+        ...state,
+        clubs: (state.clubs ?? []).map(c =>
+          c.id === action.payload.clubId ? { ...c, name: action.payload.name } : c
+        ),
+        updatedAt: Date.now(),
+      };
+    }
+
+    case 'SET_PLAYER_CLUB': {
+      if (!state || state.phase !== 'setup') return state;
+      const { playerId: pcId, clubId: pcClubId } = action.payload;
+      return {
+        ...state,
+        players: state.players.map(p =>
+          p.id === pcId ? { ...p, clubId: pcClubId ?? undefined } : p
+        ),
         updatedAt: Date.now(),
       };
     }

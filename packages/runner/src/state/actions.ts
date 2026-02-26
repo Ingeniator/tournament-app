@@ -32,4 +32,8 @@ export type TournamentAction =
   | { type: 'SET_TEAMS_BACK' }
   | { type: 'COMPLETE_TOURNAMENT' }
   | { type: 'COMPLETE_CEREMONY'; payload: { nominations: Nomination[] } }
-  | { type: 'RESET_TOURNAMENT' };
+  | { type: 'RESET_TOURNAMENT' }
+  | { type: 'ADD_CLUB'; payload: { name: string } }
+  | { type: 'REMOVE_CLUB'; payload: { clubId: string } }
+  | { type: 'RENAME_CLUB'; payload: { clubId: string; name: string } }
+  | { type: 'SET_PLAYER_CLUB'; payload: { playerId: string; clubId: string | null } };

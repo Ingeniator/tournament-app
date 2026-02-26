@@ -7,13 +7,20 @@ export interface GroupInfo {
   map: Map<string, 'A' | 'B'>;
 }
 
+export interface ClubInfo {
+  teamClubMap: Map<string, string>;
+  clubNameMap: Map<string, string>;
+  clubColorMap: Map<string, string>;
+}
+
 interface StandingsTableProps {
   standings: StandingsEntry[];
   plannedGames?: Map<string, number>;
   groupInfo?: GroupInfo;
+  clubInfo?: ClubInfo;
 }
 
-export function StandingsTable({ standings, plannedGames, groupInfo }: StandingsTableProps) {
+export function StandingsTable({ standings, plannedGames, groupInfo, clubInfo }: StandingsTableProps) {
   const { t } = useTranslation();
 
   if (standings.length === 0) {
@@ -61,6 +68,16 @@ export function StandingsTable({ standings, plannedGames, groupInfo }: Standings
                     {groupInfo.map.get(entry.playerId) === 'A' ? groupInfo.labels[0] : groupInfo.labels[1]}
                   </span>
                 )}
+                {clubInfo && clubInfo.teamClubMap.has(entry.playerId) && (() => {
+                  const clubId = clubInfo.teamClubMap.get(entry.playerId)!;
+                  const color = clubInfo.clubColorMap.get(clubId);
+                  const name = clubInfo.clubNameMap.get(clubId);
+                  return (
+                    <span className={styles.clubBadge} style={{ backgroundColor: color ? `${color}22` : undefined, color: color }}>
+                      {name}
+                    </span>
+                  );
+                })()}
               </td>
               <td className={`${styles.right} ${styles.points}`}>{entry.totalPoints}</td>
               {plannedGames && (

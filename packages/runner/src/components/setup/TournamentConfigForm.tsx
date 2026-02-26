@@ -94,8 +94,39 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
           <option value="team-mexicano">{t('config.formatTeamMexicano')}</option>
           <option value="mixicano">{t('config.formatMixicano')}</option>
           <option value="king-of-the-court">{t('config.formatKingOfTheCourt')}</option>
+          <option value="club-americano">{t('config.formatClubAmericano')}</option>
         </select>
       </div>
+
+      {config.format === 'club-americano' && (
+        <>
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="config-pair-mode">{t('config.pairMode')}</label>
+            <select
+              id="config-pair-mode"
+              className={styles.input}
+              value={config.pairMode ?? 'fixed'}
+              onChange={e => onUpdate({ pairMode: e.target.value as 'fixed' | 'rotating' })}
+            >
+              <option value="fixed">{t('config.pairModeFixed')}</option>
+              <option value="rotating">{t('config.pairModeRotating')}</option>
+            </select>
+          </div>
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="config-match-mode">{t('config.matchMode')}</label>
+            <select
+              id="config-match-mode"
+              className={styles.input}
+              value={config.matchMode ?? 'random'}
+              onChange={e => onUpdate({ matchMode: e.target.value as 'random' | 'standings' | 'slots' })}
+            >
+              <option value="random">{t('config.matchModeRandom')}</option>
+              <option value="standings">{t('config.matchModeStandings')}</option>
+              <option value="slots">{t('config.matchModeSlots')}</option>
+            </select>
+          </div>
+        </>
+      )}
 
       {config.format === 'mixicano' && (
         <div className={styles.field}>

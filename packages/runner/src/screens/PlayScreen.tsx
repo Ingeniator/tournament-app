@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useTournament } from '../hooks/useTournament';
 import { useStandings } from '../hooks/useStandings';
+import { useClubStandings } from '../hooks/useClubStandings';
 import { useNominations } from '../hooks/useNominations';
 import { RoundCard } from '../components/rounds/RoundCard';
 import { StandingsTable, type GroupInfo } from '../components/standings/StandingsTable';
+import { ClubStandingsTable } from '../components/standings/ClubStandingsTable';
 import { NominationCard } from '../components/nominations/NominationCard';
 import { Carousel } from '../components/carousel/Carousel';
 import { CeremonyScreen } from '../components/ceremony/CeremonyScreen';
@@ -20,6 +22,7 @@ export function PlayScreen() {
   const { tournament, dispatch } = useTournament();
   const { t } = useTranslation();
   const standings = useStandings(tournament);
+  const clubStandings = useClubStandings(tournament, standings);
   const nominations = useNominations(tournament, standings);
   const plannedGames = useMemo(() => {
     if (!tournament) return new Map<string, number>();
@@ -55,8 +58,32 @@ export function PlayScreen() {
     ];
     return { labels, map };
   }, [tournament]);
+  const isClubFormat = tournament?.config.format === 'club-americano';
+  const clubColorMap = useMemo(() => {
+    const CLUB_COLORS = ['#3b82f6', '#ec4899', '#22c55e', '#f59e0b', '#a855f7'];
+    const map = new Map<string, string>();
+    (tournament?.clubs ?? []).forEach((c, i) => map.set(c.id, CLUB_COLORS[i % CLUB_COLORS.length]));
+    return map;
+  }, [tournament?.clubs]);
+  const clubInfo = useMemo(() => {
+    if (!isClubFormat || !tournament?.clubs?.length || !tournament?.teams?.length) return undefined;
+    const playerClubMap = new Map<string, string>();
+    for (const p of tournament.players) {
+      if (p.clubId) playerClubMap.set(p.id, p.clubId);
+    }
+    // Map team IDs to club IDs
+    const teamClubMap = new Map<string, string>();
+    for (const team of tournament.teams) {
+      const clubId = playerClubMap.get(team.player1Id) ?? playerClubMap.get(team.player2Id);
+      if (clubId) teamClubMap.set(team.id, clubId);
+    }
+    const clubNameMap = new Map<string, string>();
+    for (const club of tournament.clubs) clubNameMap.set(club.id, club.name);
+    return { teamClubMap, clubNameMap, clubColorMap };
+  }, [tournament, isClubFormat, clubColorMap]);
   const { buildMessengerText } = useShareText(tournament, standings, nominations);
   const [showStandings, setShowStandings] = useState(false);
+  const [standingsTab, setStandingsTab] = useState<'pairs' | 'clubs'>('pairs');
   const [showSupport, setShowSupport] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [roundsExpanded, setRoundsExpanded] = useState(false);
@@ -161,8 +188,13 @@ export function PlayScreen() {
         <Carousel>
           {[
             <div key="standings" className={styles.completedStandings}>
-              <StandingsTable standings={standings} groupInfo={groupInfo} />
+              <StandingsTable standings={standings} groupInfo={groupInfo} clubInfo={clubInfo} />
             </div>,
+            ...(clubStandings.length > 0 ? [
+              <div key="club-standings" className={styles.completedStandings}>
+                <ClubStandingsTable standings={clubStandings} clubColorMap={clubColorMap} />
+              </div>,
+            ] : []),
             ...nominations.map((nom, i) => (
               <NominationCard key={nom.id} nomination={nom} cardRef={setNomRef(i)} minHeight={nomMinHeight || undefined} />
             )),
@@ -422,7 +454,27 @@ export function PlayScreen() {
 
       {/* Standings overlay */}
       <Modal open={showStandings} title={t('play.standingsTitle')} onClose={() => setShowStandings(false)}>
-        <StandingsTable standings={standings} plannedGames={plannedGames} groupInfo={groupInfo} />
+        {isClubFormat && clubStandings.length > 0 && (
+          <div className={styles.standingsTabs}>
+            <button
+              className={`${styles.standingsTab} ${standingsTab === 'pairs' ? styles.standingsTabActive : ''}`}
+              onClick={() => setStandingsTab('pairs')}
+            >
+              {t('play.pairStandings')}
+            </button>
+            <button
+              className={`${styles.standingsTab} ${standingsTab === 'clubs' ? styles.standingsTabActive : ''}`}
+              onClick={() => setStandingsTab('clubs')}
+            >
+              {t('play.clubStandings')}
+            </button>
+          </div>
+        )}
+        {standingsTab === 'pairs' || !isClubFormat ? (
+          <StandingsTable standings={standings} plannedGames={plannedGames} groupInfo={groupInfo} clubInfo={clubInfo} />
+        ) : (
+          <ClubStandingsTable standings={clubStandings} clubColorMap={clubColorMap} />
+        )}
       </Modal>
 
       <Toast message={toastMessage} />

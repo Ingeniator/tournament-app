@@ -5,13 +5,14 @@ export type {
   Team,
   Competitor,
   Court,
+  Club,
   TournamentConfig,
   MatchScore,
   Match,
   Round,
   Tournament,
 } from './types/tournament';
-export type { StandingsEntry } from './types/standings';
+export type { StandingsEntry, ClubStandingsEntry } from './types/standings';
 export type { AwardTier, Nomination } from './types/nomination';
 export type { Supporter, GroupedSupporter } from './types/supporter';
 export type { PlannerTournament, PlannerRegistration, TournamentSummary, TournamentStartInfo } from './types/planner';

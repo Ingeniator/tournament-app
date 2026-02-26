@@ -29,6 +29,9 @@ export const AWARD_TIERS: Record<string, AwardTier> = {
   'court-climber': 'rare',
   'social-butterfly': 'common',
   'underdog': 'legendary',
+  'club-rivalry': 'rare',
+  'club-mvp': 'rare',
+  'club-solidarity': 'common',
 };
 
 export interface PlayerMatchInfo {

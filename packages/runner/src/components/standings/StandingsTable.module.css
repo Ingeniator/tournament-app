@@ -128,6 +128,15 @@
   color: #f472b6;
 }
 
+.clubBadge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: var(--radius-full);
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
 .empty {
   text-align: center;
   padding: var(--space-xl);
