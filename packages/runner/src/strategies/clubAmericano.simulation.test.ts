@@ -3,7 +3,6 @@ import { clubAmericanoStrategy } from './clubAmericano';
 import type { Player, Team, Club, TournamentConfig } from '@padel/common';
 import {
   makeConfig,
-  scoreDeterministic,
   assertRoundInvariants,
   assertTeamIntegrity,
   analyzeTeamSchedule,
