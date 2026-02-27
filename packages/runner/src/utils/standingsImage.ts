@@ -436,9 +436,12 @@ export function renderNominationImage(
   const footerH = s(14);
 
   // Calculate player names height
+  const isPair = !isMultiPlayer && nomination.playerNames.length === 2;
   let playersH: number;
   if (isMultiPlayer) {
-    playersH = s(24) + s(16) + s(24); // pair1 + vs + pair2
+    playersH = s(24) + s(24) + s(16) + s(24) + s(24); // name1 + name2 + vs + name3 + name4
+  } else if (isPair) {
+    playersH = s(24) + s(24); // name1 + name2
   } else {
     playersH = s(26); // --text-xl: 1.25rem = 20px + line-height
   }
@@ -531,9 +534,9 @@ export function renderNominationImage(
 
   if (isMultiPlayer) {
     ctx.font = `bold ${s(16)}px ${FONT}`;
-    const pair1 = `${nomination.playerNames[0]} & ${nomination.playerNames[1]}`;
-    const pair2 = `${nomination.playerNames[2]} & ${nomination.playerNames[3]}`;
-    ctx.fillText(truncateText(ctx, pair1, maxTextW), cx, y + s(16));
+    ctx.fillText(truncateText(ctx, `${nomination.playerNames[0]} &`, maxTextW), cx, y + s(16));
+    y += s(24);
+    ctx.fillText(truncateText(ctx, nomination.playerNames[1], maxTextW), cx, y + s(16));
     y += s(24);
     // VS — matching CSS: --text-xs (12px), muted, uppercase
     ctx.fillStyle = t.textMuted;
@@ -542,16 +545,19 @@ export function renderNominationImage(
     y += s(16);
     ctx.fillStyle = t.text;
     ctx.font = `bold ${s(16)}px ${FONT}`;
-    ctx.fillText(truncateText(ctx, pair2, maxTextW), cx, y + s(16));
+    ctx.fillText(truncateText(ctx, `${nomination.playerNames[2]} &`, maxTextW), cx, y + s(16));
+    y += s(24);
+    ctx.fillText(truncateText(ctx, nomination.playerNames[3], maxTextW), cx, y + s(16));
+    y += s(24) + gap;
+  } else if (isPair) {
+    ctx.font = `bold ${s(18)}px ${FONT}`;
+    ctx.fillText(truncateText(ctx, `${nomination.playerNames[0]} &`, maxTextW), cx, y + s(18));
+    y += s(24);
+    ctx.fillText(truncateText(ctx, nomination.playerNames[1], maxTextW), cx, y + s(18));
     y += s(24) + gap;
   } else {
-    const nameText = nomination.playerNames.join(' & ');
     ctx.font = `bold ${s(20)}px ${FONT}`;
-    const nameWidth = ctx.measureText(nameText).width;
-    if (nameWidth > maxTextW) {
-      ctx.font = `bold ${s(16)}px ${FONT}`;
-    }
-    ctx.fillText(truncateText(ctx, nameText, maxTextW), cx, y + s(18));
+    ctx.fillText(truncateText(ctx, nomination.playerNames[0], maxTextW), cx, y + s(18));
     y += playersH + gap;
   }
 

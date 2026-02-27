@@ -40,12 +40,19 @@ export function NominationCard({ nomination, cardRef, minHeight }: NominationCar
       <div className={styles.players}>
         {isMultiPlayer ? (
           <>
-            <span>{nomination.playerNames[0]} & {nomination.playerNames[1]}</span>
+            <span>{nomination.playerNames[0]} &</span>
+            <span>{nomination.playerNames[1]}</span>
             <span className={styles.vs}>vs</span>
-            <span>{nomination.playerNames[2]} & {nomination.playerNames[3]}</span>
+            <span>{nomination.playerNames[2]} &</span>
+            <span>{nomination.playerNames[3]}</span>
+          </>
+        ) : nomination.playerNames.length > 1 ? (
+          <>
+            <span>{nomination.playerNames[0]} &</span>
+            <span>{nomination.playerNames[1]}</span>
           </>
         ) : (
-          nomination.playerNames.join(' & ')
+          nomination.playerNames[0]
         )}
       </div>
       <div className={styles.stat}>{nomination.stat}</div>
