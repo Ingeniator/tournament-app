@@ -257,6 +257,8 @@ const sr: Translations = {
   'config.matchModeRandom': 'Nasumično',
   'config.matchModeStandings': 'Po Tabeli',
   'config.matchModeSlots': 'Fiksne Pozicije',
+  'config.pairModeInfo': 'Fiksni: parovi se postavljaju tokom podešavanja i ostaju isti tokom celog turnira. Rotirajući: novi nasumični parovi unutar svakog kluba se formiraju pre svake runde.',
+  'config.matchModeInfo': 'Nasumično: parovi iz suprotnih klubova se uparuju nasumično. Po Tabeli: parovi se uparuju po rangu — najbolji protiv najboljeg. Fiksne Pozicije: parovi zadržavaju svoju originalnu poziciju (1v1, 2v2, 3v3).',
   'config.courtBonus': 'bonus poeni',
   'config.kotcBonusInfo': 'Viši tereni donose bonus poene koji se dodaju na tabelu',
   'config.groupLabels': 'Grupe',

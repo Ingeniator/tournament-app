@@ -257,6 +257,8 @@ const sv: Translations = {
   'config.matchModeRandom': 'Slumpmässigt',
   'config.matchModeStandings': 'Ställningsbaserat',
   'config.matchModeSlots': 'Fasta Platser',
+  'config.pairModeInfo': 'Fast: paren sätts under konfigurationen och förblir desamma under hela turneringen. Roterande: nya slumpmässiga par inom varje klubb bildas före varje omgång.',
+  'config.matchModeInfo': 'Slumpmässigt: par från motståndarklubbar matchas slumpmässigt. Ställningsbaserat: par matchas efter ranking — bäst mot bäst. Fasta Platser: par behåller sin ursprungliga position (1v1, 2v2, 3v3).',
   'config.courtBonus': 'bonuspoäng',
   'config.kotcBonusInfo': 'Högre banor ger bonuspoäng som läggs till i ställningen',
   'config.groupLabels': 'Grupper',

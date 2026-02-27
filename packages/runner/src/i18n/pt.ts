@@ -259,6 +259,8 @@ const pt: Translations = {
   'config.matchModeRandom': 'Aleatório',
   'config.matchModeStandings': 'Por Classificação',
   'config.matchModeSlots': 'Posições Fixas',
+  'config.pairModeInfo': 'Fixo: os pares são definidos na configuração e permanecem os mesmos durante todo o torneio. Rotativo: novos pares aleatórios dentro de cada clube são formados antes de cada rodada.',
+  'config.matchModeInfo': 'Aleatório: os pares dos clubes adversários são emparelhados aleatoriamente. Por Classificação: os pares são emparelhados por ranking — melhor contra melhor. Posições Fixas: os pares mantêm a posição original (1v1, 2v2, 3v3).',
   'config.courtBonus': 'pts bónus',
   'config.kotcBonusInfo': 'Campos superiores ganham pontos bónus adicionados à classificação',
   'config.groupLabels': 'Grupos',
