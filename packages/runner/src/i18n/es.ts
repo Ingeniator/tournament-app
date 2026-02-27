@@ -51,6 +51,12 @@ const es: Translations = {
   'teams.hintClub': 'Toca dos jugadores del mismo club para intercambiarlos',
   'teams.shuffle': 'Mezclar Equipos',
   'teams.start': 'Iniciar Torneo',
+  'teams.fixedPairsTitle': 'Las parejas se bloquean al iniciar',
+  'teams.fixedPairsBody': 'Estas parejas se mantendrán durante todo el torneo. Revísalas bien — no podrás cambiar compañeros una vez que comience el torneo.',
+  'teams.fixedSlotsBody': 'Modo Posiciones Fijas activo: la posición de cada pareja (Pos. 1, Pos. 2, etc.) determina contra quién juega. Pos. 1 siempre se enfrenta a Pos. 1 del club rival, y así sucesivamente.',
+  'teams.slotLabel': 'Pos. {num}',
+  'teams.unequalClubsTitle': 'Los clubes tienen diferente número de parejas',
+  'teams.unequalClubsBody': 'Las parejas que descansan reciben puntos de compensación promedio, por lo que el club con más parejas obtiene puntos extra por descansos. Para una clasificación justa, mantén el mismo número de parejas en cada club.',
 
   // PlayScreen
   'play.progress': 'Ronda {current}/{total} \u00b7 {scored}/{totalMatches} partidos',

@@ -16,6 +16,74 @@
   margin-bottom: var(--space-md);
 }
 
+.infoBanner {
+  border-left: 3px solid var(--color-primary);
+  background-color: var(--color-surface-raised);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.infoBannerTitle {
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--color-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.infoBannerBody {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.infoBannerBody + .infoBannerBody {
+  margin-top: var(--space-xs);
+}
+
+.warningBanner {
+  border-left: 3px solid var(--color-warning);
+  background-color: var(--color-surface-raised);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.warningBannerTitle {
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--color-warning);
+  margin-bottom: var(--space-xs);
+}
+
+.warningBannerBody {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.teamCardHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.teamCardHeader .teamNameInput {
+  flex: 1;
+  min-width: 0;
+}
+
+.slotBadge {
+  font-size: var(--text-xs, 11px);
+  font-weight: 600;
+  color: var(--color-primary);
+  background-color: var(--color-primary-tint);
+  border-radius: var(--radius-sm, 4px);
+  padding: 2px 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .teamList {
   display: flex;
   flex-direction: column;

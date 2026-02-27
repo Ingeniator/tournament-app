@@ -35,6 +35,13 @@ export function TeamPairingScreen() {
     return grouped;
   }, [tournament, clubs]);
 
+  // Detect unequal club sizes
+  const unequalClubs = useMemo(() => {
+    if (!tournament?.teams || tournament.config.format !== 'club-americano' || !teamsByClub) return false;
+    const pairCounts = clubs.map(c => (teamsByClub.get(c.id) ?? []).length);
+    return pairCounts.length > 1 && new Set(pairCounts).size > 1;
+  }, [tournament, clubs, teamsByClub]);
+
   if (!tournament || !tournament.teams) return null;
 
   const isClubFormat = tournament.config.format === 'club-americano';
@@ -97,14 +104,23 @@ export function TeamPairingScreen() {
   const teamCount = tournament.teams.length;
   const playerCount = tournament.players.length;
 
-  const renderTeamCard = (team: typeof tournament.teams[0]) => (
+  const isSlotMode = isClubFormat && tournament.config.matchMode === 'slots';
+
+  const renderTeamCard = (team: typeof tournament.teams[0], slotIndex?: number) => (
     <div key={team.id} className={styles.teamCard}>
-      <input
-        className={styles.teamNameInput}
-        value={team.name ?? ''}
-        placeholder={`${nameOf(team.player1Id)} & ${nameOf(team.player2Id)}`}
-        onChange={e => dispatch({ type: 'RENAME_TEAM', payload: { teamId: team.id, name: e.target.value } })}
-      />
+      <div className={styles.teamCardHeader}>
+        <input
+          className={styles.teamNameInput}
+          value={team.name ?? ''}
+          placeholder={`${nameOf(team.player1Id)} & ${nameOf(team.player2Id)}`}
+          onChange={e => dispatch({ type: 'RENAME_TEAM', payload: { teamId: team.id, name: e.target.value } })}
+        />
+        {isSlotMode && slotIndex != null && (
+          <span className={styles.slotBadge}>
+            {t('teams.slotLabel', { num: slotIndex + 1 })}
+          </span>
+        )}
+      </div>
       <div className={styles.teamPlayers}>
         <button
           className={`${styles.playerChip} ${selectedPlayerId === team.player1Id ? styles.playerChipSelected : ''}`}
@@ -141,6 +157,29 @@ export function TeamPairingScreen() {
         {isClubFormat ? t('teams.hintClub') : t('teams.hint')}
       </div>
 
+      {isClubFormat && (
+        <div className={styles.infoBanner}>
+          <div className={styles.infoBannerTitle}>{t('teams.fixedPairsTitle')}</div>
+          <div className={styles.infoBannerBody}>
+            {t('teams.fixedPairsBody')}
+          </div>
+          {tournament.config.matchMode === 'slots' && (
+            <div className={styles.infoBannerBody}>
+              {t('teams.fixedSlotsBody')}
+            </div>
+          )}
+        </div>
+      )}
+
+      {isClubFormat && unequalClubs && (
+        <div className={styles.warningBanner}>
+          <div className={styles.warningBannerTitle}>{t('teams.unequalClubsTitle')}</div>
+          <div className={styles.warningBannerBody}>
+            {t('teams.unequalClubsBody')}
+          </div>
+        </div>
+      )}
+
       {isClubFormat && teamsByClub ? (
         <div className={styles.teamList}>
           {clubs.map((club) => {
@@ -154,7 +193,7 @@ export function TeamPairingScreen() {
                 >
                   {club.name}
                 </div>
-                {clubTeams.map(renderTeamCard)}
+                {clubTeams.map((team, idx) => renderTeamCard(team, idx))}
               </div>
             );
           })}

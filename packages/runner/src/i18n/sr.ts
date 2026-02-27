@@ -51,6 +51,12 @@ const sr: Translations = {
   'teams.hintClub': 'Tapni dva igrača iz istog kluba da ih zameniš',
   'teams.shuffle': 'Pomešaj Timove',
   'teams.start': 'Započni Turnir',
+  'teams.fixedPairsTitle': 'Parovi se zaključavaju nakon pokretanja',
+  'teams.fixedPairsBody': 'Ovi parovi ostaju zajedno tokom celog turnira. Pažljivo ih pregledajte — ne možete menjati partnere nakon što turnir počne.',
+  'teams.fixedSlotsBody': 'Režim fiksnih pozicija je aktivan: pozicija svakog para (Poz. 1, Poz. 2, itd.) određuje protiv koga igra. Poz. 1 uvek igra protiv Poz. 1 iz suprotnog kluba, i tako dalje.',
+  'teams.slotLabel': 'Poz. {num}',
+  'teams.unequalClubsTitle': 'Klubovi imaju različit broj parova',
+  'teams.unequalClubsBody': 'Parovi koji pauziraju dobijaju prosečne kompenzacione poene, pa klub sa više parova dobija dodatne poene od pauza. Za fer plasman, držite isti broj parova u svakom klubu.',
 
   // PlayScreen
   'play.progress': 'Runda {current}/{total} · {scored}/{totalMatches} mečeva',
