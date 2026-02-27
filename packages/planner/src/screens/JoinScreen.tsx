@@ -11,7 +11,7 @@ import styles from './JoinScreen.module.css';
 
 export function JoinScreen() {
   const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, updatePlayerGroup, updatePlayerClub, isRegistered, setScreen, organizerName, userName, telegramUser, completedAt } = usePlanner();
-  const { startedBy, showWarning, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
+  const { startedBy, showWarning, warningReason, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
   const { t } = useTranslation();
   // null = not yet edited by user, derive from external sources
   const [nameInput, setNameInput] = useState<string | null>(null);
@@ -474,6 +474,7 @@ export function JoinScreen() {
       <StartWarningModal
         open={showWarning}
         startedBy={startedBy}
+        reason={warningReason}
         onProceed={() => proceedAnyway(tournament!, players)}
         onClose={dismissWarning}
       />

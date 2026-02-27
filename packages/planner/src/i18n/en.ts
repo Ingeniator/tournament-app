@@ -206,8 +206,11 @@ const en: Translations = {
   // Start Warning
   'startWarning.title': 'Tournament Already Started',
   'startWarning.alreadyStarted': '{name} has already started this tournament on their device.',
+  'startWarning.alreadyStartedSelf': 'You have already started this tournament.',
+  'startWarning.restartWillErase': 'Restarting will erase all scores entered so far. If you want to continue the existing tournament, go to the scoring app instead.',
   'startWarning.onePersonOnly': 'Only one person should enter results \u2014 scores are stored locally on that person\'s device, not online.',
   'startWarning.dataLost': 'If that person\'s data was lost, you can proceed and start fresh.',
+  'startWarning.continueTournament': 'Continue Tournament',
   'startWarning.proceedAnyway': 'Start Anyway',
 
   // Planner App

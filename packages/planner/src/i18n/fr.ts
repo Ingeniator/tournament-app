@@ -206,8 +206,11 @@ const fr: Translations = {
   // Start Warning
   'startWarning.title': 'Tournoi Déjà Commencé',
   'startWarning.alreadyStarted': '{name} a déjà démarré ce tournoi sur son appareil.',
+  'startWarning.alreadyStartedSelf': 'Vous avez déjà démarré ce tournoi.',
+  'startWarning.restartWillErase': 'Redémarrer effacera tous les scores saisis jusqu\'à présent. Si vous voulez continuer le tournoi en cours, allez sur l\'app de scoring.',
   'startWarning.onePersonOnly': 'Une seule personne devrait saisir les résultats — les scores sont stockés localement sur l\'appareil de cette personne, pas en ligne.',
   'startWarning.dataLost': 'Si les données de cette personne ont été perdues, vous pouvez continuer et repartir de zéro.',
+  'startWarning.continueTournament': 'Continuer le Tournoi',
   'startWarning.proceedAnyway': 'Commencer Quand Même',
 
   // Planner App

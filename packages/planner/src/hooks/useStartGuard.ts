@@ -4,9 +4,12 @@ import type { PlannerTournament, PlannerRegistration, TournamentStartInfo } from
 import { db } from '../firebase';
 import { launchInRunner } from '../utils/exportToRunner';
 
+export type WarningReason = 'same-user' | 'different-user';
+
 export function useStartGuard(tournamentId: string | null, uid: string | null, userName: string | null) {
   const [startedBy, setStartedBy] = useState<TournamentStartInfo | null>(null);
   const [showWarning, setShowWarning] = useState(false);
+  const [warningReason, setWarningReason] = useState<WarningReason>('different-user');
 
   useEffect(() => {
     if (!tournamentId || !db) return;
@@ -24,7 +27,8 @@ export function useStartGuard(tournamentId: string | null, uid: string | null, u
   };
 
   const handleLaunch = (tournament: PlannerTournament, players: PlannerRegistration[]) => {
-    if (startedBy && startedBy.uid !== uid) {
+    if (startedBy) {
+      setWarningReason(startedBy.uid === uid ? 'same-user' : 'different-user');
       setShowWarning(true);
       return;
     }
@@ -42,5 +46,5 @@ export function useStartGuard(tournamentId: string | null, uid: string | null, u
     setShowWarning(false);
   };
 
-  return { startedBy, showWarning, handleLaunch, proceedAnyway, dismissWarning };
+  return { startedBy, showWarning, warningReason, handleLaunch, proceedAnyway, dismissWarning };
 }

@@ -206,8 +206,11 @@ const es: Translations = {
   // Start Warning
   'startWarning.title': 'Torneo Ya Iniciado',
   'startWarning.alreadyStarted': '{name} ya ha iniciado este torneo en su dispositivo.',
+  'startWarning.alreadyStartedSelf': 'Ya has iniciado este torneo.',
+  'startWarning.restartWillErase': 'Reiniciar borrará todas las puntuaciones introducidas hasta ahora. Si quieres continuar el torneo existente, ve a la app de puntuación.',
   'startWarning.onePersonOnly': 'Solo una persona debe introducir los resultados \u2014 las puntuaciones se guardan localmente en el dispositivo de esa persona, no en línea.',
   'startWarning.dataLost': 'Si los datos de esa persona se perdieron, puedes continuar y empezar de nuevo.',
+  'startWarning.continueTournament': 'Continuar Torneo',
   'startWarning.proceedAnyway': 'Iniciar de Todos Modos',
 
   // Planner App

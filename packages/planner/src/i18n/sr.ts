@@ -206,8 +206,11 @@ const sr: Translations = {
   // Start Warning
   'startWarning.title': 'Turnir je Već Započet',
   'startWarning.alreadyStarted': '{name} je već započeo ovaj turnir na svom uređaju.',
+  'startWarning.alreadyStartedSelf': 'Već ste započeli ovaj turnir.',
+  'startWarning.restartWillErase': 'Ponovnim pokretanjem biće obrisani svi do sada uneti rezultati. Ako želite da nastavite postojeći turnir, idite na aplikaciju za bodovanje.',
   'startWarning.onePersonOnly': 'Samo jedna osoba treba da unosi rezultate — rezultati se čuvaju lokalno na uređaju te osobe, ne na mreži.',
   'startWarning.dataLost': 'Ako su podaci te osobe izgubljeni, možete nastaviti i početi iznova.',
+  'startWarning.continueTournament': 'Nastavi Turnir',
   'startWarning.proceedAnyway': 'Započni Svejedno',
 
   // Planner App

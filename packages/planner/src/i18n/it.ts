@@ -206,8 +206,11 @@ const it: Translations = {
   // Start Warning
   'startWarning.title': 'Torneo Già Avviato',
   'startWarning.alreadyStarted': '{name} ha già avviato questo torneo sul suo dispositivo.',
+  'startWarning.alreadyStartedSelf': 'Hai già avviato questo torneo.',
+  'startWarning.restartWillErase': 'Riavviare cancellerà tutti i punteggi inseriti finora. Se vuoi continuare il torneo esistente, vai all\'app di punteggio.',
   'startWarning.onePersonOnly': 'Solo una persona deve inserire i risultati \u2014 i punteggi sono salvati localmente sul dispositivo di quella persona, non online.',
   'startWarning.dataLost': 'Se i dati di quella persona sono andati persi, puoi procedere e ricominciare.',
+  'startWarning.continueTournament': 'Continua Torneo',
   'startWarning.proceedAnyway': 'Avvia Comunque',
 
   // Planner App

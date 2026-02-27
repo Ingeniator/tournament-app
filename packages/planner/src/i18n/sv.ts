@@ -206,8 +206,11 @@ const sv: Translations = {
   // Start Warning
   'startWarning.title': 'Turnering Redan Startad',
   'startWarning.alreadyStarted': '{name} har redan startat denna turnering på sin enhet.',
+  'startWarning.alreadyStartedSelf': 'Du har redan startat denna turnering.',
+  'startWarning.restartWillErase': 'Om du startar om raderas alla poäng som matats in hittills. Om du vill fortsätta den befintliga turneringen, gå till poängappen istället.',
   'startWarning.onePersonOnly': 'Bara en person bör mata in resultat — poäng lagras lokalt på den personens enhet, inte online.',
   'startWarning.dataLost': 'Om den personens data förlorats kan du fortsätta och börja om.',
+  'startWarning.continueTournament': 'Fortsätt Turnering',
   'startWarning.proceedAnyway': 'Starta Ändå',
 
   // Planner App
