@@ -632,6 +632,28 @@
   color: var(--color-text-muted);
 }
 
+/* Reopen modal */
+.reopenGap {
+  height: var(--space-sm);
+}
+
+.reopenModal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.reopenWarning {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.reopenActions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
 .toast {
   position: fixed;
   bottom: var(--space-lg);

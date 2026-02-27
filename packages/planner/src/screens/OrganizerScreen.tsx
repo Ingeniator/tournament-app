@@ -1,6 +1,6 @@
 import { useState, useMemo, type ReactNode } from 'react';
 import { ref, push, set } from 'firebase/database';
-import { Button, Card, FeedbackModal, AppFooter, Toast, useToast, useTranslation } from '@padel/common';
+import { Button, Card, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation } from '@padel/common';
 import type { TournamentFormat, Court, Club } from '@padel/common';
 import { generateId } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
@@ -66,6 +66,8 @@ export function OrganizerScreen() {
 
   if (!tournament) return null;
 
+  const [showReopenModal, setShowReopenModal] = useState(false);
+
   if (completedAt) {
     return (
       <div className={styles.container}>
@@ -85,7 +87,8 @@ export function OrganizerScreen() {
             }}>
               {t('organizer.viewResults')}
             </Button>
-            <Button variant="secondary" fullWidth onClick={undoComplete}>
+            <div className={styles.reopenGap} />
+            <Button variant="secondary" fullWidth onClick={() => setShowReopenModal(true)}>
               {t('organizer.undoComplete')}
             </Button>
           </Card>
@@ -100,6 +103,27 @@ export function OrganizerScreen() {
             {t('organizer.deleteTournament')}
           </button>
         </main>
+
+        <Modal
+          open={showReopenModal}
+          title={t('organizer.reopenTitle')}
+          onClose={() => setShowReopenModal(false)}
+        >
+          <div className={styles.reopenModal}>
+            <p className={styles.reopenWarning}>{t('organizer.reopenWarning')}</p>
+            <div className={styles.reopenActions}>
+              <Button variant="secondary" fullWidth onClick={() => setShowReopenModal(false)}>
+                {t('home.cancel')}
+              </Button>
+              <Button fullWidth onClick={async () => {
+                setShowReopenModal(false);
+                await undoComplete();
+              }}>
+                {t('organizer.reopenConfirm')}
+              </Button>
+            </div>
+          </div>
+        </Modal>
       </div>
     );
   }
