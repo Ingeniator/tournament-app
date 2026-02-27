@@ -75,4 +75,48 @@ describe('PlayerList', () => {
     fireEvent.click(screen.getByText('Women'));
     expect(onSetGroup).toHaveBeenCalledWith('p0', 'B');
   });
+
+  it('enters edit mode when player name is clicked and onRename is provided', () => {
+    const onRename = vi.fn();
+    render(<PlayerList players={makePlayers(1)} onRemove={vi.fn()} onRename={onRename} />);
+    fireEvent.click(screen.getByText('Player 1'));
+    const input = screen.getByDisplayValue('Player 1');
+    expect(input).toBeTruthy();
+  });
+
+  it('calls onRename with new name on Enter', () => {
+    const onRename = vi.fn();
+    render(<PlayerList players={makePlayers(1)} onRemove={vi.fn()} onRename={onRename} />);
+    fireEvent.click(screen.getByText('Player 1'));
+    const input = screen.getByDisplayValue('Player 1');
+    fireEvent.change(input, { target: { value: 'New Name' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(onRename).toHaveBeenCalledWith('p0', 'New Name');
+  });
+
+  it('does not call onRename if name is unchanged', () => {
+    const onRename = vi.fn();
+    render(<PlayerList players={makePlayers(1)} onRemove={vi.fn()} onRename={onRename} />);
+    fireEvent.click(screen.getByText('Player 1'));
+    const input = screen.getByDisplayValue('Player 1');
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(onRename).not.toHaveBeenCalled();
+  });
+
+  it('cancels editing on Escape', () => {
+    const onRename = vi.fn();
+    render(<PlayerList players={makePlayers(1)} onRemove={vi.fn()} onRename={onRename} />);
+    fireEvent.click(screen.getByText('Player 1'));
+    const input = screen.getByDisplayValue('Player 1');
+    fireEvent.change(input, { target: { value: 'Changed' } });
+    fireEvent.keyDown(input, { key: 'Escape' });
+    expect(onRename).not.toHaveBeenCalled();
+    expect(screen.getByText('Player 1')).toBeTruthy();
+  });
+
+  it('does not enter edit mode when onRename is not provided', () => {
+    render(<PlayerList players={makePlayers(1)} onRemove={vi.fn()} />);
+    fireEvent.click(screen.getByText('Player 1'));
+    expect(screen.queryByDisplayValue('Player 1')).toBeNull();
+  });
 });
