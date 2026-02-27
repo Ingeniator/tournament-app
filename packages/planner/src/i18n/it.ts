@@ -121,8 +121,8 @@ const it: Translations = {
   'organizer.loadingResults': 'Caricamento risultati...',
   'organizer.noBackupData': 'Risultati non disponibili',
   'organizer.groupLabels': 'Nomi dei gruppi',
-  'organizer.groupLabelAPlaceholder': 'Nome gruppo A',
-  'organizer.groupLabelBPlaceholder': 'Nome gruppo B',
+  'organizer.groupLabelAPlaceholder': 'Giocatore lato sinistro',
+  'organizer.groupLabelBPlaceholder': 'Giocatore lato destro',
   'organizer.clubs': 'Club ({count})',
   'organizer.addClub': '+ Aggiungi',
   'organizer.noClub': 'Aggiungi almeno 2 club',
@@ -175,6 +175,9 @@ const it: Translations = {
   'join.failedCopy': 'Impossibile copiare',
   'join.completed': 'Questo torneo è stato completato',
   'join.completedOn': 'Completato il {date}',
+  'join.format': 'Formato',
+  'join.selectGroup': 'Seleziona il tuo gruppo',
+  'join.selectClub': 'Seleziona il tuo club',
 
   // SupportOverlay
   'support.title': 'Supportaci',

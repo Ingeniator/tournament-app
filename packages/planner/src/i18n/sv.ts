@@ -121,8 +121,8 @@ const sv: Translations = {
   'organizer.loadingResults': 'Laddar resultat...',
   'organizer.noBackupData': 'Resultat ej tillgängliga',
   'organizer.groupLabels': 'Gruppnamn',
-  'organizer.groupLabelAPlaceholder': 'Namn grupp A',
-  'organizer.groupLabelBPlaceholder': 'Namn grupp B',
+  'organizer.groupLabelAPlaceholder': 'Spelare vänster sida',
+  'organizer.groupLabelBPlaceholder': 'Spelare höger sida',
   'organizer.clubs': 'Klubbar ({count})',
   'organizer.addClub': '+ Lägg till',
   'organizer.noClub': 'Lägg till minst 2 klubbar',
@@ -175,6 +175,9 @@ const sv: Translations = {
   'join.failedCopy': 'Kopiering misslyckades',
   'join.completed': 'Denna turnering är avslutad',
   'join.completedOn': 'Avslutad {date}',
+  'join.format': 'Format',
+  'join.selectGroup': 'Välj din grupp',
+  'join.selectClub': 'Välj din klubb',
 
   // SupportOverlay
   'support.title': 'Stöd Oss',

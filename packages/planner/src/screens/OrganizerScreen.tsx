@@ -45,7 +45,10 @@ export function OrganizerScreen() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const capacity = tournament ? tournament.courts.length * 4 + (tournament.extraSpots ?? 0) : 0;
-  const statuses = useMemo(() => getPlayerStatuses(players, capacity), [players, capacity]);
+  const statuses = useMemo(() => getPlayerStatuses(players, capacity, {
+    format: tournament?.format,
+    clubs: tournament?.clubs,
+  }), [players, capacity, tournament?.format, tournament?.clubs]);
 
   const duplicateNames = useMemo(() => {
     const counts = new Map<string, number>();

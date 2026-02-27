@@ -11,7 +11,10 @@ export function buildRunnerTournament(
   registrations: PlannerRegistration[]
 ): Tournament {
   const capacity = plannerTournament.courts.length * 4 + (plannerTournament.extraSpots ?? 0);
-  const statuses = getPlayerStatuses(registrations, capacity);
+  const statuses = getPlayerStatuses(registrations, capacity, {
+    format: plannerTournament.format,
+    clubs: plannerTournament.clubs,
+  });
 
   const players: Player[] = registrations
     .filter(r => statuses.get(r.id) === 'playing')

@@ -10,7 +10,7 @@ import { StartWarningModal } from '../components/StartWarningModal';
 import styles from './JoinScreen.module.css';
 
 export function JoinScreen() {
-  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, isRegistered, setScreen, organizerName, userName, telegramUser, completedAt } = usePlanner();
+  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, updatePlayerGroup, updatePlayerClub, isRegistered, setScreen, organizerName, userName, telegramUser, completedAt } = usePlanner();
   const { startedBy, showWarning, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
   const { t } = useTranslation();
   const [name, setName] = useState(userName ?? telegramUser?.displayName ?? '');
@@ -32,7 +32,10 @@ export function JoinScreen() {
   }, [userName, telegramUser]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const capacity = tournament ? tournament.courts.length * 4 + (tournament.extraSpots ?? 0) : 0;
-  const statuses = useMemo(() => getPlayerStatuses(players, capacity), [players, capacity]);
+  const statuses = useMemo(() => getPlayerStatuses(players, capacity, {
+    format: tournament?.format,
+    clubs: tournament?.clubs,
+  }), [players, capacity, tournament?.format, tournament?.clubs]);
   const myRegistration = uid ? players.find(p => p.id === uid) : undefined;
   const myStatus = myRegistration ? statuses.get(myRegistration.id) : undefined;
 
@@ -191,34 +194,45 @@ export function JoinScreen() {
 
       <main>
 
-      {(tournament.date || tournament.place || organizerName || tournament.chatLink || tournament.description) && (
-        <Card>
-          <div className={styles.detailsList}>
-            {tournament.date && (
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>{t('join.date')}</span>
-                <span>{new Date(tournament.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-              </div>
-            )}
-            {tournament.duration && (
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>{t('join.duration')}</span>
-                <span>{tournament.duration >= 60 ? `${Math.floor(tournament.duration / 60)}h${tournament.duration % 60 ? ` ${tournament.duration % 60}min` : ''}` : `${tournament.duration}min`}</span>
-              </div>
-            )}
-            {tournament.place && (
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>{t('join.place')}</span>
-                <span>{tournament.place}</span>
-              </div>
-            )}
-            {organizerName && (
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>{t('join.organizer')}</span>
-                <span>{organizerName}</span>
-              </div>
-            )}
-            {tournament.chatLink && (
+      <Card>
+        <div className={styles.detailsList}>
+          <div className={styles.detailRow}>
+            <span className={styles.detailLabel}>{t('join.format')}</span>
+            <span>{
+              tournament.format === 'americano' ? t('organizer.formatAmericano')
+              : tournament.format === 'team-americano' ? t('organizer.formatTeamAmericano')
+              : tournament.format === 'team-mexicano' ? t('organizer.formatTeamMexicano')
+              : tournament.format === 'mixicano' ? t('organizer.formatMixicano')
+              : tournament.format === 'king-of-the-court' ? t('organizer.formatKingOfTheCourt')
+              : tournament.format === 'club-americano' ? t('organizer.formatClubAmericano')
+              : t('organizer.formatMexicano')
+            }</span>
+          </div>
+          {tournament.date && (
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>{t('join.date')}</span>
+              <span>{new Date(tournament.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+          )}
+          {tournament.duration && (
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>{t('join.duration')}</span>
+              <span>{tournament.duration >= 60 ? `${Math.floor(tournament.duration / 60)}h${tournament.duration % 60 ? ` ${tournament.duration % 60}min` : ''}` : `${tournament.duration}min`}</span>
+            </div>
+          )}
+          {tournament.place && (
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>{t('join.place')}</span>
+              <span>{tournament.place}</span>
+            </div>
+          )}
+          {organizerName && (
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>{t('join.organizer')}</span>
+              <span>{organizerName}</span>
+            </div>
+          )}
+          {tournament.chatLink && (
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>{t('join.groupChat')}</span>
                 <a href={tournament.chatLink.match(/^https?:\/\//) ? tournament.chatLink : `https://${tournament.chatLink}`} target="_blank" rel="noopener noreferrer" className={styles.chatLink}>
@@ -234,7 +248,6 @@ export function JoinScreen() {
             )}
           </div>
         </Card>
-      )}
 
       <Card>
         {isRegistered ? (
@@ -317,6 +330,48 @@ export function JoinScreen() {
                 &#128197; {t('join.addToCalendar')}
               </button>
             )}
+
+            {isConfirmed && uid && tournament.format === 'mixicano' && (
+              <div className={styles.groupPicker}>
+                <span className={styles.groupPickerLabel}>{t('join.selectGroup')}</span>
+                <div className={styles.groupToggle}>
+                  <button
+                    className={myRegistration?.group === 'A' ? styles.groupBtnActive : styles.groupBtn}
+                    onClick={() => updatePlayerGroup(uid, myRegistration?.group === 'A' ? null : 'A')}
+                  >
+                    {tournament.groupLabels?.[0] || 'A'}
+                  </button>
+                  <button
+                    className={myRegistration?.group === 'B' ? styles.groupBtnActive : styles.groupBtn}
+                    onClick={() => updatePlayerGroup(uid, myRegistration?.group === 'B' ? null : 'B')}
+                  >
+                    {tournament.groupLabels?.[1] || 'B'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {isConfirmed && uid && tournament.format === 'club-americano' && (tournament.clubs ?? []).length > 0 && (() => {
+              const clubs = tournament.clubs!;
+              const CLUB_COLORS = ['#3b82f6', '#ec4899', '#22c55e', '#f59e0b', '#a855f7'];
+              return (
+                <div className={styles.clubPicker}>
+                  <span className={styles.clubPickerLabel}>{t('join.selectClub')}</span>
+                  <div className={styles.clubOptions}>
+                    {clubs.map((club, idx) => (
+                      <button
+                        key={club.id}
+                        className={myRegistration?.clubId === club.id ? styles.clubOptionActive : styles.clubOption}
+                        style={{ '--club-color': CLUB_COLORS[idx % CLUB_COLORS.length] } as React.CSSProperties}
+                        onClick={() => updatePlayerClub(uid, myRegistration?.clubId === club.id ? null : club.id)}
+                      >
+                        {club.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         ) : (
           <div className={styles.registerForm}>

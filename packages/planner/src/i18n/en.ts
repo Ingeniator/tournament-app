@@ -121,8 +121,8 @@ const en: Translations = {
   'organizer.loadingResults': 'Loading results...',
   'organizer.noBackupData': 'Results not available',
   'organizer.groupLabels': 'Group labels',
-  'organizer.groupLabelAPlaceholder': 'Group A label',
-  'organizer.groupLabelBPlaceholder': 'Group B label',
+  'organizer.groupLabelAPlaceholder': 'Left side player',
+  'organizer.groupLabelBPlaceholder': 'Right side player',
   'organizer.clubs': 'Clubs ({count})',
   'organizer.addClub': '+ Add',
   'organizer.noClub': 'Add at least 2 clubs',
@@ -175,6 +175,9 @@ const en: Translations = {
   'join.failedCopy': 'Failed to copy',
   'join.completed': 'This tournament has been completed',
   'join.completedOn': 'Completed on {date}',
+  'join.format': 'Format',
+  'join.selectGroup': 'Select your group',
+  'join.selectClub': 'Select your club',
 
   // SupportOverlay
   'support.title': 'Support Us',

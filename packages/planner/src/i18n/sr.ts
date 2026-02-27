@@ -121,8 +121,8 @@ const sr: Translations = {
   'organizer.loadingResults': 'Učitavanje rezultata...',
   'organizer.noBackupData': 'Rezultati nisu dostupni',
   'organizer.groupLabels': 'Nazivi grupa',
-  'organizer.groupLabelAPlaceholder': 'Naziv grupe A',
-  'organizer.groupLabelBPlaceholder': 'Naziv grupe B',
+  'organizer.groupLabelAPlaceholder': 'Igrač leva strana',
+  'organizer.groupLabelBPlaceholder': 'Igrač desna strana',
   'organizer.clubs': 'Klubovi ({count})',
   'organizer.addClub': '+ Dodaj',
   'organizer.noClub': 'Dodajte najmanje 2 kluba',
@@ -175,6 +175,9 @@ const sr: Translations = {
   'join.failedCopy': 'Kopiranje neuspešno',
   'join.completed': 'Ovaj turnir je završen',
   'join.completedOn': 'Završen {date}',
+  'join.format': 'Format',
+  'join.selectGroup': 'Izaberite grupu',
+  'join.selectClub': 'Izaberite klub',
 
   // SupportOverlay
   'support.title': 'Podržite Nas',
