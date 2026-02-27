@@ -1,5 +1,5 @@
-import type { StandingsEntry } from '@padel/common';
-import type { GroupInfo } from '../components/standings/StandingsTable';
+import type { StandingsEntry, ClubStandingsEntry } from '@padel/common';
+import type { GroupInfo, ClubInfo } from '../components/standings/StandingsTable';
 import type { Nomination } from '../hooks/useNominations';
 
 const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
@@ -40,6 +40,7 @@ export function renderStandingsImage(
   tournamentName: string,
   standings: StandingsEntry[],
   groupInfo?: GroupInfo,
+  clubInfo?: ClubInfo,
 ): HTMLCanvasElement {
   const t = getThemeColors();
   const canvas = document.createElement('canvas');
@@ -148,15 +149,29 @@ export function renderStandingsImage(
         : t.textMuted;
     ctx.fillText(String(entry.rank), tableX + colRank, textY);
 
-    // Name (truncated if too long) + optional group badge
+    // Name (truncated if too long) + optional group/club badge
     ctx.font = `600 ${s(12)}px ${FONT}`;
     ctx.fillStyle = t.text;
     const playerGroup = groupInfo?.map.get(entry.playerId);
     const badgeLabel = playerGroup
       ? (playerGroup === 'A' ? groupInfo!.labels[0] : groupInfo!.labels[1])
       : null;
-    const badgeSpace = badgeLabel ? s(4) + ctx.measureText(badgeLabel).width + s(10) : 0;
-    const displayName = truncateText(ctx, entry.playerName, nameMaxWidth - badgeSpace);
+
+    // Determine club badge info
+    const clubId = clubInfo?.teamClubMap.get(entry.playerId);
+    const clubBadgeLabel = clubId ? clubInfo!.clubNameMap.get(clubId) : null;
+    const clubBadgeColor = clubId ? clubInfo!.clubColorMap.get(clubId) : null;
+
+    // Compute badge space (either group or club badge, not both)
+    let totalBadgeSpace = 0;
+    if (badgeLabel) {
+      totalBadgeSpace = s(4) + ctx.measureText(badgeLabel).width + s(10);
+    } else if (clubBadgeLabel) {
+      ctx.font = `bold ${s(8)}px ${FONT}`;
+      totalBadgeSpace = s(4) + ctx.measureText(clubBadgeLabel).width + s(10);
+      ctx.font = `600 ${s(12)}px ${FONT}`;
+    }
+    const displayName = truncateText(ctx, entry.playerName, nameMaxWidth - totalBadgeSpace);
     ctx.fillText(displayName, tableX + colName, textY);
 
     if (badgeLabel && playerGroup) {
@@ -175,6 +190,21 @@ export function renderStandingsImage(
       ctx.fillStyle = pillTextColor;
       ctx.textAlign = 'left';
       ctx.fillText(badgeLabel, badgeX + s(4), textY - s(1));
+    } else if (clubBadgeLabel && clubBadgeColor) {
+      const nameWidth = ctx.measureText(displayName).width;
+      const badgeX = tableX + colName + nameWidth + s(4);
+      ctx.font = `bold ${s(8)}px ${FONT}`;
+      const measuredBadgeW = ctx.measureText(clubBadgeLabel).width;
+      const pillW = measuredBadgeW + s(8);
+      const pillH = s(12);
+      const pillY = textY - s(9);
+      // Use club color with ~13% opacity for background (hex 22)
+      ctx.fillStyle = clubBadgeColor + '33';
+      roundRect(ctx, badgeX, pillY, pillW, pillH, s(6));
+      ctx.fill();
+      ctx.fillStyle = clubBadgeColor;
+      ctx.textAlign = 'left';
+      ctx.fillText(clubBadgeLabel, badgeX + s(4), textY - s(1));
     }
 
     // Points
@@ -196,6 +226,149 @@ export function renderStandingsImage(
       entry.pointDiff > 0 ? t.success : entry.pointDiff < 0 ? t.danger : t.textSecondary;
     ctx.font = bodyFont;
     ctx.fillText(diffStr, tableX + colDiff, textY);
+  }
+
+  // Footer / watermark
+  const footerY = tableY + tableHeight + s(8) + s(16);
+  ctx.textAlign = 'center';
+  ctx.font = `${s(9)}px ${FONT}`;
+  ctx.fillStyle = t.textMuted;
+  ctx.fillText(window.location.hostname, canvasWidth / 2, footerY + s(12));
+
+  return canvas;
+}
+
+export function renderClubStandingsImage(
+  tournamentName: string,
+  clubStandings: ClubStandingsEntry[],
+  clubColorMap: Map<string, string>,
+): HTMLCanvasElement {
+  const t = getThemeColors();
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d')!;
+
+  // Layout constants
+  const padding = s(20);
+  const headerHeight = s(36);
+  const tableHeaderHeight = s(32);
+  const rowHeight = s(36);
+  const canvasWidth = s(400);
+
+  const tableRows = clubStandings.length;
+  const tableHeight = tableHeaderHeight + rowHeight * tableRows;
+  const footerHeight = s(28);
+  const canvasHeight = padding + headerHeight + s(12) + tableHeight + s(16) + footerHeight + padding;
+
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
+
+  // Background
+  ctx.fillStyle = t.bg;
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+  // Header
+  let y = padding;
+  ctx.fillStyle = t.text;
+  ctx.font = `bold ${s(18)}px ${FONT}`;
+  ctx.textAlign = 'center';
+  ctx.fillText(tournamentName, canvasWidth / 2, y + s(24));
+  y += headerHeight;
+
+  // Table card background
+  const tableX = padding;
+  const tableW = canvasWidth - padding * 2;
+  const tableY = y;
+  const cardRadius = s(8);
+
+  ctx.fillStyle = t.surface;
+  roundRect(ctx, tableX, tableY, tableW, tableHeight + s(8), cardRadius);
+  ctx.fill();
+
+  ctx.strokeStyle = t.border;
+  ctx.lineWidth = s(1);
+  roundRect(ctx, tableX, tableY, tableW, tableHeight + s(8), cardRadius);
+  ctx.stroke();
+
+  // Column positions
+  const colRank = s(12);
+  const colName = s(40);
+  const colPts = tableW - s(56);
+  const colPairs = tableW - s(14);
+
+  // Table header
+  y = tableY + s(4);
+  ctx.textAlign = 'left';
+  ctx.font = `600 ${s(9)}px ${FONT}`;
+  ctx.fillStyle = t.textMuted;
+  const headerY = y + s(20);
+  ctx.fillText('#', tableX + colRank, headerY);
+  ctx.fillText('CLUB', tableX + colName, headerY);
+  ctx.textAlign = 'right';
+  ctx.fillText('PTS', tableX + colPts, headerY);
+  ctx.fillText('PAIRS', tableX + colPairs, headerY);
+
+  // Header separator
+  y += tableHeaderHeight;
+  ctx.strokeStyle = t.border;
+  ctx.lineWidth = s(1);
+  ctx.beginPath();
+  ctx.moveTo(tableX + s(8), y);
+  ctx.lineTo(tableX + tableW - s(8), y);
+  ctx.stroke();
+
+  // Table rows
+  const bodyFont = `${s(12)}px ${FONT}`;
+  const boldFont = `bold ${s(12)}px ${FONT}`;
+
+  for (let i = 0; i < clubStandings.length; i++) {
+    const entry = clubStandings[i];
+    const rowY = y + rowHeight * i;
+    const textY = rowY + s(24);
+
+    // Row separator (skip first)
+    if (i > 0) {
+      ctx.strokeStyle = t.border;
+      ctx.lineWidth = s(0.5);
+      ctx.beginPath();
+      ctx.moveTo(tableX + s(8), rowY);
+      ctx.lineTo(tableX + tableW - s(8), rowY);
+      ctx.stroke();
+    }
+
+    // Rank
+    ctx.textAlign = 'left';
+    ctx.font = boldFont;
+    ctx.fillStyle =
+      entry.rank === 1 ? t.rankGold
+        : entry.rank === 2 ? t.rankSilver
+        : entry.rank === 3 ? t.rankBronze
+        : t.textMuted;
+    ctx.fillText(String(entry.rank), tableX + colRank, textY);
+
+    // Club name with color dot
+    const dotRadius = s(4);
+    const dotX = tableX + colName + dotRadius;
+    const dotY = textY - s(4);
+    const color = clubColorMap.get(entry.clubId) ?? t.textMuted;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(dotX, dotY, dotRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.font = `600 ${s(12)}px ${FONT}`;
+    ctx.fillStyle = t.text;
+    ctx.fillText(entry.clubName, tableX + colName + dotRadius * 2 + s(6), textY);
+
+    // Points
+    ctx.textAlign = 'right';
+    ctx.font = boldFont;
+    ctx.fillStyle = t.primary;
+    ctx.fillText(String(entry.totalPoints), tableX + colPts, textY);
+
+    // Pairs count
+    ctx.font = bodyFont;
+    ctx.fillStyle = t.textSecondary;
+    ctx.fillText(String(entry.memberCount), tableX + colPairs, textY);
   }
 
   // Footer / watermark
@@ -383,12 +556,19 @@ export async function shareStandingsImage(
   standings: StandingsEntry[],
   nominations: Nomination[] = [],
   groupInfo?: GroupInfo,
+  clubInfo?: ClubInfo,
+  clubStandings?: ClubStandingsEntry[],
+  clubColorMap?: Map<string, string>,
 ): Promise<ShareImageResult> {
   let standingsCanvas: HTMLCanvasElement;
+  let clubStandingsCanvas: HTMLCanvasElement | null = null;
   let nominationCanvases: HTMLCanvasElement[];
 
   try {
-    standingsCanvas = renderStandingsImage(tournamentName, standings, groupInfo);
+    standingsCanvas = renderStandingsImage(tournamentName, standings, groupInfo, clubInfo);
+    if (clubStandings && clubStandings.length > 0 && clubColorMap) {
+      clubStandingsCanvas = renderClubStandingsImage(tournamentName, clubStandings, clubColorMap);
+    }
     nominationCanvases = nominations.map(n => renderNominationImage(tournamentName, n));
   } catch {
     return { status: 'failed' };
@@ -428,6 +608,13 @@ export async function shareStandingsImage(
       new File([standingsBlob], `${safeName}_results.png`, { type: 'image/png' }),
     );
 
+    if (clubStandingsCanvas) {
+      const clubBlob = await canvasToBlob(clubStandingsCanvas);
+      if (clubBlob) {
+        files.push(new File([clubBlob], `${safeName}_club_standings.png`, { type: 'image/png' }));
+      }
+    }
+
     for (const i of otherIndices) {
       const blob = await canvasToBlob(nominationCanvases[i]);
       if (blob) {
@@ -447,6 +634,7 @@ export async function shareStandingsImage(
       const allCanvases = [
         ...podiumIndices.map(i => nominationCanvases[i]),
         standingsCanvas,
+        ...(clubStandingsCanvas ? [clubStandingsCanvas] : []),
         ...otherIndices.map(i => nominationCanvases[i]),
       ];
       const blobs = await Promise.all(allCanvases.map(c => canvasToBlob(c)));
@@ -496,6 +684,7 @@ export async function shareStandingsImage(
         const allCanvases = [
           ...podiumIndices.map(i => nominationCanvases[i]),
           standingsCanvas,
+          ...(clubStandingsCanvas ? [clubStandingsCanvas] : []),
           ...otherIndices.map(i => nominationCanvases[i]),
         ];
         const blobs = await Promise.all(allCanvases.map(c => canvasToBlob(c)));

@@ -172,7 +172,7 @@ export function PlayScreen() {
       showToast(ok ? t('play.copied') : t('play.failedCopy'));
     };
     const handleShareImage = async () => {
-      const result = await shareStandingsImage(tournament.name, standings, nominations, groupInfo);
+      const result = await shareStandingsImage(tournament.name, standings, nominations, groupInfo, clubInfo, clubStandings, clubColorMap);
       if (result.status === 'shared') showToast(t('play.shared'));
       else if (result.status === 'downloaded') showToast(t('play.imageSaved'));
       else if (result.status === 'preview') setPreviewImages(result.dataUrls);
