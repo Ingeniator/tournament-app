@@ -127,7 +127,7 @@ export function tournamentReducer(
       if (!state || (state.phase !== 'setup' && state.phase !== 'in-progress')) return state;
       const { playerId: gpId, group } = action.payload;
       const gpPlayers = state.players.map(p =>
-        p.id === gpId ? { ...p, group } : p
+        p.id === gpId ? { ...p, group: group ?? undefined } : p
       );
 
       if (state.phase === 'in-progress') {

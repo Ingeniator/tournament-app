@@ -88,6 +88,10 @@ export function SetupScreen() {
           onSetGroup={(playerId, group) =>
             dispatch({ type: 'SET_PLAYER_GROUP', payload: { playerId, group } })
           }
+          clubs={tournament.clubs}
+          onSetClub={(playerId, clubId) =>
+            dispatch({ type: 'SET_PLAYER_CLUB', payload: { playerId, clubId } })
+          }
         />
       </div>
 
