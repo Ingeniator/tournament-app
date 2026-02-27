@@ -57,6 +57,8 @@ const it: Translations = {
   'teams.fixedPairsBody': 'Queste coppie resteranno insieme per tutto il torneo. Controllale attentamente — non potrai cambiare i partner una volta iniziato il torneo.',
   'teams.fixedSlotsBody': 'Modalità Posizioni Fisse attiva: la posizione di ogni coppia (Pos. 1, Pos. 2, ecc.) determina contro chi gioca. Pos. 1 affronta sempre Pos. 1 del club avversario, e così via.',
   'teams.slotLabel': 'Pos. {num}',
+  'teams.unequalClubsTitle': 'I club hanno un numero diverso di coppie',
+  'teams.unequalClubsBody': 'Le coppie a riposo ricevono punti di compensazione medi, quindi il club con più coppie ottiene punti extra dai riposi. Per una classifica equa, mantieni lo stesso numero di coppie in ogni club.',
 
   // PlayScreen
   'play.progress': 'Turno {current}/{total} \u00b7 {scored}/{totalMatches} partite',

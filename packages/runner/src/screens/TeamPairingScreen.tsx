@@ -35,6 +35,13 @@ export function TeamPairingScreen() {
     return grouped;
   }, [tournament, clubs]);
 
+  // Detect unequal club sizes
+  const unequalClubs = useMemo(() => {
+    if (!tournament?.teams || tournament.config.format !== 'club-americano' || !teamsByClub) return false;
+    const pairCounts = clubs.map(c => (teamsByClub.get(c.id) ?? []).length);
+    return pairCounts.length > 1 && new Set(pairCounts).size > 1;
+  }, [tournament, clubs, teamsByClub]);
+
   if (!tournament || !tournament.teams) return null;
 
   const isClubFormat = tournament.config.format === 'club-americano';
@@ -161,6 +168,15 @@ export function TeamPairingScreen() {
               {t('teams.fixedSlotsBody')}
             </div>
           )}
+        </div>
+      )}
+
+      {isClubFormat && unequalClubs && (
+        <div className={styles.warningBanner}>
+          <div className={styles.warningBannerTitle}>{t('teams.unequalClubsTitle')}</div>
+          <div className={styles.warningBannerBody}>
+            {t('teams.unequalClubsBody')}
+          </div>
         </div>
       )}
 

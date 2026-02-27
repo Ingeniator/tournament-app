@@ -55,6 +55,8 @@ const sv: Translations = {
   'teams.fixedPairsBody': 'Dessa par förblir tillsammans under hela turneringen. Granska dem noga — du kan inte byta partners efter att turneringen har startat.',
   'teams.fixedSlotsBody': 'Fasta positioner är aktivt: varje pars position (Pos. 1, Pos. 2, osv.) bestämmer vilka de möter. Pos. 1 möter alltid Pos. 1 från motståndarklubb, och så vidare.',
   'teams.slotLabel': 'Pos. {num}',
+  'teams.unequalClubsTitle': 'Klubbarna har olika antal par',
+  'teams.unequalClubsBody': 'Par som vilar får genomsnittliga kompensationspoäng, så klubben med fler par får extrapoäng från viloperioder. För rättvis ställning, håll samma antal par i varje klubb.',
 
   // PlayScreen
   'play.progress': 'Omgång {current}/{total} · {scored}/{totalMatches} matcher',

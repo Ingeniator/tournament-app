@@ -41,6 +41,27 @@
   margin-top: var(--space-xs);
 }
 
+.warningBanner {
+  border-left: 3px solid var(--color-warning);
+  background-color: var(--color-surface-raised);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.warningBannerTitle {
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--color-warning);
+  margin-bottom: var(--space-xs);
+}
+
+.warningBannerBody {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
 .teamCardHeader {
   display: flex;
   align-items: center;

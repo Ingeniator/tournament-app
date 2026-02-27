@@ -212,7 +212,8 @@ function clubAmericanoValidateWarnings(players: Player[], _config: TournamentCon
   }
   const sizes = [...clubCounts.values()];
   if (sizes.length > 1 && new Set(sizes).size > 1) {
-    warnings.push('Clubs have different sizes — some pairs may sit out more');
+    const pairSizes = sizes.map(s => s / 2);
+    warnings.push(`Clubs have different sizes (${pairSizes.join(' vs ')} pairs) — the larger club gets extra sit-out compensation points, which may affect club standings`);
   }
   return warnings;
 }
