@@ -14,6 +14,7 @@ export type {
 } from './types/tournament';
 export type { StandingsEntry, ClubStandingsEntry } from './types/standings';
 export type { AwardTier, Nomination } from './types/nomination';
+export type { ChaosLevel, CardTier, CurseCard, MatchCurse, MaldicionesHands } from './types/maldiciones';
 export type { Supporter, GroupedSupporter } from './types/supporter';
 export type { PlannerTournament, PlannerRegistration, TournamentSummary, TournamentStartInfo } from './types/planner';
 export { CLUB_COLORS } from './constants/clubColors';

@@ -4,6 +4,8 @@ import { generateId } from '@padel/common';
 import { getStrategy } from '../strategies';
 import { deduplicateNames } from '../utils/deduplicateNames';
 import { resolveConfigDefaults } from '../utils/resolveConfigDefaults';
+import { dealMaldicionesHands } from '../utils/maldiciones';
+import { findTeamByPair } from '../strategies/shared';
 
 function shuffleArray<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -379,12 +381,25 @@ export function tournamentReducer(
       const resolvedConfig = resolveConfigDefaults(state.config, players.length);
       const strategy = getStrategy(resolvedConfig.format);
       const { rounds } = strategy.generateSchedule(players, resolvedConfig, state);
+
+      // Deal maldiciones cards once at tournament start
+      let maldicionesHands = state.maldicionesHands;
+      if (resolvedConfig.maldiciones?.enabled && !maldicionesHands && state.teams?.length) {
+        const plannedRounds = rounds.length;
+        maldicionesHands = dealMaldicionesHands(
+          state.teams.map(t => t.id),
+          resolvedConfig.maldiciones.chaosLevel,
+          plannedRounds,
+        );
+      }
+
       return {
         ...state,
         players,
         config: resolvedConfig,
         phase: 'in-progress',
         rounds,
+        ...(maldicionesHands ? { maldicionesHands } : {}),
         updatedAt: Date.now(),
       };
     }
@@ -401,10 +416,23 @@ export function tournamentReducer(
         undefined,
         state
       );
+
+      // Deal maldiciones if enabled and not dealt yet
+      let addMaldHands = state.maldicionesHands;
+      if (state.config.maldiciones?.enabled && !addMaldHands && state.teams?.length) {
+        const totalRounds = state.rounds.length + newRounds.length;
+        addMaldHands = dealMaldicionesHands(
+          state.teams.map(t => t.id),
+          state.config.maldiciones.chaosLevel,
+          totalRounds,
+        );
+      }
+
       return {
         ...state,
         phase: 'in-progress',
         rounds: [...state.rounds, ...newRounds],
+        ...(addMaldHands && !state.maldicionesHands ? { maldicionesHands: addMaldHands } : {}),
         updatedAt: Date.now(),
       };
     }
@@ -585,6 +613,117 @@ export function tournamentReducer(
         ),
         updatedAt: Date.now(),
       };
+    }
+
+    case 'CAST_MALDICION': {
+      if (!state || !state.maldicionesHands || !state.teams) return state;
+      const { roundId: crId, matchId: cmId, castBy, cardId, targetPlayerId } = action.payload;
+      const round = state.rounds.find(r => r.id === crId);
+      const match = round?.matches.find(m => m.id === cmId);
+      if (!match || match.curse || match.score) return state;
+
+      // Find the casting team
+      const castSide = castBy === 'team1' ? match.team1 : match.team2;
+      const castTeam = findTeamByPair(state.teams, castSide);
+      if (!castTeam) return state;
+
+      const hand = state.maldicionesHands[castTeam.id];
+      if (!hand || !hand.cardIds.includes(cardId)) return state;
+
+      // Remove card from hand
+      const newHands = {
+        ...state.maldicionesHands,
+        [castTeam.id]: {
+          ...hand,
+          cardIds: hand.cardIds.filter(c => c !== cardId),
+        },
+      };
+
+      const updatedRounds = state.rounds.map(r =>
+        r.id === crId
+          ? {
+              ...r,
+              matches: r.matches.map(m =>
+                m.id === cmId
+                  ? { ...m, curse: { cardId, castBy, targetPlayerId, shielded: false } }
+                  : m
+              ),
+            }
+          : r
+      );
+
+      return { ...state, rounds: updatedRounds, maldicionesHands: newHands, updatedAt: Date.now() };
+    }
+
+    case 'USE_ESCUDO': {
+      if (!state || !state.maldicionesHands || !state.teams) return state;
+      const { roundId: erId, matchId: emId } = action.payload;
+      const round = state.rounds.find(r => r.id === erId);
+      const match = round?.matches.find(m => m.id === emId);
+      if (!match?.curse || match.curse.shielded) return state;
+
+      // Victim is the opposite side from castBy
+      const victimSide = match.curse.castBy === 'team1' ? match.team2 : match.team1;
+      const victimTeam = findTeamByPair(state.teams, victimSide);
+      if (!victimTeam) return state;
+
+      const victimHand = state.maldicionesHands[victimTeam.id];
+      if (!victimHand?.hasShield) return state;
+
+      const newHands = {
+        ...state.maldicionesHands,
+        [victimTeam.id]: { ...victimHand, hasShield: false },
+      };
+
+      const updatedRounds = state.rounds.map(r =>
+        r.id === erId
+          ? {
+              ...r,
+              matches: r.matches.map(m =>
+                m.id === emId && m.curse
+                  ? { ...m, curse: { ...m.curse, shielded: true } }
+                  : m
+              ),
+            }
+          : r
+      );
+
+      return { ...state, rounds: updatedRounds, maldicionesHands: newHands, updatedAt: Date.now() };
+    }
+
+    case 'VETO_MALDICION': {
+      if (!state || !state.maldicionesHands || !state.teams) return state;
+      const { roundId: vrId, matchId: vmId } = action.payload;
+      const round = state.rounds.find(r => r.id === vrId);
+      const match = round?.matches.find(m => m.id === vmId);
+      if (!match?.curse) return state;
+
+      // Return card to caster's hand
+      const casterSide = match.curse.castBy === 'team1' ? match.team1 : match.team2;
+      const casterTeam = findTeamByPair(state.teams, casterSide);
+      if (!casterTeam) return state;
+
+      const casterHand = state.maldicionesHands[casterTeam.id];
+      const newHands = {
+        ...state.maldicionesHands,
+        [casterTeam.id]: {
+          ...casterHand,
+          cardIds: [...(casterHand?.cardIds ?? []), match.curse.cardId],
+        },
+      };
+
+      const updatedRounds = state.rounds.map(r =>
+        r.id === vrId
+          ? {
+              ...r,
+              matches: r.matches.map(m =>
+                m.id === vmId ? { ...m, curse: undefined } : m
+              ),
+            }
+          : r
+      );
+
+      return { ...state, rounds: updatedRounds, maldicionesHands: newHands, updatedAt: Date.now() };
     }
 
     case 'RESET_TOURNAMENT':

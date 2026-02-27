@@ -1,6 +1,7 @@
 import { useMemo, useCallback } from 'react';
 import type { Tournament, StandingsEntry } from '@padel/common';
 import type { Nomination } from './useNominations';
+import { CURSE_CARDS } from '../data/curseCards';
 import { getStrategy } from '../strategies';
 
 export function useShareText(
@@ -43,9 +44,14 @@ export function useShareText(
         const t2 = `${playerName(match.team2[0])} & ${playerName(match.team2[1])}`;
         const s = match.score!;
         const score = `${s.team1Points}:${s.team2Points}`;
-        lines.push(
-          `  ${courtName(match.courtId).padEnd(maxCourtW)}  ${t1.padEnd(maxT1W)}  ${score.padStart(maxScoreW)}  ${t2}`
-        );
+        let line = `  ${courtName(match.courtId).padEnd(maxCourtW)}  ${t1.padEnd(maxT1W)}  ${score.padStart(maxScoreW)}  ${t2}`;
+        if (match.curse) {
+          const card = CURSE_CARDS.find(c => c.id === match.curse!.cardId);
+          if (card) {
+            line += match.curse.shielded ? `  🛡️${card.emoji} ${card.name}` : `  ${card.emoji} ${card.name}`;
+          }
+        }
+        lines.push(line);
       }
       if (round.sitOuts.length > 0) {
         lines.push(`  Sat out: ${round.sitOuts.map(playerName).join(', ')}`);
@@ -85,6 +91,9 @@ export function useShareText(
 
     // Title
     lines.push(`🏆 ${tournament.name}`);
+    if (tournament.config.maldiciones?.enabled) {
+      lines.push('🎭 Maldiciones del Padel');
+    }
     lines.push('');
 
     // Podium — top 3 simplified
@@ -163,6 +172,12 @@ export function useShareText(
           const t2 = `${playerName(match.team2[0])} & ${playerName(match.team2[1])}`;
           lines.push(`${t1.padEnd(maxTeamW)}  ${String(s.team1Points).padStart(maxPtsW)}`);
           lines.push(`${t2.padEnd(maxTeamW)}  ${String(s.team2Points).padStart(maxPtsW)}`);
+          if (match.curse) {
+            const card = CURSE_CARDS.find(c => c.id === match.curse!.cardId);
+            if (card) {
+              lines.push(match.curse.shielded ? `  🛡️${card.emoji} ${card.name}` : `  ${card.emoji} ${card.name}`);
+            }
+          }
           lines.push('');
         }
         if (lines[lines.length - 1] === '') lines.pop();

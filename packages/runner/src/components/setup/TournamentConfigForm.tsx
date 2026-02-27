@@ -128,6 +128,43 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
         </>
       )}
 
+      {config.format === 'team-americano' && (
+        <div className={styles.field}>
+          <label className={styles.checkboxLabel}>
+            <input
+              type="checkbox"
+              checked={config.maldiciones?.enabled ?? false}
+              onChange={e => {
+                onUpdate({
+                  maldiciones: e.target.checked
+                    ? { enabled: true, chaosLevel: config.maldiciones?.chaosLevel ?? 'medium' }
+                    : undefined,
+                });
+              }}
+            />
+            <span>{t('config.maldicionesEnabled')}</span>
+          </label>
+          <span className={styles.hint}>{t('config.maldicionesHint')}</span>
+          {config.maldiciones?.enabled && (
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="config-chaos">{t('config.chaosLevel')}</label>
+              <select
+                id="config-chaos"
+                className={styles.input}
+                value={config.maldiciones.chaosLevel}
+                onChange={e => onUpdate({
+                  maldiciones: { enabled: true, chaosLevel: e.target.value as 'lite' | 'medium' | 'hardcore' },
+                })}
+              >
+                <option value="lite">{t('config.chaosLite')}</option>
+                <option value="medium">{t('config.chaosMedium')}</option>
+                <option value="hardcore">{t('config.chaosHardcore')}</option>
+              </select>
+            </div>
+          )}
+        </div>
+      )}
+
       {config.format === 'mixicano' && (
         <div className={styles.field}>
           <label className={styles.label}>{t('config.groupLabels')}</label>

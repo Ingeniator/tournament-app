@@ -7,6 +7,7 @@ import { PlayerStats } from '../components/stats/PlayerStats';
 import { DistributionStats } from '../components/stats/DistributionStats';
 import { Button, Modal, useTranslation } from '@padel/common';
 import { getStrategy, scoreSchedule } from '../strategies';
+import { MaldicionesRulesModal } from '../components/maldiciones/MaldicionesRulesModal';
 import type { Round } from '@padel/common';
 import styles from './LogScreen.module.css';
 
@@ -23,6 +24,7 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
   const distributionStats = useDistributionStats(tournament);
   const [editingMatch, setEditingMatch] = useState<{ roundId: string; matchId: string } | null>(null);
   const [showStats, setShowStats] = useState(false);
+  const [showMaldicionesRules, setShowMaldicionesRules] = useState(false);
   const [optimizeElapsed, setOptimizeElapsed] = useState<number | null>(null);
   const [optimalBackup, setOptimalBackup] = useState<Round[] | null>(null);
   const optimizeCtrlRef = useRef<{ cancelled: boolean }>({ cancelled: false });
@@ -277,6 +279,14 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
         </Button>
       </div>
 
+      {tournament.config.maldiciones?.enabled && (
+        <div className={styles.statsBtn}>
+          <Button variant="ghost" fullWidth onClick={() => setShowMaldicionesRules(true)}>
+            {t('play.maldicionesInfo')}
+          </Button>
+        </div>
+      )}
+
       <Modal open={showStats} title={t('log.statisticsTitle')} onClose={handleCloseStats}>
         {distributionStats && (
           <DistributionStats
@@ -307,6 +317,17 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
           </Button>
         </div>
       </Modal>
+
+      {tournament.config.maldiciones?.enabled && tournament.config.maldiciones && (
+        <MaldicionesRulesModal
+          open={showMaldicionesRules}
+          chaosLevel={tournament.config.maldiciones.chaosLevel}
+          hands={tournament.maldicionesHands}
+          teams={tournament.teams}
+          nameOf={(id: string) => tournament.players.find(p => p.id === id)?.name ?? '?'}
+          onClose={() => setShowMaldicionesRules(false)}
+        />
+      )}
     </div>
   );
 }

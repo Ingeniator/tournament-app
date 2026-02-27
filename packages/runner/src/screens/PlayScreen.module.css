@@ -254,6 +254,17 @@
   text-align: center;
 }
 
+.resultCurse {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  text-align: center;
+  padding-top: 2px;
+}
+
+.resultCurseShielded {
+  text-decoration: line-through;
+}
+
 .resultSitOut {
   font-size: var(--text-xs);
   color: var(--color-text-muted);

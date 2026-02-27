@@ -34,6 +34,7 @@ export function NominationCard({ nomination, cardRef, minHeight }: NominationCar
       style={minHeight ? { minHeight } : undefined}
     >
       {tierLabel && <div className={styles.tierBadge}>{tierLabel}</div>}
+      {nomination.modeTitle && <div className={styles.modeTitle}>{nomination.modeTitle}</div>}
       <div className={styles.emoji}>{nomination.emoji}</div>
       <div className={styles.title}>{nomination.title}</div>
       <div className={styles.players}>

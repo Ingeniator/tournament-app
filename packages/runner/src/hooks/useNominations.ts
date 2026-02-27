@@ -6,6 +6,7 @@ import { buildMatchData, buildCompetitorMatchData } from './awards/matchData';
 import { computeIndividualAwards } from './awards/individual';
 import { computeDuoAwards } from './awards/duo';
 import { computeClubAwards } from './awards/club';
+import { computeMaldicionesAwards } from './awards/maldiciones';
 import { assignTiers, selectAwards } from './awards/selection';
 
 export type { AwardTier, Nomination };
@@ -83,7 +84,8 @@ export function useNominations(
     const individualAwards = computeIndividualAwards(ctx, tournament);
     const duoAwards = !strategy.hasFixedPartners ? computeDuoAwards(ctx, tournament) : [];
     const { champion: clubChampion, awards: clubAwards } = computeClubAwards(tournament, standings);
-    const awards = [...individualAwards, ...duoAwards, ...clubAwards];
+    const maldicionesAwards = computeMaldicionesAwards(tournament);
+    const awards = [...individualAwards, ...duoAwards, ...clubAwards, ...maldicionesAwards];
 
     // Assign tiers and select
     assignTiers(awards);
@@ -111,6 +113,10 @@ export function useNominations(
       });
     }
 
-    return [...podium, ...clubChampion, ...finalAwards, ...lucky];
+    const all = [...podium, ...clubChampion, ...finalAwards, ...lucky];
+    if (tournament.config.maldiciones?.enabled) {
+      return all.map(n => ({ ...n, modeTitle: '🎭 Maldiciones del Padel' }));
+    }
+    return all;
   }, [tournament, standings]);
 }

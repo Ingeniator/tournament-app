@@ -1,5 +1,6 @@
 import type { Player } from './player';
 import type { Nomination } from './nomination';
+import type { ChaosLevel, MatchCurse, MaldicionesHands } from './maldiciones';
 
 export type TournamentFormat = 'americano' | 'mexicano' | 'mixicano' | 'team-americano' | 'team-mexicano' | 'round-robin' | 'king-of-the-court' | 'club-americano';
 
@@ -38,6 +39,7 @@ export interface TournamentConfig {
   groupLabels?: [string, string];
   pairMode?: 'fixed' | 'rotating';
   matchMode?: 'random' | 'standings' | 'slots';
+  maldiciones?: { enabled: boolean; chaosLevel: ChaosLevel };
 }
 
 export interface MatchScore {
@@ -51,6 +53,7 @@ export interface Match {
   team1: [string, string];
   team2: [string, string];
   score: MatchScore | null;
+  curse?: MatchCurse;
 }
 
 export interface Round {
@@ -70,6 +73,7 @@ export interface Tournament {
   teams?: Team[];
   clubs?: Club[];
   plannerTournamentId?: string;
+  maldicionesHands?: MaldicionesHands;
   nominations?: Nomination[];
   ceremonyCompleted?: boolean;
   createdAt: number;

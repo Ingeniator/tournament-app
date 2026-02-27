@@ -108,6 +108,22 @@
   color: var(--color-danger);
 }
 
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.checkboxLabel input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--color-primary);
+}
+
 .hint {
   font-size: var(--text-xs);
   color: var(--color-text-muted);

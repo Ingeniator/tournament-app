@@ -32,6 +32,14 @@ export const AWARD_TIERS: Record<string, AwardTier> = {
   'club-rivalry': 'rare',
   'club-mvp': 'rare',
   'club-solidarity': 'common',
+  'el-brujo': 'rare',
+  'el-superviviente': 'rare',
+  'escudo-de-oro': 'common',
+  'el-maldito': 'common',
+  'el-inmune': 'legendary',
+  'el-resistente': 'rare',
+  'karma': 'common',
+  'el-intocable': 'rare',
 };
 
 export interface PlayerMatchInfo {

@@ -41,6 +41,7 @@ export function renderStandingsImage(
   standings: StandingsEntry[],
   groupInfo?: GroupInfo,
   clubInfo?: ClubInfo,
+  modeTitle?: string,
 ): HTMLCanvasElement {
   const t = getThemeColors();
   const canvas = document.createElement('canvas');
@@ -49,6 +50,7 @@ export function renderStandingsImage(
   // Layout constants
   const padding = s(20);
   const headerHeight = s(36);
+  const modeTitleH = modeTitle ? s(16) : 0;
   const tableHeaderHeight = s(32);
   const hasPairs = standings.some(e => e.playerName.includes(' & '));
   const rowHeight = hasPairs ? s(52) : s(36);
@@ -57,7 +59,7 @@ export function renderStandingsImage(
   const tableRows = standings.length;
   const tableHeight = tableHeaderHeight + rowHeight * tableRows;
   const footerHeight = s(28);
-  const canvasHeight = padding + headerHeight + s(12) + tableHeight + s(16) + footerHeight + padding;
+  const canvasHeight = padding + headerHeight + modeTitleH + s(12) + tableHeight + s(16) + footerHeight + padding;
 
   canvas.width = canvasWidth;
   canvas.height = canvasHeight;
@@ -73,6 +75,14 @@ export function renderStandingsImage(
   ctx.textAlign = 'center';
   ctx.fillText(tournamentName, canvasWidth / 2, y + s(24));
   y += headerHeight;
+
+  // Mode title (e.g., "🎭 Maldiciones del Padel")
+  if (modeTitle) {
+    ctx.fillStyle = t.textMuted;
+    ctx.font = `600 ${s(9)}px ${FONT}`;
+    ctx.fillText(modeTitle, canvasWidth / 2, y + s(10));
+    y += modeTitleH;
+  }
 
   // Table card background
   const tableX = padding;
@@ -417,6 +427,7 @@ export function renderNominationImage(
   const headerH = s(14);    // tournament name line
   const headerGap = s(12);
   const tierBadgeH = tier && tier !== 'common' ? s(16) + gap : 0; // badge + gap
+  const modeTitleH = nomination.modeTitle ? s(14) + gap : 0; // mode title line
   const emojiH = s(44);     // 2.5rem = 40px + margin
   const titleH = s(16);     // --text-xs: 0.75rem = 12px + line-height
   const statH = s(22);      // --text-lg: 1.125rem = 18px + line-height
@@ -432,7 +443,7 @@ export function renderNominationImage(
     playersH = s(26); // --text-xl: 1.25rem = 20px + line-height
   }
 
-  const contentH = tierBadgeH + emojiH + gap + titleH + gap + playersH + gap + statH + gap + descH;
+  const contentH = tierBadgeH + modeTitleH + emojiH + gap + titleH + gap + playersH + gap + statH + gap + descH;
   const canvasHeight = padV + headerH + headerGap + contentH + footerGap + footerH + padV;
 
   canvas.width = canvasWidth;
@@ -494,6 +505,14 @@ export function renderNominationImage(
     ctx.fillStyle = badgeColor;
     ctx.fillText(label, cx, badgeY + s(10));
     y += s(16) + gap;
+  }
+
+  // Mode title (e.g., "🎭 Maldiciones del Padel")
+  if (nomination.modeTitle) {
+    ctx.fillStyle = t.textMuted;
+    ctx.font = `500 ${s(7)}px ${FONT}`;
+    ctx.fillText(nomination.modeTitle, cx, y + s(10));
+    y += s(14) + gap;
   }
 
   // Emoji — matching CSS: font-size 2.5rem
@@ -574,13 +593,14 @@ export async function shareStandingsImage(
   clubInfo?: ClubInfo,
   clubStandings?: ClubStandingsEntry[],
   clubColorMap?: Map<string, string>,
+  modeTitle?: string,
 ): Promise<ShareImageResult> {
   let standingsCanvas: HTMLCanvasElement;
   let clubStandingsCanvas: HTMLCanvasElement | null = null;
   let nominationCanvases: HTMLCanvasElement[];
 
   try {
-    standingsCanvas = renderStandingsImage(tournamentName, standings, groupInfo, clubInfo);
+    standingsCanvas = renderStandingsImage(tournamentName, standings, groupInfo, clubInfo, modeTitle);
     if (clubStandings && clubStandings.length > 0 && clubColorMap) {
       clubStandingsCanvas = renderClubStandingsImage(tournamentName, clubStandings, clubColorMap);
     }

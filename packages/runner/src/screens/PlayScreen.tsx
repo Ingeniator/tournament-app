@@ -16,6 +16,8 @@ import { ref, push, set } from 'firebase/database';
 import { auth, db, firebaseConfigured } from '../firebase';
 import { Button, CLUB_COLORS, FeedbackModal, Modal, SupportOverlay, Toast, useToast, useTranslation } from '@padel/common';
 import { getStrategy } from '../strategies';
+import { MaldicionesRulesModal } from '../components/maldiciones/MaldicionesRulesModal';
+import { CURSE_CARDS } from '../data/curseCards';
 import styles from './PlayScreen.module.css';
 
 export function PlayScreen() {
@@ -85,6 +87,7 @@ export function PlayScreen() {
   const [standingsTab, setStandingsTab] = useState<'pairs' | 'clubs'>('pairs');
   const [showSupport, setShowSupport] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [showMaldicionesRules, setShowMaldicionesRules] = useState(false);
   const [roundsExpanded, setRoundsExpanded] = useState(false);
   const { toastMessage, showToast } = useToast();
   const [roundCompleteNum, setRoundCompleteNum] = useState<number | null>(null);
@@ -127,6 +130,8 @@ export function PlayScreen() {
   }, [activeRound?.id, tournament?.rounds]);
 
   const name = (id: string) => tournament?.players.find(p => p.id === id)?.name ?? '?';
+
+  const maldicionesEnabled = !!tournament?.config.maldiciones?.enabled;
 
   // Equalize nomination card heights
   const nomCardRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -172,7 +177,8 @@ export function PlayScreen() {
       showToast(ok ? t('play.copied') : t('play.failedCopy'));
     };
     const handleShareImage = async () => {
-      const result = await shareStandingsImage(tournament.name, standings, nominations, groupInfo, clubInfo, clubStandings, clubColorMap);
+      const modeTitle = tournament.config.maldiciones?.enabled ? '🎭 Maldiciones del Padel' : undefined;
+      const result = await shareStandingsImage(tournament.name, standings, nominations, groupInfo, clubInfo, clubStandings, clubColorMap, modeTitle);
       if (result.status === 'shared') showToast(t('play.shared'));
       else if (result.status === 'downloaded') showToast(t('play.imageSaved'));
       else if (result.status === 'preview') setPreviewImages(result.dataUrls);
@@ -217,6 +223,7 @@ export function PlayScreen() {
                       const s = match.score!;
                       const t1Won = s.team1Points > s.team2Points;
                       const t2Won = s.team2Points > s.team1Points;
+                      const curseCard = match.curse ? CURSE_CARDS.find(c => c.id === match.curse!.cardId) : null;
                       return (
                         <div key={match.id} className={styles.resultMatch}>
                           <div className={styles.resultCourt}>{courtLabel}</div>
@@ -231,6 +238,14 @@ export function PlayScreen() {
                               {name(match.team2[0])} & {name(match.team2[1])}
                             </span>
                           </div>
+                          {curseCard && (
+                            <div className={styles.resultCurse}>
+                              {match.curse!.shielded
+                                ? <>{'🛡️'} <span className={styles.resultCurseShielded}>{curseCard.emoji} {curseCard.name}</span></>
+                                : <>{curseCard.emoji} {curseCard.name}</>
+                              }
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -319,6 +334,9 @@ export function PlayScreen() {
           courts={tournament.config.courts}
           pointsPerMatch={tournament.config.pointsPerMatch}
           format={tournament.config.format}
+          maldicionesEnabled={maldicionesEnabled}
+          maldicionesHands={tournament.maldicionesHands}
+          teams={tournament.teams}
           onScore={(matchId, score) =>
             dispatch({
               type: 'SET_MATCH_SCORE',
@@ -330,6 +348,24 @@ export function PlayScreen() {
               type: 'CLEAR_MATCH_SCORE',
               payload: { roundId: activeRound.id, matchId },
             })
+          }
+          onCast={maldicionesEnabled ? (matchId, castBy, cardId, targetPlayerId) =>
+            dispatch({
+              type: 'CAST_MALDICION',
+              payload: { roundId: activeRound.id, matchId, castBy, cardId, targetPlayerId },
+            }) : undefined
+          }
+          onEscudo={maldicionesEnabled ? (matchId) =>
+            dispatch({
+              type: 'USE_ESCUDO',
+              payload: { roundId: activeRound.id, matchId },
+            }) : undefined
+          }
+          onVeto={maldicionesEnabled ? (matchId) =>
+            dispatch({
+              type: 'VETO_MALDICION',
+              payload: { roundId: activeRound.id, matchId },
+            }) : undefined
           }
         />
       )}
@@ -436,6 +472,15 @@ export function PlayScreen() {
         </Button>
       </div>
 
+      {/* Maldiciones info button */}
+      {maldicionesEnabled && (
+        <div className={styles.standingsBtn}>
+          <Button variant="ghost" fullWidth onClick={() => setShowMaldicionesRules(true)}>
+            {t('play.maldicionesInfo')}
+          </Button>
+        </div>
+      )}
+
       {/* Round complete interstitial */}
       {roundCompleteNum !== null && (
         <div className={styles.interstitialOverlay} onClick={() => setRoundCompleteNum(null)}>
@@ -475,6 +520,18 @@ export function PlayScreen() {
           <ClubStandingsTable standings={clubStandings} clubColorMap={clubColorMap} />
         )}
       </Modal>
+
+      {/* Maldiciones rules modal */}
+      {maldicionesEnabled && tournament.config.maldiciones && (
+        <MaldicionesRulesModal
+          open={showMaldicionesRules}
+          chaosLevel={tournament.config.maldiciones.chaosLevel}
+          hands={tournament.maldicionesHands}
+          teams={tournament.teams}
+          nameOf={name}
+          onClose={() => setShowMaldicionesRules(false)}
+        />
+      )}
 
       <Toast message={toastMessage} />
     </div>
