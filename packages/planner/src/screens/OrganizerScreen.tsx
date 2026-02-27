@@ -43,6 +43,7 @@ export function OrganizerScreen() {
   const [nameDraft, setNameDraft] = useState('');
   const [showFormatInfo, setShowFormatInfo] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [showReopenModal, setShowReopenModal] = useState(false);
 
   const capacity = tournament ? tournament.courts.length * 4 + (tournament.extraSpots ?? 0) : 0;
   const statuses = useMemo(() => getPlayerStatuses(players, capacity, {
@@ -65,8 +66,6 @@ export function OrganizerScreen() {
   }, [players]);
 
   if (!tournament) return null;
-
-  const [showReopenModal, setShowReopenModal] = useState(false);
 
   if (completedAt) {
     return (
