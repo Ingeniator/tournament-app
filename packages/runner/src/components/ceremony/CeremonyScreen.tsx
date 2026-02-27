@@ -92,13 +92,20 @@ export function CeremonyScreen({ nominations, onComplete }: CeremonyScreenProps)
             <div className={styles.cardReveal}>
               {isMultiPlayer ? (
                 <div className={`${styles.playerName} ${styles.playerNameMulti}`}>
-                  <span>{current.playerNames[0]} & {current.playerNames[1]}</span>
+                  <span>{current.playerNames[0]} &</span>
+                  <span>{current.playerNames[1]}</span>
                   <div className={styles.vs}>vs</div>
-                  <span>{current.playerNames[2]} & {current.playerNames[3]}</span>
+                  <span>{current.playerNames[2]} &</span>
+                  <span>{current.playerNames[3]}</span>
+                </div>
+              ) : current.playerNames.length > 1 ? (
+                <div className={`${styles.playerName} ${styles.playerNameMulti}`}>
+                  <span>{current.playerNames[0]} &</span>
+                  <span>{current.playerNames[1]}</span>
                 </div>
               ) : (
                 <div className={`${styles.playerName}${isPodium ? '' : ` ${styles.playerNameMulti}`}`}>
-                  {current.playerNames.join(' & ')}
+                  {current.playerNames[0]}
                 </div>
               )}
               <div className={styles.statLine}>{current.stat}</div>
