@@ -66,6 +66,43 @@
   text-overflow: ellipsis;
 }
 
+.pairCell {
+  white-space: normal !important;
+}
+
+.pairWrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pairNames {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.4;
+  overflow: hidden;
+}
+
+.pairNames span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pairSecondary {
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+}
+
+.clubDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 .points {
   font-weight: 700;
   color: var(--color-primary);

@@ -61,24 +61,39 @@ export function StandingsTable({ standings, plannedGames, groupInfo, clubInfo }:
           return (
             <tr key={entry.playerId}>
               <td className={`${styles.rank} ${rankClass}`}>{entry.rank}</td>
-              <td className={styles.name}>
-                {entry.playerName}
-                {groupInfo && groupInfo.map.has(entry.playerId) && (
-                  <span className={`${styles.groupBadge} ${groupInfo.map.get(entry.playerId) === 'A' ? styles.groupA : styles.groupB}`}>
-                    {groupInfo.map.get(entry.playerId) === 'A' ? groupInfo.labels[0] : groupInfo.labels[1]}
-                  </span>
-                )}
-                {clubInfo && clubInfo.teamClubMap.has(entry.playerId) && (() => {
-                  const clubId = clubInfo.teamClubMap.get(entry.playerId)!;
-                  const color = clubInfo.clubColorMap.get(clubId);
-                  const name = clubInfo.clubNameMap.get(clubId);
+              {(() => {
+                const nameParts = entry.playerName.split(' & ');
+                const isPair = nameParts.length === 2;
+                const clubId = clubInfo?.teamClubMap.get(entry.playerId);
+                const clubColor = clubId ? clubInfo!.clubColorMap.get(clubId) : undefined;
+
+                if (isPair) {
                   return (
-                    <span className={styles.clubBadge} style={{ backgroundColor: color ? `${color}22` : undefined, color: color }}>
-                      {name}
-                    </span>
+                    <td className={`${styles.name} ${styles.pairCell}`}>
+                      <div className={styles.pairWrapper}>
+                        {clubColor && (
+                          <span className={styles.clubDot} style={{ backgroundColor: clubColor }} />
+                        )}
+                        <span className={styles.pairNames}>
+                          <span>{nameParts[0]}</span>
+                          <span className={styles.pairSecondary}>{nameParts[1]}</span>
+                        </span>
+                      </div>
+                    </td>
                   );
-                })()}
-              </td>
+                }
+
+                return (
+                  <td className={styles.name}>
+                    {entry.playerName}
+                    {groupInfo && groupInfo.map.has(entry.playerId) && (
+                      <span className={`${styles.groupBadge} ${groupInfo.map.get(entry.playerId) === 'A' ? styles.groupA : styles.groupB}`}>
+                        {groupInfo.map.get(entry.playerId) === 'A' ? groupInfo.labels[0] : groupInfo.labels[1]}
+                      </span>
+                    )}
+                  </td>
+                );
+              })()}
               <td className={`${styles.right} ${styles.points}`}>{entry.totalPoints}</td>
               {plannedGames && (
                 <td className={`${styles.right} ${styles.gamesCol} ${planned === 0 ? styles.noPlanned : ''}`}>

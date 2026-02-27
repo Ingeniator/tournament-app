@@ -50,7 +50,8 @@ export function renderStandingsImage(
   const padding = s(20);
   const headerHeight = s(36);
   const tableHeaderHeight = s(32);
-  const rowHeight = s(36);
+  const hasPairs = standings.some(e => e.playerName.includes(' & '));
+  const rowHeight = hasPairs ? s(52) : s(36);
   const canvasWidth = s(400);
 
   const tableRows = standings.length;
@@ -127,7 +128,6 @@ export function renderStandingsImage(
   for (let i = 0; i < standings.length; i++) {
     const entry = standings[i];
     const rowY = y + rowHeight * i;
-    const textY = rowY + s(24);
 
     // Row separator (skip first)
     if (i > 0) {
@@ -139,6 +139,12 @@ export function renderStandingsImage(
       ctx.stroke();
     }
 
+    // Detect pair entries
+    const nameParts = entry.playerName.split(' & ');
+    const isPair = nameParts.length === 2;
+    // Vertical center for stats columns
+    const textY = isPair ? rowY + s(30) : rowY + s(24);
+
     // Rank
     ctx.textAlign = 'left';
     ctx.font = boldFont;
@@ -149,62 +155,71 @@ export function renderStandingsImage(
         : t.textMuted;
     ctx.fillText(String(entry.rank), tableX + colRank, textY);
 
-    // Name (truncated if too long) + optional group/club badge
-    ctx.font = `600 ${s(12)}px ${FONT}`;
-    ctx.fillStyle = t.text;
-    const playerGroup = groupInfo?.map.get(entry.playerId);
-    const badgeLabel = playerGroup
-      ? (playerGroup === 'A' ? groupInfo!.labels[0] : groupInfo!.labels[1])
-      : null;
+    // Name rendering
+    ctx.textAlign = 'left';
 
-    // Determine club badge info
-    const clubId = clubInfo?.teamClubMap.get(entry.playerId);
-    const clubBadgeLabel = clubId ? clubInfo!.clubNameMap.get(clubId) : null;
-    const clubBadgeColor = clubId ? clubInfo!.clubColorMap.get(clubId) : null;
+    if (isPair) {
+      // Club dot for pair entries
+      const clubId = clubInfo?.teamClubMap.get(entry.playerId);
+      const clubDotColor = clubId ? clubInfo!.clubColorMap.get(clubId) : null;
 
-    // Compute badge space (either group or club badge, not both)
-    let totalBadgeSpace = 0;
-    if (badgeLabel) {
-      totalBadgeSpace = s(4) + ctx.measureText(badgeLabel).width + s(10);
-    } else if (clubBadgeLabel) {
-      ctx.font = `bold ${s(8)}px ${FONT}`;
-      totalBadgeSpace = s(4) + ctx.measureText(clubBadgeLabel).width + s(10);
+      let nameStartX = tableX + colName;
+      if (clubDotColor) {
+        const dotRadius = s(4);
+        const dotX = nameStartX + dotRadius;
+        const dotY = rowY + rowHeight / 2;
+        ctx.fillStyle = clubDotColor;
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, dotRadius, 0, Math.PI * 2);
+        ctx.fill();
+        nameStartX += dotRadius * 2 + s(6);
+      }
+
+      const dotSpace = clubDotColor ? s(14) : 0;
+      const pairNameMax = nameMaxWidth - dotSpace;
+
+      // First player name
       ctx.font = `600 ${s(12)}px ${FONT}`;
-    }
-    const displayName = truncateText(ctx, entry.playerName, nameMaxWidth - totalBadgeSpace);
-    ctx.fillText(displayName, tableX + colName, textY);
+      ctx.fillStyle = t.text;
+      ctx.fillText(truncateText(ctx, nameParts[0], pairNameMax), nameStartX, rowY + s(22));
 
-    if (badgeLabel && playerGroup) {
-      const nameWidth = ctx.measureText(displayName).width;
-      const badgeX = tableX + colName + nameWidth + s(4);
-      ctx.font = `bold ${s(8)}px ${FONT}`;
-      const measuredBadgeW = ctx.measureText(badgeLabel).width;
-      const pillW = measuredBadgeW + s(8);
-      const pillH = s(12);
-      const pillY = textY - s(9);
-      const pillColor = playerGroup === 'A' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(244, 114, 182, 0.2)';
-      const pillTextColor = playerGroup === 'A' ? '#60a5fa' : '#f472b6';
-      ctx.fillStyle = pillColor;
-      roundRect(ctx, badgeX, pillY, pillW, pillH, s(6));
-      ctx.fill();
-      ctx.fillStyle = pillTextColor;
-      ctx.textAlign = 'left';
-      ctx.fillText(badgeLabel, badgeX + s(4), textY - s(1));
-    } else if (clubBadgeLabel && clubBadgeColor) {
-      const nameWidth = ctx.measureText(displayName).width;
-      const badgeX = tableX + colName + nameWidth + s(4);
-      ctx.font = `bold ${s(8)}px ${FONT}`;
-      const measuredBadgeW = ctx.measureText(clubBadgeLabel).width;
-      const pillW = measuredBadgeW + s(8);
-      const pillH = s(12);
-      const pillY = textY - s(9);
-      // Use club color with ~13% opacity for background (hex 22)
-      ctx.fillStyle = clubBadgeColor + '33';
-      roundRect(ctx, badgeX, pillY, pillW, pillH, s(6));
-      ctx.fill();
-      ctx.fillStyle = clubBadgeColor;
-      ctx.textAlign = 'left';
-      ctx.fillText(clubBadgeLabel, badgeX + s(4), textY - s(1));
+      // Second player name (smaller, muted)
+      ctx.font = `${s(10)}px ${FONT}`;
+      ctx.fillStyle = t.textSecondary;
+      ctx.fillText(truncateText(ctx, nameParts[1], pairNameMax), nameStartX, rowY + s(38));
+    } else {
+      // Single-line name with optional group badge
+      ctx.font = `600 ${s(12)}px ${FONT}`;
+      ctx.fillStyle = t.text;
+      const playerGroup = groupInfo?.map.get(entry.playerId);
+      const badgeLabel = playerGroup
+        ? (playerGroup === 'A' ? groupInfo!.labels[0] : groupInfo!.labels[1])
+        : null;
+
+      let totalBadgeSpace = 0;
+      if (badgeLabel) {
+        totalBadgeSpace = s(4) + ctx.measureText(badgeLabel).width + s(10);
+      }
+      const displayName = truncateText(ctx, entry.playerName, nameMaxWidth - totalBadgeSpace);
+      ctx.fillText(displayName, tableX + colName, textY);
+
+      if (badgeLabel && playerGroup) {
+        const nameWidth = ctx.measureText(displayName).width;
+        const badgeX = tableX + colName + nameWidth + s(4);
+        ctx.font = `bold ${s(8)}px ${FONT}`;
+        const measuredBadgeW = ctx.measureText(badgeLabel).width;
+        const pillW = measuredBadgeW + s(8);
+        const pillH = s(12);
+        const pillY = textY - s(9);
+        const pillColor = playerGroup === 'A' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(244, 114, 182, 0.2)';
+        const pillTextColor = playerGroup === 'A' ? '#60a5fa' : '#f472b6';
+        ctx.fillStyle = pillColor;
+        roundRect(ctx, badgeX, pillY, pillW, pillH, s(6));
+        ctx.fill();
+        ctx.fillStyle = pillTextColor;
+        ctx.textAlign = 'left';
+        ctx.fillText(badgeLabel, badgeX + s(4), textY - s(1));
+      }
     }
 
     // Points
