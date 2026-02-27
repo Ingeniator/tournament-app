@@ -53,6 +53,10 @@ const pt: Translations = {
   'teams.hintClub': 'Toque em dois jogadores do mesmo clube para os trocar',
   'teams.shuffle': 'Baralhar Equipas',
   'teams.start': 'Iniciar Torneio',
+  'teams.fixedPairsTitle': 'Os pares ficam bloqueados após iniciar',
+  'teams.fixedPairsBody': 'Estes pares vão permanecer juntos durante todo o torneio. Reveja-os com atenção — não poderá alterar os parceiros depois de o torneio começar.',
+  'teams.fixedSlotsBody': 'Modo Posições Fixas ativo: a posição de cada par (Pos. 1, Pos. 2, etc.) determina contra quem joga. Pos. 1 enfrenta sempre Pos. 1 do clube adversário, e assim por diante.',
+  'teams.slotLabel': 'Pos. {num}',
 
   // PlayScreen
   'play.progress': 'Ronda {current}/{total} · {scored}/{totalMatches} jogos',

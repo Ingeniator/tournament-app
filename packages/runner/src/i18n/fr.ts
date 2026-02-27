@@ -51,6 +51,10 @@ const fr: Translations = {
   'teams.hintClub': 'Appuyez sur deux joueurs du même club pour les échanger',
   'teams.shuffle': 'Mélanger les Équipes',
   'teams.start': 'Démarrer le Tournoi',
+  'teams.fixedPairsTitle': 'Les paires sont verrouillées après le lancement',
+  'teams.fixedPairsBody': 'Ces paires resteront ensemble pendant tout le tournoi. Vérifiez-les attentivement — vous ne pourrez plus changer de partenaires une fois le tournoi lancé.',
+  'teams.fixedSlotsBody': 'Mode Positions Fixes actif : la position de chaque paire (Pos. 1, Pos. 2, etc.) détermine contre qui elle joue. Pos. 1 affronte toujours Pos. 1 du club adverse, et ainsi de suite.',
+  'teams.slotLabel': 'Pos. {num}',
 
   // PlayScreen
   'play.progress': 'Tour {current}/{total} · {scored}/{totalMatches} matchs',
