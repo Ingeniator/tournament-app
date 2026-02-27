@@ -1,7 +1,7 @@
 import { useState, useMemo, type ReactNode } from 'react';
 import { ref, push, set } from 'firebase/database';
 import { Button, Card, FeedbackModal, AppFooter, Toast, useToast, useTranslation } from '@padel/common';
-import type { TournamentFormat, Court } from '@padel/common';
+import type { TournamentFormat, Court, Club } from '@padel/common';
 import { generateId } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { auth, db } from '../firebase';
@@ -35,7 +35,7 @@ function CollapsibleSection({ title, summary, defaultOpen, children }: {
 }
 
 export function OrganizerScreen() {
-  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerTelegram, deleteTournament, completedAt, undoComplete, uid } = usePlanner();
+  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, deleteTournament, completedAt, undoComplete, uid } = usePlanner();
   const { startedBy, showWarning, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
   const { t, locale } = useTranslation();
   const { toastMessage, showToast } = useToast();
@@ -194,6 +194,7 @@ export function OrganizerScreen() {
     : tournament.format === 'team-mexicano' ? t('organizer.formatTeamMexicano')
     : tournament.format === 'mixicano' ? t('organizer.formatMixicano')
     : tournament.format === 'king-of-the-court' ? t('organizer.formatKingOfTheCourt')
+    : tournament.format === 'club-americano' ? t('organizer.formatClubAmericano')
     : t('organizer.formatMexicano');
   const formatCourtsSummary = `${formatLabel} \u00b7 ${t('organizer.courts', { count: tournament.courts.length })}`;
 
@@ -326,6 +327,7 @@ export function OrganizerScreen() {
             <option value="team-mexicano">{t('organizer.formatTeamMexicano')}</option>
             <option value="mixicano">{t('organizer.formatMixicano')}</option>
             <option value="king-of-the-court">{t('organizer.formatKingOfTheCourt')}</option>
+            <option value="club-americano">{t('organizer.formatClubAmericano')}</option>
           </select>
           {showFormatInfo && (
             <div className={styles.formatInfo}>
@@ -335,9 +337,85 @@ export function OrganizerScreen() {
               <p><strong>{t('organizer.teamMexicanoDesc')}</strong></p>
               <p><strong>{t('organizer.mixicanoDesc')}</strong></p>
               <p><strong>{t('organizer.kingOfTheCourtDesc')}</strong></p>
+              <p><strong>{t('organizer.clubAmericanoDesc')}</strong></p>
             </div>
           )}
         </div>
+
+        {tournament.format === 'mixicano' && (
+          <div className={styles.groupLabelsSection}>
+            <span className={styles.groupLabelsTitle}>{t('organizer.groupLabels')}</span>
+            <div className={styles.groupLabelsRow}>
+              <input
+                className={styles.groupLabelInput}
+                type="text"
+                value={tournament.groupLabels?.[0] ?? ''}
+                onChange={e => {
+                  const labels: [string, string] = [e.target.value, tournament.groupLabels?.[1] ?? ''];
+                  updateTournament({ groupLabels: labels[0] || labels[1] ? labels : undefined });
+                }}
+                placeholder={t('organizer.groupLabelAPlaceholder')}
+              />
+              <input
+                className={styles.groupLabelInput}
+                type="text"
+                value={tournament.groupLabels?.[1] ?? ''}
+                onChange={e => {
+                  const labels: [string, string] = [tournament.groupLabels?.[0] ?? '', e.target.value];
+                  updateTournament({ groupLabels: labels[0] || labels[1] ? labels : undefined });
+                }}
+                placeholder={t('organizer.groupLabelBPlaceholder')}
+              />
+            </div>
+          </div>
+        )}
+
+        {tournament.format === 'club-americano' && (() => {
+          const clubs = tournament.clubs ?? [];
+          const CLUB_COLORS = ['#3b82f6', '#ec4899', '#22c55e', '#f59e0b', '#a855f7'];
+          return (
+            <div className={styles.clubsSection}>
+              <div className={styles.courtsHeader}>
+                <span>{t('organizer.clubs', { count: clubs.length })}</span>
+                <Button variant="ghost" size="small" onClick={() => {
+                  const newClubs: Club[] = [...clubs, { id: generateId(), name: `Club ${clubs.length + 1}` }];
+                  updateTournament({ clubs: newClubs });
+                }}>{t('organizer.addClub')}</Button>
+              </div>
+              {clubs.map((club, idx) => (
+                <div key={club.id} className={styles.courtItem}>
+                  <div className={styles.courtMainRow}>
+                    <span className={styles.clubDot} style={{ backgroundColor: CLUB_COLORS[idx % CLUB_COLORS.length] }} />
+                    <input
+                      className={styles.courtNameInput}
+                      value={club.name}
+                      onChange={e => {
+                        const updated = clubs.map(c =>
+                          c.id === club.id ? { ...c, name: e.target.value } : c
+                        );
+                        updateTournament({ clubs: updated });
+                      }}
+                    />
+                    {clubs.length > 2 && (
+                      <button
+                        className={styles.removeBtn}
+                        onClick={() => {
+                          const updated = clubs.filter(c => c.id !== club.id);
+                          updateTournament({ clubs: updated });
+                        }}
+                      >
+                        &times;
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {clubs.length === 0 && (
+                <p className={styles.empty}>{t('organizer.noClub')}</p>
+              )}
+            </div>
+          );
+        })()}
 
         <div className={styles.courtsSection}>
           <div className={styles.courtsHeader}>
@@ -448,6 +526,11 @@ export function OrganizerScreen() {
         toggleConfirmed={toggleConfirmed}
         updatePlayerTelegram={updatePlayerTelegram}
         statuses={statuses}
+        format={tournament.format}
+        clubs={tournament.clubs}
+        groupLabels={tournament.groupLabels}
+        onSetGroup={updatePlayerGroup}
+        onSetClub={updatePlayerClub}
       />
 
       {/* Export */}

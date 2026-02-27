@@ -1,8 +1,10 @@
 import { useState, useRef, type ClipboardEvent } from 'react';
 import { Button, Card, Modal, useTranslation } from '@padel/common';
-import type { PlannerRegistration } from '@padel/common';
+import type { PlannerRegistration, TournamentFormat, Club } from '@padel/common';
 import { parsePlayerList } from '@padel/common';
 import styles from '../../screens/OrganizerScreen.module.css';
+
+const CLUB_COLORS = ['#3b82f6', '#ec4899', '#22c55e', '#f59e0b', '#a855f7'];
 
 interface PlayerListProps {
   players: PlannerRegistration[];
@@ -13,9 +15,14 @@ interface PlayerListProps {
   toggleConfirmed: (playerId: string, currentConfirmed: boolean) => Promise<void>;
   updatePlayerTelegram: (playerId: string, telegramUsername: string | null) => Promise<void>;
   statuses: Map<string, string>;
+  format?: TournamentFormat;
+  clubs?: Club[];
+  groupLabels?: [string, string];
+  onSetGroup?: (playerId: string, group: 'A' | 'B' | null) => Promise<void>;
+  onSetClub?: (playerId: string, clubId: string | null) => Promise<void>;
 }
 
-export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, removePlayer, toggleConfirmed, updatePlayerTelegram, statuses }: PlayerListProps) {
+export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, removePlayer, toggleConfirmed, updatePlayerTelegram, statuses, format, clubs, groupLabels, onSetGroup, onSetClub }: PlayerListProps) {
   const { t } = useTranslation();
   const [newPlayerName, setNewPlayerName] = useState('');
   const addingPlayer = useRef(false);
@@ -71,6 +78,39 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                     <span className={styles.reserveBadge}>{t('organizer.reserve')}</span>
                   )}
                 </span>
+                {format === 'mixicano' && onSetGroup && (
+                  <div className={styles.groupToggle}>
+                    <button
+                      className={player.group === 'A' ? styles.groupBtnActive : styles.groupBtn}
+                      onClick={() => onSetGroup(player.id, player.group === 'A' ? null : 'A')}
+                    >
+                      {groupLabels?.[0] || 'A'}
+                    </button>
+                    <button
+                      className={player.group === 'B' ? styles.groupBtnActive : styles.groupBtn}
+                      onClick={() => onSetGroup(player.id, player.group === 'B' ? null : 'B')}
+                    >
+                      {groupLabels?.[1] || 'B'}
+                    </button>
+                  </div>
+                )}
+                {format === 'club-americano' && onSetClub && clubs && clubs.length > 0 && (
+                  <select
+                    className={styles.clubSelect}
+                    value={player.clubId ?? ''}
+                    onChange={e => onSetClub(player.id, e.target.value || null)}
+                    style={player.clubId ? {
+                      '--club-color': CLUB_COLORS[clubs.findIndex(c => c.id === player.clubId) % CLUB_COLORS.length],
+                    } as React.CSSProperties : undefined}
+                  >
+                    <option value="">—</option>
+                    {clubs.map(club => (
+                      <option key={club.id} value={club.id}>
+                        {club.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
                 <button
                   className={player.telegramUsername ? styles.linkBtnActive : styles.linkBtn}
                   onClick={() => {

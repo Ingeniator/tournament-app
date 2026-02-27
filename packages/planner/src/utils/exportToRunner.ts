@@ -18,6 +18,8 @@ export function buildRunnerTournament(
     .map(r => ({
       id: generateId(),
       name: r.name,
+      ...(r.group ? { group: r.group } : {}),
+      ...(r.clubId ? { clubId: r.clubId } : {}),
     }));
 
   return {
@@ -29,10 +31,12 @@ export function buildRunnerTournament(
       courts: plannerTournament.courts,
       maxRounds: null,
       targetDuration: plannerTournament.duration,
+      ...(plannerTournament.groupLabels ? { groupLabels: plannerTournament.groupLabels } : {}),
     },
     phase: 'setup',
     players,
     rounds: [],
+    ...(plannerTournament.clubs ? { clubs: plannerTournament.clubs } : {}),
     plannerTournamentId: plannerTournament.id,
     createdAt: Date.now(),
     updatedAt: Date.now(),

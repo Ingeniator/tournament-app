@@ -361,7 +361,15 @@ export function JoinScreen() {
           <p className={styles.empty}>{t('join.noPlayersYet')}</p>
         ) : (
           <div className={styles.playerList}>
-            {players.map((player, i) => (
+            {players.map((player, i) => {
+              const isMixicano = tournament.format === 'mixicano';
+              const isClubAmericano = tournament.format === 'club-americano';
+              const clubs = tournament.clubs ?? [];
+              const clubIdx = isClubAmericano && player.clubId
+                ? clubs.findIndex(c => c.id === player.clubId)
+                : -1;
+              const CLUB_COLORS = ['#3b82f6', '#ec4899', '#22c55e', '#f59e0b', '#a855f7'];
+              return (
               <div key={player.id} className={styles.playerItem}>
                 <span className={styles.playerNum}>{i + 1}</span>
                 <span className={styles.playerName}>
@@ -380,12 +388,28 @@ export function JoinScreen() {
                   {statuses.get(player.id) === 'reserve' && (
                     <span className={styles.reserveBadge}>{t('join.reserve')}</span>
                   )}
+                  {isMixicano && player.group && (
+                    <span className={styles.groupBadge}>
+                      {player.group === 'A'
+                        ? (tournament.groupLabels?.[0] || 'A')
+                        : (tournament.groupLabels?.[1] || 'B')}
+                    </span>
+                  )}
+                  {isClubAmericano && clubIdx >= 0 && (
+                    <span
+                      className={styles.clubBadge}
+                      style={{ backgroundColor: CLUB_COLORS[clubIdx % CLUB_COLORS.length] }}
+                    >
+                      {clubs[clubIdx].name}
+                    </span>
+                  )}
                 </span>
                 <span className={player.confirmed !== false ? styles.statusConfirmed : styles.statusCancelled}>
                   {player.confirmed !== false ? '\u2713' : '\u2717'}
                 </span>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </Card>

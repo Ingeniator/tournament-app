@@ -11,6 +11,7 @@ function toTournament(id: string, data: Record<string, unknown>): PlannerTournam
   // objects into React state (which causes "Objects are not valid as a React
   // child" errors when accidentally rendered).
   const courts = data.courts;
+  const clubs = data.clubs;
   return {
     id,
     name: data.name as string,
@@ -30,6 +31,12 @@ function toTournament(id: string, data: Record<string, unknown>): PlannerTournam
     chatLink: data.chatLink as string | undefined,
     description: data.description as string | undefined,
     locale: data.locale as string | undefined,
+    clubs: Array.isArray(clubs)
+      ? clubs
+      : typeof clubs === 'object' && clubs !== null
+        ? Object.values(clubs)
+        : undefined,
+    groupLabels: data.groupLabels as [string, string] | undefined,
   };
 }
 
@@ -85,7 +92,7 @@ export function usePlannerTournament(tournamentId: string | null) {
     return id;
   }, []);
 
-  const updateTournament = useCallback(async (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'courts' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description'>>) => {
+  const updateTournament = useCallback(async (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'courts' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description' | 'clubs' | 'groupLabels'>>) => {
     if (!tournamentId || !db) return;
     // Convert undefined to null so Firebase deletes the field
     const pathUpdates: Record<string, unknown> = {};

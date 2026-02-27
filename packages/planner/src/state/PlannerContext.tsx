@@ -27,7 +27,7 @@ export interface PlannerContextValue {
   setScreen: (screen: Screen) => void;
   createTournament: (name: string) => Promise<void>;
   loadByCode: (code: string) => Promise<boolean>;
-  updateTournament: (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'pointsPerMatch' | 'courts' | 'maxRounds' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description'>>) => Promise<void>;
+  updateTournament: (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'pointsPerMatch' | 'courts' | 'maxRounds' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description' | 'clubs' | 'groupLabels'>>) => Promise<void>;
   registerPlayer: (name: string) => Promise<void>;
   removePlayer: (playerId: string) => Promise<void>;
   updateConfirmed: (confirmed: boolean) => Promise<void>;
@@ -36,6 +36,8 @@ export interface PlannerContextValue {
   toggleConfirmed: (playerId: string, currentConfirmed: boolean) => Promise<void>;
   updatePlayerName: (playerId: string, name: string) => Promise<void>;
   updatePlayerTelegram: (playerId: string, telegramUsername: string | null) => Promise<void>;
+  updatePlayerGroup: (playerId: string, group: 'A' | 'B' | null) => Promise<void>;
+  updatePlayerClub: (playerId: string, clubId: string | null) => Promise<void>;
   isRegistered: boolean;
   organizerName: string | null;
   userName: string | null;
@@ -92,7 +94,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     undoComplete,
   } = usePlannerTournament(tournamentId);
 
-  const { players, registerPlayer: registerInDb, removePlayer, updateConfirmed: updateConfirmedInDb, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, isRegistered: checkRegistered, claimOrphanRegistration } = usePlayers(tournamentId);
+  const { players, registerPlayer: registerInDb, removePlayer, updateConfirmed: updateConfirmedInDb, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, isRegistered: checkRegistered, claimOrphanRegistration } = usePlayers(tournamentId);
 
   const { name: userName, skin: userSkin, loading: userNameLoading, updateName: updateUserName, updateSkin: updateUserSkin, updateTelegramId, updateTelegramUsername } = useUserProfile(uid);
 
@@ -246,6 +248,8 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       toggleConfirmed,
       updatePlayerName,
       updatePlayerTelegram,
+      updatePlayerGroup,
+      updatePlayerClub,
       isRegistered,
       organizerName,
       userName,
