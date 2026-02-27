@@ -1,5 +1,5 @@
-import type { Player, TournamentFormat } from '@padel/common';
-import { useTranslation } from '@padel/common';
+import type { Player, TournamentFormat, Club } from '@padel/common';
+import { useTranslation, CLUB_COLORS } from '@padel/common';
 import styles from './PlayerList.module.css';
 
 interface PlayerListProps {
@@ -7,12 +7,15 @@ interface PlayerListProps {
   onRemove: (id: string) => void;
   format?: TournamentFormat;
   groupLabels?: [string, string];
-  onSetGroup?: (playerId: string, group: 'A' | 'B') => void;
+  onSetGroup?: (playerId: string, group: 'A' | 'B' | null) => void;
+  clubs?: Club[];
+  onSetClub?: (playerId: string, clubId: string | null) => void;
 }
 
-export function PlayerList({ players, onRemove, format, groupLabels, onSetGroup }: PlayerListProps) {
+export function PlayerList({ players, onRemove, format, groupLabels, onSetGroup, clubs, onSetClub }: PlayerListProps) {
   const { t } = useTranslation();
   const showGroups = format === 'mixicano' && onSetGroup;
+  const showClubs = format === 'club-americano' && onSetClub && clubs && clubs.length > 0;
   const labelA = groupLabels?.[0] || t('config.groupLabelAPlaceholder');
   const labelB = groupLabels?.[1] || t('config.groupLabelBPlaceholder');
 
@@ -33,17 +36,35 @@ export function PlayerList({ players, onRemove, format, groupLabels, onSetGroup 
               <div className={styles.groupToggle}>
                 <button
                   className={`${styles.groupBtn} ${player.group === 'A' ? styles.groupActive : ''}`}
-                  onClick={() => onSetGroup(player.id, 'A')}
+                  onClick={() => onSetGroup(player.id, player.group === 'A' ? null : 'A')}
                 >
                   {labelA}
                 </button>
                 <button
                   className={`${styles.groupBtn} ${player.group === 'B' ? styles.groupActive : ''}`}
-                  onClick={() => onSetGroup(player.id, 'B')}
+                  onClick={() => onSetGroup(player.id, player.group === 'B' ? null : 'B')}
                 >
                   {labelB}
                 </button>
               </div>
+            )}
+            {showClubs && (
+              <select
+                className={styles.clubSelect}
+                value={player.clubId ?? ''}
+                onChange={e => onSetClub(player.id, e.target.value || null)}
+                style={player.clubId ? (() => {
+                  const idx = clubs.findIndex(c => c.id === player.clubId);
+                  return idx >= 0 ? { '--club-color': CLUB_COLORS[idx % CLUB_COLORS.length] } as React.CSSProperties : undefined;
+                })() : undefined}
+              >
+                <option value="">—</option>
+                {clubs.map(club => (
+                  <option key={club.id} value={club.id}>
+                    {club.name}
+                  </option>
+                ))}
+              </select>
             )}
             <button
               className={styles.removeBtn}
