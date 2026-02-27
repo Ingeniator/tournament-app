@@ -1,10 +1,8 @@
 import { useState, useRef, type ClipboardEvent } from 'react';
-import { Button, Card, Modal, useTranslation } from '@padel/common';
+import { Button, Card, CLUB_COLORS, Modal, useTranslation } from '@padel/common';
 import type { PlannerRegistration, TournamentFormat, Club } from '@padel/common';
 import { parsePlayerList } from '@padel/common';
 import styles from '../../screens/OrganizerScreen.module.css';
-
-const CLUB_COLORS = ['#3b82f6', '#ec4899', '#22c55e', '#f59e0b', '#a855f7'];
 
 interface PlayerListProps {
   players: PlannerRegistration[];
@@ -99,9 +97,10 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                     className={styles.clubSelect}
                     value={player.clubId ?? ''}
                     onChange={e => onSetClub(player.id, e.target.value || null)}
-                    style={player.clubId ? {
-                      '--club-color': CLUB_COLORS[clubs.findIndex(c => c.id === player.clubId) % CLUB_COLORS.length],
-                    } as React.CSSProperties : undefined}
+                    style={player.clubId ? (() => {
+                      const idx = clubs.findIndex(c => c.id === player.clubId);
+                      return idx >= 0 ? { '--club-color': CLUB_COLORS[idx % CLUB_COLORS.length] } as React.CSSProperties : undefined;
+                    })() : undefined}
                   >
                     <option value="">—</option>
                     {clubs.map(club => (

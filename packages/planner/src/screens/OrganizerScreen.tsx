@@ -1,6 +1,6 @@
 import { useState, useMemo, type ReactNode } from 'react';
 import { ref, push, set } from 'firebase/database';
-import { Button, Card, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation } from '@padel/common';
+import { Button, Card, CLUB_COLORS, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation } from '@padel/common';
 import type { TournamentFormat, Court, Club } from '@padel/common';
 import { generateId } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
@@ -50,6 +50,8 @@ export function OrganizerScreen() {
     clubs: tournament?.clubs,
   }), [players, capacity, tournament?.format, tournament?.clubs]);
 
+  const [showReopenModal, setShowReopenModal] = useState(false);
+
   const duplicateNames = useMemo(() => {
     const counts = new Map<string, number>();
     for (const p of players) {
@@ -65,8 +67,6 @@ export function OrganizerScreen() {
   }, [players]);
 
   if (!tournament) return null;
-
-  const [showReopenModal, setShowReopenModal] = useState(false);
 
   if (completedAt) {
     return (
@@ -399,7 +399,6 @@ export function OrganizerScreen() {
 
         {tournament.format === 'club-americano' && (() => {
           const clubs = tournament.clubs ?? [];
-          const CLUB_COLORS = ['#3b82f6', '#ec4899', '#22c55e', '#f59e0b', '#a855f7'];
           return (
             <div className={styles.clubsSection}>
               <div className={styles.courtsHeader}>

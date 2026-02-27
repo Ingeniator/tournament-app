@@ -1,4 +1,5 @@
 import type { Tournament, Nomination, StandingsEntry, ClubStandingsEntry } from '@padel/common';
+import { buildClubStandings, buildClubMaps } from '../../utils/clubStandings';
 
 /**
  * Club-specific awards for club-americano format.
@@ -9,57 +10,7 @@ interface ClubAwardContext {
   clubStandings: ClubStandingsEntry[];
   pairStandings: StandingsEntry[];
   tournament: Tournament;
-}
-
-function buildClubStandings(tournament: Tournament, pairStandings: StandingsEntry[]): ClubStandingsEntry[] {
-  const clubs = tournament.clubs ?? [];
-  const teams = tournament.teams ?? [];
-  if (clubs.length === 0 || teams.length === 0) return [];
-
-  // Build teamId → clubId mapping
-  const playerClubMap = new Map<string, string>();
-  for (const p of tournament.players) {
-    if (p.clubId) playerClubMap.set(p.id, p.clubId);
-  }
-  const teamClubMap = new Map<string, string>();
-  for (const team of teams) {
-    const clubId = playerClubMap.get(team.player1Id) ?? playerClubMap.get(team.player2Id);
-    if (clubId) teamClubMap.set(team.id, clubId);
-  }
-
-  const clubPoints = new Map<string, number>();
-  const clubMembers = new Map<string, number>();
-  for (const club of clubs) {
-    clubPoints.set(club.id, 0);
-    clubMembers.set(club.id, 0);
-  }
-
-  for (const entry of pairStandings) {
-    const clubId = teamClubMap.get(entry.playerId);
-    if (clubId) {
-      clubPoints.set(clubId, (clubPoints.get(clubId) ?? 0) + entry.totalPoints);
-      clubMembers.set(clubId, (clubMembers.get(clubId) ?? 0) + 1);
-    }
-  }
-
-  const entries: ClubStandingsEntry[] = clubs.map(club => ({
-    clubId: club.id,
-    clubName: club.name,
-    totalPoints: clubPoints.get(club.id) ?? 0,
-    memberCount: clubMembers.get(club.id) ?? 0,
-    rank: 0,
-  }));
-
-  entries.sort((a, b) => b.totalPoints - a.totalPoints);
-  entries.forEach((entry, i) => {
-    if (i === 0) entry.rank = 1;
-    else {
-      const prev = entries[i - 1];
-      entry.rank = entry.totalPoints === prev.totalPoints ? prev.rank : i + 1;
-    }
-  });
-
-  return entries;
+  teamClubMap: Map<string, string>;
 }
 
 export function computeClubChampion(ctx: ClubAwardContext): Nomination[] {
@@ -85,7 +36,8 @@ export function computeClubAwards(tournament: Tournament, pairStandings: Standin
   }
 
   const clubStandings = buildClubStandings(tournament, pairStandings);
-  const ctx: ClubAwardContext = { clubStandings, pairStandings, tournament };
+  const { teamClubMap } = buildClubMaps(tournament.players, tournament.teams ?? []);
+  const ctx: ClubAwardContext = { clubStandings, pairStandings, tournament, teamClubMap };
 
   const champion = computeClubChampion(ctx);
   const awards: Nomination[] = [];
@@ -120,16 +72,6 @@ export function computeClubAwards(tournament: Tournament, pairStandings: Standin
   // CLUB MVP — Pair that scored highest % of their club's total points
   if (clubStandings.length > 0) {
     const clubs = tournament.clubs ?? [];
-    const teams = tournament.teams ?? [];
-    const playerClubMap = new Map<string, string>();
-    for (const p of tournament.players) {
-      if (p.clubId) playerClubMap.set(p.id, p.clubId);
-    }
-    const teamClubMap = new Map<string, string>();
-    for (const team of teams) {
-      const clubId = playerClubMap.get(team.player1Id) ?? playerClubMap.get(team.player2Id);
-      if (clubId) teamClubMap.set(team.id, clubId);
-    }
 
     const clubTotals = new Map<string, number>();
     for (const cs of clubStandings) clubTotals.set(cs.clubId, cs.totalPoints);
@@ -140,7 +82,6 @@ export function computeClubAwards(tournament: Tournament, pairStandings: Standin
       if (!clubId) continue;
       const clubTotal = clubTotals.get(clubId) ?? 0;
       if (clubTotal === 0) continue;
-      // Only consider clubs with 2+ pairs for MVP to be meaningful
       const clubPairCount = clubStandings.find(c => c.clubId === clubId)?.memberCount ?? 0;
       if (clubPairCount < 2) continue;
       const pct = entry.totalPoints / clubTotal;
@@ -164,16 +105,6 @@ export function computeClubAwards(tournament: Tournament, pairStandings: Standin
   // CLUB SOLIDARITY — Club with smallest points spread between pairs
   if (clubStandings.length > 0) {
     const clubs = tournament.clubs ?? [];
-    const teams = tournament.teams ?? [];
-    const playerClubMap = new Map<string, string>();
-    for (const p of tournament.players) {
-      if (p.clubId) playerClubMap.set(p.id, p.clubId);
-    }
-    const teamClubMap = new Map<string, string>();
-    for (const team of teams) {
-      const clubId = playerClubMap.get(team.player1Id) ?? playerClubMap.get(team.player2Id);
-      if (clubId) teamClubMap.set(team.id, clubId);
-    }
 
     let bestSolidarity: { clubId: string; clubName: string; spread: number; pairCount: number } | null = null;
     for (const club of clubs) {

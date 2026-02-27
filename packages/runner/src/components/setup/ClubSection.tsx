@@ -1,8 +1,6 @@
 import type { Player, Club } from '@padel/common';
-import { Button, useTranslation } from '@padel/common';
+import { Button, useTranslation, CLUB_COLORS } from '@padel/common';
 import styles from './ClubSection.module.css';
-
-const CLUB_COLORS = ['#3b82f6', '#ec4899', '#22c55e', '#f59e0b', '#a855f7'];
 
 interface ClubSectionProps {
   clubs: Club[];
@@ -107,4 +105,3 @@ export function ClubSection({
   );
 }
 
-export { CLUB_COLORS };

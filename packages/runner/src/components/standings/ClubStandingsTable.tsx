@@ -1,8 +1,6 @@
 import type { ClubStandingsEntry } from '@padel/common';
-import { useTranslation } from '@padel/common';
+import { useTranslation, CLUB_COLORS } from '@padel/common';
 import styles from './ClubStandingsTable.module.css';
-
-const CLUB_COLORS = ['#3b82f6', '#ec4899', '#22c55e', '#f59e0b', '#a855f7'];
 
 interface ClubStandingsTableProps {
   standings: ClubStandingsEntry[];

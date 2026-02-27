@@ -1,23 +1,15 @@
 import { useState, useMemo } from 'react';
 import { useTournament } from '../hooks/useTournament';
 import { AppShell } from '../components/layout/AppShell';
-import { Button, useTranslation } from '@padel/common';
+import { Button, useTranslation, CLUB_COLORS } from '@padel/common';
 import styles from './TeamPairingScreen.module.css';
-
-const CLUB_COLORS = ['#3b82f6', '#ec4899', '#22c55e', '#f59e0b', '#a855f7'];
 
 export function TeamPairingScreen() {
   const { tournament, dispatch } = useTournament();
   const { t } = useTranslation();
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
-  if (!tournament || !tournament.teams) return null;
-
-  const isClubFormat = tournament.config.format === 'club-americano';
-  const clubs = tournament.clubs ?? [];
-
-  const nameOf = (id: string) => tournament.players.find(p => p.id === id)?.name ?? '?';
-  const playerClub = (id: string) => tournament.players.find(p => p.id === id)?.clubId;
+  const clubs = useMemo(() => tournament?.clubs ?? [], [tournament?.clubs]);
 
   // Build club color map
   const clubColorMap = useMemo(() => {
@@ -28,19 +20,27 @@ export function TeamPairingScreen() {
 
   // Group teams by club for club-americano
   const teamsByClub = useMemo(() => {
-    if (!isClubFormat || clubs.length === 0) return null;
+    if (!tournament?.teams || tournament.config.format !== 'club-americano' || clubs.length === 0) return null;
+    const playerClubOf = (id: string) => tournament.players.find(p => p.id === id)?.clubId;
     const grouped = new Map<string, typeof tournament.teams>();
     for (const club of clubs) {
       grouped.set(club.id, []);
     }
-    for (const team of tournament.teams!) {
-      const clubId = playerClub(team.player1Id) ?? playerClub(team.player2Id);
+    for (const team of tournament.teams) {
+      const clubId = playerClubOf(team.player1Id) ?? playerClubOf(team.player2Id);
       if (clubId && grouped.has(clubId)) {
         grouped.get(clubId)!.push(team);
       }
     }
     return grouped;
-  }, [tournament.teams, tournament.players, clubs, isClubFormat]);
+  }, [tournament, clubs]);
+
+  if (!tournament || !tournament.teams) return null;
+
+  const isClubFormat = tournament.config.format === 'club-americano';
+
+  const nameOf = (id: string) => tournament.players.find(p => p.id === id)?.name ?? '?';
+  const playerClub = (id: string) => tournament.players.find(p => p.id === id)?.clubId;
 
   const handlePlayerTap = (playerId: string) => {
     if (!selectedPlayerId) {

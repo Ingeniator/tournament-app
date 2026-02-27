@@ -14,7 +14,7 @@ import { copyToClipboard } from '../utils/clipboard';
 import { shareStandingsImage } from '../utils/standingsImage';
 import { ref, push, set } from 'firebase/database';
 import { auth, db, firebaseConfigured } from '../firebase';
-import { Button, FeedbackModal, Modal, SupportOverlay, Toast, useToast, useTranslation } from '@padel/common';
+import { Button, CLUB_COLORS, FeedbackModal, Modal, SupportOverlay, Toast, useToast, useTranslation } from '@padel/common';
 import { getStrategy } from '../strategies';
 import styles from './PlayScreen.module.css';
 
@@ -60,7 +60,6 @@ export function PlayScreen() {
   }, [tournament]);
   const isClubFormat = tournament?.config.format === 'club-americano';
   const clubColorMap = useMemo(() => {
-    const CLUB_COLORS = ['#3b82f6', '#ec4899', '#22c55e', '#f59e0b', '#a855f7'];
     const map = new Map<string, string>();
     (tournament?.clubs ?? []).forEach((c, i) => map.set(c.id, CLUB_COLORS[i % CLUB_COLORS.length]));
     return map;

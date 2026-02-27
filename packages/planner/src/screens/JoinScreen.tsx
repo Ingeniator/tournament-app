@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Button, Card, Toast, useToast, useTranslation } from '@padel/common';
+import { Button, Card, CLUB_COLORS, Toast, useToast, useTranslation } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import { downloadICS } from '../utils/icsExport';
@@ -13,7 +13,9 @@ export function JoinScreen() {
   const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, updatePlayerGroup, updatePlayerClub, isRegistered, setScreen, organizerName, userName, telegramUser, completedAt } = usePlanner();
   const { startedBy, showWarning, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
   const { t } = useTranslation();
-  const [name, setName] = useState(userName ?? telegramUser?.displayName ?? '');
+  // null = not yet edited by user, derive from external sources
+  const [nameInput, setNameInput] = useState<string | null>(null);
+  const name = nameInput ?? userName ?? telegramUser?.displayName ?? '';
   const [registering, setRegistering] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [editingName, setEditingName] = useState(false);
@@ -22,14 +24,6 @@ export function JoinScreen() {
   const [restoreFailed, setRestoreFailed] = useState(false);
   const { toastMessage, showToast } = useToast();
   const registeringRef = useRef(false);
-
-  // Pre-fill name from profile or Telegram when it loads
-  useEffect(() => {
-    if (!name) {
-      const prefill = userName ?? telegramUser?.displayName;
-      if (prefill) setName(prefill);
-    }
-  }, [userName, telegramUser]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const capacity = tournament ? tournament.courts.length * 4 + (tournament.extraSpots ?? 0) : 0;
   const statuses = useMemo(() => getPlayerStatuses(players, capacity, {
@@ -135,7 +129,7 @@ export function JoinScreen() {
     }
     setRegistering(false);
     registeringRef.current = false;
-    setName('');
+    setNameInput('');
   };
 
   const handleSaveName = async () => {
@@ -353,7 +347,6 @@ export function JoinScreen() {
 
             {isConfirmed && uid && tournament.format === 'club-americano' && (tournament.clubs ?? []).length > 0 && (() => {
               const clubs = tournament.clubs!;
-              const CLUB_COLORS = ['#3b82f6', '#ec4899', '#22c55e', '#f59e0b', '#a855f7'];
               return (
                 <div className={styles.clubPicker}>
                   <span className={styles.clubPickerLabel}>{t('join.selectClub')}</span>
@@ -380,7 +373,7 @@ export function JoinScreen() {
               className={styles.nameInput}
               type="text"
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={e => setNameInput(e.target.value)}
               placeholder={t('join.enterName')}
               onKeyDown={e => e.key === 'Enter' && handleRegister()}
               autoFocus
@@ -423,7 +416,6 @@ export function JoinScreen() {
               const clubIdx = isClubAmericano && player.clubId
                 ? clubs.findIndex(c => c.id === player.clubId)
                 : -1;
-              const CLUB_COLORS = ['#3b82f6', '#ec4899', '#22c55e', '#f59e0b', '#a855f7'];
               return (
               <div key={player.id} className={styles.playerItem}>
                 <span className={styles.playerNum}>{i + 1}</span>

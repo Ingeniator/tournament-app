@@ -16,6 +16,7 @@ export type { StandingsEntry, ClubStandingsEntry } from './types/standings';
 export type { AwardTier, Nomination } from './types/nomination';
 export type { Supporter, GroupedSupporter } from './types/supporter';
 export type { PlannerTournament, PlannerRegistration, TournamentSummary, TournamentStartInfo } from './types/planner';
+export { CLUB_COLORS } from './constants/clubColors';
 export { generateId } from './utils/id';
 export { parsePlayerList } from './utils/parsePlayerList';
 export { groupSupporters } from './utils/groupSupporters';
