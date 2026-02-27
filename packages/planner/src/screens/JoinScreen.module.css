@@ -200,18 +200,17 @@
 .playerList {
   display: flex;
   flex-direction: column;
+  gap: var(--space-sm);
 }
 
 .playerItem {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  padding: var(--space-sm) 0;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.playerItem:last-child {
-  border-bottom: none;
+  padding: var(--space-sm) var(--space-md);
+  background-color: var(--color-surface-raised);
+  border-radius: var(--radius-sm);
+  min-height: 44px;
 }
 
 .playerNum {

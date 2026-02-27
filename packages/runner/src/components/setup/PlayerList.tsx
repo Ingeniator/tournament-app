@@ -48,7 +48,7 @@ export function PlayerList({ players, onRemove, onRename, format, groupLabels, o
       {players.map((player, i) => (
         <div key={player.id} className={styles.item}>
           <div className={styles.left}>
-            <span className={styles.number}>{i + 1}.</span>
+            <span className={styles.number}>{i + 1}</span>
             {editingId === player.id ? (
               <input
                 className={styles.editInput}
