@@ -259,6 +259,8 @@ const it: Translations = {
   'config.matchModeRandom': 'Casuale',
   'config.matchModeStandings': 'Per Classifica',
   'config.matchModeSlots': 'Posizioni Fisse',
+  'config.pairModeInfo': 'Fissa: le coppie vengono definite durante la configurazione e rimangono le stesse per tutto il torneo. Rotante: nuove coppie casuali all\'interno di ogni club vengono formate prima di ogni turno.',
+  'config.matchModeInfo': 'Casuale: le coppie dei club avversari vengono abbinate casualmente. Per Classifica: le coppie vengono abbinate per ranking — migliore contro migliore. Posizioni Fisse: le coppie mantengono la posizione originale (1v1, 2v2, 3v3).',
   'config.courtBonus': 'pti bonus',
   'config.kotcBonusInfo': 'I campi più alti guadagnano punti bonus aggiunti alla classifica',
   'config.groupLabels': 'Gruppi',

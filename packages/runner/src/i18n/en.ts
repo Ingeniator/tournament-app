@@ -257,6 +257,8 @@ const en: Translations = {
   'config.matchModeRandom': 'Random',
   'config.matchModeStandings': 'Standings-Based',
   'config.matchModeSlots': 'Fixed Slots',
+  'config.pairModeInfo': 'Fixed: pairs are set during setup and stay the same for the entire tournament. Rotating: new random pairs within each club are formed before every round.',
+  'config.matchModeInfo': 'Random: pairs from opposing clubs are matched randomly. Standings-Based: pairs are matched by rank — best vs best. Fixed Slots: pairs keep their original position (1v1, 2v2, 3v3).',
   'config.courtBonus': 'bonus pts',
   'config.kotcBonusInfo': 'Higher courts earn bonus points added to standings',
   'config.groupLabels': 'Groups',

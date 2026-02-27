@@ -1,7 +1,35 @@
+import { useState } from 'react';
 import type { TournamentConfig, TournamentFormat } from '@padel/common';
 import { Button, generateId, useTranslation } from '@padel/common';
 import { resolveConfigDefaults, computeSitOutInfo } from '../../utils/resolveConfigDefaults';
 import styles from './TournamentConfigForm.module.css';
+
+function InfoButton({ hint }: { hint: string }) {
+  const [open, setOpen] = useState(false);
+  const { t } = useTranslation();
+
+  return (
+    <>
+      <button
+        className={styles.infoBtn}
+        onClick={() => setOpen(true)}
+        aria-label="Info"
+      >
+        i
+      </button>
+      {open && (
+        <div className={styles.tooltipOverlay} onClick={() => setOpen(false)}>
+          <div className={styles.tooltip} onClick={e => e.stopPropagation()}>
+            <p>{hint}</p>
+            <button className={styles.tooltipClose} onClick={() => setOpen(false)}>
+              {t('distribution.gotIt')}
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
 
 const MINUTES_PER_POINT = 0.5;
 const CHANGEOVER_MINUTES = 3;
@@ -101,7 +129,10 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
       {config.format === 'club-americano' && (
         <>
           <div className={styles.field}>
-            <label className={styles.label} htmlFor="config-pair-mode">{t('config.pairMode')}</label>
+            <div className={styles.labelRow}>
+              <label className={styles.label} htmlFor="config-pair-mode">{t('config.pairMode')}</label>
+              <InfoButton hint={t('config.pairModeInfo')} />
+            </div>
             <select
               id="config-pair-mode"
               className={styles.input}
@@ -113,7 +144,10 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
             </select>
           </div>
           <div className={styles.field}>
-            <label className={styles.label} htmlFor="config-match-mode">{t('config.matchMode')}</label>
+            <div className={styles.labelRow}>
+              <label className={styles.label} htmlFor="config-match-mode">{t('config.matchMode')}</label>
+              <InfoButton hint={t('config.matchModeInfo')} />
+            </div>
             <select
               id="config-match-mode"
               className={styles.input}
