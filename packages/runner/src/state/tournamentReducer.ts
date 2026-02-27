@@ -430,7 +430,7 @@ export function tournamentReducer(
         if (allScored && updatedRounds.length < totalTarget) {
           // For rotating pair mode: regenerate intra-club pairs
           let updatedTeams = state.teams;
-          let updatedPlayers = state.players;
+          const updatedPlayers = state.players;
           if (state.config.format === 'club-americano' && state.config.pairMode === 'rotating' && state.clubs?.length) {
             updatedTeams = createClubTeams(state.players, state.clubs);
           }
