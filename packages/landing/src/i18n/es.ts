@@ -1,13 +1,52 @@
 import type { Translations } from '@padel/common';
 
 const es: Translations = {
-  // Landing
+  // Landing - Hero
   'landing.title': 'Gestor de Torneos',
+  'landing.tagline': 'Gratis, sin registro, funciona en tu navegador.',
   'landing.subtitle': 'Organiza y gestiona torneos en la pista',
+  'landing.ctaStart': 'Iniciar Torneo',
+  'landing.ctaPlan': 'Planificar un Torneo',
   'landing.planner': 'Planificador',
   'landing.plannerDesc': 'Crea torneos, invita jugadores, gestiona inscripciones',
   'landing.runner': 'Ejecuci\u00f3n',
   'landing.runnerDesc': 'Ejecuta partidos, registra puntuaciones, ve clasificaciones en vivo',
+
+  // Landing - Differentiators
+  'landing.diffTitle': 'Qué Nos Hace Diferentes',
+  'landing.diffAwardsTitle': '41 Premios. Una Ceremonia.',
+  'landing.diffAwardsDesc': 'De Giant Slayer a Social Butterfly — cada jugador tiene su momento.',
+  'landing.diffCursesTitle': 'Cartas de Maldición',
+  'landing.diffCursesDesc': 'Maldiciones del Padel — añade caos con 17 cartas en 3 niveles de dificultad.',
+  'landing.diffFairTitle': 'Matemáticamente Justo',
+  'landing.diffFairDesc': 'Emparejamientos basados en clasificación mantienen cada ronda competitiva.',
+
+  // Landing - Features
+  'landing.featuresTitle': 'Todo Lo Que Necesitas',
+  'landing.feat1Title': '10 Formatos',
+  'landing.feat1Desc': 'Americano, Mexicano, King of the Court y más.',
+  'landing.feat2Title': 'Puntuación en Tiempo Real',
+  'landing.feat2Desc': 'Marca puntos, avance automático de rondas.',
+  'landing.feat3Title': 'Funciona Sin Conexión',
+  'landing.feat3Desc': 'PWA completa — sin internet necesario en la pista.',
+  'landing.feat4Title': 'Sin Fricción',
+  'landing.feat4Desc': 'Sin cuentas, sin descargas, sin anuncios.',
+  'landing.feat5Title': '7 Idiomas',
+  'landing.feat5Desc': 'Inglés, español, francés, italiano, portugués, serbio, sueco.',
+  'landing.feat6Title': '16 Temas',
+  'landing.feat6Desc': 'Elige tu estilo — de Midnight a Claude.',
+
+  // Landing - How It Works
+  'landing.stepsTitle': 'Cómo Funciona',
+  'landing.step1Title': 'Configura',
+  'landing.step1Desc': '30 segundos. Elige un formato, añade jugadores, listo.',
+  'landing.step2Title': 'Juega y Puntúa',
+  'landing.step2Desc': 'Marca puntos. Las rondas avanzan automáticamente.',
+  'landing.step3Title': 'Celebra',
+  'landing.step3Desc': 'Clasificación + ceremonia de 41 premios.',
+
+  // Landing - Bottom CTA
+  'landing.ctaTitle': '¿Listo para tu próximo torneo?',
 
   // Footer & Options
   'footer.freeOpenSource': 'Gratuito y de c\u00f3digo abierto',

@@ -1,11 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { ref, push, set, onValue } from 'firebase/database';
-import { ErrorBoundary, I18nProvider, SkinPicker, AppFooter, FeedbackModal, useTranslation, useTheme, isValidSkin, DEFAULT_SKIN } from '@padel/common';
+import { ErrorBoundary, I18nProvider, useTheme, isValidSkin, DEFAULT_SKIN } from '@padel/common';
 import type { SkinId } from '@padel/common';
 import { translations } from './i18n';
 import { auth, db, signIn, firebaseConfigured } from './firebase';
-import styles from './App.module.css';
+import { LandingPage } from './pages/LandingPage';
+import { FormatsPage } from './pages/FormatsPage';
+import { AmericanoPage } from './pages/AmericanoPage';
+import { MexicanoPage } from './pages/MexicanoPage';
+import { AwardsPage } from './pages/AwardsPage';
+import { MaldicionesPage } from './pages/MaldicionesPage';
 
 declare global {
   interface Window {
@@ -37,10 +42,14 @@ function loadLocalSkin(): SkinId {
 
 const initialSkin = loadLocalSkin();
 
-function LandingContent() {
-  const { t } = useTranslation();
+function getPage(): string {
+  return window.location.pathname.replace(/\/$/, '') || '/';
+}
+
+function AppContent() {
   const { skin, setSkin: rawSetSkin } = useTheme(initialSkin);
   const [uid, setUid] = useState<string | null>(null);
+  const [page] = useState(getPage);
 
   // Auth
   useEffect(() => {
@@ -75,26 +84,16 @@ function LandingContent() {
       set(ref(db, `users/${uid}/skin`), s).catch(() => {});
     }
   }, [rawSetSkin, uid]);
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
+
   const [telegramName, setTelegramName] = useState<string | null>(null);
 
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
     if (!tg) return;
     tg.ready();
-
     const user = tg.initDataUnsafe?.user;
     if (user) {
       setTelegramName(user.first_name + (user.last_name ? ' ' + user.last_name : ''));
-    }
-
-    // Forward hash fragment to card links
-    const hash = window.location.hash;
-    if (hash) {
-      const links = document.querySelectorAll<HTMLAnchorElement>('a[data-card]');
-      links.forEach(link => {
-        link.href = link.getAttribute('href') + hash;
-      });
     }
   }, []);
 
@@ -104,66 +103,35 @@ function LandingContent() {
     await set(feedbackRef, { message, source: 'landing', createdAt: Date.now() });
   };
 
-  return (
-    <main className={styles.container}>
-      <div className={styles.skinPicker}>
-        <SkinPicker skin={skin} onSelect={setSkin} />
-      </div>
-      <div className={styles.logo}>
-        <svg viewBox="0 0 100 100" width="48" height="48" aria-hidden="true">
-          <defs>
-            <radialGradient id="ball" cx="40%" cy="38%" r="50%">
-              <stop offset="0%" stopColor="#d4e142"/>
-              <stop offset="100%" stopColor="#b8c230"/>
-            </radialGradient>
-            <clipPath id="bc"><circle cx="50" cy="50" r="24"/></clipPath>
-          </defs>
-          <circle cx="50" cy="50" r="24" fill="url(#ball)"/>
-          <g clipPath="url(#bc)">
-            <path d="M38 23 C26 38, 26 62, 38 77" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round"/>
-            <path d="M62 23 C74 38, 74 62, 62 77" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round"/>
-          </g>
-        </svg>
-      </div>
-      <h1 className={styles.title}>{t('landing.title')}</h1>
-      {telegramName && (
-        <p className={styles.greeting}>Hello, {telegramName}!</p>
-      )}
-      <p className={styles.subtitle}>{t('landing.subtitle')}</p>
-
-      <div className={styles.cards}>
-        <a className={styles.card} href="/plan" data-card>
-          <div className={styles.cardTitle}>
-            {t('landing.planner')} <span className={styles.arrow}>&rarr;</span>
-          </div>
-          <div className={styles.cardDesc}>{t('landing.plannerDesc')}</div>
-        </a>
-        <a className={styles.card} href="/play" data-card>
-          <div className={styles.cardTitle}>
-            {t('landing.runner')} <span className={styles.arrow}>&rarr;</span>
-          </div>
-          <div className={styles.cardDesc}>{t('landing.runnerDesc')}</div>
-        </a>
-      </div>
-
-      <AppFooter
-        onFeedbackClick={() => setFeedbackOpen(true)}
-      />
-
-      <FeedbackModal
-        open={feedbackOpen}
-        onClose={() => setFeedbackOpen(false)}
-        onSubmit={handleFeedback}
-      />
-    </main>
-  );
+  // Route to SEO pages
+  switch (page) {
+    case '/formats':
+      return <FormatsPage />;
+    case '/americano':
+      return <AmericanoPage />;
+    case '/mexicano':
+      return <MexicanoPage />;
+    case '/awards':
+      return <AwardsPage />;
+    case '/maldiciones':
+      return <MaldicionesPage />;
+    default:
+      return (
+        <LandingPage
+          skin={skin}
+          setSkin={setSkin}
+          telegramName={telegramName}
+          onFeedback={handleFeedback}
+        />
+      );
+  }
 }
 
 export function App() {
   return (
     <ErrorBoundary>
       <I18nProvider translations={translations}>
-        <LandingContent />
+        <AppContent />
       </I18nProvider>
     </ErrorBoundary>
   );
