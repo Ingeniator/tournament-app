@@ -254,7 +254,7 @@ const fr: Translations = {
   'format.wizardCrossGroup': 'Paires inter-groupes',
   'format.wizardClub': 'Compétition de club',
   'format.wizardResult': 'Format recommandé',
-  'format.wizardNoMatch': 'Aucun format ne correspond à cette combinaison',
+  'format.wizardNotYet': 'Cette combinaison n\'est pas encore disponible',
 
   // Planner App
   'app.connectionError': 'Erreur de Connexion',

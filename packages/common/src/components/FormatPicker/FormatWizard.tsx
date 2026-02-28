@@ -10,25 +10,32 @@ interface FormatWizardProps {
 type PartnerMode = 'rotating' | 'fixed' | null;
 type OpponentMode = 'random' | 'standings' | 'promotion' | null;
 
+function matchesFilters(
+  p: FormatPreset,
+  partnerMode: PartnerMode,
+  opponentMode: OpponentMode,
+  crossGroup: boolean,
+  clubMode: boolean,
+): boolean {
+  if (partnerMode === 'rotating' && !p.tags.includes('rotating')) return false;
+  if (partnerMode === 'fixed' && !p.tags.includes('fixed')) return false;
+  if (opponentMode === 'random' && !p.tags.includes('random')) return false;
+  if (opponentMode === 'standings' && !p.tags.includes('standings')) return false;
+  if (opponentMode === 'promotion' && !p.tags.includes('promotion')) return false;
+  if (crossGroup && !p.tags.includes('groups')) return false;
+  if (!crossGroup && p.tags.includes('groups')) return false;
+  if (clubMode && !p.tags.includes('clubs')) return false;
+  if (!clubMode && p.tags.includes('clubs')) return false;
+  return true;
+}
+
 function resolvePreset(
   partnerMode: PartnerMode,
   opponentMode: OpponentMode,
   crossGroup: boolean,
   clubMode: boolean,
 ): FormatPreset | null {
-  const candidates = FORMAT_PRESETS.filter(p => {
-    if (partnerMode === 'rotating' && !p.tags.includes('rotating')) return false;
-    if (partnerMode === 'fixed' && !p.tags.includes('fixed')) return false;
-    if (opponentMode === 'random' && !p.tags.includes('random')) return false;
-    if (opponentMode === 'standings' && !p.tags.includes('standings')) return false;
-    if (opponentMode === 'promotion' && !p.tags.includes('promotion')) return false;
-    if (crossGroup && !p.tags.includes('groups')) return false;
-    if (!crossGroup && p.tags.includes('groups')) return false;
-    if (clubMode && !p.tags.includes('clubs')) return false;
-    if (!clubMode && p.tags.includes('clubs')) return false;
-    return true;
-  });
-  return candidates[0] ?? null;
+  return FORMAT_PRESETS.find(p => matchesFilters(p, partnerMode, opponentMode, crossGroup, clubMode)) ?? null;
 }
 
 export function FormatWizard({ onChange, t }: FormatWizardProps) {
@@ -39,11 +46,8 @@ export function FormatWizard({ onChange, t }: FormatWizardProps) {
 
   const handlePartnerMode = (mode: PartnerMode) => {
     setPartnerMode(mode);
-    // Reset opponent mode if incompatible
-    if (mode === 'rotating' && opponentMode === null) return;
-    if (mode === 'fixed') {
+    if (mode === 'fixed' && opponentMode === 'promotion') {
       setOpponentMode(null);
-      setCrossGroup(false);
     }
   };
 
@@ -71,13 +75,8 @@ export function FormatWizard({ onChange, t }: FormatWizardProps) {
     },
   ];
 
-  // Cross-group only applies to rotating partners (fixed teams are set at registration)
-  const crossGroupDisabled = partnerMode === 'fixed';
-
-  // Resolve result (use effective crossGroup value — disabled means unchecked)
-  const effectiveCrossGroup = crossGroup && !crossGroupDisabled;
   const resolved = (partnerMode && opponentMode)
-    ? resolvePreset(partnerMode, opponentMode, effectiveCrossGroup, clubMode)
+    ? resolvePreset(partnerMode, opponentMode, crossGroup, clubMode)
     : null;
 
   // Auto-select when resolved
@@ -131,12 +130,11 @@ export function FormatWizard({ onChange, t }: FormatWizardProps) {
         <div className={styles.wizardStep}>
           <div className={styles.wizardStepLabel}>{t('format.wizardStep3')}</div>
           <div className={styles.wizardCheckboxes}>
-            <label className={`${styles.wizardCheckbox} ${crossGroupDisabled ? styles.wizardCheckboxDisabled : ''}`}>
+            <label className={styles.wizardCheckbox}>
               <input
                 type="checkbox"
-                checked={crossGroup && !crossGroupDisabled}
-                onChange={e => !crossGroupDisabled && setCrossGroup(e.target.checked)}
-                disabled={crossGroupDisabled}
+                checked={crossGroup}
+                onChange={e => setCrossGroup(e.target.checked)}
               />
               <span>{t('format.wizardCrossGroup')}</span>
             </label>
@@ -164,7 +162,7 @@ export function FormatWizard({ onChange, t }: FormatWizardProps) {
 
       {partnerMode && opponentMode && !resolved && (
         <div className={styles.wizardNoMatch}>
-          {t('format.wizardNoMatch')}
+          {t('format.wizardNotYet')}
         </div>
       )}
     </div>

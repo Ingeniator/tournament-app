@@ -402,7 +402,7 @@ const pt: Translations = {
   'format.wizardCrossGroup': 'Duplas entre grupos',
   'format.wizardClub': 'Competição de clube',
   'format.wizardResult': 'Formato recomendado',
-  'format.wizardNoMatch': 'Nenhum formato corresponde a esta combinação',
+  'format.wizardNotYet': 'Esta combinação ainda não está disponível',
 
   // Common
   'common.cancel': 'Cancelar',

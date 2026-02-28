@@ -400,7 +400,7 @@ const sv: Translations = {
   'format.wizardCrossGroup': 'Gruppöverskridande par',
   'format.wizardClub': 'Klubbtävling',
   'format.wizardResult': 'Rekommenderat format',
-  'format.wizardNoMatch': 'Inget format matchar denna kombination',
+  'format.wizardNotYet': 'Denna kombination är inte tillgänglig ännu',
 
   // Common
   'common.cancel': 'Avbryt',

@@ -254,7 +254,7 @@ const sr: Translations = {
   'format.wizardCrossGroup': 'Parovi iz grupa',
   'format.wizardClub': 'Klubsko takmičenje',
   'format.wizardResult': 'Preporučeni format',
-  'format.wizardNoMatch': 'Nijedan format ne odgovara ovoj kombinaciji',
+  'format.wizardNotYet': 'Ova kombinacija još nije dostupna',
 
   // Planner App
   'app.connectionError': 'Greška u Povezivanju',

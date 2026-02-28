@@ -331,6 +331,7 @@ export function OrganizerScreen() {
         defaultOpen={!hasFormatCourts}
       >
         <div className={styles.configGrid}>
+          <div className={styles.configFullWidth}>
           <label className={styles.configLabel}>
             {t('organizer.format')}
           </label>
@@ -345,6 +346,7 @@ export function OrganizerScreen() {
             }}
             t={t}
           />
+          </div>
         </div>
 
         {formatHasGroups(tournament.format) && (
