@@ -359,7 +359,7 @@
   color: var(--color-text-secondary);
 }
 
-.courtItem {
+.editableItem {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -367,7 +367,7 @@
   font-size: var(--text-sm);
 }
 
-.courtItemKotc {
+.editableItemWithSub {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
@@ -376,17 +376,17 @@
   border-bottom: 1px solid var(--color-border);
 }
 
-.courtItemKotc:last-child {
+.editableItemWithSub:last-child {
   border-bottom: none;
 }
 
-.courtMainRow {
+.editableItemRow {
   display: flex;
   align-items: center;
   min-width: 0;
 }
 
-.courtKotcFields {
+.editableItemSub {
   display: flex;
   gap: var(--space-sm);
   align-items: center;
@@ -403,7 +403,7 @@
   white-space: nowrap;
 }
 
-.courtNameInput {
+.editableItemInput {
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
@@ -414,7 +414,7 @@
   min-width: 0;
 }
 
-.courtNameInput:focus {
+.editableItemInput:focus {
   outline: none;
   border-color: var(--color-primary);
   background-color: var(--color-surface-raised);

@@ -10,6 +10,7 @@ import { restoreFromBackup } from '../utils/restoreFromBackup';
 import { useStartGuard } from '../hooks/useStartGuard';
 import { StartWarningModal } from '../components/StartWarningModal';
 import { PlayerList } from '../components/organizer/PlayerList';
+import { EditableItem } from '../components/organizer/EditableItem';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import styles from './OrganizerScreen.module.css';
 
@@ -389,32 +390,21 @@ export function OrganizerScreen() {
                 }}>{t('organizer.addClub')}</Button>
               </div>
               {clubs.map((club, idx) => (
-                <div key={club.id} className={styles.courtItem}>
-                  <div className={styles.courtMainRow}>
-                    <span className={styles.clubDot} style={{ backgroundColor: CLUB_COLORS[idx % CLUB_COLORS.length] }} />
-                    <input
-                      className={styles.courtNameInput}
-                      value={club.name}
-                      onChange={e => {
-                        const updated = clubs.map(c =>
-                          c.id === club.id ? { ...c, name: e.target.value } : c
-                        );
-                        updateTournament({ clubs: updated });
-                      }}
-                    />
-                    {clubs.length > 2 && (
-                      <button
-                        className={styles.removeBtn}
-                        onClick={() => {
-                          const updated = clubs.filter(c => c.id !== club.id);
-                          updateTournament({ clubs: updated });
-                        }}
-                      >
-                        &times;
-                      </button>
-                    )}
-                  </div>
-                </div>
+                <EditableItem
+                  key={club.id}
+                  name={club.name}
+                  onChange={name => {
+                    const updated = clubs.map(c =>
+                      c.id === club.id ? { ...c, name } : c
+                    );
+                    updateTournament({ clubs: updated });
+                  }}
+                  onRemove={clubs.length > 2 ? () => {
+                    const updated = clubs.filter(c => c.id !== club.id);
+                    updateTournament({ clubs: updated });
+                  } : undefined}
+                  icon={<span className={styles.clubDot} style={{ backgroundColor: CLUB_COLORS[idx % CLUB_COLORS.length] }} />}
+                />
               ))}
               {clubs.length === 0 && (
                 <p className={styles.empty}>{t('organizer.noClub')}</p>
@@ -429,35 +419,26 @@ export function OrganizerScreen() {
             <Button variant="ghost" size="small" onClick={handleAddCourt}>{t('organizer.addCourt')}</Button>
           </div>
           {tournament.courts.map((court, courtIdx) => (
-            <div key={court.id} className={isKOTC ? styles.courtItemKotc : styles.courtItem}>
-              <div className={styles.courtMainRow}>
-                <input
-                  className={styles.courtNameInput}
-                  value={court.name}
-                  onChange={e => {
-                    const courts = tournament.courts.map(c =>
-                      c.id === court.id ? { ...c, name: e.target.value } : c
-                    );
-                    updateTournament({ courts });
-                  }}
-                />
-                {tournament.courts.length > 1 && !(isKOTC && tournament.courts.length <= 2) && (
-                  <button
-                    className={styles.removeBtn}
-                    onClick={() => handleRemoveCourt(court.id)}
-                  >
-                    &times;
-                  </button>
-                )}
-              </div>
-              {isKOTC && (
-                <div className={styles.courtKotcFields}>
-                  <span className={styles.courtBonusLabel}>
-                    +{tournament.courts.length - 1 - courtIdx} {t('organizer.courtBonusAuto')}
-                  </span>
-                </div>
-              )}
-            </div>
+            <EditableItem
+              key={court.id}
+              name={court.name}
+              onChange={name => {
+                const courts = tournament.courts.map(c =>
+                  c.id === court.id ? { ...c, name } : c
+                );
+                updateTournament({ courts });
+              }}
+              onRemove={
+                tournament.courts.length > 1 && !(isKOTC && tournament.courts.length <= 2)
+                  ? () => handleRemoveCourt(court.id)
+                  : undefined
+              }
+              subtitle={isKOTC ? (
+                <span className={styles.courtBonusLabel}>
+                  +{tournament.courts.length - 1 - courtIdx} {t('organizer.courtBonusAuto')}
+                </span>
+              ) : undefined}
+            />
           ))}
         </div>
 
