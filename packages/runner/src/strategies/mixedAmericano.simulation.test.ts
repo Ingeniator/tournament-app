@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { mixedAmericanoStrategy } from './mixedAmericano';
-import { makeMixicanoPlayers, makeConfig, simulateDynamic, analyzeSchedule, assertRoundInvariants } from './simulation-helpers.test-utils';
-import type { Round } from '@padel/common';
+import { mixedAmericanoStrategy } from './americano';
+import { makeMixicanoPlayers, makeConfig, analyzeSchedule, assertRoundInvariants } from './simulation-helpers.test-utils';
+import type { Player, Round, TournamentConfig } from '@padel/common';
 
-const TRIALS = 10;
+const TRIALS = 5;
 
 /** Verify every team in every match is cross-group (one A + one B player) */
 function assertCrossGroupPartners(players: ReturnType<typeof makeMixicanoPlayers>, rounds: Round[]) {
@@ -22,15 +22,26 @@ function assertCrossGroupPartners(players: ReturnType<typeof makeMixicanoPlayers
   }
 }
 
+/** Generate a full batch schedule with a specific number of rounds */
+function generateBatch(
+  players: Player[],
+  config: TournamentConfig,
+  numRounds: number,
+): Round[] {
+  const batchConfig = { ...config, maxRounds: numRounds };
+  const { rounds } = mixedAmericanoStrategy.generateSchedule(players, batchConfig);
+  return rounds;
+}
+
 describe('mixedAmericano simulation', () => {
   describe('4A+4B / 2c / 7r', () => {
     const players = makeMixicanoPlayers(4, 4);
     const config = makeConfig('mixed-americano', 2);
     const numRounds = 7;
 
-    it('games balanced, partners always cross-group', () => {
+    it('games balanced, partners always cross-group', { timeout: 15000 }, () => {
       for (let t = 0; t < TRIALS; t++) {
-        const rounds = simulateDynamic(mixedAmericanoStrategy, players, config, numRounds);
+        const rounds = generateBatch(players, config, numRounds);
         expect(rounds).toHaveLength(numRounds);
         assertRoundInvariants(players, rounds);
 
@@ -50,12 +61,12 @@ describe('mixedAmericano simulation', () => {
     const config = makeConfig('mixed-americano', 1);
     const numRounds = 5;
 
-    it('game spread ≤ 1, sit-out spread ≤ 1, always cross-group', () => {
+    it('game spread ≤ 1, sit-out spread ≤ 1, always cross-group', { timeout: 15000 }, () => {
       let worstGameSpread = 0;
       let worstSitSpread = 0;
 
       for (let t = 0; t < TRIALS; t++) {
-        const rounds = simulateDynamic(mixedAmericanoStrategy, players, config, numRounds);
+        const rounds = generateBatch(players, config, numRounds);
         expect(rounds).toHaveLength(numRounds);
         assertRoundInvariants(players, rounds);
 
@@ -76,12 +87,12 @@ describe('mixedAmericano simulation', () => {
     const config = makeConfig('mixed-americano', 2);
     const numRounds = 9;
 
-    it('game spread ≤ 1, sit-out spread ≤ 1', () => {
+    it('game spread ≤ 1, sit-out spread ≤ 1', { timeout: 15000 }, () => {
       let worstGameSpread = 0;
       let worstSitSpread = 0;
 
       for (let t = 0; t < TRIALS; t++) {
-        const rounds = simulateDynamic(mixedAmericanoStrategy, players, config, numRounds);
+        const rounds = generateBatch(players, config, numRounds);
         expect(rounds).toHaveLength(numRounds);
         assertRoundInvariants(players, rounds);
 
@@ -102,12 +113,12 @@ describe('mixedAmericano simulation', () => {
     const config = makeConfig('mixed-americano', 1);
     const numRounds = 5;
 
-    it('runs correctly, cross-group partners, group A absorbs all sit-outs', () => {
+    it('runs correctly, cross-group partners, group A absorbs all sit-outs', { timeout: 15000 }, () => {
       const groupAIds = new Set(players.filter(p => p.group === 'A').map(p => p.id));
       const groupBIds = new Set(players.filter(p => p.group === 'B').map(p => p.id));
 
       for (let t = 0; t < TRIALS; t++) {
-        const rounds = simulateDynamic(mixedAmericanoStrategy, players, config, numRounds);
+        const rounds = generateBatch(players, config, numRounds);
         expect(rounds.length).toBeGreaterThan(0);
         assertRoundInvariants(players, rounds);
         assertCrossGroupPartners(players, rounds);

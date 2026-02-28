@@ -1,7 +1,12 @@
 import type { TournamentStrategy, ScheduleResult } from './types';
 import type { Player, TournamentConfig, Round, Match, Tournament } from '@padel/common';
 import { generateId } from '@padel/common';
-import { shuffle, commonValidateScore, seedFromRounds, selectSitOuts, updateMatchStats, selectBestPairing } from './shared';
+import { shuffle, partnerKey, commonValidateScore, seedFromRounds, selectSitOuts, updateMatchStats, selectBestPairing } from './shared';
+
+/** Detect cross-group mode from player data */
+function isCrossGroup(players: Player[]): boolean {
+  return players.some(p => p.group === 'A') && players.some(p => p.group === 'B');
+}
 
 function validateKOTCSetup(players: Player[], config: TournamentConfig): string[] {
   const errors: string[] = [];
@@ -209,6 +214,34 @@ function buildPromotionGroups(
  * - Subsequent rounds: promotion/relegation based on previous round results
  * - Within each court group: pair 1st+4th vs 2nd+3rd by standings
  */
+/**
+ * For cross-group: pick the best of 2 pairings (a1+b1 vs a2+b2 or a1+b2 vs a2+b1)
+ */
+function crossGroupPairing(
+  group: string[],
+  players: Player[],
+  partnerCounts: Map<string, number>,
+): [[string, string], [string, string]] {
+  const groupOf = new Map(players.map(p => [p.id, p.group]));
+  const aPlayers = group.filter(id => groupOf.get(id) === 'A');
+  const bPlayers = group.filter(id => groupOf.get(id) === 'B');
+  if (aPlayers.length !== 2 || bPlayers.length !== 2) {
+    return selectBestPairing(group as [string, string, string, string], partnerCounts);
+  }
+  const [a1, a2] = aPlayers;
+  const [b1, b2] = bPlayers;
+  const score1 =
+    (partnerCounts.get(partnerKey(a1, b1)) ?? 0) +
+    (partnerCounts.get(partnerKey(a2, b2)) ?? 0);
+  const score2 =
+    (partnerCounts.get(partnerKey(a1, b2)) ?? 0) +
+    (partnerCounts.get(partnerKey(a2, b1)) ?? 0);
+  if (score1 <= score2) {
+    return [[a1, b1], [a2, b2]];
+  }
+  return [[a1, b2], [a2, b1]];
+}
+
 function generateKOTCRounds(
   players: Player[],
   config: TournamentConfig,
@@ -221,27 +254,55 @@ function generateKOTCRounds(
     ? players.filter(p => !excludePlayerIds.includes(p.id))
     : players;
 
+  const crossGroup = isCrossGroup(activePlayers);
+  const groupAPlayers = crossGroup ? activePlayers.filter(p => p.group === 'A') : [];
+  const groupBPlayers = crossGroup ? activePlayers.filter(p => p.group === 'B') : [];
+
   const n = activePlayers.length;
   const availableCourts = config.courts.filter(c => !c.unavailable);
-  const numCourts = Math.min(availableCourts.length, Math.floor(n / 4));
+  const numCourts = crossGroup
+    ? Math.min(availableCourts.length, Math.floor(Math.min(groupAPlayers.length, groupBPlayers.length) / 2))
+    : Math.min(availableCourts.length, Math.floor(n / 4));
 
   if (numCourts === 0) {
-    return { rounds: [], warnings: ['Not enough players for a match (need at least 4)'] };
+    return { rounds: [], warnings: [crossGroup ? 'Not enough players for a match (need at least 2 per group)' : 'Not enough players for a match (need at least 4)'] };
   }
 
-  const playersPerRound = numCourts * 4;
-  const sitOutCount = n - playersPerRound;
   const { gamesPlayed, partnerCounts, lastSitOutRound } = seedFromRounds(existingRounds, activePlayers);
 
-  if (sitOutCount > 0 && existingRounds.length === 0) {
-    warnings.push(`${sitOutCount} player(s) will sit out each round`);
+  if (crossGroup) {
+    const sitOutCountA = groupAPlayers.length - numCourts * 2;
+    const sitOutCountB = groupBPlayers.length - numCourts * 2;
+    if ((sitOutCountA > 0 || sitOutCountB > 0) && existingRounds.length === 0) {
+      warnings.push(`${sitOutCountA + sitOutCountB} player(s) will sit out each round`);
+    }
+  } else {
+    const playersPerRound = numCourts * 4;
+    const sitOutCount = n - playersPerRound;
+    if (sitOutCount > 0 && existingRounds.length === 0) {
+      warnings.push(`${sitOutCount} player(s) will sit out each round`);
+    }
   }
 
   const rounds: Round[] = [];
   const startRoundNumber = existingRounds.length + 1;
 
   for (let r = 0; r < count; r++) {
-    const { sitOutIds } = selectSitOuts(activePlayers, sitOutCount, gamesPlayed, lastSitOutRound);
+    let sitOutIds: Set<string>;
+
+    if (crossGroup) {
+      const sitOutCountA = groupAPlayers.length - numCourts * 2;
+      const sitOutCountB = groupBPlayers.length - numCourts * 2;
+      const { sitOutIds: sitOutA } = selectSitOuts(groupAPlayers, sitOutCountA, gamesPlayed, lastSitOutRound);
+      const { sitOutIds: sitOutB } = selectSitOuts(groupBPlayers, sitOutCountB, gamesPlayed, lastSitOutRound);
+      sitOutIds = new Set([...sitOutA, ...sitOutB]);
+    } else {
+      const playersPerRound = numCourts * 4;
+      const sitOutCount = n - playersPerRound;
+      const result = selectSitOuts(activePlayers, sitOutCount, gamesPlayed, lastSitOutRound);
+      sitOutIds = result.sitOutIds;
+    }
+
     const roundPlayers = activePlayers.filter(p => !sitOutIds.has(p.id));
     const roundPlayerIds = new Set(roundPlayers.map(p => p.id));
 
@@ -249,17 +310,25 @@ function generateKOTCRounds(
     let standingsMap: Map<string, number> | undefined;
 
     if (existingRounds.length + r === 0) {
-      // Round 1: random grouping with basic partner-repeat avoidance
-      const shuffled = shuffle(roundPlayers.map(p => p.id));
-      groups = [];
-      for (let i = 0; i < numCourts; i++) {
-        groups.push(shuffled.slice(i * 4, i * 4 + 4));
+      // Round 1: random grouping
+      if (crossGroup) {
+        const activeA = shuffle(roundPlayers.filter(p => p.group === 'A').map(p => p.id));
+        const activeB = shuffle(roundPlayers.filter(p => p.group === 'B').map(p => p.id));
+        groups = [];
+        for (let i = 0; i < numCourts; i++) {
+          groups.push([activeA[i * 2], activeA[i * 2 + 1], activeB[i * 2], activeB[i * 2 + 1]]);
+        }
+      } else {
+        const shuffled = shuffle(roundPlayers.map(p => p.id));
+        groups = [];
+        for (let i = 0; i < numCourts; i++) {
+          groups.push(shuffled.slice(i * 4, i * 4 + 4));
+        }
       }
     } else {
       // Subsequent rounds: promotion/relegation
       const allRoundsForStandings = [...existingRounds, ...rounds];
 
-      // Calculate standings once for both promotion groups and pairing
       const standingsEntries = calculateKOTCStandingsInternal(
         activePlayers,
         allRoundsForStandings,
@@ -267,7 +336,6 @@ function generateKOTCRounds(
       );
       standingsMap = new Map(standingsEntries.map((s, i) => [s.playerId, i]));
 
-      // Get previous round
       const prevRound = allRoundsForStandings[allRoundsForStandings.length - 1];
 
       groups = buildPromotionGroups(
@@ -279,21 +347,45 @@ function generateKOTCRounds(
       );
     }
 
-    // Create matches: within each group, 1st+4th vs 2nd+3rd by standings
+    // Create matches
     const matches: Match[] = groups.map((group, idx) => {
       let team1: [string, string];
       let team2: [string, string];
 
       if (!standingsMap) {
-        // Round 1: pick pairing with fewest partner repeats
-        [team1, team2] = selectBestPairing(group as [string, string, string, string], partnerCounts);
+        // Round 1: pick pairing
+        if (crossGroup) {
+          [team1, team2] = crossGroupPairing(group, activePlayers, partnerCounts);
+        } else {
+          [team1, team2] = selectBestPairing(group as [string, string, string, string], partnerCounts);
+        }
       } else {
-        // KOTC rule: within each court group, rank by standings, 1st+4th vs 2nd+3rd
-        const sorted = [...group].sort(
-          (a, b) => (standingsMap.get(a) ?? 999) - (standingsMap.get(b) ?? 999)
-        );
-        team1 = [sorted[0], sorted[3]];
-        team2 = [sorted[1], sorted[2]];
+        if (crossGroup) {
+          // KOTC cross-group: rank within group, pair top-A+top-B vs bottom-A+bottom-B
+          const groupOf = new Map(activePlayers.map(p => [p.id, p.group]));
+          const aInGroup = group.filter(id => groupOf.get(id) === 'A');
+          const bInGroup = group.filter(id => groupOf.get(id) === 'B');
+          if (aInGroup.length === 2 && bInGroup.length === 2) {
+            const [a1, a2] = aInGroup.sort((a, b) => (standingsMap!.get(a) ?? 999) - (standingsMap!.get(b) ?? 999));
+            const [b1, b2] = bInGroup.sort((a, b) => (standingsMap!.get(a) ?? 999) - (standingsMap!.get(b) ?? 999));
+            team1 = [a1, b1]; // top A + top B
+            team2 = [a2, b2]; // bottom A + bottom B
+          } else {
+            // Fallback: standard pairing
+            const sorted = [...group].sort(
+              (a, b) => (standingsMap!.get(a) ?? 999) - (standingsMap!.get(b) ?? 999)
+            );
+            team1 = [sorted[0], sorted[3]];
+            team2 = [sorted[1], sorted[2]];
+          }
+        } else {
+          // KOTC rule: within each court group, rank by standings, 1st+4th vs 2nd+3rd
+          const sorted = [...group].sort(
+            (a, b) => (standingsMap!.get(a) ?? 999) - (standingsMap!.get(b) ?? 999)
+          );
+          team1 = [sorted[0], sorted[3]];
+          team2 = [sorted[1], sorted[2]];
+        }
       }
 
       return {
@@ -448,29 +540,74 @@ function calculateKOTCStandingsInternal(
   return entries;
 }
 
-export const kingOfTheCourtStrategy: TournamentStrategy = {
-  isDynamic: true,
-  hasFixedPartners: false,
-  validateSetup: validateKOTCSetup,
-  validateWarnings: validateKOTCWarnings,
-  validateScore: commonValidateScore,
+function validateMixedKOTCSetup(players: Player[], config: TournamentConfig): string[] {
+  const errors: string[] = [];
+  const availableCourts = config.courts.filter(c => !c.unavailable);
+  const groupA = players.filter(p => p.group === 'A');
+  const groupB = players.filter(p => p.group === 'B');
+  const unassigned = players.filter(p => !p.group);
 
-  calculateStandings(tournament: Tournament) {
-    const activePlayers = tournament.players.filter(p => !p.unavailable);
-    return calculateKOTCStandingsInternal(activePlayers, tournament.rounds, tournament.config);
-  },
+  if (unassigned.length > 0) {
+    errors.push(`${unassigned.length} player(s) have no group assigned`);
+  }
+  if (groupA.length < 4) {
+    errors.push('Group A needs at least 4 players');
+  }
+  if (groupB.length < 4) {
+    errors.push('Group B needs at least 4 players');
+  }
+  if (availableCourts.length < 2) {
+    errors.push('King of the Court requires at least 2 courts');
+  }
+  if (config.pointsPerMatch < 12) {
+    errors.push('King of the Court requires at least 12 points per match');
+  }
+  const maxCourts = Math.floor(Math.min(groupA.length, groupB.length) / 2);
+  if (availableCourts.length > maxCourts && groupA.length >= 4 && groupB.length >= 4) {
+    errors.push(`Too many courts: need at most ${maxCourts} court(s) for ${groupA.length}+${groupB.length} players`);
+  }
+  return errors;
+}
 
-  getCompetitors(tournament: Tournament) {
-    return tournament.players
-      .filter(p => !p.unavailable)
-      .map(p => ({ id: p.id, name: p.name, playerIds: [p.id] }));
-  },
+function validateMixedKOTCWarnings(players: Player[], config: TournamentConfig): string[] {
+  const warnings = validateKOTCWarnings(players, config);
+  const groupA = players.filter(p => p.group === 'A');
+  const groupB = players.filter(p => p.group === 'B');
+  if (groupA.length >= 2 && groupB.length >= 2 && groupA.length !== groupB.length) {
+    warnings.push(`Groups are unequal (${groupA.length} vs ${groupB.length}) — less variety in matchups`);
+  }
+  return warnings;
+}
 
-  generateSchedule(players: Player[], config: TournamentConfig): ScheduleResult {
-    return generateKOTCRounds(players, config, [], 1);
-  },
+function buildKOTCStrategy(crossGroupMode: boolean): TournamentStrategy {
+  const strategy: TournamentStrategy = {
+    isDynamic: true,
+    hasFixedPartners: false,
+    validateSetup: crossGroupMode ? validateMixedKOTCSetup : validateKOTCSetup,
+    validateWarnings: crossGroupMode ? validateMixedKOTCWarnings : validateKOTCWarnings,
+    validateScore: commonValidateScore,
 
-  generateAdditionalRounds(players: Player[], config: TournamentConfig, existingRounds: Round[], count: number, excludePlayerIds?: string[]): ScheduleResult {
-    return generateKOTCRounds(players, config, existingRounds, count, excludePlayerIds);
-  },
-};
+    calculateStandings(tournament: Tournament) {
+      const activePlayers = tournament.players.filter(p => !p.unavailable);
+      return calculateKOTCStandingsInternal(activePlayers, tournament.rounds, tournament.config);
+    },
+
+    getCompetitors(tournament: Tournament) {
+      return tournament.players
+        .filter(p => !p.unavailable)
+        .map(p => ({ id: p.id, name: p.name, playerIds: [p.id] }));
+    },
+
+    generateSchedule(players: Player[], config: TournamentConfig): ScheduleResult {
+      return generateKOTCRounds(players, config, [], 1);
+    },
+
+    generateAdditionalRounds(players: Player[], config: TournamentConfig, existingRounds: Round[], count: number, excludePlayerIds?: string[]): ScheduleResult {
+      return generateKOTCRounds(players, config, existingRounds, count, excludePlayerIds);
+    },
+  };
+  return strategy;
+}
+
+export const kingOfTheCourtStrategy: TournamentStrategy = buildKOTCStrategy(false);
+export const mixedKingOfTheCourtStrategy: TournamentStrategy = buildKOTCStrategy(true);

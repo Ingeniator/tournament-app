@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mixicanoStrategy } from './mixicano';
+import { mixicanoStrategy } from './mexicano';
 import type { Player, TournamentConfig, Round } from '@padel/common';
 
 function makePlayers(groupACount: number, groupBCount: number): Player[] {
@@ -273,11 +273,11 @@ describe('mixicano strategy', () => {
     });
 
     it('returns empty rounds when not enough active players per group', () => {
-      const players = makePlayers(4, 4);
-      const config = makeConfig(2);
-      // Exclude all group B players
+      const players = makePlayers(2, 2);
+      const config = makeConfig(1);
+      // Exclude both B players — only 2 A players left, not enough for match
       const { rounds } = mixicanoStrategy.generateAdditionalRounds(
-        players, config, [], 1, ['b1', 'b2', 'b3', 'b4'],
+        players, config, [], 1, ['b1', 'b2'],
       );
       expect(rounds).toHaveLength(0);
     });

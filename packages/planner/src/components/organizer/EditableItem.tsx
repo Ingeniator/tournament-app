@@ -11,11 +11,11 @@ interface EditableItemProps {
 
 export function EditableItem({ name, onChange, onRemove, icon, subtitle }: EditableItemProps) {
   return (
-    <div className={subtitle ? styles.courtItemKotc : styles.courtItem}>
-      <div className={styles.courtMainRow}>
+    <div className={subtitle ? styles.editableItemWithSub : styles.editableItem}>
+      <div className={styles.editableItemRow}>
         {icon}
         <input
-          className={styles.courtNameInput}
+          className={styles.editableItemInput}
           value={name}
           onChange={e => onChange(e.target.value)}
         />
@@ -25,7 +25,7 @@ export function EditableItem({ name, onChange, onRemove, icon, subtitle }: Edita
           </button>
         )}
       </div>
-      {subtitle && <div className={styles.courtKotcFields}>{subtitle}</div>}
+      {subtitle && <div className={styles.editableItemSub}>{subtitle}</div>}
     </div>
   );
 }

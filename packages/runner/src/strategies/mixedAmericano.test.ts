@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mixedAmericanoStrategy } from './mixedAmericano';
+import { mixedAmericanoStrategy } from './americano';
 import type { Player, TournamentConfig, Round } from '@padel/common';
 
 function makePlayers(groupACount: number, groupBCount: number): Player[] {
@@ -49,8 +49,8 @@ function assertCrossGroupPartners(players: Player[], rounds: Round[]) {
 
 describe('mixedAmericano strategy', () => {
   describe('strategy properties', () => {
-    it('is a dynamic strategy', () => {
-      expect(mixedAmericanoStrategy.isDynamic).toBe(true);
+    it('is a batch (non-dynamic) strategy', () => {
+      expect(mixedAmericanoStrategy.isDynamic).toBe(false);
     });
 
     it('does not have fixed partners', () => {
@@ -162,9 +162,9 @@ describe('mixedAmericano strategy', () => {
   });
 
   describe('generateSchedule', () => {
-    it('generates exactly 1 round initially', () => {
+    it('generates all rounds upfront (batch mode)', () => {
       const { rounds } = mixedAmericanoStrategy.generateSchedule(makePlayers(4, 4), makeConfig(2));
-      expect(rounds).toHaveLength(1);
+      expect(rounds.length).toBeGreaterThan(1);
     });
 
     it('creates correct number of matches per round', () => {
@@ -180,16 +180,20 @@ describe('mixedAmericano strategy', () => {
 
     it('each match has exactly 4 players (2v2)', () => {
       const { rounds } = mixedAmericanoStrategy.generateSchedule(makePlayers(4, 4), makeConfig(2));
-      for (const match of rounds[0].matches) {
-        expect(match.team1).toHaveLength(2);
-        expect(match.team2).toHaveLength(2);
+      for (const round of rounds) {
+        for (const match of round.matches) {
+          expect(match.team1).toHaveLength(2);
+          expect(match.team2).toHaveLength(2);
+        }
       }
     });
 
     it('no player appears in multiple matches in same round', () => {
       const { rounds } = mixedAmericanoStrategy.generateSchedule(makePlayers(4, 4), makeConfig(2));
-      const playerIds = rounds[0].matches.flatMap(m => [...m.team1, ...m.team2]);
-      expect(new Set(playerIds).size).toBe(playerIds.length);
+      for (const round of rounds) {
+        const playerIds = round.matches.flatMap(m => [...m.team1, ...m.team2]);
+        expect(new Set(playerIds).size).toBe(playerIds.length);
+      }
     });
 
     it('assigns all players to matches or sit-outs', () => {
@@ -266,17 +270,20 @@ describe('mixedAmericano strategy', () => {
       const config = makeConfig(2);
       const initial = mixedAmericanoStrategy.generateSchedule(players, config);
       const scored = scoreAllMatches(initial.rounds);
+      const existingCount = scored.length;
       const { rounds } = mixedAmericanoStrategy.generateAdditionalRounds(players, config, scored, 2);
-      expect(rounds[0].roundNumber).toBe(2);
-      expect(rounds[1].roundNumber).toBe(3);
+      expect(rounds[0].roundNumber).toBe(existingCount + 1);
+      expect(rounds[1].roundNumber).toBe(existingCount + 2);
     });
 
     it('returns empty rounds when not enough active players per group', () => {
-      const players = makePlayers(4, 4);
-      const config = makeConfig(2);
+      const players = makePlayers(2, 2);
+      const config = makeConfig(1);
+      // Exclude both B players — only 2 A players left, not enough for cross-group
       const { rounds } = mixedAmericanoStrategy.generateAdditionalRounds(
-        players, config, [], 1, ['b1', 'b2', 'b3', 'b4'],
+        players, config, [], 1, ['b1', 'b2'],
       );
+      // With only 2 players left (both A), no cross-group possible and not enough for 4-player match
       expect(rounds).toHaveLength(0);
     });
   });

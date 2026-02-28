@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useTournament } from '../hooks/useTournament';
 import { AppShell } from '../components/layout/AppShell';
-import { Button, useTranslation, CLUB_COLORS } from '@padel/common';
+import { Button, useTranslation, CLUB_COLORS, formatHasGroups } from '@padel/common';
 import styles from './TeamPairingScreen.module.css';
 
 export function TeamPairingScreen() {
@@ -45,9 +45,11 @@ export function TeamPairingScreen() {
   if (!tournament || !tournament.teams) return null;
 
   const isClubFormat = tournament.config.format === 'club-americano';
+  const isCrossGroupFormat = formatHasGroups(tournament.config.format);
 
   const nameOf = (id: string) => tournament.players.find(p => p.id === id)?.name ?? '?';
   const playerClub = (id: string) => tournament.players.find(p => p.id === id)?.clubId;
+  const playerGroup = (id: string) => tournament.players.find(p => p.id === id)?.group;
 
   const handlePlayerTap = (playerId: string) => {
     if (!selectedPlayerId) {
@@ -75,6 +77,17 @@ export function TeamPairingScreen() {
       const clubB = playerClub(playerId);
       if (clubA !== clubB) {
         // Different clubs — select the new player instead
+        setSelectedPlayerId(playerId);
+        return;
+      }
+    }
+
+    // Cross-group constraint: only swap players from the same group
+    // (preserves the 1A+1B team invariant)
+    if (isCrossGroupFormat) {
+      const groupA = playerGroup(selectedPlayerId);
+      const groupB = playerGroup(playerId);
+      if (groupA !== groupB) {
         setSelectedPlayerId(playerId);
         return;
       }
@@ -126,12 +139,18 @@ export function TeamPairingScreen() {
           className={`${styles.playerChip} ${selectedPlayerId === team.player1Id ? styles.playerChipSelected : ''}`}
           onClick={() => handlePlayerTap(team.player1Id)}
         >
+          {isCrossGroupFormat && playerGroup(team.player1Id) && (
+            <span className={styles.groupBadge}>{playerGroup(team.player1Id)}</span>
+          )}
           {nameOf(team.player1Id)}
         </button>
         <button
           className={`${styles.playerChip} ${selectedPlayerId === team.player2Id ? styles.playerChipSelected : ''}`}
           onClick={() => handlePlayerTap(team.player2Id)}
         >
+          {isCrossGroupFormat && playerGroup(team.player2Id) && (
+            <span className={styles.groupBadge}>{playerGroup(team.player2Id)}</span>
+          )}
           {nameOf(team.player2Id)}
         </button>
       </div>

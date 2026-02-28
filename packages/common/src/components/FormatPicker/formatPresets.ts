@@ -74,6 +74,34 @@ export const FORMAT_PRESETS: FormatPreset[] = [
     category: 'team',
     tags: ['fixed', 'standings'],
   },
+  {
+    id: 'mixed-king-of-the-court',
+    format: 'mixed-king-of-the-court',
+    nameKey: 'format.mixedKingOfTheCourt',
+    descKey: 'format.mixedKingOfTheCourtDesc',
+    category: 'competitive',
+    tags: ['rotating', 'promotion', 'groups'],
+    requiresGroups: true,
+  },
+  // Team
+  {
+    id: 'mixed-team-americano',
+    format: 'mixed-team-americano',
+    nameKey: 'format.mixedTeamAmericano',
+    descKey: 'format.mixedTeamAmericanoDesc',
+    category: 'team',
+    tags: ['fixed', 'random', 'groups'],
+    requiresGroups: true,
+  },
+  {
+    id: 'mixed-team-mexicano',
+    format: 'mixed-team-mexicano',
+    nameKey: 'format.mixedTeamMexicano',
+    descKey: 'format.mixedTeamMexicanoDesc',
+    category: 'team',
+    tags: ['fixed', 'standings', 'groups'],
+    requiresGroups: true,
+  },
   // Club
   {
     id: 'club-americano',
@@ -123,5 +151,5 @@ export function getPresetsByCategory(category: FormatPreset['category']): Format
 }
 
 export function formatHasGroups(format: TournamentFormat): boolean {
-  return format === 'mixicano' || format === 'mixed-americano';
+  return ['mixicano', 'mixed-americano', 'mixed-team-americano', 'mixed-team-mexicano', 'mixed-king-of-the-court'].includes(format);
 }

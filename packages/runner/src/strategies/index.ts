@@ -1,13 +1,11 @@
 import type { TournamentFormat } from '@padel/common';
 import type { TournamentStrategy } from './types';
-import { americanoStrategy } from './americano';
-import { mexicanoStrategy } from './mexicano';
-import { mixicanoStrategy } from './mixicano';
+import { americanoStrategy, mixedAmericanoStrategy } from './americano';
+import { mexicanoStrategy, mixicanoStrategy } from './mexicano';
 import { teamAmericanoStrategy } from './teamAmericano';
 import { teamMexicanoStrategy } from './teamMexicano';
-import { kingOfTheCourtStrategy } from './kingOfTheCourt';
+import { kingOfTheCourtStrategy, mixedKingOfTheCourtStrategy } from './kingOfTheCourt';
 import { clubAmericanoStrategy } from './clubAmericano';
-import { mixedAmericanoStrategy } from './mixedAmericano';
 
 export type { TournamentStrategy, ScheduleResult } from './types';
 export { scoreSchedule } from './shared';
@@ -36,6 +34,9 @@ registerStrategy('mexicano', mexicanoStrategy);
 registerStrategy('mixicano', mixicanoStrategy);
 registerStrategy('team-americano', teamAmericanoStrategy);
 registerStrategy('team-mexicano', teamMexicanoStrategy);
+registerStrategy('mixed-team-americano', teamAmericanoStrategy);
+registerStrategy('mixed-team-mexicano', teamMexicanoStrategy);
 registerStrategy('king-of-the-court', kingOfTheCourtStrategy);
+registerStrategy('mixed-king-of-the-court', mixedKingOfTheCourtStrategy);
 registerStrategy('club-americano', clubAmericanoStrategy);
 registerStrategy('mixed-americano', mixedAmericanoStrategy);

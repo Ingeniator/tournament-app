@@ -1,6 +1,7 @@
 import type { Tournament, Player, Court, TournamentConfig, Round, Team, Club } from '@padel/common';
 import type { TournamentAction } from './actions';
 import { generateId } from '@padel/common';
+import { formatHasGroups } from '@padel/common';
 import { getStrategy } from '../strategies';
 import { deduplicateNames } from '../utils/deduplicateNames';
 import { resolveConfigDefaults } from '../utils/resolveConfigDefaults';
@@ -24,6 +25,20 @@ function createTeams(players: Player[]): Team[] {
       id: generateId(),
       player1Id: shuffled[i].id,
       player2Id: shuffled[i + 1].id,
+    });
+  }
+  return teams;
+}
+
+function createCrossGroupTeams(players: Player[]): Team[] {
+  const groupA = shuffleArray(players.filter(p => p.group === 'A'));
+  const groupB = shuffleArray(players.filter(p => p.group === 'B'));
+  const teams: Team[] = [];
+  for (let i = 0; i < Math.min(groupA.length, groupB.length); i++) {
+    teams.push({
+      id: generateId(),
+      player1Id: groupA[i].id,
+      player2Id: groupB[i].id,
     });
   }
   return teams;
@@ -310,7 +325,9 @@ export function tournamentReducer(
       if (!getStrategy(state.config.format).hasFixedPartners) return state;
       const teams = state.config.format === 'club-americano' && state.clubs?.length
         ? createClubTeams(state.players, state.clubs)
-        : createTeams(state.players);
+        : formatHasGroups(state.config.format)
+          ? createCrossGroupTeams(state.players)
+          : createTeams(state.players);
       return {
         ...state,
         teams,
@@ -323,7 +340,9 @@ export function tournamentReducer(
       if (!state || state.phase !== 'team-pairing') return state;
       const teams = state.config.format === 'club-americano' && state.clubs?.length
         ? createClubTeams(state.players, state.clubs)
-        : createTeams(state.players);
+        : formatHasGroups(state.config.format)
+          ? createCrossGroupTeams(state.players)
+          : createTeams(state.players);
       return {
         ...state,
         teams,
