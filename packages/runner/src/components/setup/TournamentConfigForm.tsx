@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { TournamentConfig, TournamentFormat } from '@padel/common';
-import { Button, generateId, useTranslation } from '@padel/common';
+import type { TournamentConfig } from '@padel/common';
+import { Button, generateId, useTranslation, FormatPicker, formatHasGroups } from '@padel/common';
 import { resolveConfigDefaults, computeSitOutInfo } from '../../utils/resolveConfigDefaults';
 import styles from './TournamentConfigForm.module.css';
 
@@ -101,29 +101,20 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
   return (
     <div className={styles.form}>
       <div className={styles.field}>
-        <label className={styles.label} htmlFor="config-format">{t('config.format')}</label>
-        <select
-          id="config-format"
-          className={styles.input}
-          value={config.format}
-          onChange={e => {
-            const newFormat = e.target.value as TournamentFormat;
-            const update: Partial<TournamentConfig> = { format: newFormat };
+        <label className={styles.label}>{t('config.format')}</label>
+        <FormatPicker
+          format={config.format}
+          matchMode={config.matchMode}
+          onChange={(newFormat, defaultConfig) => {
+            const update: Partial<TournamentConfig> = { format: newFormat, ...defaultConfig };
             // KOTC requires at least 2 courts
             if (newFormat === 'king-of-the-court' && config.courts.length < 2) {
               update.courts = [...config.courts, { id: generateId(), name: `Court ${config.courts.length + 1}` }];
             }
             onUpdate(update);
           }}
-        >
-          <option value="americano">{t('config.formatAmericano')}</option>
-          <option value="team-americano">{t('config.formatTeamAmericano')}</option>
-          <option value="mexicano">{t('config.formatMexicano')}</option>
-          <option value="team-mexicano">{t('config.formatTeamMexicano')}</option>
-          <option value="mixicano">{t('config.formatMixicano')}</option>
-          <option value="king-of-the-court">{t('config.formatKingOfTheCourt')}</option>
-          <option value="club-americano">{t('config.formatClubAmericano')}</option>
-        </select>
+          t={t}
+        />
       </div>
 
       {config.format === 'club-americano' && (
@@ -199,7 +190,7 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
         </div>
       )}
 
-      {config.format === 'mixicano' && (
+      {formatHasGroups(config.format) && (
         <div className={styles.field}>
           <label className={styles.label}>{t('config.groupLabels')}</label>
           <div className={styles.courtList}>

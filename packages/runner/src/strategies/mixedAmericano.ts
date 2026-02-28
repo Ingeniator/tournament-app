@@ -3,7 +3,7 @@ import type { Player, TournamentConfig, Round, Match, Tournament } from '@padel/
 import { generateId } from '@padel/common';
 import { shuffle, partnerKey, commonValidateSetup, commonValidateScore, calculateCompetitorStandings, seedFromRounds, selectSitOuts, updateMatchStats } from './shared';
 
-function validateMixicanoSetup(players: Player[], config: TournamentConfig): string[] {
+function validateMixedAmericanoSetup(players: Player[], config: TournamentConfig): string[] {
   const errors = commonValidateSetup(players, config);
 
   const availableCourts = config.courts.filter(c => !c.unavailable);
@@ -28,7 +28,12 @@ function validateMixicanoSetup(players: Player[], config: TournamentConfig): str
   return errors;
 }
 
-function generateMixicanoRounds(
+/**
+ * Generate rounds using Mixed Americano rules:
+ * Cross-group pairing (like Mixicano) but random opponent matching (like Americano).
+ * Partners are always one from each group, opponents are random for ALL rounds.
+ */
+function generateMixedAmericanoRounds(
   players: Player[],
   config: TournamentConfig,
   existingRounds: Round[],
@@ -74,83 +79,43 @@ function generateMixicanoRounds(
     const activeA = groupAPlayers.filter(p => !sitOutIds.has(p.id));
     const activeB = groupBPlayers.filter(p => !sitOutIds.has(p.id));
 
-    let matches: Match[];
+    // Random cross-group pairing for ALL rounds (key difference from mixicano)
+    const shuffledA = shuffle(activeA.map(p => p.id));
+    const shuffledB = shuffle(activeB.map(p => p.id));
 
-    if (existingRounds.length + r === 0) {
-      // Round 1: random pairing
-      const shuffledA = shuffle(activeA.map(p => p.id));
-      const shuffledB = shuffle(activeB.map(p => p.id));
+    const matches: Match[] = [];
+    for (let i = 0; i < numCourts; i++) {
+      const a1 = shuffledA[i * 2];
+      const a2 = shuffledA[i * 2 + 1];
+      const b1 = shuffledB[i * 2];
+      const b2 = shuffledB[i * 2 + 1];
 
-      matches = [];
-      for (let i = 0; i < numCourts; i++) {
-        const a1 = shuffledA[i * 2];
-        const a2 = shuffledA[i * 2 + 1];
-        const b1 = shuffledB[i * 2];
-        const b2 = shuffledB[i * 2 + 1];
+      // Pick pairing that minimizes partner repeats
+      // Options: (a1+b1 vs a2+b2) or (a1+b2 vs a2+b1)
+      const score1 =
+        (partnerCounts.get(partnerKey(a1, b1)) ?? 0) +
+        (partnerCounts.get(partnerKey(a2, b2)) ?? 0);
+      const score2 =
+        (partnerCounts.get(partnerKey(a1, b2)) ?? 0) +
+        (partnerCounts.get(partnerKey(a2, b1)) ?? 0);
 
-        // Pick pairing that minimizes partner repeats
-        // Options: (a1+b1 vs a2+b2) or (a1+b2 vs a2+b1)
-        const score1 =
-          (partnerCounts.get(partnerKey(a1, b1)) ?? 0) +
-          (partnerCounts.get(partnerKey(a2, b2)) ?? 0);
-        const score2 =
-          (partnerCounts.get(partnerKey(a1, b2)) ?? 0) +
-          (partnerCounts.get(partnerKey(a2, b1)) ?? 0);
-
-        let team1: [string, string];
-        let team2: [string, string];
-        if (score1 <= score2) {
-          team1 = [a1, b1];
-          team2 = [a2, b2];
-        } else {
-          team1 = [a1, b2];
-          team2 = [a2, b1];
-        }
-
-        matches.push({
-          id: generateId(),
-          courtId: availableCourts[i].id,
-          team1,
-          team2,
-          score: null,
-        });
+      let team1: [string, string];
+      let team2: [string, string];
+      if (score1 <= score2) {
+        team1 = [a1, b1];
+        team2 = [a2, b2];
+      } else {
+        team1 = [a1, b2];
+        team2 = [a2, b1];
       }
-    } else {
-      // Subsequent rounds: standings-based pairing
-      const allRoundsForStandings = [...existingRounds, ...rounds];
-      const standings = mixicanoStrategy.calculateStandings({
-        players: activePlayers,
-        rounds: allRoundsForStandings,
-      } as Tournament);
 
-      // Use rank (shared for ties) and pre-shuffle so draws get randomized
-      const rankMap = new Map(standings.map(s => [s.playerId, s.rank]));
-      const rankedA = shuffle([...activeA]).sort(
-        (a, b) => (rankMap.get(a.id) ?? 999) - (rankMap.get(b.id) ?? 999)
-      );
-      const rankedB = shuffle([...activeB]).sort(
-        (a, b) => (rankMap.get(a.id) ?? 999) - (rankMap.get(b.id) ?? 999)
-      );
-
-      matches = [];
-      for (let i = 0; i < numCourts; i++) {
-        const a1 = rankedA[i * 2].id;     // higher ranked A
-        const a2 = rankedA[i * 2 + 1].id; // lower ranked A
-        const b1 = rankedB[i * 2].id;     // higher ranked B
-        const b2 = rankedB[i * 2 + 1].id; // lower ranked B
-
-        // Mexicano-style: top A + top B vs bottom A + bottom B
-        const team1: [string, string] = [a1, b1];
-        const team2: [string, string] = [a2, b2];
-
-        matches.push({
-          id: generateId(),
-          courtId: availableCourts[i].id,
-          team1,
-          team2,
-          score: null,
-        });
-      }
+      matches.push({
+        id: generateId(),
+        courtId: availableCourts[i].id,
+        team1,
+        team2,
+        score: null,
+      });
     }
 
     // Update tracking
@@ -173,10 +138,10 @@ function generateMixicanoRounds(
   return { rounds, warnings };
 }
 
-export const mixicanoStrategy: TournamentStrategy = {
+export const mixedAmericanoStrategy: TournamentStrategy = {
   isDynamic: true,
   hasFixedPartners: false,
-  validateSetup: validateMixicanoSetup,
+  validateSetup: validateMixedAmericanoSetup,
   validateWarnings(players: Player[], _config: TournamentConfig): string[] {
     const warnings: string[] = [];
     const groupA = players.filter(p => p.group === 'A');
@@ -189,7 +154,7 @@ export const mixicanoStrategy: TournamentStrategy = {
   validateScore: commonValidateScore,
 
   calculateStandings(tournament: Tournament) {
-    const competitors = mixicanoStrategy.getCompetitors(tournament);
+    const competitors = mixedAmericanoStrategy.getCompetitors(tournament);
     return calculateCompetitorStandings(tournament, competitors, (side) =>
       side.map(pid => competitors.find(c => c.id === pid)!).filter(Boolean)
     );
@@ -202,10 +167,10 @@ export const mixicanoStrategy: TournamentStrategy = {
   },
 
   generateSchedule(players: Player[], config: TournamentConfig): ScheduleResult {
-    return generateMixicanoRounds(players, config, [], 1);
+    return generateMixedAmericanoRounds(players, config, [], 1);
   },
 
   generateAdditionalRounds(players: Player[], config: TournamentConfig, existingRounds: Round[], count: number, excludePlayerIds?: string[]): ScheduleResult {
-    return generateMixicanoRounds(players, config, existingRounds, count, excludePlayerIds);
+    return generateMixedAmericanoRounds(players, config, existingRounds, count, excludePlayerIds);
   },
 };

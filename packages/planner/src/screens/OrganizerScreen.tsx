@@ -1,6 +1,6 @@
 import { useState, useMemo, type ReactNode } from 'react';
 import { ref, push, set } from 'firebase/database';
-import { Button, Card, CLUB_COLORS, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation } from '@padel/common';
+import { Button, Card, CLUB_COLORS, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation, FormatPicker, getPresetByFormat, formatHasGroups } from '@padel/common';
 import type { TournamentFormat, Court, Club } from '@padel/common';
 import { generateId } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
@@ -41,7 +41,6 @@ export function OrganizerScreen() {
   const { toastMessage, showToast } = useToast();
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
-  const [showFormatInfo, setShowFormatInfo] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const capacity = tournament ? tournament.courts.length * 4 + (tournament.extraSpots ?? 0) : 0;
@@ -177,7 +176,12 @@ export function OrganizerScreen() {
   };
 
   const handleFormatChange = (format: TournamentFormat) => {
-    updateTournament({ format });
+    // Clear matchMode when switching away from club format to avoid stale values
+    if (format !== 'club-americano' && tournament.matchMode) {
+      updateTournament({ format, matchMode: undefined });
+    } else {
+      updateTournament({ format });
+    }
   };
 
   const handleAddCourt = async () => {
@@ -216,13 +220,8 @@ export function OrganizerScreen() {
   if (tournament.place) whenWhereParts.push(tournament.place);
   const whenWhereSummary = whenWhereParts.join(' \u00b7 ');
 
-  const formatLabel = tournament.format === 'americano' ? t('organizer.formatAmericano')
-    : tournament.format === 'team-americano' ? t('organizer.formatTeamAmericano')
-    : tournament.format === 'team-mexicano' ? t('organizer.formatTeamMexicano')
-    : tournament.format === 'mixicano' ? t('organizer.formatMixicano')
-    : tournament.format === 'king-of-the-court' ? t('organizer.formatKingOfTheCourt')
-    : tournament.format === 'club-americano' ? t('organizer.formatClubAmericano')
-    : t('organizer.formatMexicano');
+  const formatPreset = getPresetByFormat(tournament.format);
+  const formatLabel = formatPreset ? t(formatPreset.nameKey) : t('organizer.formatMexicano');
   const formatCourtsSummary = `${formatLabel} \u00b7 ${t('organizer.courts', { count: tournament.courts.length })}`;
 
   const detailsParts: string[] = [];
@@ -334,42 +333,21 @@ export function OrganizerScreen() {
         <div className={styles.configGrid}>
           <label className={styles.configLabel}>
             {t('organizer.format')}
-            <button
-              className={styles.infoBtn}
-              onClick={(e) => { e.stopPropagation(); setShowFormatInfo(v => !v); }}
-              type="button"
-              aria-label={t('organizer.formatInfo')}
-            >
-              i
-            </button>
           </label>
-          <select
-            className={styles.select}
-            value={tournament.format}
-            onChange={e => handleFormatChange(e.target.value as TournamentFormat)}
-          >
-            <option value="americano">{t('organizer.formatAmericano')}</option>
-            <option value="team-americano">{t('organizer.formatTeamAmericano')}</option>
-            <option value="mexicano">{t('organizer.formatMexicano')}</option>
-            <option value="team-mexicano">{t('organizer.formatTeamMexicano')}</option>
-            <option value="mixicano">{t('organizer.formatMixicano')}</option>
-            <option value="king-of-the-court">{t('organizer.formatKingOfTheCourt')}</option>
-            <option value="club-americano">{t('organizer.formatClubAmericano')}</option>
-          </select>
-          {showFormatInfo && (
-            <div className={styles.formatInfo}>
-              <p><strong>{t('organizer.americanoDesc')}</strong></p>
-              <p><strong>{t('organizer.teamAmericanoDesc')}</strong></p>
-              <p><strong>{t('organizer.mexicanoDesc')}</strong></p>
-              <p><strong>{t('organizer.teamMexicanoDesc')}</strong></p>
-              <p><strong>{t('organizer.mixicanoDesc')}</strong></p>
-              <p><strong>{t('organizer.kingOfTheCourtDesc')}</strong></p>
-              <p><strong>{t('organizer.clubAmericanoDesc')}</strong></p>
-            </div>
-          )}
+          <FormatPicker
+            format={tournament.format}
+            matchMode={tournament.matchMode}
+            onChange={(format, defaultConfig) => {
+              handleFormatChange(format);
+              if (defaultConfig?.matchMode) {
+                updateTournament({ matchMode: defaultConfig.matchMode });
+              }
+            }}
+            t={t}
+          />
         </div>
 
-        {tournament.format === 'mixicano' && (
+        {formatHasGroups(tournament.format) && (
           <div className={styles.groupLabelsSection}>
             <span className={styles.groupLabelsTitle}>{t('organizer.groupLabels')}</span>
             <div className={styles.groupLabelsRow}>

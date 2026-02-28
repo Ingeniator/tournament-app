@@ -1,0 +1,231 @@
+/* ── Container ── */
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+/* ── Mode toggle tabs ── */
+.header {
+  display: flex;
+  gap: 2px;
+  background-color: var(--color-surface-raised);
+  border-radius: var(--radius-md);
+  padding: 2px;
+}
+
+.modeTab {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: calc(var(--radius-md) - 2px);
+  background: none;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.modeTab:hover:not(.modeTabActive) {
+  color: var(--color-text-secondary);
+}
+
+.modeTabActive {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Format list ── */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.category {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.categoryLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: var(--space-xs) var(--space-xs) 2px;
+}
+
+/* ── Preset row (radio) ── */
+.presetRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-sm);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.12s;
+  border: 1px solid transparent;
+}
+
+.presetRow:hover {
+  background-color: var(--color-surface-raised);
+}
+
+.presetRowSelected {
+  background-color: var(--color-primary-tint);
+  border-color: var(--color-primary);
+}
+
+.radio {
+  margin: 2px 0 0;
+  flex-shrink: 0;
+  accent-color: var(--color-primary);
+  width: 16px;
+  height: 16px;
+}
+
+.presetInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.presetName {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.presetDesc {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: 1.3;
+}
+
+/* ── Wizard ── */
+.wizard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.wizardStep {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.wizardStepLabel {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.wizardOptions {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.wizardBtn {
+  padding: 8px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-raised);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.12s, border-color 0.12s;
+  min-height: 38px;
+}
+
+.wizardBtn:hover:not(.wizardBtnActive):not(.wizardBtnDisabled) {
+  border-color: var(--color-text-muted);
+}
+
+.wizardBtnActive {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+  font-weight: 600;
+}
+
+.wizardBtnDisabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Wizard checkboxes ── */
+.wizardCheckboxes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.wizardCheckbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.wizardCheckbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+}
+
+.wizardCheckboxDisabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Wizard result ── */
+.wizardResult {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  background-color: var(--color-primary-tint);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-primary);
+}
+
+.wizardResultLabel {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.wizardResultBtn {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--color-text);
+  font-size: var(--text-base);
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+}
+
+.wizardResultBtn:hover {
+  text-decoration: underline;
+}
+
+.wizardNoMatch {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  font-style: italic;
+  padding: var(--space-sm);
+}

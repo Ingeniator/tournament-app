@@ -1,6 +1,6 @@
 import { useState, useMemo, type Dispatch, type ClipboardEvent } from 'react';
 import type { Tournament } from '@padel/common';
-import { Button, Card, CLUB_COLORS, useTranslation, parsePlayerList } from '@padel/common';
+import { Button, Card, CLUB_COLORS, useTranslation, parsePlayerList, formatHasGroups } from '@padel/common';
 import type { TournamentAction } from '../../state/actions';
 import styles from '../../screens/SettingsScreen.module.css';
 
@@ -21,7 +21,7 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
   const [addPlayerGroup, setAddPlayerGroup] = useState<'A' | 'B'>('A');
   const [showAddPlayer, setShowAddPlayer] = useState(false);
 
-  const isMixicano = tournament.config.format === 'mixicano';
+  const isMixicano = formatHasGroups(tournament.config.format);
 
   const groupWarning = useMemo(() => {
     if (!isMixicano) return null;
@@ -54,7 +54,7 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
     const trimmed = addPlayerName.trim();
     if (!trimmed) return;
     if (tournament.phase === 'in-progress') {
-      const group = tournament.config.format === 'mixicano' ? addPlayerGroup : undefined;
+      const group = formatHasGroups(tournament.config.format) ? addPlayerGroup : undefined;
       dispatch({ type: 'ADD_PLAYER_LIVE', payload: { name: trimmed, group } });
     } else {
       dispatch({ type: 'ADD_PLAYER', payload: { name: trimmed } });
@@ -250,7 +250,7 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
             onPaste={handlePaste}
             autoFocus
           />
-          {tournament.config.format === 'mixicano' && (
+          {formatHasGroups(tournament.config.format) && (
             <div className={styles.groupSelector}>
               <button
                 className={`${styles.groupBtn} ${addPlayerGroup === 'A' ? styles.groupBtnActive : ''}`}

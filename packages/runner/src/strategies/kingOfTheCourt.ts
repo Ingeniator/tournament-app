@@ -1,7 +1,7 @@
 import type { TournamentStrategy, ScheduleResult } from './types';
 import type { Player, TournamentConfig, Round, Match, Tournament } from '@padel/common';
 import { generateId } from '@padel/common';
-import { shuffle, partnerKey, commonValidateScore, seedFromRounds, selectSitOuts } from './shared';
+import { shuffle, commonValidateScore, seedFromRounds, selectSitOuts, updateMatchStats, selectBestPairing } from './shared';
 
 function validateKOTCSetup(players: Player[], config: TournamentConfig): string[] {
   const errors: string[] = [];
@@ -286,23 +286,7 @@ function generateKOTCRounds(
 
       if (!standingsMap) {
         // Round 1: pick pairing with fewest partner repeats
-        const pairings: [[string, string], [string, string]][] = [
-          [[group[0], group[3]], [group[1], group[2]]],
-          [[group[0], group[2]], [group[1], group[3]]],
-          [[group[0], group[1]], [group[2], group[3]]],
-        ];
-        let bestPairing = pairings[0];
-        let bestScore = Infinity;
-        for (const p of pairings) {
-          const score =
-            (partnerCounts.get(partnerKey(p[0][0], p[0][1])) ?? 0) +
-            (partnerCounts.get(partnerKey(p[1][0], p[1][1])) ?? 0);
-          if (score < bestScore) {
-            bestScore = score;
-            bestPairing = p;
-          }
-        }
-        [team1, team2] = bestPairing;
+        [team1, team2] = selectBestPairing(group as [string, string, string, string], partnerCounts);
       } else {
         // KOTC rule: within each court group, rank by standings, 1st+4th vs 2nd+3rd
         const sorted = [...group].sort(
@@ -322,15 +306,7 @@ function generateKOTCRounds(
     });
 
     // Update tracking
-    for (const match of matches) {
-      const k1 = partnerKey(match.team1[0], match.team1[1]);
-      const k2 = partnerKey(match.team2[0], match.team2[1]);
-      partnerCounts.set(k1, (partnerCounts.get(k1) ?? 0) + 1);
-      partnerCounts.set(k2, (partnerCounts.get(k2) ?? 0) + 1);
-      for (const pid of [...match.team1, ...match.team2]) {
-        gamesPlayed.set(pid, (gamesPlayed.get(pid) ?? 0) + 1);
-      }
-    }
+    updateMatchStats(matches, partnerCounts, gamesPlayed);
 
     // Update sit-out tracking for multi-round fairness
     const roundNum = startRoundNumber + r;

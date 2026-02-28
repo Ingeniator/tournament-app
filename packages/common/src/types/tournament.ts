@@ -2,7 +2,7 @@ import type { Player } from './player';
 import type { Nomination } from './nomination';
 import type { ChaosLevel, MatchCurse, MaldicionesHands } from './maldiciones';
 
-export type TournamentFormat = 'americano' | 'mexicano' | 'mixicano' | 'team-americano' | 'team-mexicano' | 'round-robin' | 'king-of-the-court' | 'club-americano';
+export type TournamentFormat = 'americano' | 'mexicano' | 'mixicano' | 'mixed-americano' | 'team-americano' | 'team-mexicano' | 'round-robin' | 'king-of-the-court' | 'club-americano';
 
 export type TournamentPhase = 'setup' | 'team-pairing' | 'in-progress' | 'completed';
 

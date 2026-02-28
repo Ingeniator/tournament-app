@@ -28,6 +28,8 @@ export { Toast } from './components/Toast';
 export { ErrorBoundary } from './components/ErrorBoundary';
 export { SkinPicker } from './components/SkinPicker';
 export { FeedbackModal } from './components/FeedbackModal';
+export { FormatPicker, FORMAT_PRESETS, getPresetById, getPresetByFormat, getPresetsByCategory, formatHasGroups } from './components/FormatPicker';
+export type { FormatPreset } from './components/FormatPicker';
 export { useToast } from './hooks/useToast';
 export type { Locale, Translations, TranslationMap } from './i18n/types';
 export { I18nProvider, useTranslation } from './i18n/context';

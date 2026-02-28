@@ -59,6 +59,7 @@ vi.mock('@padel/common', () => ({
   Toast: ({ message }: { message: string | null }) =>
     message ? <div data-testid="toast">{message}</div> : null,
   useToast: () => ({ toastMessage: null, showToast: vi.fn() }),
+  formatHasGroups: (format: string) => format === 'mixicano' || format === 'mixed-americano',
 }));
 
 vi.mock('../components/rounds/RoundCard', () => ({

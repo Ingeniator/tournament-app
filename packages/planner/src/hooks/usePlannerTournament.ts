@@ -92,7 +92,7 @@ export function usePlannerTournament(tournamentId: string | null) {
     return id;
   }, []);
 
-  const updateTournament = useCallback(async (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'courts' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description' | 'clubs' | 'groupLabels'>>) => {
+  const updateTournament = useCallback(async (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'matchMode' | 'courts' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description' | 'clubs' | 'groupLabels'>>) => {
     if (!tournamentId || !db) return;
     // Convert undefined to null so Firebase deletes the field
     const pathUpdates: Record<string, unknown> = {};

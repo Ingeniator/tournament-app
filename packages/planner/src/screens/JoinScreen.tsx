@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Button, Card, CLUB_COLORS, Toast, useToast, useTranslation } from '@padel/common';
+import { Button, Card, CLUB_COLORS, Toast, useToast, useTranslation, getPresetByFormat, formatHasGroups } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import { downloadICS } from '../utils/icsExport';
@@ -192,15 +192,10 @@ export function JoinScreen() {
         <div className={styles.detailsList}>
           <div className={styles.detailRow}>
             <span className={styles.detailLabel}>{t('join.format')}</span>
-            <span>{
-              tournament.format === 'americano' ? t('organizer.formatAmericano')
-              : tournament.format === 'team-americano' ? t('organizer.formatTeamAmericano')
-              : tournament.format === 'team-mexicano' ? t('organizer.formatTeamMexicano')
-              : tournament.format === 'mixicano' ? t('organizer.formatMixicano')
-              : tournament.format === 'king-of-the-court' ? t('organizer.formatKingOfTheCourt')
-              : tournament.format === 'club-americano' ? t('organizer.formatClubAmericano')
-              : t('organizer.formatMexicano')
-            }</span>
+            <span>{(() => {
+              const preset = getPresetByFormat(tournament.format, tournament.matchMode);
+              return preset ? t(preset.nameKey) : t('organizer.formatMexicano');
+            })()}</span>
           </div>
           {tournament.date && (
             <div className={styles.detailRow}>
@@ -325,7 +320,7 @@ export function JoinScreen() {
               </button>
             )}
 
-            {isConfirmed && uid && tournament.format === 'mixicano' && (
+            {isConfirmed && uid && formatHasGroups(tournament.format) && (
               <div className={styles.groupPicker}>
                 <span className={styles.groupPickerLabel}>{t('join.selectGroup')}</span>
                 <div className={styles.groupToggle}>
@@ -410,7 +405,7 @@ export function JoinScreen() {
         ) : (
           <div className={styles.playerList}>
             {players.map((player, i) => {
-              const isMixicano = tournament.format === 'mixicano';
+              const isMixicano = formatHasGroups(tournament.format);
               const isClubAmericano = tournament.format === 'club-americano';
               const clubs = tournament.clubs ?? [];
               const clubIdx = isClubAmericano && player.clubId

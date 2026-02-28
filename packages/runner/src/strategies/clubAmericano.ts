@@ -1,17 +1,13 @@
 import type { TournamentStrategy, ScheduleResult } from './types';
 import type { Player, TournamentConfig, Round, Match, Tournament, Team, Club } from '@padel/common';
 import { generateId } from '@padel/common';
-import { shuffle, commonValidateScore, calculateCompetitorStandings, findTeamByPair } from './shared';
+import { shuffle, commonValidateScore, calculateCompetitorStandings, findTeamByPair, seedTeamsFromRounds, teamKey } from './shared';
 
 /**
  * Club Americano: clubs of 2-3 pairs compete in a round-robin.
  * Partners are always from the same club.
  * Club standings aggregate member pair points.
  */
-
-function teamKey(a: string, b: string): string {
-  return a < b ? `${a}:${b}` : `${b}:${a}`;
-}
 
 /** Generate a round-robin schedule of club fixtures */
 function generateClubFixtures(clubIds: string[], totalRounds: number): [string, string][][] {
@@ -310,36 +306,9 @@ export const clubAmericanoStrategy: TournamentStrategy = {
     }
 
     // Seed tracking from existing rounds
-    const opponentCounts = new Map<string, number>();
-    const gamesPlayed = new Map<string, number>();
-    const lastSitOutRound = new Map<string, number>();
-    activeTeams.forEach(t => { gamesPlayed.set(t.id, 0); lastSitOutRound.set(t.id, -Infinity); });
-
-    // Build team points for standings-based matching
-    const teamPoints = new Map<string, number>();
-    activeTeams.forEach(t => teamPoints.set(t.id, 0));
-
-    for (const round of existingRounds) {
-      for (const match of round.matches) {
-        const t1 = findTeamByPair(allTeams, match.team1);
-        const t2 = findTeamByPair(allTeams, match.team2);
-        if (t1 && t2) {
-          const ok = teamKey(t1.id, t2.id);
-          opponentCounts.set(ok, (opponentCounts.get(ok) ?? 0) + 1);
-          if (gamesPlayed.has(t1.id)) gamesPlayed.set(t1.id, (gamesPlayed.get(t1.id) ?? 0) + 1);
-          if (gamesPlayed.has(t2.id)) gamesPlayed.set(t2.id, (gamesPlayed.get(t2.id) ?? 0) + 1);
-          if (match.score) {
-            if (teamPoints.has(t1.id)) teamPoints.set(t1.id, (teamPoints.get(t1.id) ?? 0) + match.score.team1Points);
-            if (teamPoints.has(t2.id)) teamPoints.set(t2.id, (teamPoints.get(t2.id) ?? 0) + match.score.team2Points);
-          }
-        }
-      }
-      for (const team of activeTeams) {
-        if (round.sitOuts.includes(team.player1Id) || round.sitOuts.includes(team.player2Id)) {
-          lastSitOutRound.set(team.id, round.roundNumber);
-        }
-      }
-    }
+    const { opponentCounts, gamesPlayed, lastSitOutRound, teamPoints } = seedTeamsFromRounds(
+      existingRounds, allTeams, activeTeams, { trackPoints: true },
+    );
 
     const numClubs = clubs.length;
     const defaultTotal = numClubs % 2 === 0 ? numClubs - 1 : numClubs;

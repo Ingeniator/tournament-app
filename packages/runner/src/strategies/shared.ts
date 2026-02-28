@@ -1,4 +1,4 @@
-import type { Player, Round, TournamentConfig, Tournament, StandingsEntry, MatchScore, Competitor, Team } from '@padel/common';
+import type { Player, Round, TournamentConfig, Tournament, StandingsEntry, MatchScore, Competitor, Team, Match } from '@padel/common';
 
 export function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -437,4 +437,98 @@ export function scoreSchedule(rounds: Round[], seedPartnerCounts?: Map<string, n
   }
 
   return [repeats, spread, neverPlayed, courtSpread];
+}
+
+/** Update partner counts and games played from a set of matches (used by mexicano, mixicano, kingOfTheCourt) */
+export function updateMatchStats(
+  matches: Match[],
+  partnerCounts: Map<string, number>,
+  gamesPlayed: Map<string, number>,
+): void {
+  for (const match of matches) {
+    const k1 = partnerKey(match.team1[0], match.team1[1]);
+    const k2 = partnerKey(match.team2[0], match.team2[1]);
+    partnerCounts.set(k1, (partnerCounts.get(k1) ?? 0) + 1);
+    partnerCounts.set(k2, (partnerCounts.get(k2) ?? 0) + 1);
+    for (const pid of [...match.team1, ...match.team2]) {
+      gamesPlayed.set(pid, (gamesPlayed.get(pid) ?? 0) + 1);
+    }
+  }
+}
+
+/** Pick the best of 3 possible pairings for a group of 4, minimizing partner repeats */
+export function selectBestPairing(
+  group: [string, string, string, string],
+  partnerCounts: Map<string, number>,
+): [[string, string], [string, string]] {
+  const pairings: [[string, string], [string, string]][] = [
+    [[group[0], group[3]], [group[1], group[2]]],
+    [[group[0], group[2]], [group[1], group[3]]],
+    [[group[0], group[1]], [group[2], group[3]]],
+  ];
+  let bestPairing = pairings[0];
+  let bestScore = Infinity;
+  for (const p of pairings) {
+    const score =
+      (partnerCounts.get(partnerKey(p[0][0], p[0][1])) ?? 0) +
+      (partnerCounts.get(partnerKey(p[1][0], p[1][1])) ?? 0);
+    if (score < bestScore) {
+      bestScore = score;
+      bestPairing = p;
+    }
+  }
+  return bestPairing;
+}
+
+/** Seed team tracking maps from existing rounds (used by teamAmericano, teamMexicano, clubAmericano) */
+export interface TeamSeed {
+  opponentCounts: Map<string, number>;
+  gamesPlayed: Map<string, number>;
+  lastSitOutRound: Map<string, number>;
+  teamPoints: Map<string, number>;
+}
+
+export function teamKey(a: string, b: string): string {
+  return a < b ? `${a}:${b}` : `${b}:${a}`;
+}
+
+export function seedTeamsFromRounds(
+  existingRounds: Round[],
+  allTeams: Team[],
+  activeTeams: Team[],
+  options?: { trackPoints?: boolean },
+): TeamSeed {
+  const opponentCounts = new Map<string, number>();
+  const gamesPlayed = new Map<string, number>();
+  const lastSitOutRound = new Map<string, number>();
+  const teamPoints = new Map<string, number>();
+  activeTeams.forEach(t => {
+    gamesPlayed.set(t.id, 0);
+    lastSitOutRound.set(t.id, -Infinity);
+    if (options?.trackPoints) teamPoints.set(t.id, 0);
+  });
+
+  for (const round of existingRounds) {
+    for (const match of round.matches) {
+      const t1 = findTeamByPair(allTeams, match.team1);
+      const t2 = findTeamByPair(allTeams, match.team2);
+      if (t1 && t2) {
+        const ok = teamKey(t1.id, t2.id);
+        opponentCounts.set(ok, (opponentCounts.get(ok) ?? 0) + 1);
+        if (gamesPlayed.has(t1.id)) gamesPlayed.set(t1.id, (gamesPlayed.get(t1.id) ?? 0) + 1);
+        if (gamesPlayed.has(t2.id)) gamesPlayed.set(t2.id, (gamesPlayed.get(t2.id) ?? 0) + 1);
+        if (options?.trackPoints && match.score) {
+          if (teamPoints.has(t1.id)) teamPoints.set(t1.id, (teamPoints.get(t1.id) ?? 0) + match.score.team1Points);
+          if (teamPoints.has(t2.id)) teamPoints.set(t2.id, (teamPoints.get(t2.id) ?? 0) + match.score.team2Points);
+        }
+      }
+    }
+    for (const team of activeTeams) {
+      if (round.sitOuts.includes(team.player1Id) || round.sitOuts.includes(team.player2Id)) {
+        lastSitOutRound.set(team.id, round.roundNumber);
+      }
+    }
+  }
+
+  return { opponentCounts, gamesPlayed, lastSitOutRound, teamPoints };
 }
