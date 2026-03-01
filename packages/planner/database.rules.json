@@ -87,6 +87,12 @@
         }
       }
     },
+    "eventCodes": {
+      "$code": {
+        ".read": true,
+        ".write": "auth != null && (!data.exists() || !newData.exists() && root.child('events').child(data.val()).child('organizerId').val() === auth.uid)"
+      }
+    },
     "events": {
       "$eventId": {
         ".read": true,
