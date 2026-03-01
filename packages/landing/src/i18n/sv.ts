@@ -7,6 +7,7 @@ const sv: Translations = {
   'landing.subtitle': 'Organisera och kör turneringar på banan',
   'landing.ctaStart': 'Starta Turnering',
   'landing.ctaPlan': 'Planera en Turnering',
+  'landing.ctaJoin': 'Gå med i en Turnering',
   'landing.planner': 'Planerare',
   'landing.plannerDesc': 'Skapa turneringar, bjud in spelare, hantera registreringar',
   'landing.runner': 'Körning',

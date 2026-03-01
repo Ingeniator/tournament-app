@@ -35,6 +35,8 @@ function CollapsibleSection({ title, summary, defaultOpen, children }: {
   );
 }
 
+type PlayerMode = 'quick' | 'share';
+
 export function OrganizerScreen() {
   const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, deleteTournament, completedAt, undoComplete, uid } = usePlanner();
   const { startedBy, showWarning, warningReason, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
@@ -43,6 +45,11 @@ export function OrganizerScreen() {
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+
+  // Auto-detect mode: if any player self-registered (id matches a real uid,
+  // i.e. not added by organizer), default to 'share'.
+  const hasSelfRegistered = players.some(p => p.id !== uid && p.confirmed === undefined);
+  const [playerMode, setPlayerMode] = useState<PlayerMode>(hasSelfRegistered ? 'share' : 'quick');
 
   const capacity = tournament ? tournament.courts.length * 4 + (tournament.extraSpots ?? 0) : 0;
   const statuses = useMemo(() => getPlayerStatuses(players, capacity, {
@@ -269,7 +276,24 @@ export function OrganizerScreen() {
         <span className={styles.organizerLabel}>{t('organizer.by', { name: userName })}</span>
       )}
 
-      {/* Settings groups — at the top */}
+      {/* Player mode toggle */}
+      <div className={styles.modeToggle}>
+        <button
+          className={playerMode === 'quick' ? styles.modeBtnActive : styles.modeBtn}
+          onClick={() => setPlayerMode('quick')}
+        >
+          {t('organizer.modeQuickPlay')}
+        </button>
+        <button
+          className={playerMode === 'share' ? styles.modeBtnActive : styles.modeBtn}
+          onClick={() => setPlayerMode('share')}
+        >
+          {t('organizer.modeShare')}
+        </button>
+      </div>
+
+      {/* When & Where — only in share mode */}
+      {playerMode === 'share' && (
       <CollapsibleSection
         title={t('organizer.whenWhere')}
         summary={whenWhereSummary}
@@ -325,6 +349,7 @@ export function OrganizerScreen() {
           />
         </div>
       </CollapsibleSection>
+      )}
 
       <CollapsibleSection
         title={t('organizer.formatAndCourts')}
@@ -465,6 +490,7 @@ export function OrganizerScreen() {
         </div>
       </CollapsibleSection>
 
+      {playerMode === 'share' && (
       <CollapsibleSection
         title={t('organizer.details')}
         summary={detailsSummary}
@@ -490,8 +516,10 @@ export function OrganizerScreen() {
           />
         </div>
       </CollapsibleSection>
+      )}
 
-      {/* Share section */}
+      {/* Share section — only in share mode */}
+      {playerMode === 'share' && (
       <Card>
         <h2 className={styles.sectionTitle}>{t('organizer.shareWithPlayers')}</h2>
         <div className={styles.codeDisplay}>
@@ -502,6 +530,7 @@ export function OrganizerScreen() {
           {t('organizer.copyLink')}
         </Button>
       </Card>
+      )}
 
       {/* Player list */}
       <PlayerList
@@ -518,10 +547,11 @@ export function OrganizerScreen() {
         groupLabels={tournament.groupLabels}
         onSetGroup={updatePlayerGroup}
         onSetClub={updatePlayerClub}
+        simplified={playerMode === 'quick'}
       />
 
-      {/* Export */}
-      {confirmedCount > 0 && confirmedCount < capacity && (() => {
+      {/* Warnings & actions */}
+      {playerMode === 'share' && confirmedCount > 0 && confirmedCount < capacity && (() => {
         const courtsNeeded = tournament.courts.length * 4;
         const fillsCourts = confirmedCount >= courtsNeeded;
         return (
@@ -544,9 +574,11 @@ export function OrganizerScreen() {
       <Button fullWidth onClick={handleLaunch} disabled={players.length === 0}>
         {t('organizer.letsPlay')}
       </Button>
+      {playerMode === 'share' && (
       <Button variant="secondary" fullWidth onClick={handleCopyExport} disabled={players.length === 0}>
         {t('organizer.copyForDevice')}
       </Button>
+      )}
 
       <button
         className={styles.deleteBtn}

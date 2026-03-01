@@ -437,6 +437,44 @@
   color: var(--color-text-muted);
 }
 
+/* Player mode toggle */
+.modeToggle {
+  display: flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--color-surface-raised);
+}
+
+.modeBtn {
+  flex: 1;
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  background: transparent;
+  color: var(--color-text-muted);
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+  text-align: center;
+}
+
+.modeBtn:active {
+  opacity: 0.8;
+}
+
+.modeBtnActive {
+  flex: 1;
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+}
+
 .warning {
   background-color: var(--color-warning-tint);
   border: 1px solid var(--color-warning);

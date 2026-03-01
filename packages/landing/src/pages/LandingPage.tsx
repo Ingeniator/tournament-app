@@ -47,8 +47,8 @@ export function LandingPage({ skin, setSkin, telegramName, onFeedback }: Props) 
         <p className={styles.tagline}>{t('landing.tagline')}</p>
         <p className={styles.subtitle}>{t('landing.subtitle')}</p>
         <div className={styles.ctas}>
-          <a className={styles.ctaPrimary} href="/play">{t('landing.ctaStart')} →</a>
-          <a className={styles.ctaSecondary} href="/plan">{t('landing.ctaPlan')} →</a>
+          <a className={styles.ctaPrimary} href="/plan">{t('landing.ctaStart')} →</a>
+          <a className={styles.ctaSecondary} href="/plan">{t('landing.ctaJoin')} →</a>
         </div>
         <div className={styles.phones}>
           <div className={styles.phone}>
@@ -130,8 +130,8 @@ export function LandingPage({ skin, setSkin, telegramName, onFeedback }: Props) 
       <section className={styles.bottomCta}>
         <h2 className={styles.bottomCtaTitle}>{t('landing.ctaTitle')}</h2>
         <div className={styles.ctas}>
-          <a className={styles.ctaPrimary} href="/play">{t('landing.ctaStart')} →</a>
-          <a className={styles.ctaSecondary} href="/plan">{t('landing.ctaPlan')} →</a>
+          <a className={styles.ctaPrimary} href="/plan">{t('landing.ctaStart')} →</a>
+          <a className={styles.ctaSecondary} href="/plan">{t('landing.ctaJoin')} →</a>
         </div>
       </section>
 

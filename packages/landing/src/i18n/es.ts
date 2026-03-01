@@ -7,6 +7,7 @@ const es: Translations = {
   'landing.subtitle': 'Organiza y gestiona torneos en la pista',
   'landing.ctaStart': 'Iniciar Torneo',
   'landing.ctaPlan': 'Planificar un Torneo',
+  'landing.ctaJoin': 'Unirse a un Torneo',
   'landing.planner': 'Planificador',
   'landing.plannerDesc': 'Crea torneos, invita jugadores, gestiona inscripciones',
   'landing.runner': 'Ejecuci\u00f3n',

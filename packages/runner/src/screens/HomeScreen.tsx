@@ -127,11 +127,6 @@ export function HomeScreen() {
             <Button onClick={handleNew} fullWidth>
               {t('home.newPlay')}
             </Button>
-            <a href="/plan" className={styles.planLink}>
-              <Button variant="secondary" fullWidth>
-                {t('home.planShare')}
-              </Button>
-            </a>
             <Button variant="secondary" fullWidth onClick={handleImportClipboard}>
               {t('home.importFromClipboard')}
             </Button>

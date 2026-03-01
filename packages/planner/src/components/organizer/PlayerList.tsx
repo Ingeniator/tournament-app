@@ -18,9 +18,10 @@ interface PlayerListProps {
   groupLabels?: [string, string];
   onSetGroup?: (playerId: string, group: 'A' | 'B' | null) => Promise<void>;
   onSetClub?: (playerId: string, clubId: string | null) => Promise<void>;
+  simplified?: boolean;
 }
 
-export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, removePlayer, toggleConfirmed, updatePlayerTelegram, statuses, format, clubs, groupLabels, onSetGroup, onSetClub }: PlayerListProps) {
+export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, removePlayer, toggleConfirmed, updatePlayerTelegram, statuses, format, clubs, groupLabels, onSetGroup, onSetClub, simplified }: PlayerListProps) {
   const { t } = useTranslation();
   const [newPlayerName, setNewPlayerName] = useState('');
   const addingPlayer = useRef(false);
@@ -46,11 +47,14 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
     <>
       <Card>
         <h2 className={styles.sectionTitle}>
-          {t('organizer.players', {
-            confirmed: confirmedCount,
-            capacity,
-            reserve: reserveCount > 0 ? t('organizer.reserveSuffix', { count: reserveCount }) : '',
-          })}
+          {simplified
+            ? t('organizer.playersSimple', { count: players.length })
+            : t('organizer.players', {
+                confirmed: confirmedCount,
+                capacity,
+                reserve: reserveCount > 0 ? t('organizer.reserveSuffix', { count: reserveCount }) : '',
+              })
+          }
         </h2>
         {players.length === 0 ? (
           <p className={styles.empty}>{t('organizer.noPlayersYet')}</p>
@@ -60,7 +64,7 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
               <div key={player.id} className={styles.playerItem}>
                 <span className={styles.playerNum}>{i + 1}</span>
                 <span className={styles.playerName}>
-                  {player.telegramUsername ? (
+                  {!simplified && player.telegramUsername ? (
                     <a
                       href={`https://t.me/${player.telegramUsername}`}
                       target="_blank"
@@ -72,11 +76,11 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                   ) : (
                     player.name
                   )}
-                  {statuses.get(player.id) === 'reserve' && (
+                  {!simplified && statuses.get(player.id) === 'reserve' && (
                     <span className={styles.reserveBadge}>{t('organizer.reserve')}</span>
                   )}
                 </span>
-                {format === 'mixicano' && onSetGroup && (
+                {!simplified && format === 'mixicano' && onSetGroup && (
                   <div className={styles.groupToggle}>
                     <button
                       className={player.group === 'A' ? styles.groupBtnActive : styles.groupBtn}
@@ -92,7 +96,7 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                     </button>
                   </div>
                 )}
-                {format === 'club-americano' && onSetClub && clubs && clubs.length > 0 && (
+                {!simplified && format === 'club-americano' && onSetClub && clubs && clubs.length > 0 && (
                   <select
                     className={styles.clubSelect}
                     value={player.clubId ?? ''}
@@ -110,23 +114,27 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                     ))}
                   </select>
                 )}
-                <button
-                  className={player.telegramUsername ? styles.linkBtnActive : styles.linkBtn}
-                  onClick={() => {
-                    setLinkingPlayer({ id: player.id, name: player.name, telegramUsername: player.telegramUsername });
-                    setLinkDraft(player.telegramUsername ? `@${player.telegramUsername}` : '');
-                  }}
-                  title={t('organizer.linkProfile')}
-                >
-                  &#x1F517;
-                </button>
-                <button
-                  className={player.confirmed !== false ? styles.statusConfirmed : styles.statusCancelled}
-                  onClick={() => toggleConfirmed(player.id, player.confirmed !== false)}
-                  title={player.confirmed !== false ? t('organizer.markCancelled') : t('organizer.markConfirmed')}
-                >
-                  {player.confirmed !== false ? '\u2713' : '\u2717'}
-                </button>
+                {!simplified && (
+                  <button
+                    className={player.telegramUsername ? styles.linkBtnActive : styles.linkBtn}
+                    onClick={() => {
+                      setLinkingPlayer({ id: player.id, name: player.name, telegramUsername: player.telegramUsername });
+                      setLinkDraft(player.telegramUsername ? `@${player.telegramUsername}` : '');
+                    }}
+                    title={t('organizer.linkProfile')}
+                  >
+                    &#x1F517;
+                  </button>
+                )}
+                {!simplified && (
+                  <button
+                    className={player.confirmed !== false ? styles.statusConfirmed : styles.statusCancelled}
+                    onClick={() => toggleConfirmed(player.id, player.confirmed !== false)}
+                    title={player.confirmed !== false ? t('organizer.markCancelled') : t('organizer.markConfirmed')}
+                  >
+                    {player.confirmed !== false ? '\u2713' : '\u2717'}
+                  </button>
+                )}
                 <button
                   className={styles.removeBtn}
                   onClick={() => removePlayer(player.id)}

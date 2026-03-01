@@ -7,6 +7,7 @@ const sr: Translations = {
   'landing.subtitle': 'Organizujte i vodite turnire na terenu',
   'landing.ctaStart': 'Pokreni Turnir',
   'landing.ctaPlan': 'Planiraj Turnir',
+  'landing.ctaJoin': 'Pridruži se Turniru',
   'landing.planner': 'Planer',
   'landing.plannerDesc': 'Kreirajte turnire, pozovite igrače, upravljajte registracijama',
   'landing.runner': 'Vođenje',
