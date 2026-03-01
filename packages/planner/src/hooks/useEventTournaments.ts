@@ -108,7 +108,14 @@ export function useEventTournaments(links: EventTournamentLink[]) {
           if (t) newDataMap.set(id, t);
         }
         setTournamentData(newDataMap);
-        setTournamentInfos(Array.from(infoMap.values()));
+        const infos = Array.from(infoMap.values());
+        infos.sort((a, b) => {
+          if (a.date && b.date) return a.date.localeCompare(b.date);
+          if (a.date) return -1;
+          if (b.date) return 1;
+          return 0;
+        });
+        setTournamentInfos(infos);
         setLoading(false);
       });
       unsubscribes.push(unsub);

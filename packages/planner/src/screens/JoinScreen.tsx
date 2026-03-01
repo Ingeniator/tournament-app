@@ -67,7 +67,7 @@ export function JoinScreen() {
                 {tournament.date && (
                   <div className={styles.detailRow}>
                     <span className={styles.detailLabel}>{t('join.date')}</span>
-                    <span>{new Date(tournament.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                    <span>{new Date(tournament.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}</span>
                   </div>
                 )}
                 {tournament.place && (
@@ -87,7 +87,7 @@ export function JoinScreen() {
           )}
           <Card>
             <h2 className={styles.sectionTitle}>{t('join.completed')}</h2>
-            <p>{t('join.completedOn', { date: new Date(completedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) })}</p>
+            <p>{t('join.completedOn', { date: new Date(completedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }) })}</p>
           </Card>
         </main>
       </div>
@@ -205,7 +205,7 @@ export function JoinScreen() {
           {tournament.date && (
             <div className={styles.detailRow}>
               <span className={styles.detailLabel}>{t('join.date')}</span>
-              <span>{new Date(tournament.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+              <span>{new Date(tournament.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}</span>
             </div>
           )}
           {tournament.duration && (

@@ -318,6 +318,8 @@ const en: Translations = {
   'event.copyLink': 'Copy Link',
   'event.linkCopied': 'Link copied!',
   'event.codeCopied': 'Code copied!',
+  'event.description': 'Description',
+  'event.descriptionPlaceholder': 'Event details, rules, schedule, etc.',
 
   // EventJoinScreen
   'eventJoin.join': 'Join',

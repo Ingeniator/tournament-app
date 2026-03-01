@@ -56,8 +56,12 @@ function AppContent() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
 
+    // Check Telegram startapp param
+    const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param ?? null;
+
     // Event link takes priority
-    const eventCode = params.get('event');
+    const eventCode = params.get('event')
+      ?? (startParam?.startsWith('event_') ? startParam.slice(6) : null);
     if (eventCode && eventCode.length === 6) {
       loadEventByCode(eventCode).then(found => {
         setScreen(found ? 'event-join' : 'home');
@@ -65,9 +69,7 @@ function AppContent() {
       return;
     }
 
-    const code = params.get('code')
-      ?? window.Telegram?.WebApp?.initDataUnsafe?.start_param
-      ?? null;
+    const code = params.get('code') ?? startParam ?? null;
     if (code && code.length === 6) {
       loadByCode(code).then(found => {
         setScreen(found ? 'join' : 'home');

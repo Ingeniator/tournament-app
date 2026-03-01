@@ -80,7 +80,7 @@ export function OrganizerScreen() {
         <main>
           <Card>
             <h2 className={styles.sectionTitle}>{t('organizer.completed')}</h2>
-            <p>{t('organizer.completedOn', { date: new Date(completedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) })}</p>
+            <p>{t('organizer.completedOn', { date: new Date(completedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }) })}</p>
             <Button fullWidth onClick={async () => {
               const ok = await restoreFromBackup(tournament.id);
               if (!ok) showToast(t('organizer.noBackupData'));
@@ -284,6 +284,7 @@ export function OrganizerScreen() {
           <input
             className={styles.configInput}
             type="time"
+            lang="en-GB"
             value={tournament.date?.split('T')[1] ?? ''}
             onChange={e => {
               const time = e.target.value;
@@ -525,6 +526,7 @@ export function OrganizerScreen() {
             onChange={e => updateTournament({ description: e.target.value || undefined })}
             placeholder={t('organizer.descriptionPlaceholder')}
             rows={3}
+            maxLength={2000}
           />
         </div>
       </CollapsibleSection>

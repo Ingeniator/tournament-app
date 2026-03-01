@@ -23,6 +23,7 @@ declare global {
             first_name: string;
             last_name?: string;
           };
+          start_param?: string;
         };
       };
     };
@@ -92,6 +93,14 @@ function AppContent() {
     const tg = window.Telegram?.WebApp;
     if (!tg) return;
     tg.ready();
+
+    // Redirect to /plan when opened via Telegram with a start_param (tournament or event link)
+    const startParam = tg.initDataUnsafe?.start_param;
+    if (startParam) {
+      window.location.href = '/plan';
+      return;
+    }
+
     const user = tg.initDataUnsafe?.user;
     if (user) {
       setTelegramName(user.first_name + (user.last_name ? ' ' + user.last_name : ''));

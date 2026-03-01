@@ -15,8 +15,8 @@ interface EventScreenProps {
 }
 
 export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScreenProps) {
-  const { event, loading, linkTournament, unlinkTournament, updateTournamentWeight, deleteEvent } = useEvent(eventId);
-  const { t } = useTranslation();
+  const { event, loading, updateEvent, linkTournament, unlinkTournament, updateTournamentWeight, deleteEvent } = useEvent(eventId);
+  const { t, locale } = useTranslation();
   const { toastMessage, showToast } = useToast();
   const [linkCode, setLinkCode] = useState('');
   const [linking, setLinking] = useState(false);
@@ -55,9 +55,15 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
     status === 'completed' ? styles.statusCompleted :
     styles.statusDraft;
 
+  const botName = import.meta.env.VITE_TELEGRAM_BOT_NAME as string | undefined;
+  const isTelegram = !!window.Telegram?.WebApp?.initData;
+  const eventShareUrl = isTelegram && botName
+    ? `https://t.me/${botName}?startapp=event_${event.code}`
+    : `${window.location.origin}/plan?event=${event.code}&lang=${locale}`;
+
   const handleCopyEventLink = async () => {
     if (!event.code) return;
-    const url = `${window.location.origin}/plan?event=${event.code}`;
+    const url = eventShareUrl;
     try {
       await navigator.clipboard.writeText(url);
       showToast(t('event.linkCopied'));
@@ -139,6 +145,21 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
             {t(`event.status.${status}`)}
           </span>
         </div>
+
+        {/* Description (owner only) */}
+        {isOwner && (
+          <Card>
+            <label className={styles.configLabel}>{t('event.description')}</label>
+            <textarea
+              className={styles.configTextarea}
+              value={event.description ?? ''}
+              onChange={e => updateEvent({ description: e.target.value || undefined })}
+              placeholder={t('event.descriptionPlaceholder')}
+              rows={3}
+              maxLength={2000}
+            />
+          </Card>
+        )}
 
         {/* Share card (owner only) */}
         {isOwner && event.code && (

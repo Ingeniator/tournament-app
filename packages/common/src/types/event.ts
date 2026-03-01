@@ -10,6 +10,7 @@ export interface PadelEvent {
   name: string;
   date: string;
   code: string;
+  description?: string;
   tournaments: EventTournamentLink[];
   organizerId: string;
   createdAt: number;
