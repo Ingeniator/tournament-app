@@ -24,6 +24,15 @@ test.describe('Team Americano Flow', () => {
     page.on('dialog', dialog => dialog.accept());
     await page.getByRole('button', { name: 'Finish Tournament' }).click();
 
+    // Skip the post-tournament ceremony/awards screen if it appears
+    const skipBtn = page.getByRole('button', { name: 'Skip' });
+    try {
+      await skipBtn.waitFor({ timeout: 3000 });
+      await skipBtn.click();
+    } catch {
+      // No ceremony screen
+    }
+
     await expect(page.getByRole('button', { name: 'Share Results as Text' })).toBeVisible();
   });
 

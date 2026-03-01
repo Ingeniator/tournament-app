@@ -22,11 +22,12 @@ test.describe('Home Screen', () => {
 
     // The app restores the in-progress tournament directly
     // Should show round headings, not the home screen
-    await expect(page.getByRole('heading', { name: 'Round 1' })).toBeVisible();
+    // After reload, a round heading should be visible (app restores to Log tab)
+    await expect(page.getByRole('heading', { name: /^Round \d+$/ }).first()).toBeVisible({ timeout: 5000 });
   });
 
   test('new play creates tournament', async ({ page }) => {
-    await expect(page.getByRole('button', { name: 'New Play' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Quick Play' })).toBeVisible();
     await expect(page).toHaveScreenshot('home-empty-state.png');
     await createTournament(page);
 
@@ -68,7 +69,9 @@ test.describe('Home Screen', () => {
       });
     }, JSON.stringify(exportData));
 
-    await page.getByRole('button', { name: 'Import from Clipboard' }).click();
+    // Open the import dropdown, then click "Import from Clipboard"
+    await page.getByRole('button', { name: /^Import/ }).click();
+    await page.getByText('Import from Clipboard').click();
 
     // Should load the tournament — setup screen with tournament name populated
     await expect(page.getByPlaceholder('Tournament name')).toHaveValue('Imported Cup');
@@ -83,7 +86,9 @@ test.describe('Home Screen', () => {
       });
     });
 
-    await page.getByRole('button', { name: 'Import from Clipboard' }).click();
+    // Open the import dropdown, then click "Import from Clipboard"
+    await page.getByRole('button', { name: /^Import/ }).click();
+    await page.getByText('Import from Clipboard').click();
 
     // Should show an error message
     await expect(page.locator('[class*="error"], [class*="Error"]').first()).toBeVisible();

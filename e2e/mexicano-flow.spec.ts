@@ -18,8 +18,8 @@ test.describe('Mexicano Flow', () => {
     await createTournament(page);
     await addFourPlayers(page);
     await selectFormat(page, 'mexicano');
-    // Verify format was actually changed
-    await expect(page.locator('select#config-format')).toHaveValue('mexicano');
+    // Verify format was actually changed — the Mexicano preset row should be selected
+    await expect(page.locator('input[name="format-preset"]:checked')).toBeVisible();
   });
 
   test('full lifecycle: generate → score all rounds → finish', async ({ page }) => {

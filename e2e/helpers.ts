@@ -7,9 +7,9 @@ export async function clearState(page: Page) {
   await page.getByRole('heading', { name: 'Tournament Manager' }).waitFor();
 }
 
-/** Click "New Play" to create a tournament and wait for setup screen. */
+/** Click "Quick Play" to create a tournament and wait for setup screen. */
 export async function createTournament(page: Page) {
-  await page.getByRole('button', { name: 'New Play' }).click();
+  await page.getByRole('button', { name: 'Quick Play' }).click();
   await page.getByPlaceholder('Tournament name').waitFor();
 }
 
@@ -130,23 +130,16 @@ export async function addPlayers(page: Page, names: string[]) {
   }
 }
 
-/** Select a tournament format from the config dropdown. */
+/** Select a tournament format from the FormatPicker radio list. */
 export async function selectFormat(page: Page, format: 'americano' | 'team-americano' | 'mexicano') {
-  const select = page.locator('select#config-format');
-  // Use Playwright's selectOption which triggers the native browser interaction.
-  await select.selectOption(format);
-  // Additionally, trigger the React onChange by setting the native value and
-  // dispatching events that React's internal event system responds to.
-  await select.evaluate((el, f) => {
-    const tracker = (el as any)._valueTracker;
-    if (tracker) tracker.setValue('');
-    const nativeSetter = Object.getOwnPropertyDescriptor(
-      HTMLSelectElement.prototype, 'value',
-    )!.set!;
-    nativeSetter.call(el, f);
-    el.dispatchEvent(new Event('input', { bubbles: true }));
-    el.dispatchEvent(new Event('change', { bubbles: true }));
-  }, format);
+  const labels: Record<string, string> = {
+    'americano': 'Americano',
+    'team-americano': 'Team Americano',
+    'mexicano': 'Mexicano',
+  };
+  const label = labels[format];
+  // Click the exact preset name span — this selects the parent label's radio.
+  await page.getByText(label, { exact: true }).click();
 }
 
 /**
