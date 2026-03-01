@@ -98,7 +98,6 @@ export function resolveConfigDefaults(config: TournamentConfig, playerCount: num
       effectivePoints = config.pointsPerMatch;
     } else {
       // First try with points mode
-      const minPts = getMin('points', config.format);
       const rawPts = effectiveRounds > 0
         ? Math.floor((durationMinutes / effectiveRounds - CHANGEOVER_MINUTES) / MINUTES_PER_POINT)
         : PREFERRED_POINTS;
