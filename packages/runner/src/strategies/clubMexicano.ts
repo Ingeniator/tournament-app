@@ -49,7 +49,7 @@ function assignCourtsStandings(
   clubBPlayers: string[],
   numCourts: number,
   partnerCounts: Map<string, number>,
-  opponentCounts: Map<string, number>,
+  _opponentCounts: Map<string, number>,
   gamesPlayed: Map<string, number>,
   playerPoints: Map<string, number>,
 ): { courts: CourtAssignment[]; sitOutA: string[]; sitOutB: string[] } {
@@ -346,7 +346,7 @@ export const clubMexicanoStrategy: TournamentStrategy = (() => {
           rounds: existingRounds,
         });
         for (const s of standings) {
-          playerPoints.set(s.playerId, s.points);
+          playerPoints.set(s.playerId, s.totalPoints);
         }
       }
 
