@@ -79,9 +79,26 @@ export function FormatWizard({ onChange, t }: FormatWizardProps) {
     ? resolvePreset(partnerMode, opponentMode, crossGroup, clubMode)
     : null;
 
-  // Auto-select when resolved
+  // Auto-apply when resolved
   const handleSelect = () => {
     if (resolved) onChange(resolved);
+  };
+
+  // Auto-apply when toggling options checkboxes so related config (group labels, clubs) appears immediately
+  const handleCrossGroup = (checked: boolean) => {
+    setCrossGroup(checked);
+    if (partnerMode && opponentMode) {
+      const next = resolvePreset(partnerMode, opponentMode, checked, clubMode);
+      if (next) onChange(next);
+    }
+  };
+
+  const handleClubMode = (checked: boolean) => {
+    setClubMode(checked);
+    if (partnerMode && opponentMode) {
+      const next = resolvePreset(partnerMode, opponentMode, crossGroup, checked);
+      if (next) onChange(next);
+    }
   };
 
   return (
@@ -134,7 +151,7 @@ export function FormatWizard({ onChange, t }: FormatWizardProps) {
               <input
                 type="checkbox"
                 checked={crossGroup}
-                onChange={e => setCrossGroup(e.target.checked)}
+                onChange={e => handleCrossGroup(e.target.checked)}
               />
               <span>{t('format.wizardCrossGroup')}</span>
             </label>
@@ -142,7 +159,7 @@ export function FormatWizard({ onChange, t }: FormatWizardProps) {
               <input
                 type="checkbox"
                 checked={clubMode}
-                onChange={e => setClubMode(e.target.checked)}
+                onChange={e => handleClubMode(e.target.checked)}
               />
               <span>{t('format.wizardClub')}</span>
             </label>
