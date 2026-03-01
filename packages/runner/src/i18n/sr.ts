@@ -277,6 +277,7 @@ const sr: Translations = {
   'config.clubFixedRounds': '{rounds} rundi za {clubs} klubova (svako sa svakim)',
   'config.pointsPerMatch': 'Poeni po meču',
   'config.recommendedPoints': 'Preporučeno: {points} poena da stane u {duration}',
+  'config.recommendedPointsClub': 'Maks: {points} poena po meču',
   'config.estimatedDuration': 'Procenjeno trajanje: ',
   'config.estimateBreakdown': '({rounds} rundi × {minutes} min po rundi)',
   'config.somePlayersWontPlay': 'Neki igrači neće igrati',

@@ -277,6 +277,7 @@ const en: Translations = {
   'config.clubFixedRounds': '{rounds} rounds for {clubs} clubs (round-robin)',
   'config.pointsPerMatch': 'Points per match',
   'config.recommendedPoints': 'Recommended: {points} points to fit in {duration}',
+  'config.recommendedPointsClub': 'Max: {points} points per match',
   'config.estimatedDuration': 'Estimated duration: ',
   'config.estimateBreakdown': '({rounds} rounds \u00d7 {minutes} min per round)',
   'config.somePlayersWontPlay': 'Some players won\'t play',

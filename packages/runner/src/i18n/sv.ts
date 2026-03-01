@@ -277,6 +277,7 @@ const sv: Translations = {
   'config.clubFixedRounds': '{rounds} omgångar för {clubs} klubbar (alla mot alla)',
   'config.pointsPerMatch': 'Poäng per match',
   'config.recommendedPoints': 'Rekommenderat: {points} poäng för att passa i {duration}',
+  'config.recommendedPointsClub': 'Max: {points} poäng per match',
   'config.estimatedDuration': 'Beräknad varaktighet: ',
   'config.estimateBreakdown': '({rounds} omgångar × {minutes} min per omgång)',
   'config.somePlayersWontPlay': 'Vissa spelare kommer inte att spela',

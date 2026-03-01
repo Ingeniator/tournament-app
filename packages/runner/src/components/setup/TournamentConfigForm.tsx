@@ -293,7 +293,11 @@ export function TournamentConfigForm({ config, playerCount, clubCount, onUpdate 
             onUpdate({ pointsPerMatch: isNaN(v) ? 0 : Math.max(0, v) });
           }}
         />
-        <span className={styles.hint}>{t('config.recommendedPoints', { points: suggestedPoints, duration: formatDuration(durationLimit) })}</span>
+        <span className={styles.hint}>
+          {clubFixedRounds
+            ? t('config.recommendedPointsClub', { points: suggestedPoints })
+            : t('config.recommendedPoints', { points: suggestedPoints, duration: formatDuration(durationLimit) })}
+        </span>
       </div>
 
       <div className={styles.estimate}>

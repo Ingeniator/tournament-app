@@ -279,6 +279,7 @@ const it: Translations = {
   'config.clubFixedRounds': '{rounds} turni per {clubs} club (girone all\'italiana)',
   'config.pointsPerMatch': 'Punti per partita',
   'config.recommendedPoints': 'Consigliati: {points} punti per rientrare in {duration}',
+  'config.recommendedPointsClub': 'Max: {points} punti per partita',
   'config.estimatedDuration': 'Durata stimata: ',
   'config.estimateBreakdown': '({rounds} turni \u00d7 {minutes} min per turno)',
   'config.somePlayersWontPlay': 'Alcuni giocatori non giocheranno',

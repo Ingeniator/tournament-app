@@ -279,6 +279,7 @@ const pt: Translations = {
   'config.clubFixedRounds': '{rounds} rondas para {clubs} clubes (todos contra todos)',
   'config.pointsPerMatch': 'Pontos por jogo',
   'config.recommendedPoints': 'Recomendado: {points} pontos para caber em {duration}',
+  'config.recommendedPointsClub': 'Máx: {points} pontos por partida',
   'config.estimatedDuration': 'Duração estimada: ',
   'config.estimateBreakdown': '({rounds} rondas × {minutes} min por ronda)',
   'config.somePlayersWontPlay': 'Alguns jogadores não vão jogar',
