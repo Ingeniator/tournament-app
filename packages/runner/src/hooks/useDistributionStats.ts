@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { Tournament } from '@padel/common';
-import { formatHasClubs, formatHasGroups } from '@padel/common';
+import { formatHasClubs } from '@padel/common';
 import { getStrategy } from '../strategies';
 
 export interface DistributionData {
@@ -10,6 +10,7 @@ export interface DistributionData {
   };
   repeatPartners: { names: [string, string]; count: number }[];
   idealRepeatPartners: number;
+  hasFixedPartners: boolean;
   neverPlayed: [string, string][];
   idealNeverPlayed: number;
   opponentSpread: { min: number; max: number } | null;
@@ -361,6 +362,6 @@ export function useDistributionStats(tournament: Tournament | null): Distributio
     const reachablePairs = computeReachablePairs(tournament, activeList, rounds.length);
     const idealNeverPlayed = Math.max(0, reachablePairs - maxCoveredPairs);
 
-    return { restBalance, repeatPartners, idealRepeatPartners, neverPlayed, idealNeverPlayed, opponentSpread, idealOpponentSpread, courtBalance, totalPairs };
+    return { restBalance, repeatPartners, idealRepeatPartners, hasFixedPartners: strategy.hasFixedPartners, neverPlayed, idealNeverPlayed, opponentSpread, idealOpponentSpread, courtBalance, totalPairs };
   }, [tournament]);
 }
