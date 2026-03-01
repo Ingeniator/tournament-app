@@ -94,6 +94,14 @@
   color: var(--color-success);
 }
 
+.description {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  white-space: pre-line;
+  margin: 0;
+}
+
 .sectionTitle {
   font-size: var(--text-base);
   font-weight: 600;

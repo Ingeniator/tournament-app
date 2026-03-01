@@ -15,7 +15,7 @@ interface EventScreenProps {
 }
 
 export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScreenProps) {
-  const { event, loading, linkTournament, unlinkTournament, updateTournamentWeight, deleteEvent } = useEvent(eventId);
+  const { event, loading, updateEvent, linkTournament, unlinkTournament, updateTournamentWeight, deleteEvent } = useEvent(eventId);
   const { t } = useTranslation();
   const { toastMessage, showToast } = useToast();
   const [linkCode, setLinkCode] = useState('');
@@ -139,6 +139,21 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
             {t(`event.status.${status}`)}
           </span>
         </div>
+
+        {/* Description (owner only) */}
+        {isOwner && (
+          <Card>
+            <label className={styles.configLabel}>{t('event.description')}</label>
+            <textarea
+              className={styles.configTextarea}
+              value={event.description ?? ''}
+              onChange={e => updateEvent({ description: e.target.value || undefined })}
+              placeholder={t('event.descriptionPlaceholder')}
+              rows={3}
+              maxLength={2000}
+            />
+          </Card>
+        )}
 
         {/* Share card (owner only) */}
         {isOwner && event.code && (

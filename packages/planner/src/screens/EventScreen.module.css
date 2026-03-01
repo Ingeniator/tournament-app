@@ -340,9 +340,27 @@
 }
 
 .configInput:focus,
-.select:focus {
+.select:focus,
+.configTextarea:focus {
   outline: none;
   border-color: var(--color-primary);
+}
+
+.configTextarea {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background-color: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  font-family: inherit;
+  resize: vertical;
+  margin-top: var(--space-xs);
+}
+
+.configTextarea::placeholder {
+  color: var(--color-text-muted);
 }
 
 /* Delete */

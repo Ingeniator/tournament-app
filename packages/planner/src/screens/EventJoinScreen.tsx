@@ -71,6 +71,11 @@ export function EventJoinScreen({ eventId, uid, onJoinTournament, onBack, onEdit
           </span>
         </div>
 
+        {/* Description */}
+        {event.description && (
+          <p className={styles.description}>{event.description}</p>
+        )}
+
         {/* Tournament list with join buttons */}
         <Card>
           <h2 className={styles.sectionTitle}>

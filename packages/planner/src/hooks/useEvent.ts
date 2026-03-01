@@ -12,6 +12,7 @@ function toEvent(id: string, data: Record<string, unknown>): PadelEvent {
     name: data.name as string,
     date: data.date as string,
     code: (data.code as string) ?? '',
+    description: (data.description as string) ?? undefined,
     tournaments: Array.isArray(tournaments)
       ? tournaments.map((t: EventTournamentLink) => ({
           tournamentId: t.tournamentId,
@@ -73,7 +74,7 @@ export function useEvent(eventId: string | null) {
   }, []);
 
   const updateEvent = useCallback(async (
-    updates: Partial<Pick<PadelEvent, 'name' | 'date' | 'tournaments'>>,
+    updates: Partial<Pick<PadelEvent, 'name' | 'date' | 'description' | 'tournaments'>>,
   ) => {
     if (!eventId || !db) return;
     const pathUpdates: Record<string, unknown> = {};

@@ -525,6 +525,7 @@ export function OrganizerScreen() {
             onChange={e => updateTournament({ description: e.target.value || undefined })}
             placeholder={t('organizer.descriptionPlaceholder')}
             rows={3}
+            maxLength={2000}
           />
         </div>
       </CollapsibleSection>
