@@ -186,6 +186,7 @@ const sr: Translations = {
   'join.selectGroup': 'Izaberite grupu',
   'join.selectClub': 'Izaberite klub',
   'join.selectRank': 'Izaberite svoj rang',
+  'join.edit': 'Uredi',
 
   // SupportOverlay
   'support.title': 'Podržite Nas',

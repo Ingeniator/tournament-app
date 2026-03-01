@@ -11,9 +11,10 @@ interface EventScreenProps {
   eventId: string;
   uid: string | null;
   onBack: () => void;
+  onOpenTournament: (tournamentId: string) => void;
 }
 
-export function EventScreen({ eventId, uid, onBack }: EventScreenProps) {
+export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScreenProps) {
   const { event, loading, linkTournament, unlinkTournament, updateTournamentWeight, deleteEvent } = useEvent(eventId);
   const { t } = useTranslation();
   const { toastMessage, showToast } = useToast();
@@ -166,6 +167,7 @@ export function EventScreen({ eventId, uid, onBack }: EventScreenProps) {
               isOwner={isOwner}
               onUnlink={handleUnlink}
               onWeightChange={updateTournamentWeight}
+              onOpen={isOwner ? onOpenTournament : undefined}
               t={t}
             />
           </>
@@ -177,6 +179,7 @@ export function EventScreen({ eventId, uid, onBack }: EventScreenProps) {
               isOwner={isOwner}
               onUnlink={handleUnlink}
               onWeightChange={updateTournamentWeight}
+              onOpen={isOwner ? onOpenTournament : undefined}
               t={t}
             />
             {standings.length > 0 && (
@@ -234,12 +237,14 @@ function TournamentListCard({
   isOwner,
   onUnlink,
   onWeightChange,
+  onOpen,
   t,
 }: {
   infos: EventTournamentInfo[];
   isOwner: boolean;
   onUnlink: (tid: string) => void;
   onWeightChange: (tid: string, weight: number) => void;
+  onOpen?: (tid: string) => void;
   t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   return (
@@ -254,7 +259,11 @@ function TournamentListCard({
           {infos.map(ti => (
             <div key={ti.id} className={styles.tournamentItem}>
               <div className={styles.tournamentDetails}>
-                <div className={styles.tournamentName}>{ti.name}</div>
+                <div className={styles.tournamentName}>
+                  {onOpen ? (
+                    <button className={styles.tournamentLink} onClick={() => onOpen(ti.id)}>{ti.name}</button>
+                  ) : ti.name}
+                </div>
                 <div className={styles.tournamentMeta}>
                   {ti.date && <span>{ti.date}</span>}
                   {ti.place && <span>{ti.place}</span>}

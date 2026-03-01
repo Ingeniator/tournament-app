@@ -186,6 +186,7 @@ const pt: Translations = {
   'join.selectGroup': 'Seleciona o teu grupo',
   'join.selectClub': 'Seleciona o teu clube',
   'join.selectRank': 'Selecione o seu rank',
+  'join.edit': 'Editar',
 
   // SupportOverlay
   'support.title': 'Apoie-nos',

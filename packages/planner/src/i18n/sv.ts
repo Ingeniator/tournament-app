@@ -186,6 +186,7 @@ const sv: Translations = {
   'join.selectGroup': 'Välj din grupp',
   'join.selectClub': 'Välj din klubb',
   'join.selectRank': 'Välj din rank',
+  'join.edit': 'Redigera',
 
   // SupportOverlay
   'support.title': 'Stöd Oss',

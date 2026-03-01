@@ -38,6 +38,23 @@
   white-space: nowrap;
 }
 
+.editTournamentBtn {
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-primary);
+  background: none;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.editTournamentBtn:active {
+  opacity: 0.7;
+}
+
 .registered {
   display: flex;
   flex-direction: column;

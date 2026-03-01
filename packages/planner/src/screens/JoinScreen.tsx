@@ -184,6 +184,11 @@ export function JoinScreen() {
       <header className={styles.header}>
         <button className={styles.backBtn} onClick={handleBack} aria-label={t('join.back')}>&larr;</button>
         <h1 className={styles.title}>{tournament.name}</h1>
+        {uid && tournament.organizerId === uid && (
+          <button className={styles.editTournamentBtn} onClick={() => setScreen('organizer')}>
+            {t('join.edit')}
+          </button>
+        )}
       </header>
 
       <main>

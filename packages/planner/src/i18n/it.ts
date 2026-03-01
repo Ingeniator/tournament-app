@@ -186,6 +186,7 @@ const it: Translations = {
   'join.selectGroup': 'Seleziona il tuo gruppo',
   'join.selectClub': 'Seleziona il tuo club',
   'join.selectRank': 'Seleziona il tuo rango',
+  'join.edit': 'Modifica',
 
   // SupportOverlay
   'support.title': 'Supportaci',

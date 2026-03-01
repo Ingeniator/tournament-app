@@ -8,11 +8,13 @@ import styles from './EventJoinScreen.module.css';
 
 interface EventJoinScreenProps {
   eventId: string;
+  uid: string | null;
   onJoinTournament: (tournamentId: string) => void;
   onBack: () => void;
+  onEdit: () => void;
 }
 
-export function EventJoinScreen({ eventId, onJoinTournament, onBack }: EventJoinScreenProps) {
+export function EventJoinScreen({ eventId, uid, onJoinTournament, onBack, onEdit }: EventJoinScreenProps) {
   const { event, loading } = useEvent(eventId);
   const { t } = useTranslation();
 
@@ -54,6 +56,11 @@ export function EventJoinScreen({ eventId, onJoinTournament, onBack }: EventJoin
         <div className={styles.nameRow}>
           <h1 className={styles.name}>{event.name}</h1>
         </div>
+        {event.organizerId === uid && (
+          <button className={styles.editEventBtn} onClick={onEdit}>
+            {t('eventJoin.edit')}
+          </button>
+        )}
       </header>
       <main>
         {/* Metadata */}

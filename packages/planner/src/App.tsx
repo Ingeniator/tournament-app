@@ -39,7 +39,7 @@ function FirebaseSetupMessage() {
 }
 
 function AppContent() {
-  const { screen, setScreen, authLoading, authError, loadByCode, loadEventByCode, tournament, uid, activeEventId, setActiveEventId, openTournamentFromEvent } = usePlanner();
+  const { screen, setScreen, authLoading, authError, loadByCode, loadEventByCode, openTournament, tournament, uid, activeEventId, setActiveEventId, openTournamentFromEvent } = usePlanner();
   const { t, setLocale } = useTranslation();
 
   // Apply tournament locale for Telegram deep links (no &lang= in URL)
@@ -129,17 +129,20 @@ function AppContent() {
             setActiveEventId(null);
             setScreen('home');
           }}
+          onOpenTournament={(tid) => openTournament(tid, 'organizer')}
         />
       );
     case 'event-join':
       return (
         <EventJoinScreen
           eventId={activeEventId!}
+          uid={uid}
           onJoinTournament={openTournamentFromEvent}
           onBack={() => {
             setActiveEventId(null);
             setScreen('home');
           }}
+          onEdit={() => setScreen('event-detail')}
         />
       );
     default:
