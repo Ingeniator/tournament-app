@@ -14,9 +14,11 @@ const formats = [
   { name: 'King of the Court', category: 'Competitive', emoji: '👑', desc: 'Court hierarchy system. Winners get promoted to higher courts, losers move down. Bonus points for winning on top courts. Rotating partners.', bestFor: 'Multi-court clubs, ranking battles' },
   { name: 'Team Americano', category: 'Team', emoji: '🤝', desc: 'Fixed partner pairs throughout the tournament with random opponents. Team standings — you win or lose together.', bestFor: 'Established pairs, team bonding' },
   { name: 'Team Mexicano', category: 'Team', emoji: '🔥', desc: 'Fixed teams with standings-based opponent matching. The most competitive team format — top teams face top teams.', bestFor: 'Serious pair competition' },
-  { name: 'Club Americano (Slots)', category: 'Club', emoji: '🏟️', desc: 'Inter-club competition with fixed positional matchups. Slot 1 always faces Slot 1 from the opposing club. Perfect for structured league play.', bestFor: 'Club leagues, structured competition' },
-  { name: 'Club Americano (Random)', category: 'Club', emoji: '🎲', desc: 'Inter-club competition with randomized pair matchups. Same club format but with more variety in who faces whom.', bestFor: 'Club social events' },
-  { name: 'Club Mexicano', category: 'Club', emoji: '📊', desc: 'Inter-club competition with standings-based matchups. The most competitive club format — top pairs face top pairs across clubs.', bestFor: 'Competitive inter-club events' },
+  { name: 'Club Americano', category: 'Club', emoji: '🎾', desc: 'Inter-club competition with rotating partners and random opponents. Players rotate within their club each round. Individual standings.', bestFor: 'Social inter-club events' },
+  { name: 'Club Mexicano', category: 'Club', emoji: '📊', desc: 'Inter-club competition with rotating partners and standings-based opponents. The competitive version — top players face top players across clubs.', bestFor: 'Competitive inter-club events' },
+  { name: 'Club Ranked', category: 'Club', emoji: '🏟️', desc: 'Inter-club competition with fixed pairs and positional matchups. Pair #1 always faces Pair #1 from the opposing club. Structured league play.', bestFor: 'Club leagues, formal brackets' },
+  { name: 'Club Team Americano', category: 'Club', emoji: '🎲', desc: 'Inter-club competition with fixed pairs and randomized matchups. Partners stay together, but which pair you face is shuffled each round.', bestFor: 'Casual inter-club team events' },
+  { name: 'Club Team Mexicano', category: 'Club', emoji: '🔥', desc: 'Inter-club competition with fixed pairs and standings-based matchups. Top pairs face top pairs. The most competitive club format.', bestFor: 'High-stakes inter-club showdowns' },
 ];
 
 const categoryStyle = (cat: string) => {
@@ -41,7 +43,7 @@ export function FormatsPage({ onFeedback }: Props) {
       <article className={styles.article}>
         <h1>Tournament Formats — Complete Guide</h1>
         <p className={styles.lead}>
-          Choose from 15 tournament configurations across 4 categories. Whether you're running a casual social event or a competitive inter-club league, there's a format for you. Most formats also have a cross-group variant for mixed-gender or skill-group play.
+          15 tournament formats across 4 categories. Whether you're running a casual social event or a competitive inter-club league, there's a format for you. Many formats also have a cross-group variant for mixed-gender or skill-group play.
         </p>
 
         <h2>All Formats</h2>
@@ -82,9 +84,11 @@ export function FormatsPage({ onFeedback }: Props) {
             <tr><td>Team Mexicano</td><td>Fixed</td><td>Standings</td><td>Team</td></tr>
             <tr><td>Mixed Team Americano</td><td>Fixed (cross-group)</td><td>Random</td><td>Team</td></tr>
             <tr><td>Mixed Team Mexicano</td><td>Fixed (cross-group)</td><td>Standings</td><td>Team</td></tr>
-            <tr><td>Club (Slots)</td><td>Fixed</td><td>Positional</td><td>Club</td></tr>
-            <tr><td>Club (Random)</td><td>Fixed</td><td>Random</td><td>Club</td></tr>
-            <tr><td>Club (Mexicano)</td><td>Fixed</td><td>Standings</td><td>Club</td></tr>
+            <tr><td>Club Americano</td><td>Rotating</td><td>Random</td><td>Club</td></tr>
+            <tr><td>Club Mexicano</td><td>Rotating</td><td>Standings</td><td>Club</td></tr>
+            <tr><td>Club Ranked</td><td>Fixed</td><td>Positional</td><td>Club</td></tr>
+            <tr><td>Club Team Americano</td><td>Fixed</td><td>Random</td><td>Club</td></tr>
+            <tr><td>Club Team Mexicano</td><td>Fixed</td><td>Standings</td><td>Club</td></tr>
           </tbody>
         </table>
 

@@ -37,57 +37,76 @@ export function ClubPage({ onFeedback }: Props) {
           <li><strong>Points per match:</strong> Same as other formats — typically 16, 24, or 32.</li>
         </ul>
 
-        <h2>3 Club Formats</h2>
+        <h2>5 Club Formats</h2>
         <p>
-          The three club formats share the same structure but differ in how pairs are matched across clubs. Choose based on how competitive you want the matchups to be.
+          Club formats differ in two ways: whether partners rotate or stay fixed, and how opponents are matched. Pick the combination that fits your event.
         </p>
 
-        <h3>Club Ranked (Slots)</h3>
+        <h3>Rotating Partners</h3>
+
+        <h3>Club Americano</h3>
         <p>
-          Positional matchups. Pair #1 from Club A always faces Pair #1 from Club B, Pair #2 vs Pair #2, and so on. This is the most structured format — the best pair from each club always plays the best pair from the other club.
+          Players rotate partners within their club each round, and opponents are assigned randomly across clubs. Individual standings. The social club format — everyone plays with everyone from their club.
         </p>
         <ul>
           <li>Schedule is generated upfront (all rounds known in advance)</li>
-          <li>Deterministic — same setup always produces the same matchups</li>
-          <li>Best for: formal league play, ranked inter-club competitions</li>
+          <li>Best for: social inter-club events, large groups</li>
         </ul>
 
-        <h3>Club Team Americano (Random)</h3>
+        <h3>Club Mexicano</h3>
         <p>
-          Random matchups. Pairs from opposing clubs are shuffled each round, so Pair #1 from Club A might face Pair #3 from Club B, then Pair #1 from Club B next round. More variety, less predictability.
+          Same rotating partners, but opponents are assigned based on current standings. Top players face top players across clubs. The competitive version of Club Americano.
+        </p>
+        <ul>
+          <li>Dynamic schedule — standings determine next round's matchups</li>
+          <li>Best for: competitive inter-club events</li>
+        </ul>
+
+        <h3>Fixed Pairs</h3>
+
+        <h3>Club Ranked</h3>
+        <p>
+          Fixed pairs with positional matchups. Pair #1 from Club A always faces Pair #1 from Club B, Pair #2 vs Pair #2, and so on. The most structured format — top pairs always face top pairs.
+        </p>
+        <ul>
+          <li>Deterministic — same setup always produces the same matchups</li>
+          <li>Best for: formal league play, ranked inter-club brackets</li>
+        </ul>
+
+        <h3>Club Team Americano</h3>
+        <p>
+          Fixed pairs with randomized matchups. Partners stay together, but which pair from Club A faces which pair from Club B is shuffled each round. More variety, less predictability.
         </p>
         <ul>
           <li>Schedule is generated upfront with randomized pair assignments</li>
-          <li>Different shuffle = different experience every time</li>
-          <li>Best for: social inter-club events, casual club matchups</li>
+          <li>Best for: casual inter-club team events</li>
         </ul>
 
-        <h3>Club Team Mexicano (Standings)</h3>
+        <h3>Club Team Mexicano</h3>
         <p>
-          Standings-based matchups. After round 1 (which is random), pairs are ranked by points. The top pair from Club A faces the top pair from Club B, the second-best pair vs second-best, and so on. This creates the most competitive matches.
+          Fixed pairs with standings-based matchups. After round 1 (random), pairs are ranked by points. The top pair from Club A faces the top pair from Club B. The most competitive club format.
         </p>
         <ul>
-          <li>Dynamic schedule — only the next round is generated based on current standings</li>
-          <li>Every round gets more competitive as pairs are sorted by performance</li>
-          <li>Best for: competitive inter-club showdowns, high-stakes events</li>
+          <li>Dynamic schedule — every round gets tighter as pairs are sorted by performance</li>
+          <li>Best for: high-stakes inter-club showdowns</li>
         </ul>
 
         <h2>Comparison</h2>
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>Feature</th>
-              <th>Ranked</th>
-              <th>Random</th>
-              <th>Standings</th>
+              <th>Format</th>
+              <th>Partners</th>
+              <th>Opponents</th>
+              <th>Schedule</th>
             </tr>
           </thead>
           <tbody>
-            <tr><td>Matchup logic</td><td>Position-based</td><td>Shuffled</td><td>Points-based</td></tr>
-            <tr><td>Schedule</td><td>Static</td><td>Static</td><td>Dynamic</td></tr>
-            <tr><td>Best pair vs best pair?</td><td>Always</td><td>Sometimes</td><td>After round 1</td></tr>
-            <tr><td>Competitiveness</td><td>Medium</td><td>Low</td><td>High</td></tr>
-            <tr><td>Surprise factor</td><td>Low</td><td>High</td><td>Medium</td></tr>
+            <tr><td>Club Americano</td><td>Rotating</td><td>Random</td><td>Static</td></tr>
+            <tr><td>Club Mexicano</td><td>Rotating</td><td>Standings</td><td>Dynamic</td></tr>
+            <tr><td>Club Ranked</td><td>Fixed</td><td>Positional</td><td>Static</td></tr>
+            <tr><td>Club Team Americano</td><td>Fixed</td><td>Random</td><td>Static</td></tr>
+            <tr><td>Club Team Mexicano</td><td>Fixed</td><td>Standings</td><td>Dynamic</td></tr>
           </tbody>
         </table>
 
@@ -125,8 +144,9 @@ export function ClubPage({ onFeedback }: Props) {
         <h2>Tips for Organizers</h2>
         <ul>
           <li><strong>Equal club sizes work best.</strong> Uneven sizes work fine (sit-outs get compensation), but equal numbers feel fairest.</li>
+          <li><strong>Use Club Americano or Club Mexicano</strong> if you want rotating partners — everyone plays with different clubmates each round.</li>
           <li><strong>Use Club Ranked for formal events</strong> where seeding matters — top pairs should face top pairs.</li>
-          <li><strong>Use Club Team Americano for fun</strong> — the randomness creates surprises and keeps it social.</li>
+          <li><strong>Use Club Team Americano for casual team play</strong> — fixed pairs, but randomized matchups keep it fun.</li>
           <li><strong>Use Club Team Mexicano for drama</strong> — standings-based matchups make every round tighter as the tournament progresses.</li>
           <li><strong>3+ clubs?</strong> The round-robin handles any number. Bye rounds are managed automatically.</li>
         </ul>
