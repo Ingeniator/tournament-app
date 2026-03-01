@@ -147,6 +147,8 @@ const it: Translations = {
   'settings.addPlayer': '+ Aggiungi Giocatore',
   'settings.out': 'fuori',
   'settings.exportImport': 'Esporta / Importa',
+  'settings.export': 'Esporta',
+  'settings.import': 'Importa',
   'settings.copyData': 'Esporta negli Appunti',
   'settings.exportFile': 'Esporta su File',
   'settings.cancelImport': 'Annulla Importazione',

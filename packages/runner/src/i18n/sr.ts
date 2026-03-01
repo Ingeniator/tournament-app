@@ -145,6 +145,8 @@ const sr: Translations = {
   'settings.addPlayer': '+ Dodaj Igrača',
   'settings.out': 'van',
   'settings.exportImport': 'Izvoz / Uvoz',
+  'settings.export': 'Izvoz',
+  'settings.import': 'Uvoz',
   'settings.copyData': 'Izvezi u klipbord',
   'settings.exportFile': 'Izvezi u fajl',
   'settings.cancelImport': 'Otkaži Uvoz',

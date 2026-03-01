@@ -145,6 +145,8 @@ const sv: Translations = {
   'settings.addPlayer': '+ Lägg till Spelare',
   'settings.out': 'ute',
   'settings.exportImport': 'Exportera / Importera',
+  'settings.export': 'Exportera',
+  'settings.import': 'Importera',
   'settings.copyData': 'Exportera till urklipp',
   'settings.exportFile': 'Exportera till fil',
   'settings.cancelImport': 'Avbryt Import',

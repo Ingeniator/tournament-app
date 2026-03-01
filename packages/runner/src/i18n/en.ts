@@ -145,6 +145,8 @@ const en: Translations = {
   'settings.addPlayer': '+ Add Player',
   'settings.out': 'out',
   'settings.exportImport': 'Export / Import',
+  'settings.export': 'Export',
+  'settings.import': 'Import',
   'settings.copyData': 'Export to Clipboard',
   'settings.exportFile': 'Export to File',
   'settings.cancelImport': 'Cancel Import',
