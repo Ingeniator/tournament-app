@@ -284,6 +284,7 @@ export function OrganizerScreen() {
           <input
             className={styles.configInput}
             type="time"
+            lang="en-GB"
             value={tournament.date?.split('T')[1] ?? ''}
             onChange={e => {
               const time = e.target.value;
