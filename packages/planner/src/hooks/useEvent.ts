@@ -1,15 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ref, onValue, update as firebaseUpdate } from 'firebase/database';
-import type { PadelEvent, EventRankingRules, EventTournamentLink } from '@padel/common';
+import type { PadelEvent, EventTournamentLink } from '@padel/common';
 import { generateId } from '@padel/common';
 import { db } from '../firebase';
-
-const DEFAULT_RULES: EventRankingRules = {
-  pointsPerWin: 3,
-  pointsPerDraw: 1,
-  pointsPerLoss: 0,
-  tiebreaker: 'pointDifference',
-};
 
 function toEvent(id: string, data: Record<string, unknown>): PadelEvent {
   const tournaments = data.tournaments;
@@ -23,7 +16,6 @@ function toEvent(id: string, data: Record<string, unknown>): PadelEvent {
           weight: t.weight ?? 1,
         }))
       : [],
-    rankingRules: (data.rankingRules as EventRankingRules) ?? DEFAULT_RULES,
     organizerId: data.organizerId as string,
     createdAt: data.createdAt as number,
     updatedAt: data.updatedAt as number,
@@ -54,7 +46,6 @@ export function useEvent(eventId: string | null) {
     name: string,
     date: string,
     organizerId: string,
-    rankingRules?: EventRankingRules,
   ): Promise<string> => {
     if (!db) throw new Error('Firebase not configured');
     const id = generateId();
@@ -64,7 +55,6 @@ export function useEvent(eventId: string | null) {
       name,
       date,
       tournaments: [],
-      rankingRules: rankingRules ?? DEFAULT_RULES,
       organizerId,
       createdAt: now,
       updatedAt: now,
@@ -78,7 +68,7 @@ export function useEvent(eventId: string | null) {
   }, []);
 
   const updateEvent = useCallback(async (
-    updates: Partial<Pick<PadelEvent, 'name' | 'date' | 'rankingRules' | 'tournaments'>>,
+    updates: Partial<Pick<PadelEvent, 'name' | 'date' | 'tournaments'>>,
   ) => {
     if (!eventId || !db) return;
     const pathUpdates: Record<string, unknown> = {};

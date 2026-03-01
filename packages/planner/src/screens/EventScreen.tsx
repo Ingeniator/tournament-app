@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react';
 import { Button, Card, Toast, useToast, useTranslation } from '@padel/common';
-import type { EventStandingEntry } from '@padel/common';
+import type { EventStandingEntry, EventClubStandingEntry } from '@padel/common';
 import { useEvent } from '../hooks/useEvent';
 import { useEventTournaments } from '../hooks/useEventTournaments';
 import type { EventTournamentInfo } from '../hooks/useEventTournaments';
-import { computeEventStandings } from '../utils/eventStandings';
+import { computeEventStandings, computeEventClubStandings } from '../utils/eventStandings';
 import styles from './EventScreen.module.css';
 
 interface EventScreenProps {
@@ -26,7 +26,12 @@ export function EventScreen({ eventId, uid, onBack }: EventScreenProps) {
 
   const standings = useMemo(() => {
     if (!event || tournamentData.size === 0) return [];
-    return computeEventStandings(event.tournaments, tournamentData, event.rankingRules);
+    return computeEventStandings(event.tournaments, tournamentData);
+  }, [event, tournamentData]);
+
+  const clubStandings = useMemo(() => {
+    if (!event || tournamentData.size === 0) return [];
+    return computeEventClubStandings(event.tournaments, tournamentData);
   }, [event, tournamentData]);
 
   if (loading || !event) {
@@ -117,6 +122,9 @@ export function EventScreen({ eventId, uid, onBack }: EventScreenProps) {
         {status === 'active' || status === 'completed' ? (
           <>
             {/* Active/Completed: Standings first */}
+            {clubStandings.length > 0 && (
+              <ClubStandingsCard clubStandings={clubStandings} status={status} t={t} />
+            )}
             <StandingsCard standings={standings} status={status} t={t} />
             <TournamentListCard
               infos={tournamentInfos}
@@ -137,7 +145,12 @@ export function EventScreen({ eventId, uid, onBack }: EventScreenProps) {
               t={t}
             />
             {standings.length > 0 && (
-              <StandingsCard standings={standings} status={status} t={t} />
+              <>
+                {clubStandings.length > 0 && (
+                  <ClubStandingsCard clubStandings={clubStandings} status={status} t={t} />
+                )}
+                <StandingsCard standings={standings} status={status} t={t} />
+              </>
             )}
           </>
         )}
@@ -165,74 +178,6 @@ export function EventScreen({ eventId, uid, onBack }: EventScreenProps) {
             )}
           </Card>
         )}
-
-        {/* Ranking rules (owner can edit) */}
-        <Card>
-          <h2 className={styles.sectionTitle}>{t('event.rules')}</h2>
-          <div className={styles.configGrid}>
-            <span className={styles.configLabel}>{t('event.pointsPerWin')}</span>
-            {isOwner ? (
-              <input
-                className={styles.configInput}
-                type="number"
-                value={event.rankingRules.pointsPerWin}
-                onChange={e => updateEvent({
-                  rankingRules: { ...event.rankingRules, pointsPerWin: parseInt(e.target.value, 10) || 0 },
-                })}
-                min={0}
-              />
-            ) : (
-              <span>{event.rankingRules.pointsPerWin}</span>
-            )}
-
-            <span className={styles.configLabel}>{t('event.pointsPerDraw')}</span>
-            {isOwner ? (
-              <input
-                className={styles.configInput}
-                type="number"
-                value={event.rankingRules.pointsPerDraw}
-                onChange={e => updateEvent({
-                  rankingRules: { ...event.rankingRules, pointsPerDraw: parseInt(e.target.value, 10) || 0 },
-                })}
-                min={0}
-              />
-            ) : (
-              <span>{event.rankingRules.pointsPerDraw}</span>
-            )}
-
-            <span className={styles.configLabel}>{t('event.pointsPerLoss')}</span>
-            {isOwner ? (
-              <input
-                className={styles.configInput}
-                type="number"
-                value={event.rankingRules.pointsPerLoss}
-                onChange={e => updateEvent({
-                  rankingRules: { ...event.rankingRules, pointsPerLoss: parseInt(e.target.value, 10) || 0 },
-                })}
-                min={0}
-              />
-            ) : (
-              <span>{event.rankingRules.pointsPerLoss}</span>
-            )}
-
-            <span className={styles.configLabel}>{t('event.tiebreaker')}</span>
-            {isOwner ? (
-              <select
-                className={styles.select}
-                value={event.rankingRules.tiebreaker}
-                onChange={e => updateEvent({
-                  rankingRules: { ...event.rankingRules, tiebreaker: e.target.value as 'pointDifference' | 'headToHead' | 'gamesWon' },
-                })}
-              >
-                <option value="pointDifference">{t('event.tiebreaker.pointDifference')}</option>
-                <option value="headToHead">{t('event.tiebreaker.headToHead')}</option>
-                <option value="gamesWon">{t('event.tiebreaker.gamesWon')}</option>
-              </select>
-            ) : (
-              <span>{t(`event.tiebreaker.${event.rankingRules.tiebreaker}`)}</span>
-            )}
-          </div>
-        </Card>
 
         {/* Delete event (owner only) */}
         {isOwner && (
@@ -274,7 +219,7 @@ function StandingsCard({
                 <th>{t('event.col.name')}</th>
                 <th className={styles.right}>{t('event.col.pts')}</th>
                 <th className={styles.right}>{t('event.col.mp')}</th>
-                <th className={styles.right}>{t('event.col.wdl')}</th>
+                <th className={styles.right}>{t('event.col.w')}</th>
                 <th className={`${styles.right} ${styles.diff}`}>{t('event.col.diff')}</th>
               </tr>
             </thead>
@@ -285,18 +230,18 @@ function StandingsCard({
                   entry.rank === 2 ? styles.rank2 :
                   entry.rank === 3 ? styles.rank3 : '';
                 const diffClass =
-                  entry.pointDifference > 0 ? styles.positive :
-                  entry.pointDifference < 0 ? styles.negative : '';
+                  entry.pointDiff > 0 ? styles.positive :
+                  entry.pointDiff < 0 ? styles.negative : '';
 
                 return (
                   <tr key={entry.playerName}>
                     <td className={`${styles.rank} ${rankClass}`}>{entry.rank}</td>
                     <td className={styles.playerName}>{entry.playerName}</td>
-                    <td className={`${styles.right} ${styles.points}`}>{entry.points}</td>
+                    <td className={`${styles.right} ${styles.points}`}>{entry.totalPoints}</td>
                     <td className={styles.right}>{entry.matchesPlayed}</td>
-                    <td className={styles.right}>{entry.wins}-{entry.draws}-{entry.losses}</td>
+                    <td className={styles.right}>{entry.matchesWon}</td>
                     <td className={`${styles.right} ${styles.diff} ${diffClass}`}>
-                      {entry.pointDifference > 0 ? '+' : ''}{entry.pointDifference}
+                      {entry.pointDiff > 0 ? '+' : ''}{entry.pointDiff}
                     </td>
                   </tr>
                 );
@@ -305,6 +250,53 @@ function StandingsCard({
           </table>
         </div>
       )}
+    </Card>
+  );
+}
+
+function ClubStandingsCard({
+  clubStandings,
+  status,
+  t,
+}: {
+  clubStandings: EventClubStandingEntry[];
+  status: string;
+  t: (key: string) => string;
+}) {
+  return (
+    <Card>
+      <h2 className={styles.sectionTitle}>
+        {status === 'completed' ? t('event.finalClubStandings') : t('event.liveClubStandings')}
+      </h2>
+      <div className={styles.tableWrapper}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th className={styles.rank}>#</th>
+              <th>{t('event.col.club')}</th>
+              <th className={styles.right}>{t('event.col.pts')}</th>
+              <th className={styles.right}>{t('event.col.members')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {clubStandings.map((entry) => {
+              const rankClass =
+                entry.rank === 1 ? styles.rank1 :
+                entry.rank === 2 ? styles.rank2 :
+                entry.rank === 3 ? styles.rank3 : '';
+
+              return (
+                <tr key={entry.clubName}>
+                  <td className={`${styles.rank} ${rankClass}`}>{entry.rank}</td>
+                  <td className={styles.playerName}>{entry.clubName}</td>
+                  <td className={`${styles.right} ${styles.points}`}>{entry.totalPoints}</td>
+                  <td className={styles.right}>{entry.memberCount}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </Card>
   );
 }
