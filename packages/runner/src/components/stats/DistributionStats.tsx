@@ -76,38 +76,40 @@ export function DistributionStats({ data, isDynamic, canReshuffle, onReshuffle, 
     });
   };
 
-  const allGreen = repeatPartnersOk && isBalanced && neverPlayedOk && restOk && courtBalanceOk;
+  const allGreen = (data.hasFixedPartners || repeatPartnersOk) && isBalanced && neverPlayedOk && restOk && courtBalanceOk;
   const busy = isPending || isOptimizing;
 
   return (
     <div className={styles.section}>
       {!isDynamic && (<>
-        {/* Priority 1: Partner Repeats (weight 3) */}
-        <div className={styles.row}>
-          <span className={styles.indicator}>{repeatPartnersOk ? '\u2705' : '\u26A0\uFE0F'}</span>
-          <div className={styles.content}>
-            <div className={styles.labelRow}>
-              <span className={styles.label}>{t('distribution.partnerRepeats')}</span>
-              <InfoButton hint={t('distribution.hintPartners')} />
-            </div>
-            <div className={styles.detail}>
-              {t('distribution.pairs', { count: data.repeatPartners.length, s: data.repeatPartners.length !== 1 ? 's' : '' })}
-              {' '}
-              <span className={styles.ideal}>
-                {data.idealRepeatPartners === 0 ? t('distribution.idealZero') : t('distribution.idealMax', { max: data.idealRepeatPartners })}
-              </span>
-            </div>
-            {data.repeatPartners.length > 0 && (
-              <div className={styles.pairList}>
-                {data.repeatPartners.map((p, i) => (
-                  <span key={i} className={styles.pair}>
-                    {p.names[0]} & {p.names[1]} x{p.count}
-                  </span>
-                ))}
+        {/* Priority 1: Partner Repeats (weight 3) — hidden for fixed-partner formats */}
+        {!data.hasFixedPartners && (
+          <div className={styles.row}>
+            <span className={styles.indicator}>{repeatPartnersOk ? '\u2705' : '\u26A0\uFE0F'}</span>
+            <div className={styles.content}>
+              <div className={styles.labelRow}>
+                <span className={styles.label}>{t('distribution.partnerRepeats')}</span>
+                <InfoButton hint={t('distribution.hintPartners')} />
               </div>
-            )}
+              <div className={styles.detail}>
+                {t('distribution.pairs', { count: data.repeatPartners.length, s: data.repeatPartners.length !== 1 ? 's' : '' })}
+                {' '}
+                <span className={styles.ideal}>
+                  {data.idealRepeatPartners === 0 ? t('distribution.idealZero') : t('distribution.idealMax', { max: data.idealRepeatPartners })}
+                </span>
+              </div>
+              {data.repeatPartners.length > 0 && (
+                <div className={styles.pairList}>
+                  {data.repeatPartners.map((p, i) => (
+                    <span key={i} className={styles.pair}>
+                      {p.names[0]} & {p.names[1]} x{p.count}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Priority 2: Opponent Balance (weight 2) */}
         <div className={styles.row}>

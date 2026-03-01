@@ -9,3 +9,11 @@ export interface StandingsEntry {
   pointDiff: number;
   rank: number;
 }
+
+export interface ClubStandingsEntry {
+  clubId: string;
+  clubName: string;
+  totalPoints: number;
+  memberCount: number;
+  rank: number;
+}

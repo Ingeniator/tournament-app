@@ -5,16 +5,20 @@ export type {
   Team,
   Competitor,
   Court,
+  Club,
   TournamentConfig,
   MatchScore,
   Match,
   Round,
   Tournament,
 } from './types/tournament';
-export type { StandingsEntry } from './types/standings';
+export type { StandingsEntry, ClubStandingsEntry } from './types/standings';
 export type { AwardTier, Nomination } from './types/nomination';
+export type { ChaosLevel, CardTier, CurseCard, MatchCurse, MaldicionesHands } from './types/maldiciones';
 export type { Supporter, GroupedSupporter } from './types/supporter';
 export type { PlannerTournament, PlannerRegistration, TournamentSummary, TournamentStartInfo } from './types/planner';
+export type { PadelEvent, EventTournamentLink, PadelEventSummary, PadelEventStatus, EventStandingEntry, EventClubStandingEntry } from './types/event';
+export { CLUB_COLORS, getClubColor } from './constants/clubColors';
 export { generateId } from './utils/id';
 export { parsePlayerList } from './utils/parsePlayerList';
 export { groupSupporters } from './utils/groupSupporters';
@@ -25,6 +29,8 @@ export { Toast } from './components/Toast';
 export { ErrorBoundary } from './components/ErrorBoundary';
 export { SkinPicker } from './components/SkinPicker';
 export { FeedbackModal } from './components/FeedbackModal';
+export { FormatPicker, FORMAT_PRESETS, getPresetById, getPresetByFormat, getPresetsByCategory, formatHasGroups, formatHasClubs } from './components/FormatPicker';
+export type { FormatPreset } from './components/FormatPicker';
 export { useToast } from './hooks/useToast';
 export type { Locale, Translations, TranslationMap } from './i18n/types';
 export { I18nProvider, useTranslation } from './i18n/context';

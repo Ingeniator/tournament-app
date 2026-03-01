@@ -21,7 +21,7 @@ const UNORDERED_MARKER = /^[-*•‣]\s*/;
 
 export function parsePlayerList(text: string): string[] {
   return text
-    .split('\n')
+    .split(/[\n,]/)
     .map(line => {
       // Strip trailing status message after colon (e.g. "Anton: купит гараж")
       let cleaned = line.replace(/\s*:.*$/, '');

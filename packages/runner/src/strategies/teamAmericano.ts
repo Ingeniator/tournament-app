@@ -1,18 +1,13 @@
 import type { TournamentStrategy, ScheduleResult } from './types';
 import type { Player, TournamentConfig, Round, Match, Tournament, Team } from '@padel/common';
 import { generateId } from '@padel/common';
-import { shuffle, commonValidateScore, calculateCompetitorStandings, findTeamByPair, selectTeamSitOuts } from './shared';
+import { shuffle, commonValidateSetup, commonValidateScore, calculateCompetitorStandings, findTeamByPair, selectTeamSitOuts, seedTeamsFromRounds, teamKey } from './shared';
 
 /**
  * Team Americano: fixed teams compete against each other.
  * Teams are formed before the tournament and never change.
  * Standings are per-team, not per-individual.
  */
-
-function teamKey(a: string, b: string): string {
-  return a < b ? `${a}:${b}` : `${b}:${a}`;
-}
-
 
 /** Generate rounds for team americano */
 function generateTeamRounds(
@@ -111,20 +106,11 @@ function generateTeamRounds(
 }
 
 function teamAmericanoValidateSetup(players: Player[], config: TournamentConfig): string[] {
-  const errors: string[] = [];
-  if (players.length < 4) {
-    errors.push('At least 4 players are required');
-  }
+  const errors = commonValidateSetup(players, config);
   if (players.length % 2 !== 0) {
     errors.push('Team Americano requires an even number of players');
   }
   const availableCourts = config.courts.filter(c => !c.unavailable);
-  if (availableCourts.length === 0) {
-    errors.push('At least 1 court is required');
-  }
-  if (config.pointsPerMatch < 1) {
-    errors.push('Points per match must be at least 1');
-  }
   const numTeams = Math.floor(players.length / 2);
   const maxCourts = Math.floor(numTeams / 2);
   if (availableCourts.length > maxCourts && numTeams >= 2) {
@@ -199,29 +185,7 @@ export const teamAmericanoStrategy: TournamentStrategy = {
     }
 
     // Seed from existing rounds using all teams for accurate history
-    const opponentCounts = new Map<string, number>();
-    const gamesPlayed = new Map<string, number>();
-    const lastSitOutRound = new Map<string, number>();
-    activeTeams.forEach(t => { gamesPlayed.set(t.id, 0); lastSitOutRound.set(t.id, -Infinity); });
-
-    for (const round of existingRounds) {
-      for (const match of round.matches) {
-        const t1 = findTeamByPair(allTeams, match.team1);
-        const t2 = findTeamByPair(allTeams, match.team2);
-        if (t1 && t2) {
-          const ok = teamKey(t1.id, t2.id);
-          opponentCounts.set(ok, (opponentCounts.get(ok) ?? 0) + 1);
-          if (gamesPlayed.has(t1.id)) gamesPlayed.set(t1.id, (gamesPlayed.get(t1.id) ?? 0) + 1);
-          if (gamesPlayed.has(t2.id)) gamesPlayed.set(t2.id, (gamesPlayed.get(t2.id) ?? 0) + 1);
-        }
-      }
-      // Track sit-outs by active team
-      for (const team of activeTeams) {
-        if (round.sitOuts.includes(team.player1Id) || round.sitOuts.includes(team.player2Id)) {
-          lastSitOutRound.set(team.id, round.roundNumber);
-        }
-      }
-    }
+    const { opponentCounts, gamesPlayed, lastSitOutRound } = seedTeamsFromRounds(existingRounds, allTeams, activeTeams);
 
     const startRoundNumber = existingRounds.length + 1;
     return generateTeamRounds(activeTeams, config, count, startRoundNumber, opponentCounts, gamesPlayed, lastSitOutRound);

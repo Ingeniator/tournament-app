@@ -11,13 +11,19 @@ export function buildRunnerTournament(
   registrations: PlannerRegistration[]
 ): Tournament {
   const capacity = plannerTournament.courts.length * 4 + (plannerTournament.extraSpots ?? 0);
-  const statuses = getPlayerStatuses(registrations, capacity);
+  const statuses = getPlayerStatuses(registrations, capacity, {
+    format: plannerTournament.format,
+    clubs: plannerTournament.clubs,
+  });
 
   const players: Player[] = registrations
     .filter(r => statuses.get(r.id) === 'playing')
     .map(r => ({
       id: generateId(),
       name: r.name,
+      ...(r.group ? { group: r.group } : {}),
+      ...(r.clubId ? { clubId: r.clubId } : {}),
+      ...(r.rankSlot != null ? { rankSlot: r.rankSlot } : {}),
     }));
 
   return {
@@ -29,10 +35,13 @@ export function buildRunnerTournament(
       courts: plannerTournament.courts,
       maxRounds: null,
       targetDuration: plannerTournament.duration,
+      ...(plannerTournament.groupLabels ? { groupLabels: plannerTournament.groupLabels } : {}),
+      ...(plannerTournament.rankLabels ? { rankLabels: plannerTournament.rankLabels } : {}),
     },
     phase: 'setup',
     players,
     rounds: [],
+    ...(plannerTournament.clubs ? { clubs: plannerTournament.clubs } : {}),
     plannerTournamentId: plannerTournament.id,
     createdAt: Date.now(),
     updatedAt: Date.now(),

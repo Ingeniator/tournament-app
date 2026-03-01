@@ -1,0 +1,72 @@
+.sectionTitle {
+  font-size: var(--text-base);
+  font-weight: 600;
+  margin-bottom: var(--space-md);
+  color: var(--color-text-secondary);
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.table th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  padding: var(--space-xs) var(--space-sm);
+  border-bottom: 2px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: var(--space-xs) var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.right {
+  text-align: right;
+}
+
+.rank {
+  width: 28px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.rank1 { color: #c8a400; }
+.rank2 { color: #8a8a8a; }
+.rank3 { color: #b87333; }
+
+.playerName {
+  font-weight: 500;
+}
+
+.points {
+  font-weight: 700;
+}
+
+.diff {
+  width: 48px;
+}
+
+.positive { color: var(--color-success); }
+.negative { color: var(--color-danger); }
+
+.empty {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: var(--space-md);
+}

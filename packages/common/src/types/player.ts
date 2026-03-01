@@ -3,4 +3,6 @@ export interface Player {
   name: string;
   unavailable?: boolean;
   group?: 'A' | 'B';
+  clubId?: string;
+  rankSlot?: number;
 }

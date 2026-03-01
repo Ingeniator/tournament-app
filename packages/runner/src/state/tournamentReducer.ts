@@ -1,17 +1,24 @@
-import type { Tournament, Player, Court, TournamentConfig, Round, Team } from '@padel/common';
+import type { Tournament, Player, Court, TournamentConfig, Round, Team, Club } from '@padel/common';
 import type { TournamentAction } from './actions';
-import { generateId } from '@padel/common';
+import { generateId, CLUB_COLORS } from '@padel/common';
+import { formatHasGroups, formatHasClubs } from '@padel/common';
 import { getStrategy } from '../strategies';
 import { deduplicateNames } from '../utils/deduplicateNames';
 import { resolveConfigDefaults } from '../utils/resolveConfigDefaults';
+import { dealMaldicionesHands } from '../utils/maldiciones';
+import { findTeamByPair } from '../strategies/shared';
+
+function shuffleArray<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 function createTeams(players: Player[]): Team[] {
-  // Shuffle and pair sequentially
-  const shuffled = [...players];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
+  const shuffled = shuffleArray(players);
   const teams: Team[] = [];
   for (let i = 0; i < shuffled.length - 1; i += 2) {
     teams.push({
@@ -19,6 +26,44 @@ function createTeams(players: Player[]): Team[] {
       player1Id: shuffled[i].id,
       player2Id: shuffled[i + 1].id,
     });
+  }
+  return teams;
+}
+
+function createCrossGroupTeams(players: Player[]): Team[] {
+  const groupA = shuffleArray(players.filter(p => p.group === 'A'));
+  const groupB = shuffleArray(players.filter(p => p.group === 'B'));
+  const teams: Team[] = [];
+  for (let i = 0; i < Math.min(groupA.length, groupB.length); i++) {
+    teams.push({
+      id: generateId(),
+      player1Id: groupA[i].id,
+      player2Id: groupB[i].id,
+    });
+  }
+  return teams;
+}
+
+function createClubTeams(players: Player[], clubs: Club[]): Team[] {
+  const teams: Team[] = [];
+  const hasRanks = players.some(p => p.rankSlot != null);
+  for (const club of clubs) {
+    const raw = players.filter(p => p.clubId === club.id);
+    let clubPlayers: Player[];
+    if (hasRanks) {
+      const ranked = raw.filter(p => p.rankSlot != null).sort((a, b) => a.rankSlot! - b.rankSlot!);
+      const unranked = shuffleArray(raw.filter(p => p.rankSlot == null));
+      clubPlayers = [...ranked, ...unranked];
+    } else {
+      clubPlayers = shuffleArray(raw);
+    }
+    for (let i = 0; i < clubPlayers.length - 1; i += 2) {
+      teams.push({
+        id: generateId(),
+        player1Id: clubPlayers[i].id,
+        player2Id: clubPlayers[i + 1].id,
+      });
+    }
   }
   return teams;
 }
@@ -108,7 +153,7 @@ export function tournamentReducer(
       if (!state || (state.phase !== 'setup' && state.phase !== 'in-progress')) return state;
       const { playerId: gpId, group } = action.payload;
       const gpPlayers = state.players.map(p =>
-        p.id === gpId ? { ...p, group } : p
+        p.id === gpId ? { ...p, group: group ?? undefined } : p
       );
 
       if (state.phase === 'in-progress') {
@@ -142,7 +187,7 @@ export function tournamentReducer(
       if (!state || state.phase !== 'in-progress') return state;
       const { oldPlayerId, newPlayerName } = action.payload;
       const oldPlayer = state.players.find(p => p.id === oldPlayerId);
-      const replaceNew: Player = { id: generateId(), name: newPlayerName, ...(oldPlayer?.group ? { group: oldPlayer.group } : {}) };
+      const replaceNew: Player = { id: generateId(), name: newPlayerName, ...(oldPlayer?.group ? { group: oldPlayer.group } : {}), ...(oldPlayer?.clubId ? { clubId: oldPlayer.clubId } : {}) };
       const rawReplace = state.players.map(p =>
         p.id === oldPlayerId ? { ...p, unavailable: true } : p
       );
@@ -287,7 +332,11 @@ export function tournamentReducer(
     case 'SET_TEAMS': {
       if (!state || state.phase !== 'setup') return state;
       if (!getStrategy(state.config.format).hasFixedPartners) return state;
-      const teams = createTeams(state.players);
+      const teams = formatHasClubs(state.config.format) && state.clubs?.length
+        ? createClubTeams(state.players, state.clubs)
+        : formatHasGroups(state.config.format)
+          ? createCrossGroupTeams(state.players)
+          : createTeams(state.players);
       return {
         ...state,
         teams,
@@ -298,7 +347,11 @@ export function tournamentReducer(
 
     case 'SHUFFLE_TEAMS': {
       if (!state || state.phase !== 'team-pairing') return state;
-      const teams = createTeams(state.players);
+      const teams = formatHasClubs(state.config.format) && state.clubs?.length
+        ? createClubTeams(state.players, state.clubs)
+        : formatHasGroups(state.config.format)
+          ? createCrossGroupTeams(state.players)
+          : createTeams(state.players);
       return {
         ...state,
         teams,
@@ -353,15 +406,28 @@ export function tournamentReducer(
     case 'GENERATE_SCHEDULE': {
       if (!state || (state.phase !== 'setup' && state.phase !== 'team-pairing')) return state;
       const players = deduplicateNames(state.players);
-      const resolvedConfig = resolveConfigDefaults(state.config, players.length);
+      const resolvedConfig = resolveConfigDefaults(state.config, players.length, state.clubs?.length);
       const strategy = getStrategy(resolvedConfig.format);
       const { rounds } = strategy.generateSchedule(players, resolvedConfig, state);
+
+      // Deal maldiciones cards once at tournament start
+      let maldicionesHands = state.maldicionesHands;
+      if (resolvedConfig.maldiciones?.enabled && !maldicionesHands && state.teams?.length) {
+        const plannedRounds = rounds.length;
+        maldicionesHands = dealMaldicionesHands(
+          state.teams.map(t => t.id),
+          resolvedConfig.maldiciones.chaosLevel,
+          plannedRounds,
+        );
+      }
+
       return {
         ...state,
         players,
         config: resolvedConfig,
         phase: 'in-progress',
         rounds,
+        ...(maldicionesHands ? { maldicionesHands } : {}),
         updatedAt: Date.now(),
       };
     }
@@ -378,10 +444,23 @@ export function tournamentReducer(
         undefined,
         state
       );
+
+      // Deal maldiciones if enabled and not dealt yet
+      let addMaldHands = state.maldicionesHands;
+      if (state.config.maldiciones?.enabled && !addMaldHands && state.teams?.length) {
+        const totalRounds = state.rounds.length + newRounds.length;
+        addMaldHands = dealMaldicionesHands(
+          state.teams.map(t => t.id),
+          state.config.maldiciones.chaosLevel,
+          totalRounds,
+        );
+      }
+
       return {
         ...state,
         phase: 'in-progress',
         rounds: [...state.rounds, ...newRounds],
+        ...(addMaldHands && !state.maldicionesHands ? { maldicionesHands: addMaldHands } : {}),
         updatedAt: Date.now(),
       };
     }
@@ -405,9 +484,15 @@ export function tournamentReducer(
         const totalTarget = state.config.maxRounds ?? state.players.length - 1;
         const allScored = updatedRounds.every(r => r.matches.every(m => m.score !== null));
         if (allScored && updatedRounds.length < totalTarget) {
-          const active = state.players.filter(p => !p.unavailable);
-          const excl = state.players.filter(p => p.unavailable).map(p => p.id);
-          const updatedState = { ...state, rounds: updatedRounds };
+          // Club Americano has rotating partners — regenerate intra-club pairs each round
+          let updatedTeams = state.teams;
+          const updatedPlayers = state.players;
+          if ((state.config.format === 'club-americano' || state.config.format === 'club-mexicano') && state.clubs?.length) {
+            updatedTeams = createClubTeams(state.players, state.clubs);
+          }
+          const active = updatedPlayers.filter(p => !p.unavailable);
+          const excl = updatedPlayers.filter(p => p.unavailable).map(p => p.id);
+          const updatedState = { ...state, rounds: updatedRounds, teams: updatedTeams };
           const { rounds: next } = strategy.generateAdditionalRounds(active, state.config, updatedRounds, 1, excl, undefined, updatedState);
           return { ...updatedState, rounds: [...updatedRounds, ...next], updatedAt: Date.now() };
         }
@@ -510,6 +595,183 @@ export function tournamentReducer(
         ceremonyCompleted: true,
         updatedAt: Date.now(),
       };
+    }
+
+    case 'ADD_CLUB': {
+      if (!state || state.phase !== 'setup') return state;
+      const existingClubs = state.clubs ?? [];
+      const usedColors = new Set(existingClubs.map(c => c.color).filter(Boolean));
+      const freeColor = CLUB_COLORS.find(c => !usedColors.has(c)) ?? CLUB_COLORS[existingClubs.length % CLUB_COLORS.length];
+      const newClub: Club = { id: generateId(), name: action.payload.name, color: freeColor };
+      return {
+        ...state,
+        clubs: [...existingClubs, newClub],
+        updatedAt: Date.now(),
+      };
+    }
+
+    case 'REMOVE_CLUB': {
+      if (!state || state.phase !== 'setup') return state;
+      const { clubId: removeClubId } = action.payload;
+      return {
+        ...state,
+        clubs: (state.clubs ?? []).filter(c => c.id !== removeClubId),
+        players: state.players.map(p =>
+          p.clubId === removeClubId ? { ...p, clubId: undefined } : p
+        ),
+        updatedAt: Date.now(),
+      };
+    }
+
+    case 'RENAME_CLUB': {
+      if (!state || state.phase !== 'setup') return state;
+      return {
+        ...state,
+        clubs: (state.clubs ?? []).map(c =>
+          c.id === action.payload.clubId ? { ...c, name: action.payload.name } : c
+        ),
+        updatedAt: Date.now(),
+      };
+    }
+
+    case 'SET_PLAYER_CLUB': {
+      if (!state || state.phase !== 'setup') return state;
+      const { playerId: pcId, clubId: pcClubId } = action.payload;
+      return {
+        ...state,
+        players: state.players.map(p =>
+          p.id === pcId ? { ...p, clubId: pcClubId ?? undefined } : p
+        ),
+        updatedAt: Date.now(),
+      };
+    }
+
+    case 'UPDATE_RANK_LABEL': {
+      if (!state || state.phase !== 'team-pairing') return state;
+      const { index, label } = action.payload;
+      const existing = state.config.rankLabels ?? [];
+      const updated = [...existing];
+      // Expand array if needed
+      while (updated.length <= index) updated.push('');
+      updated[index] = label;
+      // Clean trailing empty labels
+      while (updated.length > 0 && updated[updated.length - 1] === '') updated.pop();
+      return {
+        ...state,
+        config: { ...state.config, rankLabels: updated.length > 0 ? updated : undefined },
+        updatedAt: Date.now(),
+      };
+    }
+
+    case 'CAST_MALDICION': {
+      if (!state || !state.maldicionesHands || !state.teams) return state;
+      const { roundId: crId, matchId: cmId, castBy, cardId, targetPlayerId } = action.payload;
+      const round = state.rounds.find(r => r.id === crId);
+      const match = round?.matches.find(m => m.id === cmId);
+      if (!match || match.curse || match.score) return state;
+
+      // Find the casting team
+      const castSide = castBy === 'team1' ? match.team1 : match.team2;
+      const castTeam = findTeamByPair(state.teams, castSide);
+      if (!castTeam) return state;
+
+      const hand = state.maldicionesHands[castTeam.id];
+      if (!hand || !hand.cardIds.includes(cardId)) return state;
+
+      // Remove card from hand
+      const newHands = {
+        ...state.maldicionesHands,
+        [castTeam.id]: {
+          ...hand,
+          cardIds: hand.cardIds.filter(c => c !== cardId),
+        },
+      };
+
+      const updatedRounds = state.rounds.map(r =>
+        r.id === crId
+          ? {
+              ...r,
+              matches: r.matches.map(m =>
+                m.id === cmId
+                  ? { ...m, curse: { cardId, castBy, targetPlayerId, shielded: false } }
+                  : m
+              ),
+            }
+          : r
+      );
+
+      return { ...state, rounds: updatedRounds, maldicionesHands: newHands, updatedAt: Date.now() };
+    }
+
+    case 'USE_ESCUDO': {
+      if (!state || !state.maldicionesHands || !state.teams) return state;
+      const { roundId: erId, matchId: emId } = action.payload;
+      const round = state.rounds.find(r => r.id === erId);
+      const match = round?.matches.find(m => m.id === emId);
+      if (!match?.curse || match.curse.shielded) return state;
+
+      // Victim is the opposite side from castBy
+      const victimSide = match.curse.castBy === 'team1' ? match.team2 : match.team1;
+      const victimTeam = findTeamByPair(state.teams, victimSide);
+      if (!victimTeam) return state;
+
+      const victimHand = state.maldicionesHands[victimTeam.id];
+      if (!victimHand?.hasShield) return state;
+
+      const newHands = {
+        ...state.maldicionesHands,
+        [victimTeam.id]: { ...victimHand, hasShield: false },
+      };
+
+      const updatedRounds = state.rounds.map(r =>
+        r.id === erId
+          ? {
+              ...r,
+              matches: r.matches.map(m =>
+                m.id === emId && m.curse
+                  ? { ...m, curse: { ...m.curse, shielded: true } }
+                  : m
+              ),
+            }
+          : r
+      );
+
+      return { ...state, rounds: updatedRounds, maldicionesHands: newHands, updatedAt: Date.now() };
+    }
+
+    case 'VETO_MALDICION': {
+      if (!state || !state.maldicionesHands || !state.teams) return state;
+      const { roundId: vrId, matchId: vmId } = action.payload;
+      const round = state.rounds.find(r => r.id === vrId);
+      const match = round?.matches.find(m => m.id === vmId);
+      if (!match?.curse) return state;
+
+      // Return card to caster's hand
+      const casterSide = match.curse.castBy === 'team1' ? match.team1 : match.team2;
+      const casterTeam = findTeamByPair(state.teams, casterSide);
+      if (!casterTeam) return state;
+
+      const casterHand = state.maldicionesHands[casterTeam.id];
+      const newHands = {
+        ...state.maldicionesHands,
+        [casterTeam.id]: {
+          ...casterHand,
+          cardIds: [...(casterHand?.cardIds ?? []), match.curse.cardId],
+        },
+      };
+
+      const updatedRounds = state.rounds.map(r =>
+        r.id === vrId
+          ? {
+              ...r,
+              matches: r.matches.map(m =>
+                m.id === vmId ? { ...m, curse: undefined } : m
+              ),
+            }
+          : r
+      );
+
+      return { ...state, rounds: updatedRounds, maldicionesHands: newHands, updatedAt: Date.now() };
     }
 
     case 'RESET_TOURNAMENT':

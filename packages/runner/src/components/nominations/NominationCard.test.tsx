@@ -28,20 +28,28 @@ describe('NominationCard', () => {
     expect(screen.getByText('Scored the most points overall')).toBeTruthy();
   });
 
-  it('renders 2-player layout with joined names', () => {
+  it('renders 2-player layout with names on separate rows', () => {
     render(<NominationCard nomination={makeNomination({ playerNames: ['Alice', 'Bob'] })} />);
-    expect(screen.getByText('Alice & Bob')).toBeTruthy();
+    expect(screen.getByText('Alice &')).toBeTruthy();
+    expect(screen.getByText('Bob')).toBeTruthy();
   });
 
-  it('renders 4-player layout with vs separator', () => {
+  it('renders single player name without ampersand', () => {
+    render(<NominationCard nomination={makeNomination({ playerNames: ['Alice'] })} />);
+    expect(screen.getByText('Alice')).toBeTruthy();
+  });
+
+  it('renders 4-player layout with vs separator and names on separate rows', () => {
     render(
       <NominationCard
         nomination={makeNomination({ playerNames: ['Alice', 'Bob', 'Charlie', 'Dave'] })}
       />,
     );
     expect(screen.getByText('vs')).toBeTruthy();
-    expect(screen.getByText('Alice & Bob')).toBeTruthy();
-    expect(screen.getByText('Charlie & Dave')).toBeTruthy();
+    expect(screen.getByText('Alice &')).toBeTruthy();
+    expect(screen.getByText('Bob')).toBeTruthy();
+    expect(screen.getByText('Charlie &')).toBeTruthy();
+    expect(screen.getByText('Dave')).toBeTruthy();
   });
 
   it('does not show tier badge for common tier', () => {

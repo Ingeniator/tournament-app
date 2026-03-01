@@ -66,6 +66,43 @@
   text-overflow: ellipsis;
 }
 
+.pairCell {
+  white-space: normal !important;
+}
+
+.pairWrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pairNames {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.4;
+  overflow: hidden;
+}
+
+.pairNames span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pairSecondary {
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+}
+
+.clubDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 .points {
   font-weight: 700;
   color: var(--color-primary);
@@ -126,6 +163,27 @@
 .groupB {
   background-color: rgba(244, 114, 182, 0.15);
   color: #f472b6;
+}
+
+.clubBadge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: var(--radius-full);
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.rankBadge {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--color-primary);
+  background-color: var(--color-primary-tint);
+  border-radius: var(--radius-sm, 4px);
+  padding: 1px 5px;
+  margin-left: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .empty {

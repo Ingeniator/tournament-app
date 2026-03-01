@@ -1,5 +1,5 @@
-import type { StandingsEntry } from '@padel/common';
-import type { GroupInfo } from '../components/standings/StandingsTable';
+import type { StandingsEntry, ClubStandingsEntry } from '@padel/common';
+import type { GroupInfo, ClubInfo } from '../components/standings/StandingsTable';
 import type { Nomination } from '../hooks/useNominations';
 
 const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
@@ -40,6 +40,8 @@ export function renderStandingsImage(
   tournamentName: string,
   standings: StandingsEntry[],
   groupInfo?: GroupInfo,
+  clubInfo?: ClubInfo,
+  modeTitle?: string,
 ): HTMLCanvasElement {
   const t = getThemeColors();
   const canvas = document.createElement('canvas');
@@ -48,14 +50,16 @@ export function renderStandingsImage(
   // Layout constants
   const padding = s(20);
   const headerHeight = s(36);
+  const modeTitleH = modeTitle ? s(16) : 0;
   const tableHeaderHeight = s(32);
-  const rowHeight = s(36);
+  const hasPairs = standings.some(e => e.playerName.includes(' & '));
+  const rowHeight = hasPairs ? s(52) : s(36);
   const canvasWidth = s(400);
 
   const tableRows = standings.length;
   const tableHeight = tableHeaderHeight + rowHeight * tableRows;
   const footerHeight = s(28);
-  const canvasHeight = padding + headerHeight + s(12) + tableHeight + s(16) + footerHeight + padding;
+  const canvasHeight = padding + headerHeight + modeTitleH + s(12) + tableHeight + s(16) + footerHeight + padding;
 
   canvas.width = canvasWidth;
   canvas.height = canvasHeight;
@@ -71,6 +75,14 @@ export function renderStandingsImage(
   ctx.textAlign = 'center';
   ctx.fillText(tournamentName, canvasWidth / 2, y + s(24));
   y += headerHeight;
+
+  // Mode title (e.g., "🎭 Maldiciones del Padel")
+  if (modeTitle) {
+    ctx.fillStyle = t.textMuted;
+    ctx.font = `600 ${s(9)}px ${FONT}`;
+    ctx.fillText(modeTitle, canvasWidth / 2, y + s(10));
+    y += modeTitleH;
+  }
 
   // Table card background
   const tableX = padding;
@@ -126,7 +138,6 @@ export function renderStandingsImage(
   for (let i = 0; i < standings.length; i++) {
     const entry = standings[i];
     const rowY = y + rowHeight * i;
-    const textY = rowY + s(24);
 
     // Row separator (skip first)
     if (i > 0) {
@@ -138,6 +149,12 @@ export function renderStandingsImage(
       ctx.stroke();
     }
 
+    // Detect pair entries
+    const nameParts = entry.playerName.split(' & ');
+    const isPair = nameParts.length === 2;
+    // Vertical center for stats columns
+    const textY = isPair ? rowY + s(30) : rowY + s(24);
+
     // Rank
     ctx.textAlign = 'left';
     ctx.font = boldFont;
@@ -148,33 +165,71 @@ export function renderStandingsImage(
         : t.textMuted;
     ctx.fillText(String(entry.rank), tableX + colRank, textY);
 
-    // Name (truncated if too long) + optional group badge
-    ctx.font = `600 ${s(12)}px ${FONT}`;
-    ctx.fillStyle = t.text;
-    const playerGroup = groupInfo?.map.get(entry.playerId);
-    const badgeLabel = playerGroup
-      ? (playerGroup === 'A' ? groupInfo!.labels[0] : groupInfo!.labels[1])
-      : null;
-    const badgeSpace = badgeLabel ? s(4) + ctx.measureText(badgeLabel).width + s(10) : 0;
-    const displayName = truncateText(ctx, entry.playerName, nameMaxWidth - badgeSpace);
-    ctx.fillText(displayName, tableX + colName, textY);
+    // Name rendering
+    ctx.textAlign = 'left';
 
-    if (badgeLabel && playerGroup) {
-      const nameWidth = ctx.measureText(displayName).width;
-      const badgeX = tableX + colName + nameWidth + s(4);
-      ctx.font = `bold ${s(8)}px ${FONT}`;
-      const measuredBadgeW = ctx.measureText(badgeLabel).width;
-      const pillW = measuredBadgeW + s(8);
-      const pillH = s(12);
-      const pillY = textY - s(9);
-      const pillColor = playerGroup === 'A' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(244, 114, 182, 0.2)';
-      const pillTextColor = playerGroup === 'A' ? '#60a5fa' : '#f472b6';
-      ctx.fillStyle = pillColor;
-      roundRect(ctx, badgeX, pillY, pillW, pillH, s(6));
-      ctx.fill();
-      ctx.fillStyle = pillTextColor;
-      ctx.textAlign = 'left';
-      ctx.fillText(badgeLabel, badgeX + s(4), textY - s(1));
+    if (isPair) {
+      // Club dot for pair entries
+      const clubId = clubInfo?.teamClubMap.get(entry.playerId);
+      const clubDotColor = clubId ? clubInfo!.clubColorMap.get(clubId) : null;
+
+      let nameStartX = tableX + colName;
+      if (clubDotColor) {
+        const dotRadius = s(4);
+        const dotX = nameStartX + dotRadius;
+        const dotY = rowY + rowHeight / 2;
+        ctx.fillStyle = clubDotColor;
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, dotRadius, 0, Math.PI * 2);
+        ctx.fill();
+        nameStartX += dotRadius * 2 + s(6);
+      }
+
+      const dotSpace = clubDotColor ? s(14) : 0;
+      const pairNameMax = nameMaxWidth - dotSpace;
+
+      // First player name
+      ctx.font = `600 ${s(12)}px ${FONT}`;
+      ctx.fillStyle = t.text;
+      ctx.fillText(truncateText(ctx, nameParts[0], pairNameMax), nameStartX, rowY + s(22));
+
+      // Second player name (smaller, muted)
+      ctx.font = `${s(10)}px ${FONT}`;
+      ctx.fillStyle = t.textSecondary;
+      ctx.fillText(truncateText(ctx, nameParts[1], pairNameMax), nameStartX, rowY + s(38));
+    } else {
+      // Single-line name with optional group badge
+      ctx.font = `600 ${s(12)}px ${FONT}`;
+      ctx.fillStyle = t.text;
+      const playerGroup = groupInfo?.map.get(entry.playerId);
+      const badgeLabel = playerGroup
+        ? (playerGroup === 'A' ? groupInfo!.labels[0] : groupInfo!.labels[1])
+        : null;
+
+      let totalBadgeSpace = 0;
+      if (badgeLabel) {
+        totalBadgeSpace = s(4) + ctx.measureText(badgeLabel).width + s(10);
+      }
+      const displayName = truncateText(ctx, entry.playerName, nameMaxWidth - totalBadgeSpace);
+      ctx.fillText(displayName, tableX + colName, textY);
+
+      if (badgeLabel && playerGroup) {
+        const nameWidth = ctx.measureText(displayName).width;
+        const badgeX = tableX + colName + nameWidth + s(4);
+        ctx.font = `bold ${s(8)}px ${FONT}`;
+        const measuredBadgeW = ctx.measureText(badgeLabel).width;
+        const pillW = measuredBadgeW + s(8);
+        const pillH = s(12);
+        const pillY = textY - s(9);
+        const pillColor = playerGroup === 'A' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(244, 114, 182, 0.2)';
+        const pillTextColor = playerGroup === 'A' ? '#60a5fa' : '#f472b6';
+        ctx.fillStyle = pillColor;
+        roundRect(ctx, badgeX, pillY, pillW, pillH, s(6));
+        ctx.fill();
+        ctx.fillStyle = pillTextColor;
+        ctx.textAlign = 'left';
+        ctx.fillText(badgeLabel, badgeX + s(4), textY - s(1));
+      }
     }
 
     // Points
@@ -208,6 +263,149 @@ export function renderStandingsImage(
   return canvas;
 }
 
+export function renderClubStandingsImage(
+  tournamentName: string,
+  clubStandings: ClubStandingsEntry[],
+  clubColorMap: Map<string, string>,
+): HTMLCanvasElement {
+  const t = getThemeColors();
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d')!;
+
+  // Layout constants
+  const padding = s(20);
+  const headerHeight = s(36);
+  const tableHeaderHeight = s(32);
+  const rowHeight = s(36);
+  const canvasWidth = s(400);
+
+  const tableRows = clubStandings.length;
+  const tableHeight = tableHeaderHeight + rowHeight * tableRows;
+  const footerHeight = s(28);
+  const canvasHeight = padding + headerHeight + s(12) + tableHeight + s(16) + footerHeight + padding;
+
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
+
+  // Background
+  ctx.fillStyle = t.bg;
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+  // Header
+  let y = padding;
+  ctx.fillStyle = t.text;
+  ctx.font = `bold ${s(18)}px ${FONT}`;
+  ctx.textAlign = 'center';
+  ctx.fillText(tournamentName, canvasWidth / 2, y + s(24));
+  y += headerHeight;
+
+  // Table card background
+  const tableX = padding;
+  const tableW = canvasWidth - padding * 2;
+  const tableY = y;
+  const cardRadius = s(8);
+
+  ctx.fillStyle = t.surface;
+  roundRect(ctx, tableX, tableY, tableW, tableHeight + s(8), cardRadius);
+  ctx.fill();
+
+  ctx.strokeStyle = t.border;
+  ctx.lineWidth = s(1);
+  roundRect(ctx, tableX, tableY, tableW, tableHeight + s(8), cardRadius);
+  ctx.stroke();
+
+  // Column positions
+  const colRank = s(12);
+  const colName = s(40);
+  const colPts = tableW - s(56);
+  const colPairs = tableW - s(14);
+
+  // Table header
+  y = tableY + s(4);
+  ctx.textAlign = 'left';
+  ctx.font = `600 ${s(9)}px ${FONT}`;
+  ctx.fillStyle = t.textMuted;
+  const headerY = y + s(20);
+  ctx.fillText('#', tableX + colRank, headerY);
+  ctx.fillText('CLUB', tableX + colName, headerY);
+  ctx.textAlign = 'right';
+  ctx.fillText('PTS', tableX + colPts, headerY);
+  ctx.fillText('PAIRS', tableX + colPairs, headerY);
+
+  // Header separator
+  y += tableHeaderHeight;
+  ctx.strokeStyle = t.border;
+  ctx.lineWidth = s(1);
+  ctx.beginPath();
+  ctx.moveTo(tableX + s(8), y);
+  ctx.lineTo(tableX + tableW - s(8), y);
+  ctx.stroke();
+
+  // Table rows
+  const bodyFont = `${s(12)}px ${FONT}`;
+  const boldFont = `bold ${s(12)}px ${FONT}`;
+
+  for (let i = 0; i < clubStandings.length; i++) {
+    const entry = clubStandings[i];
+    const rowY = y + rowHeight * i;
+    const textY = rowY + s(24);
+
+    // Row separator (skip first)
+    if (i > 0) {
+      ctx.strokeStyle = t.border;
+      ctx.lineWidth = s(0.5);
+      ctx.beginPath();
+      ctx.moveTo(tableX + s(8), rowY);
+      ctx.lineTo(tableX + tableW - s(8), rowY);
+      ctx.stroke();
+    }
+
+    // Rank
+    ctx.textAlign = 'left';
+    ctx.font = boldFont;
+    ctx.fillStyle =
+      entry.rank === 1 ? t.rankGold
+        : entry.rank === 2 ? t.rankSilver
+        : entry.rank === 3 ? t.rankBronze
+        : t.textMuted;
+    ctx.fillText(String(entry.rank), tableX + colRank, textY);
+
+    // Club name with color dot
+    const dotRadius = s(4);
+    const dotX = tableX + colName + dotRadius;
+    const dotY = textY - s(4);
+    const color = clubColorMap.get(entry.clubId) ?? t.textMuted;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(dotX, dotY, dotRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.font = `600 ${s(12)}px ${FONT}`;
+    ctx.fillStyle = t.text;
+    ctx.fillText(entry.clubName, tableX + colName + dotRadius * 2 + s(6), textY);
+
+    // Points
+    ctx.textAlign = 'right';
+    ctx.font = boldFont;
+    ctx.fillStyle = t.primary;
+    ctx.fillText(String(entry.totalPoints), tableX + colPts, textY);
+
+    // Pairs count
+    ctx.font = bodyFont;
+    ctx.fillStyle = t.textSecondary;
+    ctx.fillText(String(entry.memberCount), tableX + colPairs, textY);
+  }
+
+  // Footer / watermark
+  const footerY = tableY + tableHeight + s(8) + s(16);
+  ctx.textAlign = 'center';
+  ctx.font = `${s(9)}px ${FONT}`;
+  ctx.fillStyle = t.textMuted;
+  ctx.fillText(window.location.hostname, canvasWidth / 2, footerY + s(12));
+
+  return canvas;
+}
+
 export function renderNominationImage(
   tournamentName: string,
   nomination: Nomination,
@@ -229,6 +427,7 @@ export function renderNominationImage(
   const headerH = s(14);    // tournament name line
   const headerGap = s(12);
   const tierBadgeH = tier && tier !== 'common' ? s(16) + gap : 0; // badge + gap
+  const modeTitleH = nomination.modeTitle ? s(14) + gap : 0; // mode title line
   const emojiH = s(44);     // 2.5rem = 40px + margin
   const titleH = s(16);     // --text-xs: 0.75rem = 12px + line-height
   const statH = s(22);      // --text-lg: 1.125rem = 18px + line-height
@@ -237,14 +436,17 @@ export function renderNominationImage(
   const footerH = s(14);
 
   // Calculate player names height
+  const isPair = !isMultiPlayer && nomination.playerNames.length === 2;
   let playersH: number;
   if (isMultiPlayer) {
-    playersH = s(24) + s(16) + s(24); // pair1 + vs + pair2
+    playersH = s(24) + s(24) + s(16) + s(24) + s(24); // name1 + name2 + vs + name3 + name4
+  } else if (isPair) {
+    playersH = s(24) + s(24); // name1 + name2
   } else {
     playersH = s(26); // --text-xl: 1.25rem = 20px + line-height
   }
 
-  const contentH = tierBadgeH + emojiH + gap + titleH + gap + playersH + gap + statH + gap + descH;
+  const contentH = tierBadgeH + modeTitleH + emojiH + gap + titleH + gap + playersH + gap + statH + gap + descH;
   const canvasHeight = padV + headerH + headerGap + contentH + footerGap + footerH + padV;
 
   canvas.width = canvasWidth;
@@ -308,6 +510,14 @@ export function renderNominationImage(
     y += s(16) + gap;
   }
 
+  // Mode title (e.g., "🎭 Maldiciones del Padel")
+  if (nomination.modeTitle) {
+    ctx.fillStyle = t.textMuted;
+    ctx.font = `500 ${s(7)}px ${FONT}`;
+    ctx.fillText(nomination.modeTitle, cx, y + s(10));
+    y += s(14) + gap;
+  }
+
   // Emoji — matching CSS: font-size 2.5rem
   ctx.font = `${s(40)}px ${FONT}`;
   ctx.fillText(nomination.emoji, cx, y + s(36));
@@ -324,9 +534,9 @@ export function renderNominationImage(
 
   if (isMultiPlayer) {
     ctx.font = `bold ${s(16)}px ${FONT}`;
-    const pair1 = `${nomination.playerNames[0]} & ${nomination.playerNames[1]}`;
-    const pair2 = `${nomination.playerNames[2]} & ${nomination.playerNames[3]}`;
-    ctx.fillText(truncateText(ctx, pair1, maxTextW), cx, y + s(16));
+    ctx.fillText(truncateText(ctx, `${nomination.playerNames[0]} &`, maxTextW), cx, y + s(16));
+    y += s(24);
+    ctx.fillText(truncateText(ctx, nomination.playerNames[1], maxTextW), cx, y + s(16));
     y += s(24);
     // VS — matching CSS: --text-xs (12px), muted, uppercase
     ctx.fillStyle = t.textMuted;
@@ -335,16 +545,19 @@ export function renderNominationImage(
     y += s(16);
     ctx.fillStyle = t.text;
     ctx.font = `bold ${s(16)}px ${FONT}`;
-    ctx.fillText(truncateText(ctx, pair2, maxTextW), cx, y + s(16));
+    ctx.fillText(truncateText(ctx, `${nomination.playerNames[2]} &`, maxTextW), cx, y + s(16));
+    y += s(24);
+    ctx.fillText(truncateText(ctx, nomination.playerNames[3], maxTextW), cx, y + s(16));
+    y += s(24) + gap;
+  } else if (isPair) {
+    ctx.font = `bold ${s(18)}px ${FONT}`;
+    ctx.fillText(truncateText(ctx, `${nomination.playerNames[0]} &`, maxTextW), cx, y + s(18));
+    y += s(24);
+    ctx.fillText(truncateText(ctx, nomination.playerNames[1], maxTextW), cx, y + s(18));
     y += s(24) + gap;
   } else {
-    const nameText = nomination.playerNames.join(' & ');
     ctx.font = `bold ${s(20)}px ${FONT}`;
-    const nameWidth = ctx.measureText(nameText).width;
-    if (nameWidth > maxTextW) {
-      ctx.font = `bold ${s(16)}px ${FONT}`;
-    }
-    ctx.fillText(truncateText(ctx, nameText, maxTextW), cx, y + s(18));
+    ctx.fillText(truncateText(ctx, nomination.playerNames[0], maxTextW), cx, y + s(18));
     y += playersH + gap;
   }
 
@@ -383,12 +596,20 @@ export async function shareStandingsImage(
   standings: StandingsEntry[],
   nominations: Nomination[] = [],
   groupInfo?: GroupInfo,
+  clubInfo?: ClubInfo,
+  clubStandings?: ClubStandingsEntry[],
+  clubColorMap?: Map<string, string>,
+  modeTitle?: string,
 ): Promise<ShareImageResult> {
   let standingsCanvas: HTMLCanvasElement;
+  let clubStandingsCanvas: HTMLCanvasElement | null = null;
   let nominationCanvases: HTMLCanvasElement[];
 
   try {
-    standingsCanvas = renderStandingsImage(tournamentName, standings, groupInfo);
+    standingsCanvas = renderStandingsImage(tournamentName, standings, groupInfo, clubInfo, modeTitle);
+    if (clubStandings && clubStandings.length > 0 && clubColorMap) {
+      clubStandingsCanvas = renderClubStandingsImage(tournamentName, clubStandings, clubColorMap);
+    }
     nominationCanvases = nominations.map(n => renderNominationImage(tournamentName, n));
   } catch {
     return { status: 'failed' };
@@ -428,6 +649,13 @@ export async function shareStandingsImage(
       new File([standingsBlob], `${safeName}_results.png`, { type: 'image/png' }),
     );
 
+    if (clubStandingsCanvas) {
+      const clubBlob = await canvasToBlob(clubStandingsCanvas);
+      if (clubBlob) {
+        files.push(new File([clubBlob], `${safeName}_club_standings.png`, { type: 'image/png' }));
+      }
+    }
+
     for (const i of otherIndices) {
       const blob = await canvasToBlob(nominationCanvases[i]);
       if (blob) {
@@ -447,6 +675,7 @@ export async function shareStandingsImage(
       const allCanvases = [
         ...podiumIndices.map(i => nominationCanvases[i]),
         standingsCanvas,
+        ...(clubStandingsCanvas ? [clubStandingsCanvas] : []),
         ...otherIndices.map(i => nominationCanvases[i]),
       ];
       const blobs = await Promise.all(allCanvases.map(c => canvasToBlob(c)));
@@ -496,6 +725,7 @@ export async function shareStandingsImage(
         const allCanvases = [
           ...podiumIndices.map(i => nominationCanvases[i]),
           standingsCanvas,
+          ...(clubStandingsCanvas ? [clubStandingsCanvas] : []),
           ...otherIndices.map(i => nominationCanvases[i]),
         ];
         const blobs = await Promise.all(allCanvases.map(c => canvasToBlob(c)));

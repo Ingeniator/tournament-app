@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Button, Card, Toast, useToast, useTranslation } from '@padel/common';
+import { Button, Card, getClubColor, Toast, useToast, useTranslation, getPresetByFormat, formatHasGroups, formatHasClubs } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import { downloadICS } from '../utils/icsExport';
@@ -10,10 +10,12 @@ import { StartWarningModal } from '../components/StartWarningModal';
 import styles from './JoinScreen.module.css';
 
 export function JoinScreen() {
-  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, isRegistered, setScreen, organizerName, userName, telegramUser, completedAt } = usePlanner();
-  const { startedBy, showWarning, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
+  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, updatePlayerGroup, updatePlayerClub, updatePlayerRank, isRegistered, setScreen, organizerName, userName, telegramUser, completedAt, joinReturnScreen } = usePlanner();
+  const { startedBy, showWarning, warningReason, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
   const { t } = useTranslation();
-  const [name, setName] = useState(userName ?? telegramUser?.displayName ?? '');
+  // null = not yet edited by user, derive from external sources
+  const [nameInput, setNameInput] = useState<string | null>(null);
+  const name = nameInput ?? userName ?? telegramUser?.displayName ?? '';
   const [registering, setRegistering] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [editingName, setEditingName] = useState(false);
@@ -23,16 +25,11 @@ export function JoinScreen() {
   const { toastMessage, showToast } = useToast();
   const registeringRef = useRef(false);
 
-  // Pre-fill name from profile or Telegram when it loads
-  useEffect(() => {
-    if (!name) {
-      const prefill = userName ?? telegramUser?.displayName;
-      if (prefill) setName(prefill);
-    }
-  }, [userName, telegramUser]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const capacity = tournament ? tournament.courts.length * 4 + (tournament.extraSpots ?? 0) : 0;
-  const statuses = useMemo(() => getPlayerStatuses(players, capacity), [players, capacity]);
+  const statuses = useMemo(() => getPlayerStatuses(players, capacity, {
+    format: tournament?.format,
+    clubs: tournament?.clubs,
+  }), [players, capacity, tournament?.format, tournament?.clubs]);
   const myRegistration = uid ? players.find(p => p.id === uid) : undefined;
   const myStatus = myRegistration ? statuses.get(myRegistration.id) : undefined;
 
@@ -60,7 +57,7 @@ export function JoinScreen() {
     return (
       <div className={styles.container}>
         <header className={styles.header}>
-          <button className={styles.backBtn} onClick={() => setScreen('home')} aria-label={t('join.back')}>&larr;</button>
+          <button className={styles.backBtn} onClick={() => setScreen(joinReturnScreen)} aria-label={t('join.back')}>&larr;</button>
           <h1 className={styles.title}>{tournament.name}</h1>
         </header>
         <main>
@@ -132,7 +129,7 @@ export function JoinScreen() {
     }
     setRegistering(false);
     registeringRef.current = false;
-    setName('');
+    setNameInput('');
   };
 
   const handleSaveName = async () => {
@@ -179,7 +176,7 @@ export function JoinScreen() {
   };
 
   const handleBack = () => {
-    setScreen('home');
+    setScreen(joinReturnScreen);
   };
 
   return (
@@ -187,38 +184,49 @@ export function JoinScreen() {
       <header className={styles.header}>
         <button className={styles.backBtn} onClick={handleBack} aria-label={t('join.back')}>&larr;</button>
         <h1 className={styles.title}>{tournament.name}</h1>
+        {uid && tournament.organizerId === uid && (
+          <button className={styles.editTournamentBtn} onClick={() => setScreen('organizer')}>
+            {t('join.edit')}
+          </button>
+        )}
       </header>
 
       <main>
 
-      {(tournament.date || tournament.place || organizerName || tournament.chatLink || tournament.description) && (
-        <Card>
-          <div className={styles.detailsList}>
-            {tournament.date && (
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>{t('join.date')}</span>
-                <span>{new Date(tournament.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-              </div>
-            )}
-            {tournament.duration && (
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>{t('join.duration')}</span>
-                <span>{tournament.duration >= 60 ? `${Math.floor(tournament.duration / 60)}h${tournament.duration % 60 ? ` ${tournament.duration % 60}min` : ''}` : `${tournament.duration}min`}</span>
-              </div>
-            )}
-            {tournament.place && (
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>{t('join.place')}</span>
-                <span>{tournament.place}</span>
-              </div>
-            )}
-            {organizerName && (
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>{t('join.organizer')}</span>
-                <span>{organizerName}</span>
-              </div>
-            )}
-            {tournament.chatLink && (
+      <Card>
+        <div className={styles.detailsList}>
+          <div className={styles.detailRow}>
+            <span className={styles.detailLabel}>{t('join.format')}</span>
+            <span>{(() => {
+              const preset = getPresetByFormat(tournament.format);
+              return preset ? t(preset.nameKey) : t('organizer.formatMexicano');
+            })()}</span>
+          </div>
+          {tournament.date && (
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>{t('join.date')}</span>
+              <span>{new Date(tournament.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+          )}
+          {tournament.duration && (
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>{t('join.duration')}</span>
+              <span>{tournament.duration >= 60 ? `${Math.floor(tournament.duration / 60)}h${tournament.duration % 60 ? ` ${tournament.duration % 60}min` : ''}` : `${tournament.duration}min`}</span>
+            </div>
+          )}
+          {tournament.place && (
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>{t('join.place')}</span>
+              <span>{tournament.place}</span>
+            </div>
+          )}
+          {organizerName && (
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>{t('join.organizer')}</span>
+              <span>{organizerName}</span>
+            </div>
+          )}
+          {tournament.chatLink && (
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>{t('join.groupChat')}</span>
                 <a href={tournament.chatLink.match(/^https?:\/\//) ? tournament.chatLink : `https://${tournament.chatLink}`} target="_blank" rel="noopener noreferrer" className={styles.chatLink}>
@@ -234,7 +242,6 @@ export function JoinScreen() {
             )}
           </div>
         </Card>
-      )}
 
       <Card>
         {isRegistered ? (
@@ -317,6 +324,64 @@ export function JoinScreen() {
                 &#128197; {t('join.addToCalendar')}
               </button>
             )}
+
+            {isConfirmed && uid && formatHasGroups(tournament.format) && (
+              <div className={styles.groupPicker}>
+                <span className={styles.groupPickerLabel}>{t('join.selectGroup')}</span>
+                <div className={styles.groupToggle}>
+                  <button
+                    className={myRegistration?.group === 'A' ? styles.groupBtnActive : styles.groupBtn}
+                    onClick={() => updatePlayerGroup(uid, myRegistration?.group === 'A' ? null : 'A')}
+                  >
+                    {tournament.groupLabels?.[0] || 'A'}
+                  </button>
+                  <button
+                    className={myRegistration?.group === 'B' ? styles.groupBtnActive : styles.groupBtn}
+                    onClick={() => updatePlayerGroup(uid, myRegistration?.group === 'B' ? null : 'B')}
+                  >
+                    {tournament.groupLabels?.[1] || 'B'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {isConfirmed && uid && formatHasClubs(tournament.format) && (tournament.clubs ?? []).length > 0 && (() => {
+              const clubs = tournament.clubs!;
+              return (
+                <div className={styles.clubPicker}>
+                  <span className={styles.clubPickerLabel}>{t('join.selectClub')}</span>
+                  <div className={styles.clubOptions}>
+                    {clubs.map((club, idx) => (
+                      <button
+                        key={club.id}
+                        className={myRegistration?.clubId === club.id ? styles.clubOptionActive : styles.clubOption}
+                        style={{ '--club-color': getClubColor(club, idx) } as React.CSSProperties}
+                        onClick={() => updatePlayerClub(uid, myRegistration?.clubId === club.id ? null : club.id)}
+                      >
+                        {club.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {isConfirmed && uid && tournament.format === 'club-ranked' && (tournament.rankLabels ?? []).length > 0 && (
+              <div className={styles.rankPicker}>
+                <span className={styles.rankPickerLabel}>{t('join.selectRank')}</span>
+                <div className={styles.rankOptions}>
+                  {tournament.rankLabels!.map((label, idx) => (
+                    <button
+                      key={idx}
+                      className={myRegistration?.rankSlot === idx ? styles.rankOptionActive : styles.rankOption}
+                      onClick={() => updatePlayerRank(uid, myRegistration?.rankSlot === idx ? null : idx)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className={styles.registerForm}>
@@ -325,7 +390,7 @@ export function JoinScreen() {
               className={styles.nameInput}
               type="text"
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={e => setNameInput(e.target.value)}
               placeholder={t('join.enterName')}
               onKeyDown={e => e.key === 'Enter' && handleRegister()}
               autoFocus
@@ -361,7 +426,14 @@ export function JoinScreen() {
           <p className={styles.empty}>{t('join.noPlayersYet')}</p>
         ) : (
           <div className={styles.playerList}>
-            {players.map((player, i) => (
+            {players.map((player, i) => {
+              const isMixicano = formatHasGroups(tournament.format);
+              const isClubAmericano = formatHasClubs(tournament.format);
+              const clubs = tournament.clubs ?? [];
+              const clubIdx = isClubAmericano && player.clubId
+                ? clubs.findIndex(c => c.id === player.clubId)
+                : -1;
+              return (
               <div key={player.id} className={styles.playerItem}>
                 <span className={styles.playerNum}>{i + 1}</span>
                 <span className={styles.playerName}>
@@ -380,12 +452,33 @@ export function JoinScreen() {
                   {statuses.get(player.id) === 'reserve' && (
                     <span className={styles.reserveBadge}>{t('join.reserve')}</span>
                   )}
+                  {isMixicano && player.group && (
+                    <span className={styles.groupBadge}>
+                      {player.group === 'A'
+                        ? (tournament.groupLabels?.[0] || 'A')
+                        : (tournament.groupLabels?.[1] || 'B')}
+                    </span>
+                  )}
+                  {isClubAmericano && clubIdx >= 0 && (
+                    <span
+                      className={styles.clubBadge}
+                      style={{ backgroundColor: getClubColor(clubs[clubIdx], clubIdx) }}
+                    >
+                      {clubs[clubIdx].name}
+                    </span>
+                  )}
+                  {tournament.format === 'club-ranked' && player.rankSlot != null && tournament.rankLabels?.[player.rankSlot] && (
+                    <span className={styles.rankBadge}>
+                      {tournament.rankLabels[player.rankSlot]}
+                    </span>
+                  )}
                 </span>
                 <span className={player.confirmed !== false ? styles.statusConfirmed : styles.statusCancelled}>
                   {player.confirmed !== false ? '\u2713' : '\u2717'}
                 </span>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </Card>
@@ -403,6 +496,7 @@ export function JoinScreen() {
       <StartWarningModal
         open={showWarning}
         startedBy={startedBy}
+        reason={warningReason}
         onProceed={() => proceedAnyway(tournament!, players)}
         onClose={dismissWarning}
       />

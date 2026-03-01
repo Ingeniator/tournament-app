@@ -1,10 +1,37 @@
-import type { TournamentConfig, TournamentFormat } from '@padel/common';
-import { Button, generateId, useTranslation } from '@padel/common';
-import { resolveConfigDefaults, computeSitOutInfo } from '../../utils/resolveConfigDefaults';
+import { useState, useRef } from 'react';
+import type { TournamentConfig } from '@padel/common';
+import { Button, generateId, useTranslation, FormatPicker, formatHasGroups, formatHasClubs, Toast, useToast } from '@padel/common';
+import { getStrategy } from '../../strategies';
+import { resolveConfigDefaults, computeSitOutInfo, MINUTES_PER_POINT, MINUTES_PER_GAME, CHANGEOVER_MINUTES } from '../../utils/resolveConfigDefaults';
 import styles from './TournamentConfigForm.module.css';
 
-const MINUTES_PER_POINT = 0.5;
-const CHANGEOVER_MINUTES = 3;
+function InfoButton({ hint }: { hint: string }) {
+  const [open, setOpen] = useState(false);
+  const { t } = useTranslation();
+
+  return (
+    <>
+      <button
+        className={styles.infoBtn}
+        onClick={() => setOpen(true)}
+        aria-label="Info"
+      >
+        i
+      </button>
+      {open && (
+        <div className={styles.tooltipOverlay} onClick={() => setOpen(false)}>
+          <div className={styles.tooltip} onClick={e => e.stopPropagation()}>
+            <p>{hint}</p>
+            <button className={styles.tooltipClose} onClick={() => setOpen(false)}>
+              {t('distribution.gotIt')}
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 const DEFAULT_DURATION_MINUTES = 120;
 
 function formatDuration(minutes: number): string {
@@ -18,27 +45,41 @@ function formatDuration(minutes: number): string {
 interface TournamentConfigFormProps {
   config: TournamentConfig;
   playerCount: number;
+  clubCount?: number;
   onUpdate: (update: Partial<TournamentConfig>) => void;
 }
 
-export function TournamentConfigForm({ config, playerCount, onUpdate }: TournamentConfigFormProps) {
+export function TournamentConfigForm({ config, playerCount, clubCount, onUpdate }: TournamentConfigFormProps) {
   const { t } = useTranslation();
+  const { toastMessage, showToast } = useToast();
+  const lastAutoSwitchRef = useRef(false);
   const maxCourts = Math.max(1, Math.floor(playerCount / 4));
 
   // Resolve: what values will actually be used (fills in defaults for empty fields)
-  const resolved = resolveConfigDefaults(config, playerCount);
+  const resolved = resolveConfigDefaults(config, playerCount, clubCount);
+  const isGamesMode = resolved.scoringMode === 'games';
+  const minutesPer = isGamesMode ? MINUTES_PER_GAME : MINUTES_PER_POINT;
   const effectivePoints = resolved.pointsPerMatch;
   const effectiveRounds = resolved.maxRounds ?? 1;
 
+  // Track auto-switch: if resolver switched to games but user hasn't explicitly set it
+  const autoSwitchedToGames = config.scoringMode === undefined && isGamesMode;
+  lastAutoSwitchRef.current = autoSwitchedToGames;
+
+  // Club formats have a fixed round count based on club count
+  const clubFixedRounds = clubCount && clubCount >= 2
+    ? (clubCount % 2 === 0 ? clubCount - 1 : clubCount)
+    : null;
+
   // Per-field suggestions: what each field would be if cleared, given the other's current value
-  const suggestedRoundsConfig = resolveConfigDefaults({ ...config, maxRounds: null }, playerCount);
-  const suggestedPointsConfig = resolveConfigDefaults({ ...config, pointsPerMatch: 0 }, playerCount);
+  const suggestedRoundsConfig = resolveConfigDefaults({ ...config, maxRounds: null }, playerCount, clubCount);
+  const suggestedPointsConfig = resolveConfigDefaults({ ...config, pointsPerMatch: 0 }, playerCount, clubCount);
   const suggestedRounds = suggestedRoundsConfig.maxRounds ?? 1;
   const suggestedPoints = suggestedPointsConfig.pointsPerMatch;
 
   // Duration estimate
   const durationLimit = config.targetDuration ?? DEFAULT_DURATION_MINUTES;
-  const roundDuration = Math.round(effectivePoints * MINUTES_PER_POINT + CHANGEOVER_MINUTES);
+  const roundDuration = Math.round(effectivePoints * minutesPer + CHANGEOVER_MINUTES);
   const estimatedMinutes = effectiveRounds * roundDuration;
   const exceedsLimit = estimatedMinutes > durationLimit;
 
@@ -70,34 +111,88 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
     });
   };
 
+  const handleScoringModeChange = (mode: 'points' | 'games') => {
+    if (mode === 'points' && lastAutoSwitchRef.current) {
+      showToast(t('config.gamesModeSuggestion', { rounds: effectiveRounds }));
+    }
+    // Clear explicit pointsPerMatch so it gets recalculated for the new mode
+    onUpdate({ scoringMode: mode, pointsPerMatch: 0 });
+  };
+
   return (
     <div className={styles.form}>
       <div className={styles.field}>
-        <label className={styles.label} htmlFor="config-format">{t('config.format')}</label>
-        <select
-          id="config-format"
-          className={styles.input}
-          value={config.format}
-          onChange={e => {
-            const newFormat = e.target.value as TournamentFormat;
-            const update: Partial<TournamentConfig> = { format: newFormat };
+        <label className={styles.label}>{t('config.format')}</label>
+        <FormatPicker
+          format={config.format}
+          onChange={(newFormat, defaultConfig) => {
+            const update: Partial<TournamentConfig> = { format: newFormat, ...defaultConfig };
             // KOTC requires at least 2 courts
             if (newFormat === 'king-of-the-court' && config.courts.length < 2) {
               update.courts = [...config.courts, { id: generateId(), name: `Court ${config.courts.length + 1}` }];
             }
             onUpdate(update);
           }}
-        >
-          <option value="americano">{t('config.formatAmericano')}</option>
-          <option value="team-americano">{t('config.formatTeamAmericano')}</option>
-          <option value="mexicano">{t('config.formatMexicano')}</option>
-          <option value="team-mexicano">{t('config.formatTeamMexicano')}</option>
-          <option value="mixicano">{t('config.formatMixicano')}</option>
-          <option value="king-of-the-court">{t('config.formatKingOfTheCourt')}</option>
-        </select>
+          t={t}
+        />
       </div>
 
-      {config.format === 'mixicano' && (
+      {formatHasClubs(config.format) && (
+        <div className={styles.field}>
+          <div className={styles.labelRow}>
+            <label className={styles.label} htmlFor="config-pair-mode">{t('config.pairMode')}</label>
+            <InfoButton hint={t('config.pairModeInfo')} />
+          </div>
+          <select
+            id="config-pair-mode"
+            className={styles.input}
+            value={config.pairMode ?? 'fixed'}
+            onChange={e => onUpdate({ pairMode: e.target.value as 'fixed' | 'rotating' })}
+          >
+            <option value="fixed">{t('config.pairModeFixed')}</option>
+            <option value="rotating">{t('config.pairModeRotating')}</option>
+          </select>
+        </div>
+      )}
+
+      {getStrategy(config.format).hasFixedPartners && (
+        <div className={styles.field}>
+          <label className={styles.checkboxLabel}>
+            <input
+              type="checkbox"
+              checked={config.maldiciones?.enabled ?? false}
+              onChange={e => {
+                onUpdate({
+                  maldiciones: e.target.checked
+                    ? { enabled: true, chaosLevel: config.maldiciones?.chaosLevel ?? 'medium' }
+                    : undefined,
+                });
+              }}
+            />
+            <span>{t('config.maldicionesEnabled')}</span>
+          </label>
+          <span className={styles.hint}>{t('config.maldicionesHint')}</span>
+          {config.maldiciones?.enabled && (
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="config-chaos">{t('config.chaosLevel')}</label>
+              <select
+                id="config-chaos"
+                className={styles.input}
+                value={config.maldiciones.chaosLevel}
+                onChange={e => onUpdate({
+                  maldiciones: { enabled: true, chaosLevel: e.target.value as 'lite' | 'medium' | 'hardcore' },
+                })}
+              >
+                <option value="lite">{t('config.chaosLite')}</option>
+                <option value="medium">{t('config.chaosMedium')}</option>
+                <option value="hardcore">{t('config.chaosHardcore')}</option>
+              </select>
+            </div>
+          )}
+        </div>
+      )}
+
+      {formatHasGroups(config.format) && (
         <div className={styles.field}>
           <label className={styles.label}>{t('config.groupLabels')}</label>
           <div className={styles.courtList}>
@@ -191,11 +286,19 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
             onUpdate({ maxRounds: val && val > 0 ? val : null });
           }}
         />
-        <span className={styles.hint}>{t('config.recommendedRounds', { rounds: suggestedRounds, players: playerCount, courts: config.courts.length })}</span>
+        <span className={styles.hint}>
+          {clubFixedRounds
+            ? t('config.clubFixedRounds', { rounds: clubFixedRounds, clubs: clubCount! })
+            : t('config.recommendedRounds', { rounds: suggestedRounds, players: playerCount, courts: config.courts.length })}
+        </span>
       </div>
 
       <div className={styles.field}>
-        <label className={styles.label} htmlFor="config-points">{t('config.pointsPerMatch')}</label>
+        <div className={styles.labelRow}>
+          <label className={styles.label} htmlFor="config-points">
+            {isGamesMode ? t('config.gamesPerMatch') : t('config.pointsPerMatch')}
+          </label>
+        </div>
         <input
           id="config-points"
           className={styles.input}
@@ -208,7 +311,28 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
             onUpdate({ pointsPerMatch: isNaN(v) ? 0 : Math.max(0, v) });
           }}
         />
-        <span className={styles.hint}>{t('config.recommendedPoints', { points: suggestedPoints, duration: formatDuration(durationLimit) })}</span>
+        <span className={styles.hint}>
+          {isGamesMode
+            ? (clubFixedRounds
+              ? t('config.recommendedGamesClub', { games: suggestedPoints })
+              : t('config.recommendedGames', { games: suggestedPoints, duration: formatDuration(durationLimit) }))
+            : (clubFixedRounds
+              ? t('config.recommendedPointsClub', { points: suggestedPoints })
+              : t('config.recommendedPoints', { points: suggestedPoints, duration: formatDuration(durationLimit) }))}
+        </span>
+      </div>
+
+      <div className={styles.field}>
+        <label className={styles.label} htmlFor="config-scoring-mode">{t('config.scoringMode')}</label>
+        <select
+          id="config-scoring-mode"
+          className={styles.input}
+          value={isGamesMode ? 'games' : 'points'}
+          onChange={e => handleScoringModeChange(e.target.value as 'points' | 'games')}
+        >
+          <option value="points">{t('config.scoringModePoints')}</option>
+          <option value="games">{t('config.scoringModeGames')}</option>
+        </select>
       </div>
 
       <div className={styles.estimate}>
@@ -255,6 +379,8 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
           </div>
         </div>
       )}
+
+      <Toast message={toastMessage} />
     </div>
   );
 }

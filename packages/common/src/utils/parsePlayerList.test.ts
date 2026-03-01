@@ -50,4 +50,16 @@ describe('parsePlayerList', () => {
   it('trims surrounding whitespace from names', () => {
     expect(parsePlayerList('  Alice  \n  Bob  ')).toEqual(['Alice', 'Bob']);
   });
+
+  it('splits comma-separated names', () => {
+    expect(parsePlayerList('Alice, Bob, Charlie')).toEqual(['Alice', 'Bob', 'Charlie']);
+  });
+
+  it('handles mixed comma and newline separators', () => {
+    expect(parsePlayerList('Alice, Bob\nCharlie, Dave')).toEqual(['Alice', 'Bob', 'Charlie', 'Dave']);
+  });
+
+  it('skips empty segments from commas', () => {
+    expect(parsePlayerList('Alice,, Bob,')).toEqual(['Alice', 'Bob']);
+  });
 });

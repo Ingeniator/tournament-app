@@ -48,6 +48,14 @@
   background: var(--color-tier-legendary-tint);
 }
 
+.modeTitle {
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
 .emoji {
   font-size: 2.5rem;
   line-height: 1;

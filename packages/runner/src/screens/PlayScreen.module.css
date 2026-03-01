@@ -254,6 +254,17 @@
   text-align: center;
 }
 
+.resultCurse {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  text-align: center;
+  padding-top: 2px;
+}
+
+.resultCurseShielded {
+  text-decoration: line-through;
+}
+
 .resultSitOut {
   font-size: var(--text-xs);
   color: var(--color-text-muted);
@@ -362,5 +373,30 @@
   max-width: 400px;
   height: auto;
   border-radius: var(--radius-md);
+}
+
+.standingsTabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.standingsTab {
+  flex: 1;
+  padding: var(--space-sm) var(--space-md);
+  background: none;
+  border: none;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.standingsTabActive {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
 }
 

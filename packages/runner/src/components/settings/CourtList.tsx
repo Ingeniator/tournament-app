@@ -58,16 +58,23 @@ export function CourtList({ tournament, dispatch }: CourtListProps) {
                   />
                   {tournament.phase === 'in-progress' && (
                     <>
-                      <button
-                        className={`${styles.availabilityToggle} ${court.unavailable ? styles.toggleUnavailable : styles.toggleAvailable}`}
-                        onMouseDown={e => e.preventDefault()}
-                        onClick={() => dispatch({
-                          type: 'TOGGLE_COURT_AVAILABILITY',
-                          payload: { courtId: court.id },
-                        })}
-                      >
-                        {court.unavailable ? t('settings.unavailable') : t('settings.available')}
-                      </button>
+                      <label className={styles.availabilityToggle} onMouseDown={e => e.preventDefault()}>
+                        <input
+                          type="checkbox"
+                          className={styles.toggleInput}
+                          checked={!court.unavailable}
+                          onChange={() => dispatch({
+                            type: 'TOGGLE_COURT_AVAILABILITY',
+                            payload: { courtId: court.id },
+                          })}
+                        />
+                        <span className={styles.toggleTrack}>
+                          <span className={styles.toggleThumb} />
+                        </span>
+                        <span className={styles.toggleLabel}>
+                          {court.unavailable ? t('settings.unavailable') : t('settings.available')}
+                        </span>
+                      </label>
                       <button
                         className={styles.replaceBtn}
                         onMouseDown={e => e.preventDefault()}

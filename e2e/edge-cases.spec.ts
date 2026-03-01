@@ -159,7 +159,7 @@ test.describe('Empty tournament states', () => {
   });
 
   test('home screen with no tournaments shows create button', async ({ page }) => {
-    await expect(page.getByRole('button', { name: 'New Play' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Quick Play' })).toBeVisible();
     await expect(page.getByRole('heading', { name: /Round/ })).not.toBeVisible();
   });
 

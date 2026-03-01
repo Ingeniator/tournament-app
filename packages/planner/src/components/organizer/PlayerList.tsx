@@ -1,6 +1,6 @@
 import { useState, useRef, type ClipboardEvent } from 'react';
-import { Button, Card, Modal, useTranslation } from '@padel/common';
-import type { PlannerRegistration } from '@padel/common';
+import { Button, Card, getClubColor, Modal, useTranslation, formatHasClubs } from '@padel/common';
+import type { PlannerRegistration, TournamentFormat, Club } from '@padel/common';
 import { parsePlayerList } from '@padel/common';
 import styles from '../../screens/OrganizerScreen.module.css';
 
@@ -13,9 +13,16 @@ interface PlayerListProps {
   toggleConfirmed: (playerId: string, currentConfirmed: boolean) => Promise<void>;
   updatePlayerTelegram: (playerId: string, telegramUsername: string | null) => Promise<void>;
   statuses: Map<string, string>;
+  format?: TournamentFormat;
+  clubs?: Club[];
+  groupLabels?: [string, string];
+  rankLabels?: string[];
+  onSetGroup?: (playerId: string, group: 'A' | 'B' | null) => Promise<void>;
+  onSetClub?: (playerId: string, clubId: string | null) => Promise<void>;
+  onSetRank?: (playerId: string, rankSlot: number | null) => Promise<void>;
 }
 
-export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, removePlayer, toggleConfirmed, updatePlayerTelegram, statuses }: PlayerListProps) {
+export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, removePlayer, toggleConfirmed, updatePlayerTelegram, statuses, format, clubs, groupLabels, rankLabels, onSetGroup, onSetClub, onSetRank }: PlayerListProps) {
   const { t } = useTranslation();
   const [newPlayerName, setNewPlayerName] = useState('');
   const addingPlayer = useRef(false);
@@ -29,9 +36,16 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
   const handleAdd = async () => {
     if (newPlayerName.trim() && !addingPlayer.current) {
       addingPlayer.current = true;
-      const name = newPlayerName.trim();
+      const trimmed = newPlayerName.trim();
       setNewPlayerName('');
-      await addPlayer(name);
+      if (trimmed.includes(',')) {
+        const names = parsePlayerList(trimmed);
+        if (names.length > 0) {
+          await bulkAddPlayers(names);
+        }
+      } else {
+        await addPlayer(trimmed);
+      }
       addingPlayer.current = false;
       addPlayerInputRef.current?.focus();
     }
@@ -71,6 +85,54 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                     <span className={styles.reserveBadge}>{t('organizer.reserve')}</span>
                   )}
                 </span>
+                {format === 'mixicano' && onSetGroup && (
+                  <div className={styles.groupToggle}>
+                    <button
+                      className={player.group === 'A' ? styles.groupBtnActive : styles.groupBtn}
+                      onClick={() => onSetGroup(player.id, player.group === 'A' ? null : 'A')}
+                    >
+                      {groupLabels?.[0] || 'A'}
+                    </button>
+                    <button
+                      className={player.group === 'B' ? styles.groupBtnActive : styles.groupBtn}
+                      onClick={() => onSetGroup(player.id, player.group === 'B' ? null : 'B')}
+                    >
+                      {groupLabels?.[1] || 'B'}
+                    </button>
+                  </div>
+                )}
+                {format && formatHasClubs(format) && onSetClub && clubs && clubs.length > 0 && (
+                  <select
+                    className={styles.clubSelect}
+                    value={player.clubId ?? ''}
+                    onChange={e => onSetClub(player.id, e.target.value || null)}
+                    style={player.clubId ? (() => {
+                      const idx = clubs.findIndex(c => c.id === player.clubId);
+                      return idx >= 0 ? { backgroundColor: getClubColor(clubs[idx], idx), color: 'white', borderColor: 'transparent' } as React.CSSProperties : undefined;
+                    })() : undefined}
+                  >
+                    <option value="">—</option>
+                    {clubs.map(club => (
+                      <option key={club.id} value={club.id}>
+                        {club.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                {format === 'club-ranked' && onSetRank && rankLabels && rankLabels.length > 0 && (
+                  <select
+                    className={styles.rankSelect}
+                    value={player.rankSlot != null ? String(player.rankSlot) : ''}
+                    onChange={e => onSetRank(player.id, e.target.value ? Number(e.target.value) : null)}
+                  >
+                    <option value="">—</option>
+                    {rankLabels.map((label, idx) => (
+                      <option key={idx} value={String(idx)}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                )}
                 <button
                   className={player.telegramUsername ? styles.linkBtnActive : styles.linkBtn}
                   onClick={() => {
@@ -110,16 +172,23 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
             onKeyDown={async e => {
               if (e.key === 'Enter' && newPlayerName.trim() && !addingPlayer.current) {
                 addingPlayer.current = true;
-                const name = newPlayerName.trim();
+                const trimmed = newPlayerName.trim();
                 setNewPlayerName('');
-                await addPlayer(name);
+                if (trimmed.includes(',')) {
+                  const names = parsePlayerList(trimmed);
+                  if (names.length > 0) {
+                    await bulkAddPlayers(names);
+                  }
+                } else {
+                  await addPlayer(trimmed);
+                }
                 addingPlayer.current = false;
                 addPlayerInputRef.current?.focus();
               }
             }}
             onPaste={(e: ClipboardEvent<HTMLInputElement>) => {
               const text = e.clipboardData.getData('text');
-              if (!text.includes('\n')) return;
+              if (!text.includes('\n') && !text.includes(',')) return;
               e.preventDefault();
               const names = parsePlayerList(text);
               if (names.length > 0) {

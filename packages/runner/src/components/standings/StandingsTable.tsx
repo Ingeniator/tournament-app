@@ -7,13 +7,25 @@ export interface GroupInfo {
   map: Map<string, 'A' | 'B'>;
 }
 
+export interface ClubInfo {
+  teamClubMap: Map<string, string>;
+  clubNameMap: Map<string, string>;
+  clubColorMap: Map<string, string>;
+}
+
+export interface RankLabelInfo {
+  labelMap: Map<string, string>;
+}
+
 interface StandingsTableProps {
   standings: StandingsEntry[];
   plannedGames?: Map<string, number>;
   groupInfo?: GroupInfo;
+  clubInfo?: ClubInfo;
+  rankLabelInfo?: RankLabelInfo;
 }
 
-export function StandingsTable({ standings, plannedGames, groupInfo }: StandingsTableProps) {
+export function StandingsTable({ standings, plannedGames, groupInfo, clubInfo, rankLabelInfo }: StandingsTableProps) {
   const { t } = useTranslation();
 
   if (standings.length === 0) {
@@ -54,14 +66,44 @@ export function StandingsTable({ standings, plannedGames, groupInfo }: Standings
           return (
             <tr key={entry.playerId}>
               <td className={`${styles.rank} ${rankClass}`}>{entry.rank}</td>
-              <td className={styles.name}>
-                {entry.playerName}
-                {groupInfo && groupInfo.map.has(entry.playerId) && (
-                  <span className={`${styles.groupBadge} ${groupInfo.map.get(entry.playerId) === 'A' ? styles.groupA : styles.groupB}`}>
-                    {groupInfo.map.get(entry.playerId) === 'A' ? groupInfo.labels[0] : groupInfo.labels[1]}
-                  </span>
-                )}
-              </td>
+              {(() => {
+                const nameParts = entry.playerName.split(' & ');
+                const isPair = nameParts.length === 2;
+                const clubId = clubInfo?.teamClubMap.get(entry.playerId);
+                const clubColor = clubId ? clubInfo!.clubColorMap.get(clubId) : undefined;
+
+                const rankLabel = rankLabelInfo?.labelMap.get(entry.playerId);
+
+                if (isPair) {
+                  return (
+                    <td className={`${styles.name} ${styles.pairCell}`}>
+                      <div className={styles.pairWrapper}>
+                        {clubColor && (
+                          <span className={styles.clubDot} style={{ backgroundColor: clubColor }} />
+                        )}
+                        <span className={styles.pairNames}>
+                          <span>{nameParts[0]}</span>
+                          <span className={styles.pairSecondary}>{nameParts[1]}</span>
+                        </span>
+                        {rankLabel && (
+                          <span className={styles.rankBadge}>{rankLabel}</span>
+                        )}
+                      </div>
+                    </td>
+                  );
+                }
+
+                return (
+                  <td className={styles.name}>
+                    {entry.playerName}
+                    {groupInfo && groupInfo.map.has(entry.playerId) && (
+                      <span className={`${styles.groupBadge} ${groupInfo.map.get(entry.playerId) === 'A' ? styles.groupA : styles.groupB}`}>
+                        {groupInfo.map.get(entry.playerId) === 'A' ? groupInfo.labels[0] : groupInfo.labels[1]}
+                      </span>
+                    )}
+                  </td>
+                );
+              })()}
               <td className={`${styles.right} ${styles.points}`}>{entry.totalPoints}</td>
               {plannedGames && (
                 <td className={`${styles.right} ${styles.gamesCol} ${planned === 0 ? styles.noPlanned : ''}`}>

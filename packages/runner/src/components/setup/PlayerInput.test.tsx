@@ -7,7 +7,7 @@ vi.mock('@padel/common', () => ({
   Button: ({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) =>
     <button {...props}>{children}</button>,
   parsePlayerList: (text: string) =>
-    text.split('\n').map((l: string) => l.trim()).filter(Boolean),
+    text.split(/[\n,]/).map((l: string) => l.trim()).filter(Boolean),
 }));
 
 import { PlayerInput } from './PlayerInput';
@@ -55,5 +55,26 @@ describe('PlayerInput', () => {
       clipboardData: { getData: () => 'Alice' },
     });
     expect(onBulkAdd).not.toHaveBeenCalled();
+  });
+
+  it('triggers onBulkAdd for comma-separated paste', () => {
+    const onBulkAdd = vi.fn();
+    render(<PlayerInput onAdd={vi.fn()} onBulkAdd={onBulkAdd} />);
+    const input = screen.getByRole('textbox');
+    fireEvent.paste(input, {
+      clipboardData: { getData: () => 'Alice, Bob, Charlie' },
+    });
+    expect(onBulkAdd).toHaveBeenCalledWith(['Alice', 'Bob', 'Charlie']);
+  });
+
+  it('triggers onBulkAdd on submit when input has commas', () => {
+    const onAdd = vi.fn();
+    const onBulkAdd = vi.fn();
+    render(<PlayerInput onAdd={onAdd} onBulkAdd={onBulkAdd} />);
+    const input = screen.getByRole('textbox');
+    fireEvent.change(input, { target: { value: 'Alice, Bob' } });
+    fireEvent.submit(input.closest('form')!);
+    expect(onBulkAdd).toHaveBeenCalledWith(['Alice', 'Bob']);
+    expect(onAdd).not.toHaveBeenCalled();
   });
 });

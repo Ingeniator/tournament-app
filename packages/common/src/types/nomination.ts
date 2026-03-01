@@ -8,4 +8,5 @@ export interface Nomination {
   playerNames: string[];
   stat: string;
   tier?: AwardTier;
+  modeTitle?: string;
 }

@@ -1,6 +1,6 @@
-import { useState, useMemo, type Dispatch } from 'react';
+import { useState, useMemo, type Dispatch, type ClipboardEvent } from 'react';
 import type { Tournament } from '@padel/common';
-import { Button, Card, useTranslation } from '@padel/common';
+import { Button, Card, getClubColor, useTranslation, parsePlayerList, formatHasGroups, formatHasClubs } from '@padel/common';
 import type { TournamentAction } from '../../state/actions';
 import styles from '../../screens/SettingsScreen.module.css';
 
@@ -21,7 +21,7 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
   const [addPlayerGroup, setAddPlayerGroup] = useState<'A' | 'B'>('A');
   const [showAddPlayer, setShowAddPlayer] = useState(false);
 
-  const isMixicano = tournament.config.format === 'mixicano';
+  const isMixicano = formatHasGroups(tournament.config.format);
 
   const groupWarning = useMemo(() => {
     if (!isMixicano) return null;
@@ -54,10 +54,28 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
     const trimmed = addPlayerName.trim();
     if (!trimmed) return;
     if (tournament.phase === 'in-progress') {
-      const group = tournament.config.format === 'mixicano' ? addPlayerGroup : undefined;
+      const group = formatHasGroups(tournament.config.format) ? addPlayerGroup : undefined;
       dispatch({ type: 'ADD_PLAYER_LIVE', payload: { name: trimmed, group } });
     } else {
       dispatch({ type: 'ADD_PLAYER', payload: { name: trimmed } });
+    }
+    setAddPlayerName('');
+    setShowAddPlayer(false);
+    showToast(t('settings.playerAdded'));
+  };
+
+  const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
+    const text = e.clipboardData.getData('text');
+    if (!text.includes('\n') && !text.includes(',')) return;
+    e.preventDefault();
+    const names = parsePlayerList(text);
+    if (names.length === 0) return;
+    for (const name of names) {
+      if (tournament.phase === 'in-progress') {
+        dispatch({ type: 'ADD_PLAYER_LIVE', payload: { name } });
+      } else {
+        dispatch({ type: 'ADD_PLAYER', payload: { name } });
+      }
     }
     setAddPlayerName('');
     setShowAddPlayer(false);
@@ -118,18 +136,25 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
                       </button>
                     </div>
                   )}
-                  <button
-                    className={`${styles.availabilityToggle} ${player.unavailable ? styles.toggleUnavailable : styles.toggleAvailable}`}
-                    onMouseDown={e => e.preventDefault()}
-                    onClick={() => {
-                      dispatch({
-                        type: 'TOGGLE_PLAYER_AVAILABILITY',
-                        payload: { playerId: player.id },
-                      });
-                    }}
-                  >
-                    {player.unavailable ? t('settings.unavailable') : t('settings.available')}
-                  </button>
+                  <label className={styles.availabilityToggle} onMouseDown={e => e.preventDefault()}>
+                    <input
+                      type="checkbox"
+                      className={styles.toggleInput}
+                      checked={!player.unavailable}
+                      onChange={() => {
+                        dispatch({
+                          type: 'TOGGLE_PLAYER_AVAILABILITY',
+                          payload: { playerId: player.id },
+                        });
+                      }}
+                    />
+                    <span className={styles.toggleTrack}>
+                      <span className={styles.toggleThumb} />
+                    </span>
+                    <span className={styles.toggleLabel}>
+                      {player.unavailable ? t('settings.unavailable') : t('settings.available')}
+                    </span>
+                  </label>
                   {tournament.phase === 'in-progress' && (
                     <button
                       className={styles.replaceBtn}
@@ -188,6 +213,18 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
                       {player.group === 'A' ? (tournament.config.groupLabels?.[0] || 'A') : (tournament.config.groupLabels?.[1] || 'B')}
                     </span>
                   )}
+                  {formatHasClubs(tournament.config.format) && player.clubId && tournament.clubs && (() => {
+                    const clubIdx = tournament.clubs.findIndex(c => c.id === player.clubId);
+                    if (clubIdx < 0) return null;
+                    return (
+                      <span
+                        className={styles.clubBadge}
+                        style={{ backgroundColor: getClubColor(tournament.clubs[clubIdx], clubIdx) }}
+                      >
+                        {tournament.clubs[clubIdx].name}
+                      </span>
+                    );
+                  })()}
                   {player.unavailable && (
                     <span className={styles.statusBadge}>{t('settings.out')}</span>
                   )}
@@ -210,9 +247,10 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
               if (e.key === 'Enter') handleAddPlayer();
               if (e.key === 'Escape') setShowAddPlayer(false);
             }}
+            onPaste={handlePaste}
             autoFocus
           />
-          {tournament.config.format === 'mixicano' && (
+          {formatHasGroups(tournament.config.format) && (
             <div className={styles.groupSelector}>
               <button
                 className={`${styles.groupBtn} ${addPlayerGroup === 'A' ? styles.groupBtnActive : ''}`}

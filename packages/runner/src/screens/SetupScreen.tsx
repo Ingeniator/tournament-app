@@ -6,7 +6,8 @@ import { AppShell } from '../components/layout/AppShell';
 import { PlayerInput } from '../components/setup/PlayerInput';
 import { PlayerList } from '../components/setup/PlayerList';
 import { TournamentConfigForm } from '../components/setup/TournamentConfigForm';
-import { Button, Card, useTranslation } from '@padel/common';
+import { ClubSection } from '../components/setup/ClubSection';
+import { Button, Card, useTranslation, formatHasClubs } from '@padel/common';
 import styles from './SetupScreen.module.css';
 
 export function SetupScreen() {
@@ -16,16 +17,16 @@ export function SetupScreen() {
   const errors = useMemo(() => {
     if (!tournament) return [];
     const strategy = getStrategy(tournament.config.format);
-    const resolvedConfig = resolveConfigDefaults(tournament.config, tournament.players.length);
+    const resolvedConfig = resolveConfigDefaults(tournament.config, tournament.players.length, tournament.clubs?.length);
     return strategy.validateSetup(tournament.players, resolvedConfig);
-  }, [tournament?.players, tournament?.config]);
+  }, [tournament?.players, tournament?.config, tournament?.clubs?.length]);
 
   const warnings = useMemo(() => {
     if (!tournament) return [];
     const strategy = getStrategy(tournament.config.format);
-    const resolvedConfig = resolveConfigDefaults(tournament.config, tournament.players.length);
+    const resolvedConfig = resolveConfigDefaults(tournament.config, tournament.players.length, tournament.clubs?.length);
     return strategy.validateWarnings?.(tournament.players, resolvedConfig) ?? [];
-  }, [tournament?.players, tournament?.config]);
+  }, [tournament?.players, tournament?.config, tournament?.clubs?.length]);
 
   if (!tournament) return null;
 
@@ -82,19 +83,38 @@ export function SetupScreen() {
           onRemove={playerId =>
             dispatch({ type: 'REMOVE_PLAYER', payload: { playerId } })
           }
+          onRename={(playerId, name) =>
+            dispatch({ type: 'UPDATE_PLAYER', payload: { playerId, name } })
+          }
           format={tournament.config.format}
           groupLabels={tournament.config.groupLabels}
           onSetGroup={(playerId, group) =>
             dispatch({ type: 'SET_PLAYER_GROUP', payload: { playerId, group } })
           }
+          clubs={tournament.clubs}
+          onSetClub={(playerId, clubId) =>
+            dispatch({ type: 'SET_PLAYER_CLUB', payload: { playerId, clubId } })
+          }
         />
       </div>
+
+      {formatHasClubs(tournament.config.format) && (
+        <ClubSection
+          clubs={tournament.clubs ?? []}
+          players={tournament.players}
+          onAddClub={name => dispatch({ type: 'ADD_CLUB', payload: { name } })}
+          onRemoveClub={clubId => dispatch({ type: 'REMOVE_CLUB', payload: { clubId } })}
+          onRenameClub={(clubId, name) => dispatch({ type: 'RENAME_CLUB', payload: { clubId, name } })}
+          onSetPlayerClub={(playerId, clubId) => dispatch({ type: 'SET_PLAYER_CLUB', payload: { playerId, clubId } })}
+        />
+      )}
 
       <Card>
         <h2 className={styles.sectionTitle}>{t('setup.settings')}</h2>
         <TournamentConfigForm
           config={tournament.config}
           playerCount={tournament.players.length}
+          clubCount={tournament.clubs?.length}
           onUpdate={update => dispatch({ type: 'UPDATE_CONFIG', payload: update })}
         />
       </Card>

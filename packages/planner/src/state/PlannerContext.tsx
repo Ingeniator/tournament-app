@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, createContext, useContext, type ReactNode } from 'react';
 import { ref, get } from 'firebase/database';
-import type { PlannerTournament, PlannerRegistration, TournamentSummary, SkinId } from '@padel/common';
+import type { PlannerTournament, PlannerRegistration, TournamentSummary, SkinId, PadelEventSummary } from '@padel/common';
 import { useTranslation, useTheme, isValidSkin, DEFAULT_SKIN } from '@padel/common';
 import { useAuth } from '../hooks/useAuth';
 import { usePlannerTournament } from '../hooks/usePlannerTournament';
@@ -12,9 +12,11 @@ import { useRegisteredTournaments } from '../hooks/useRegisteredTournaments';
 import { useTelegram, type TelegramUser } from '../hooks/useTelegram';
 import { useTelegramSync } from '../hooks/useTelegramSync';
 import { useChatRoomTournaments } from '../hooks/useChatRoomTournaments';
+import { useMyEvents } from '../hooks/useMyEvents';
+import { loadEventByCode as loadEventByCodeFn } from '../hooks/useEvent';
 import { linkTournamentToChat } from '../utils/chatRoom';
 
-export type Screen = 'loading' | 'home' | 'organizer' | 'join';
+export type Screen = 'loading' | 'home' | 'organizer' | 'join' | 'event-detail' | 'event-create' | 'event-join';
 
 export interface PlannerContextValue {
   uid: string | null;
@@ -27,7 +29,7 @@ export interface PlannerContextValue {
   setScreen: (screen: Screen) => void;
   createTournament: (name: string) => Promise<void>;
   loadByCode: (code: string) => Promise<boolean>;
-  updateTournament: (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'pointsPerMatch' | 'courts' | 'maxRounds' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description'>>) => Promise<void>;
+  updateTournament: (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'pointsPerMatch' | 'courts' | 'maxRounds' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description' | 'clubs' | 'groupLabels' | 'rankLabels'>>) => Promise<void>;
   registerPlayer: (name: string) => Promise<void>;
   removePlayer: (playerId: string) => Promise<void>;
   updateConfirmed: (confirmed: boolean) => Promise<void>;
@@ -36,6 +38,9 @@ export interface PlannerContextValue {
   toggleConfirmed: (playerId: string, currentConfirmed: boolean) => Promise<void>;
   updatePlayerName: (playerId: string, name: string) => Promise<void>;
   updatePlayerTelegram: (playerId: string, telegramUsername: string | null) => Promise<void>;
+  updatePlayerGroup: (playerId: string, group: 'A' | 'B' | null) => Promise<void>;
+  updatePlayerClub: (playerId: string, clubId: string | null) => Promise<void>;
+  updatePlayerRank: (playerId: string, rankSlot: number | null) => Promise<void>;
   isRegistered: boolean;
   organizerName: string | null;
   userName: string | null;
@@ -48,12 +53,20 @@ export interface PlannerContextValue {
   completedAt: number | null;
   undoComplete: () => Promise<void>;
   deleteTournament: () => Promise<void>;
+  deleteTournamentById: (id: string) => Promise<void>;
   telegramUser: TelegramUser | null;
   chatInstance: string | null;
   chatRoomTournaments: TournamentSummary[];
   chatRoomLoading: boolean;
   skin: SkinId;
   setSkin: (skin: SkinId) => void;
+  myEvents: PadelEventSummary[];
+  eventsLoading: boolean;
+  activeEventId: string | null;
+  setActiveEventId: (id: string | null) => void;
+  loadEventByCode: (code: string) => Promise<boolean>;
+  joinReturnScreen: Screen;
+  openTournamentFromEvent: (tournamentId: string) => void;
 }
 
 const PlannerCtx = createContext<PlannerContextValue>(null!);
@@ -89,10 +102,11 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     updateTournament,
     loadByCode: loadByCodeFromDb,
     deleteTournament: deleteInDb,
+    deleteTournamentById: deleteByIdInDb,
     undoComplete,
   } = usePlannerTournament(tournamentId);
 
-  const { players, registerPlayer: registerInDb, removePlayer, updateConfirmed: updateConfirmedInDb, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, isRegistered: checkRegistered, claimOrphanRegistration } = usePlayers(tournamentId);
+  const { players, registerPlayer: registerInDb, removePlayer, updateConfirmed: updateConfirmedInDb, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, updatePlayerRank, isRegistered: checkRegistered, claimOrphanRegistration } = usePlayers(tournamentId);
 
   const { name: userName, skin: userSkin, loading: userNameLoading, updateName: updateUserName, updateSkin: updateUserSkin, updateTelegramId, updateTelegramUsername } = useUserProfile(uid);
 
@@ -116,6 +130,9 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
   const { tournaments: myTournaments, loading: myLoading } = useMyTournaments(uid);
   const { tournaments: registeredTournaments, loading: regLoading } = useRegisteredTournaments(uid);
   const { tournaments: chatRoomTournaments, loading: chatRoomLoading } = useChatRoomTournaments(chatInstance);
+  const { events: myEvents, loading: eventsLoading } = useMyEvents(uid);
+  const [activeEventId, setActiveEventId] = useState<string | null>(null);
+  const [joinReturnScreen, setJoinReturnScreen] = useState<Screen>('home');
 
   const listingsLoading = myLoading || regLoading;
 
@@ -218,9 +235,29 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     setScreen('home');
   }, [uid, deleteInDb]);
 
+  const deleteTournamentById = useCallback(async (id: string) => {
+    if (!uid) return;
+    await deleteByIdInDb(id, uid);
+  }, [uid, deleteByIdInDb]);
+
   const openTournament = useCallback((id: string, targetScreen: 'organizer' | 'join') => {
     setTournamentId(id);
     setScreen(targetScreen);
+  }, []);
+
+  const loadEventByCode = useCallback(async (code: string): Promise<boolean> => {
+    const id = await loadEventByCodeFn(code);
+    if (id) {
+      setActiveEventId(id);
+      return true;
+    }
+    return false;
+  }, []);
+
+  const openTournamentFromEvent = useCallback((tournamentId: string) => {
+    setJoinReturnScreen('event-join');
+    setTournamentId(tournamentId);
+    setScreen('join');
   }, []);
 
   const isRegistered = uid ? checkRegistered(uid) : false;
@@ -246,6 +283,9 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       toggleConfirmed,
       updatePlayerName,
       updatePlayerTelegram,
+      updatePlayerGroup,
+      updatePlayerClub,
+      updatePlayerRank,
       isRegistered,
       organizerName,
       userName,
@@ -258,12 +298,20 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       completedAt,
       undoComplete,
       deleteTournament,
+      deleteTournamentById,
       telegramUser,
       chatInstance,
       chatRoomTournaments,
       chatRoomLoading,
       skin,
       setSkin,
+      myEvents,
+      eventsLoading,
+      activeEventId,
+      setActiveEventId,
+      loadEventByCode,
+      joinReturnScreen,
+      openTournamentFromEvent,
     }}>
       {children}
     </PlannerCtx.Provider>

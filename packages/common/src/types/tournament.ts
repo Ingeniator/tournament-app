@@ -1,7 +1,8 @@
 import type { Player } from './player';
 import type { Nomination } from './nomination';
+import type { ChaosLevel, MatchCurse, MaldicionesHands } from './maldiciones';
 
-export type TournamentFormat = 'americano' | 'mexicano' | 'mixicano' | 'team-americano' | 'team-mexicano' | 'round-robin' | 'king-of-the-court';
+export type TournamentFormat = 'americano' | 'mexicano' | 'mixicano' | 'mixed-americano' | 'team-americano' | 'team-mexicano' | 'mixed-team-americano' | 'mixed-team-mexicano' | 'round-robin' | 'king-of-the-court' | 'mixed-king-of-the-court' | 'club-americano' | 'club-mexicano' | 'club-ranked' | 'club-team-americano' | 'club-team-mexicano';
 
 export type TournamentPhase = 'setup' | 'team-pairing' | 'in-progress' | 'completed';
 
@@ -24,13 +25,23 @@ export interface Court {
   unavailable?: boolean;
 }
 
+export interface Club {
+  id: string;
+  name: string;
+  color?: string;
+}
+
 export interface TournamentConfig {
   format: TournamentFormat;
   pointsPerMatch: number;
   courts: Court[];
   maxRounds: number | null;
   targetDuration?: number;
+  scoringMode?: 'points' | 'games';
   groupLabels?: [string, string];
+  rankLabels?: string[];
+  pairMode?: 'fixed' | 'rotating';
+  maldiciones?: { enabled: boolean; chaosLevel: ChaosLevel };
 }
 
 export interface MatchScore {
@@ -44,6 +55,7 @@ export interface Match {
   team1: [string, string];
   team2: [string, string];
   score: MatchScore | null;
+  curse?: MatchCurse;
 }
 
 export interface Round {
@@ -61,7 +73,9 @@ export interface Tournament {
   players: Player[];
   rounds: Round[];
   teams?: Team[];
+  clubs?: Club[];
   plannerTournamentId?: string;
+  maldicionesHands?: MaldicionesHands;
   nominations?: Nomination[];
   ceremonyCompleted?: boolean;
   createdAt: number;

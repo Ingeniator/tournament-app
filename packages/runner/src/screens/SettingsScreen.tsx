@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ref, push, set } from 'firebase/database';
 import { useTournament } from '../hooks/useTournament';
 import { EditableField } from '../components/settings/EditableField';
@@ -17,7 +17,11 @@ export function SettingsScreen() {
   const { toastMessage, showToast } = useToast();
   const [importError, setImportError] = useState<string | null>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const exportRef = useRef<HTMLDivElement>(null);
+  const importRef = useRef<HTMLDivElement>(null);
 
   if (!tournament) return null;
 
@@ -77,6 +81,21 @@ export function SettingsScreen() {
       dispatch({ type: 'RESET_TOURNAMENT' });
     }
   };
+
+  useEffect(() => {
+    const open = exportOpen || importOpen;
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (exportOpen && exportRef.current && !exportRef.current.contains(e.target as Node)) {
+        setExportOpen(false);
+      }
+      if (importOpen && importRef.current && !importRef.current.contains(e.target as Node)) {
+        setImportOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [exportOpen, importOpen]);
 
   return (
     <div className={styles.container}>
@@ -152,7 +171,7 @@ export function SettingsScreen() {
           </>
         ) : (
           <div className={styles.chipList}>
-            <span className={styles.chip}>{t('settings.pts', { count: tournament.config.pointsPerMatch })}</span>
+            <span className={styles.chip}>{tournament.config.scoringMode === 'games' ? t('settings.games', { count: tournament.config.pointsPerMatch }) : t('settings.pts', { count: tournament.config.pointsPerMatch })}</span>
             {tournament.rounds.length > 0 && (
               <span className={styles.chip}>{t('settings.roundCount', { count: tournament.rounds.length })}</span>
             )}
@@ -170,18 +189,36 @@ export function SettingsScreen() {
       <Card>
         <h3 className={styles.sectionTitle}>{t('settings.exportImport')}</h3>
         <div className={styles.actions}>
-          <Button variant="secondary" fullWidth onClick={handleCopy}>
-            {t('settings.copyData')}
-          </Button>
-          <Button variant="secondary" fullWidth onClick={handleExportFile}>
-            {t('settings.exportFile')}
-          </Button>
-          <Button variant="secondary" fullWidth onClick={handleImportClipboard}>
-            {t('settings.importFromClipboard')}
-          </Button>
-          <Button variant="secondary" fullWidth onClick={() => fileInputRef.current?.click()}>
-            {t('settings.loadFile')}
-          </Button>
+          <div className={styles.dropdown} ref={exportRef}>
+            <Button variant="secondary" fullWidth onClick={() => { setExportOpen(v => !v); setImportOpen(false); }}>
+              {t('settings.export')} <span className={styles.dropdownArrow}>{exportOpen ? '\u25B2' : '\u25BC'}</span>
+            </Button>
+            {exportOpen && (
+              <div className={styles.dropdownMenu}>
+                <button className={styles.dropdownItem} onClick={() => { setExportOpen(false); handleCopy(); }}>
+                  {t('settings.copyData')}
+                </button>
+                <button className={styles.dropdownItem} onClick={() => { setExportOpen(false); handleExportFile(); }}>
+                  {t('settings.exportFile')}
+                </button>
+              </div>
+            )}
+          </div>
+          <div className={styles.dropdown} ref={importRef}>
+            <Button variant="secondary" fullWidth onClick={() => { setImportOpen(v => !v); setExportOpen(false); }}>
+              {t('settings.import')} <span className={styles.dropdownArrow}>{importOpen ? '\u25B2' : '\u25BC'}</span>
+            </Button>
+            {importOpen && (
+              <div className={styles.dropdownMenu}>
+                <button className={styles.dropdownItem} onClick={() => { setImportOpen(false); handleImportClipboard(); }}>
+                  {t('settings.importFromClipboard')}
+                </button>
+                <button className={styles.dropdownItem} onClick={() => { setImportOpen(false); fileInputRef.current?.click(); }}>
+                  {t('settings.loadFile')}
+                </button>
+              </div>
+            )}
+          </div>
           <input
             ref={fileInputRef}
             type="file"

@@ -1,0 +1,245 @@
+.nav {
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--color-separator);
+}
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.navLink:hover {
+  text-decoration: underline;
+}
+
+.article {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: var(--space-2xl) var(--space-lg);
+}
+
+.article h1 {
+  font-size: var(--text-3xl);
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: var(--space-lg);
+}
+
+.article h2 {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  margin-top: var(--space-2xl);
+  margin-bottom: var(--space-md);
+}
+
+.article h3 {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  margin-top: var(--space-xl);
+  margin-bottom: var(--space-sm);
+}
+
+.article p {
+  font-size: var(--text-base);
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-md);
+}
+
+.article ul,
+.article ol {
+  padding-left: var(--space-lg);
+  margin-bottom: var(--space-md);
+}
+
+.article li {
+  font-size: var(--text-base);
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-xs);
+}
+
+.article strong {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.lead {
+  font-size: var(--text-lg);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin-bottom: var(--space-xl);
+}
+
+/* Format / Award cards */
+.cardGrid {
+  display: grid;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+}
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+}
+
+.cardEmoji {
+  font-size: var(--text-2xl);
+  margin-bottom: var(--space-sm);
+}
+
+.cardName {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  margin-bottom: var(--space-xs);
+}
+
+.cardDesc {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.badge {
+  display: inline-block;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  margin-left: var(--space-sm);
+  vertical-align: middle;
+}
+
+.badgeLegendary {
+  background: rgba(255, 215, 0, 0.15);
+  color: var(--color-rank-gold);
+}
+
+.badgeRare {
+  background: var(--color-primary-tint);
+  color: var(--color-primary);
+}
+
+.badgeCommon {
+  background: var(--color-secondary);
+  color: var(--color-text-muted);
+}
+
+.badgeSocial {
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--color-success);
+}
+
+.badgeCompetitive {
+  background: rgba(233, 69, 96, 0.15);
+  color: var(--color-danger);
+}
+
+.badgeTeam {
+  background: var(--color-primary-tint);
+  color: var(--color-primary);
+}
+
+.badgeClub {
+  background: rgba(255, 191, 0, 0.15);
+  color: var(--color-warning);
+}
+
+/* Comparison table */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: var(--space-xl);
+  font-size: var(--text-sm);
+  overflow-x: auto;
+  display: block;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--color-separator);
+}
+
+.table th {
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.table td {
+  color: var(--color-text-secondary);
+}
+
+/* Tier section headers */
+.tierHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-xl);
+  margin-bottom: var(--space-md);
+}
+
+.tierLabel {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* CTA section */
+.cta {
+  text-align: center;
+  padding: var(--space-2xl) var(--space-lg);
+  margin-top: var(--space-xl);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+}
+
+.cta p {
+  color: var(--color-text);
+  font-size: var(--text-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.ctaButton {
+  display: inline-block;
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+  font-size: var(--text-base);
+  padding: var(--space-md) var(--space-xl);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.ctaButton:hover {
+  background: var(--color-primary-hover);
+}
+
+/* Curse card specific */
+.curseEffect {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin-top: var(--space-xs);
+}
+
+@media (min-width: 768px) {
+  .cardGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .table {
+    display: table;
+  }
+}

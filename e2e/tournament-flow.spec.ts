@@ -17,7 +17,7 @@ test.describe('Tournament Flow', () => {
 
   test('home screen renders', async ({ page }) => {
     await expect(page.getByRole('heading', { name: 'Tournament Manager' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'New Play' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Quick Play' })).toBeVisible();
     await expect(page).toHaveScreenshot('flow-home-screen.png');
   });
 
@@ -65,6 +65,15 @@ test.describe('Tournament Flow', () => {
     // Accept the confirm dialog and finish
     page.on('dialog', dialog => dialog.accept());
     await page.getByRole('button', { name: 'Finish Tournament' }).click();
+
+    // Skip the post-tournament ceremony/awards screen if it appears
+    const skipBtn = page.getByRole('button', { name: 'Skip' });
+    try {
+      await skipBtn.waitFor({ timeout: 3000 });
+      await skipBtn.click();
+    } catch {
+      // No ceremony screen
+    }
 
     // Should see completed state with share button
     await expect(page.getByRole('button', { name: 'Share Results as Text' })).toBeVisible();

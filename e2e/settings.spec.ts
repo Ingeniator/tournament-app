@@ -72,13 +72,21 @@ test.describe('Settings', () => {
     // Click on Alice to open edit panel
     await page.getByText('Alice').click();
 
-    // The edit panel opens with an availability toggle button
-    const availableBtn = page.locator('button', { hasText: /^Available$/ });
-    await availableBtn.waitFor();
-    await availableBtn.click();
+    // The edit panel opens with autofocused name input and an availability toggle below.
+    // First dismiss the edit input by pressing Enter to save the name.
+    const editInput = page.locator('input[type="text"]:focus');
+    await editInput.waitFor();
+    await editInput.press('Enter');
+
+    // Now click Alice again to re-open the edit panel
+    await page.getByText('Alice').click();
+
+    // The toggle checkbox is visually hidden (width/height:0, opacity:0) and may be outside viewport.
+    // Click the checkbox by dispatching a click event via JS.
+    await page.locator('[class*="toggleInput"]').dispatchEvent('click');
 
     // After toggling, Alice should show "Unavailable"
-    await expect(page.locator('button', { hasText: /^Unavailable$/ })).toBeVisible();
+    await expect(page.getByText('Unavailable')).toBeVisible();
     await expect(page).toHaveScreenshot('settings-player-unavailable.png');
   });
 
@@ -105,6 +113,6 @@ test.describe('Settings', () => {
 
     // Should be back on home screen
     await expect(page.getByRole('heading', { name: 'Tournament Manager' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'New Play' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Quick Play' })).toBeVisible();
   });
 });

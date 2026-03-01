@@ -34,17 +34,25 @@ export function NominationCard({ nomination, cardRef, minHeight }: NominationCar
       style={minHeight ? { minHeight } : undefined}
     >
       {tierLabel && <div className={styles.tierBadge}>{tierLabel}</div>}
+      {nomination.modeTitle && <div className={styles.modeTitle}>{nomination.modeTitle}</div>}
       <div className={styles.emoji}>{nomination.emoji}</div>
       <div className={styles.title}>{nomination.title}</div>
       <div className={styles.players}>
         {isMultiPlayer ? (
           <>
-            <span>{nomination.playerNames[0]} & {nomination.playerNames[1]}</span>
+            <span>{nomination.playerNames[0]} &</span>
+            <span>{nomination.playerNames[1]}</span>
             <span className={styles.vs}>vs</span>
-            <span>{nomination.playerNames[2]} & {nomination.playerNames[3]}</span>
+            <span>{nomination.playerNames[2]} &</span>
+            <span>{nomination.playerNames[3]}</span>
+          </>
+        ) : nomination.playerNames.length > 1 ? (
+          <>
+            <span>{nomination.playerNames[0]} &</span>
+            <span>{nomination.playerNames[1]}</span>
           </>
         ) : (
-          nomination.playerNames.join(' & ')
+          nomination.playerNames[0]
         )}
       </div>
       <div className={styles.stat}>{nomination.stat}</div>

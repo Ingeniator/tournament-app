@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ref, push, set } from 'firebase/database';
 import { useTournament } from '../hooks/useTournament';
 import { useRunnerTheme } from '../state/ThemeContext';
@@ -15,6 +15,8 @@ export function HomeScreen() {
   const [importError, setImportError] = useState<string | null>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const importRef = useRef<HTMLDivElement>(null);
 
   const handleNew = () => {
     dispatch({
@@ -78,6 +80,17 @@ export function HomeScreen() {
     await set(feedbackRef, { message, source: 'runner', createdAt: Date.now() });
   };
 
+  useEffect(() => {
+    if (!importOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (importRef.current && !importRef.current.contains(e.target as Node)) {
+        setImportOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [importOpen]);
+
   const hasSaved = tournament !== null;
 
   return (
@@ -132,12 +145,21 @@ export function HomeScreen() {
                 {t('home.planShare')}
               </Button>
             </a>
-            <Button variant="secondary" fullWidth onClick={handleImportClipboard}>
-              {t('home.importFromClipboard')}
-            </Button>
-            <Button variant="secondary" fullWidth onClick={() => fileInputRef.current?.click()}>
-              {t('home.loadFile')}
-            </Button>
+            <div className={styles.importDropdown} ref={importRef}>
+              <Button variant="secondary" fullWidth onClick={() => setImportOpen(v => !v)}>
+                {t('home.import')} <span className={styles.importArrow}>{importOpen ? '\u25B2' : '\u25BC'}</span>
+              </Button>
+              {importOpen && (
+                <div className={styles.importMenu}>
+                  <button className={styles.importMenuItem} onClick={() => { setImportOpen(false); handleImportClipboard(); }}>
+                    {t('home.importFromClipboard')}
+                  </button>
+                  <button className={styles.importMenuItem} onClick={() => { setImportOpen(false); fileInputRef.current?.click(); }}>
+                    {t('home.loadFile')}
+                  </button>
+                </div>
+              )}
+            </div>
             <input
               ref={fileInputRef}
               type="file"

@@ -41,6 +41,12 @@
           ".write": "auth != null && auth.uid === $uid",
           ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 50"
         },
+        "events": {
+          "$eventId": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.isBoolean() || !newData.exists()"
+          }
+        },
         "organized": {
           "$tournamentId": {
             ".write": "auth != null && (auth.uid === $uid || !newData.exists() && root.child('users').child(auth.uid).child('telegramUsername').exists() && root.child('users').child(auth.uid).child('telegramUsername').val() === root.child('users').child($uid).child('telegramUsername').val())",
@@ -79,6 +85,18 @@
             ".validate": "newData.hasChildren(['name', 'code', 'linkedAt', 'linkedBy'])"
           }
         }
+      }
+    },
+    "eventCodes": {
+      "$code": {
+        ".read": true,
+        ".write": "auth != null && (!data.exists() || !newData.exists() && root.child('events').child(data.val()).child('organizerId').val() === auth.uid)"
+      }
+    },
+    "events": {
+      "$eventId": {
+        ".read": true,
+        ".write": "auth != null && (!data.exists() || data.child('organizerId').val() === auth.uid)"
       }
     },
     "telegramUsers": {

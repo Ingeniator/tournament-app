@@ -1,0 +1,353 @@
+/* ── Hero ── */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-2xl) var(--space-md);
+  padding-top: 80px;
+}
+
+.logo {
+  margin-bottom: var(--space-md);
+}
+
+.title {
+  font-size: var(--text-3xl);
+  font-weight: 800;
+  margin-bottom: var(--space-xs);
+}
+
+.greeting {
+  color: var(--color-primary);
+  font-size: var(--text-base);
+  font-weight: 600;
+  margin-bottom: var(--space-sm);
+}
+
+.tagline {
+  font-size: var(--text-lg);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-sm);
+}
+
+.subtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-xl);
+}
+
+.ctas {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-2xl);
+  justify-content: center;
+  width: 100%;
+  max-width: 400px;
+}
+
+.ctaPrimary,
+.ctaSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: background 0.15s, transform 0.15s;
+  flex: 1;
+  white-space: nowrap;
+}
+
+.ctaPrimary {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.ctaPrimary:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+.ctaSecondary {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.ctaSecondary:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+/* Phone mockups */
+.phones {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: center;
+  max-width: 800px;
+  width: 100%;
+  padding: 0 var(--space-sm);
+}
+
+.phone {
+  flex: 1;
+  min-width: 0;
+  max-width: 220px;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  border: 2px solid var(--color-border);
+}
+
+.phone img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ── Section shared ── */
+.section {
+  padding: var(--space-2xl) var(--space-md);
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.sectionTitle {
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: var(--space-xl);
+}
+
+/* ── Differentiators ── */
+.diffCards {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.diffCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  text-align: center;
+}
+
+.diffEmoji {
+  font-size: 2.5rem;
+  margin-bottom: var(--space-sm);
+}
+
+.diffImage {
+  width: 140px;
+  max-height: 240px;
+  object-fit: cover;
+  object-position: top;
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  margin-bottom: var(--space-md);
+  border: 2px solid var(--color-border);
+}
+
+.diffTitle {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  margin-bottom: var(--space-xs);
+}
+
+.diffDesc {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+/* ── Features Grid ── */
+.features {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-sm);
+}
+
+.feature {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  text-align: center;
+}
+
+.featureEmoji {
+  font-size: 1.5rem;
+  margin-bottom: var(--space-xs);
+}
+
+.featureTitle {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.featureDesc {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+/* ── Steps ── */
+.steps {
+  display: grid;
+  gap: var(--space-lg);
+  counter-reset: step;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+}
+
+.stepNum {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 800;
+  font-size: var(--text-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stepContent {
+  flex: 1;
+}
+
+.stepTitle {
+  font-size: var(--text-base);
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.stepDesc {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+/* ── Bottom CTA ── */
+.bottomCta {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl) var(--space-lg);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 960px;
+  margin: 0 auto var(--space-xl);
+}
+
+.bottomCtaTitle {
+  font-size: var(--text-xl);
+  font-weight: 800;
+  margin-bottom: var(--space-md);
+}
+
+/* ── SEO links ── */
+.seoLinks {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 var(--space-md) var(--space-xl);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  justify-content: center;
+}
+
+.seoLink {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  transition: color 0.15s;
+}
+
+.seoLink:hover {
+  color: var(--color-primary);
+}
+
+@media (min-width: 768px) {
+  .diffCards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .diffImage {
+    width: 180px;
+    max-height: 300px;
+  }
+
+  .features {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-md);
+  }
+
+  .feature {
+    padding: var(--space-lg);
+  }
+
+  .featureEmoji {
+    font-size: 2rem;
+    margin-bottom: var(--space-sm);
+  }
+
+  .featureTitle {
+    font-size: var(--text-base);
+    margin-bottom: var(--space-xs);
+  }
+
+  .featureDesc {
+    font-size: var(--text-sm);
+  }
+
+  .phone {
+    max-width: 220px;
+    border-radius: 20px;
+    border-width: 3px;
+  }
+
+  .phones {
+    gap: var(--space-md);
+  }
+
+  .ctaPrimary,
+  .ctaSecondary {
+    font-size: var(--text-base);
+    padding: var(--space-md) var(--space-xl);
+    flex: none;
+  }
+
+  .ctas {
+    gap: var(--space-md);
+  }
+
+  .stepNum {
+    width: 40px;
+    height: 40px;
+    font-size: var(--text-lg);
+  }
+
+  .stepTitle {
+    font-size: var(--text-lg);
+  }
+
+  .bottomCtaTitle {
+    font-size: var(--text-2xl);
+  }
+}

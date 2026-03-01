@@ -5,16 +5,24 @@ import { generateId } from '@padel/common';
 import { db } from '../firebase';
 import { generateUniqueCode } from '../utils/shortCode';
 
+function migrateClubFormat(format: TournamentFormat, matchMode?: string): TournamentFormat {
+  if (format !== ('club-americano' as string)) return format;
+  if (matchMode === 'random') return 'club-team-americano';
+  if (matchMode === 'standings') return 'club-team-mexicano';
+  return 'club-ranked';
+}
+
 function toTournament(id: string, data: Record<string, unknown>): PlannerTournament {
   // Firebase returns the entire node including nested children like `players`.
   // Extract only the known PlannerTournament fields to avoid passing opaque
   // objects into React state (which causes "Objects are not valid as a React
   // child" errors when accidentally rendered).
   const courts = data.courts;
+  const clubs = data.clubs;
   return {
     id,
     name: data.name as string,
-    format: data.format as TournamentFormat,
+    format: migrateClubFormat(data.format as TournamentFormat, data.matchMode as string | undefined),
     courts: Array.isArray(courts)
       ? courts
       : typeof courts === 'object' && courts !== null
@@ -30,6 +38,17 @@ function toTournament(id: string, data: Record<string, unknown>): PlannerTournam
     chatLink: data.chatLink as string | undefined,
     description: data.description as string | undefined,
     locale: data.locale as string | undefined,
+    clubs: Array.isArray(clubs)
+      ? clubs
+      : typeof clubs === 'object' && clubs !== null
+        ? Object.values(clubs)
+        : undefined,
+    groupLabels: data.groupLabels as [string, string] | undefined,
+    rankLabels: Array.isArray(data.rankLabels)
+      ? data.rankLabels as string[]
+      : typeof data.rankLabels === 'object' && data.rankLabels !== null
+        ? Object.values(data.rankLabels) as string[]
+        : undefined,
   };
 }
 
@@ -85,7 +104,7 @@ export function usePlannerTournament(tournamentId: string | null) {
     return id;
   }, []);
 
-  const updateTournament = useCallback(async (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'courts' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description'>>) => {
+  const updateTournament = useCallback(async (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'courts' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description' | 'clubs' | 'groupLabels' | 'rankLabels'>>) => {
     if (!tournamentId || !db) return;
     // Convert undefined to null so Firebase deletes the field
     const pathUpdates: Record<string, unknown> = {};
@@ -131,5 +150,25 @@ export function usePlannerTournament(tournamentId: string | null) {
     await set(ref(db, `tournaments/${tournamentId}/completedAt`), null);
   }, [tournamentId]);
 
-  return { tournament, completedAt, loading, createTournament, updateTournament, loadByCode, deleteTournament, undoComplete };
+  const deleteTournamentById = useCallback(async (id: string, organizerId: string) => {
+    if (!db) return;
+    const snapshot = await get(ref(db, `tournaments/${id}`));
+    if (!snapshot.exists()) return;
+    const data = snapshot.val() as Record<string, unknown>;
+
+    const deletes: Record<string, null> = {
+      [`codes/${data.code as string}`]: null,
+      [`tournaments/${id}`]: null,
+      [`users/${organizerId}/organized/${id}`]: null,
+    };
+    const players = data.players as Record<string, unknown> | undefined;
+    if (players) {
+      for (const playerId of Object.keys(players)) {
+        deletes[`users/${playerId}/registrations/${id}`] = null;
+      }
+    }
+    await firebaseUpdate(ref(db), deletes);
+  }, []);
+
+  return { tournament, completedAt, loading, createTournament, updateTournament, loadByCode, deleteTournament, deleteTournamentById, undoComplete };
 }

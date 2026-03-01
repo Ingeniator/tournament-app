@@ -107,18 +107,17 @@
 .playerList {
   display: flex;
   flex-direction: column;
+  gap: var(--space-sm);
 }
 
 .playerItem {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  padding: var(--space-sm) 0;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.playerItem:last-child {
-  border-bottom: none;
+  padding: var(--space-sm) var(--space-md);
+  background-color: var(--color-surface-raised);
+  border-radius: var(--radius-sm);
+  min-height: 44px;
 }
 
 .playerNum {
@@ -256,6 +255,13 @@
   color: var(--color-text-secondary);
 }
 
+.configFullWidth {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
 .infoBtn {
   display: inline-flex;
   align-items: center;
@@ -353,34 +359,36 @@
   color: var(--color-text-secondary);
 }
 
-.courtItem {
+.editableItem {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: var(--space-xs) 0;
+  gap: var(--space-xs);
   font-size: var(--text-sm);
 }
 
-.courtItemKotc {
+.editableItem + .editableItem {
+  margin-top: var(--space-sm);
+}
+
+.editableItemWithSub {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
-  padding: var(--space-sm) 0;
   font-size: var(--text-sm);
-  border-bottom: 1px solid var(--color-border);
 }
 
-.courtItemKotc:last-child {
-  border-bottom: none;
+.editableItemWithSub + .editableItemWithSub {
+  margin-top: var(--space-sm);
 }
 
-.courtMainRow {
+.editableItemRow {
   display: flex;
   align-items: center;
+  gap: var(--space-xs);
   min-width: 0;
 }
 
-.courtKotcFields {
+.editableItemSub {
   display: flex;
   gap: var(--space-sm);
   align-items: center;
@@ -397,21 +405,21 @@
   white-space: nowrap;
 }
 
-.courtNameInput {
-  background: transparent;
-  border: 1px solid transparent;
+.editableItemInput {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background-color: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  padding: var(--space-xs) var(--space-sm);
   font-size: var(--text-sm);
   color: var(--color-text);
   flex: 1;
   min-width: 0;
 }
 
-.courtNameInput:focus {
+.editableItemInput:focus {
   outline: none;
   border-color: var(--color-primary);
-  background-color: var(--color-surface-raised);
 }
 
 .capacitySection {
@@ -447,6 +455,18 @@
   font-weight: 600;
   background-color: var(--color-warning-tint);
   color: var(--color-warning);
+  border-radius: var(--radius-full);
+  padding: 1px 8px;
+  margin-left: var(--space-sm);
+  vertical-align: middle;
+}
+
+.rankBadge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  background-color: var(--color-primary);
+  color: white;
   border-radius: var(--radius-full);
   padding: 1px 8px;
   margin-left: var(--space-sm);
@@ -521,6 +541,198 @@
   display: flex;
   gap: var(--space-sm);
   justify-content: flex-end;
+}
+
+/* Group toggle (Mixicano) */
+.groupToggle {
+  display: inline-flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.groupBtn {
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  background: transparent;
+  color: var(--color-text-muted);
+  border: none;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.groupBtn:first-child {
+  border-right: 1px solid var(--color-border);
+}
+
+.groupBtnActive {
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.groupBtnActive:first-child {
+  border-right: 1px solid var(--color-border);
+}
+
+/* Club select (Club Americano) */
+.clubSelect {
+  flex-shrink: 0;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-raised);
+  color: var(--color-text);
+  cursor: pointer;
+  max-width: 80px;
+}
+
+.clubSelect:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.rankSelect {
+  flex-shrink: 0;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-raised);
+  color: var(--color-text);
+  cursor: pointer;
+  max-width: 80px;
+}
+
+.rankSelect:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* Club dot */
+.clubDot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  margin-right: var(--space-xs);
+  cursor: pointer;
+  border: 2px solid transparent;
+  padding: 0;
+}
+
+.clubDot:active {
+  border-color: var(--color-text-muted);
+}
+
+/* Clubs section */
+.clubsSection {
+  padding-top: var(--space-sm);
+}
+
+/* Group labels section (Mixicano) */
+.groupLabelsSection {
+  padding-top: var(--space-sm);
+}
+
+.groupLabelsTitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.groupLabelsRow {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+
+.groupLabelInput {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-xs) var(--space-sm);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+.groupLabelInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.groupLabelInput::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* Rank labels section (Club Ranked) */
+.rankLabelsSection {
+  padding-top: var(--space-sm);
+}
+
+.rankLabelsTitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.rankLabelsColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
+}
+
+.rankLabelInput {
+  width: 100%;
+  padding: var(--space-xs) var(--space-sm);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+.rankLabelInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.rankLabelInput::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* Reopen modal */
+.reopenGap {
+  height: var(--space-sm);
+}
+
+.reopenModal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.reopenWarning {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.reopenActions {
+  display: flex;
+  gap: var(--space-sm);
 }
 
 .toast {

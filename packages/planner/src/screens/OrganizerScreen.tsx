@@ -1,7 +1,7 @@
 import { useState, useMemo, type ReactNode } from 'react';
 import { ref, push, set } from 'firebase/database';
-import { Button, Card, FeedbackModal, AppFooter, Toast, useToast, useTranslation } from '@padel/common';
-import type { TournamentFormat, Court } from '@padel/common';
+import { Button, Card, CLUB_COLORS, getClubColor, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation, FormatPicker, getPresetByFormat, formatHasGroups, formatHasClubs } from '@padel/common';
+import type { Court, Club } from '@padel/common';
 import { generateId } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { auth, db } from '../firebase';
@@ -10,6 +10,7 @@ import { restoreFromBackup } from '../utils/restoreFromBackup';
 import { useStartGuard } from '../hooks/useStartGuard';
 import { StartWarningModal } from '../components/StartWarningModal';
 import { PlayerList } from '../components/organizer/PlayerList';
+import { EditableItem } from '../components/organizer/EditableItem';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import styles from './OrganizerScreen.module.css';
 
@@ -35,17 +36,21 @@ function CollapsibleSection({ title, summary, defaultOpen, children }: {
 }
 
 export function OrganizerScreen() {
-  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerTelegram, deleteTournament, completedAt, undoComplete, uid } = usePlanner();
-  const { startedBy, showWarning, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
+  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, updatePlayerRank, deleteTournament, completedAt, undoComplete, uid } = usePlanner();
+  const { startedBy, showWarning, warningReason, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
   const { t, locale } = useTranslation();
   const { toastMessage, showToast } = useToast();
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
-  const [showFormatInfo, setShowFormatInfo] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const capacity = tournament ? tournament.courts.length * 4 + (tournament.extraSpots ?? 0) : 0;
-  const statuses = useMemo(() => getPlayerStatuses(players, capacity), [players, capacity]);
+  const statuses = useMemo(() => getPlayerStatuses(players, capacity, {
+    format: tournament?.format,
+    clubs: tournament?.clubs,
+  }), [players, capacity, tournament?.format, tournament?.clubs]);
+
+  const [showReopenModal, setShowReopenModal] = useState(false);
 
   const duplicateNames = useMemo(() => {
     const counts = new Map<string, number>();
@@ -82,7 +87,8 @@ export function OrganizerScreen() {
             }}>
               {t('organizer.viewResults')}
             </Button>
-            <Button variant="secondary" fullWidth onClick={undoComplete}>
+            <div className={styles.reopenGap} />
+            <Button variant="secondary" fullWidth onClick={() => setShowReopenModal(true)}>
               {t('organizer.undoComplete')}
             </Button>
           </Card>
@@ -97,6 +103,27 @@ export function OrganizerScreen() {
             {t('organizer.deleteTournament')}
           </button>
         </main>
+
+        <Modal
+          open={showReopenModal}
+          title={t('organizer.reopenTitle')}
+          onClose={() => setShowReopenModal(false)}
+        >
+          <div className={styles.reopenModal}>
+            <p className={styles.reopenWarning}>{t('organizer.reopenWarning')}</p>
+            <div className={styles.reopenActions}>
+              <Button variant="secondary" fullWidth onClick={() => setShowReopenModal(false)}>
+                {t('home.cancel')}
+              </Button>
+              <Button fullWidth onClick={async () => {
+                setShowReopenModal(false);
+                await undoComplete();
+              }}>
+                {t('organizer.reopenConfirm')}
+              </Button>
+            </div>
+          </div>
+        </Modal>
       </div>
     );
   }
@@ -149,10 +176,6 @@ export function OrganizerScreen() {
     setEditingName(false);
   };
 
-  const handleFormatChange = (format: TournamentFormat) => {
-    updateTournament({ format });
-  };
-
   const handleAddCourt = async () => {
     const newIndex = tournament.courts.length;
     const courts: Court[] = [...tournament.courts, { id: generateId(), name: `Court ${newIndex + 1}` }];
@@ -189,12 +212,8 @@ export function OrganizerScreen() {
   if (tournament.place) whenWhereParts.push(tournament.place);
   const whenWhereSummary = whenWhereParts.join(' \u00b7 ');
 
-  const formatLabel = tournament.format === 'americano' ? t('organizer.formatAmericano')
-    : tournament.format === 'team-americano' ? t('organizer.formatTeamAmericano')
-    : tournament.format === 'team-mexicano' ? t('organizer.formatTeamMexicano')
-    : tournament.format === 'mixicano' ? t('organizer.formatMixicano')
-    : tournament.format === 'king-of-the-court' ? t('organizer.formatKingOfTheCourt')
-    : t('organizer.formatMexicano');
+  const formatPreset = getPresetByFormat(tournament.format);
+  const formatLabel = formatPreset ? t(formatPreset.nameKey) : t('organizer.formatMexicano');
   const formatCourtsSummary = `${formatLabel} \u00b7 ${t('organizer.courts', { count: tournament.courts.length })}`;
 
   const detailsParts: string[] = [];
@@ -304,40 +323,133 @@ export function OrganizerScreen() {
         defaultOpen={!hasFormatCourts}
       >
         <div className={styles.configGrid}>
+          <div className={styles.configFullWidth}>
           <label className={styles.configLabel}>
             {t('organizer.format')}
-            <button
-              className={styles.infoBtn}
-              onClick={(e) => { e.stopPropagation(); setShowFormatInfo(v => !v); }}
-              type="button"
-              aria-label={t('organizer.formatInfo')}
-            >
-              i
-            </button>
           </label>
-          <select
-            className={styles.select}
-            value={tournament.format}
-            onChange={e => handleFormatChange(e.target.value as TournamentFormat)}
-          >
-            <option value="americano">{t('organizer.formatAmericano')}</option>
-            <option value="team-americano">{t('organizer.formatTeamAmericano')}</option>
-            <option value="mexicano">{t('organizer.formatMexicano')}</option>
-            <option value="team-mexicano">{t('organizer.formatTeamMexicano')}</option>
-            <option value="mixicano">{t('organizer.formatMixicano')}</option>
-            <option value="king-of-the-court">{t('organizer.formatKingOfTheCourt')}</option>
-          </select>
-          {showFormatInfo && (
-            <div className={styles.formatInfo}>
-              <p><strong>{t('organizer.americanoDesc')}</strong></p>
-              <p><strong>{t('organizer.teamAmericanoDesc')}</strong></p>
-              <p><strong>{t('organizer.mexicanoDesc')}</strong></p>
-              <p><strong>{t('organizer.teamMexicanoDesc')}</strong></p>
-              <p><strong>{t('organizer.mixicanoDesc')}</strong></p>
-              <p><strong>{t('organizer.kingOfTheCourtDesc')}</strong></p>
-            </div>
-          )}
+          <FormatPicker
+            format={tournament.format}
+            onChange={(format) => {
+              updateTournament({ format });
+            }}
+            t={t}
+          />
+          </div>
         </div>
+
+        {formatHasGroups(tournament.format) && (
+          <div className={styles.groupLabelsSection}>
+            <span className={styles.groupLabelsTitle}>{t('organizer.groupLabels')}</span>
+            <div className={styles.groupLabelsRow}>
+              <input
+                className={styles.groupLabelInput}
+                type="text"
+                value={tournament.groupLabels?.[0] ?? ''}
+                onChange={e => {
+                  const labels: [string, string] = [e.target.value, tournament.groupLabels?.[1] ?? ''];
+                  updateTournament({ groupLabels: labels[0] || labels[1] ? labels : undefined });
+                }}
+                placeholder={t('organizer.groupLabelAPlaceholder')}
+              />
+              <input
+                className={styles.groupLabelInput}
+                type="text"
+                value={tournament.groupLabels?.[1] ?? ''}
+                onChange={e => {
+                  const labels: [string, string] = [tournament.groupLabels?.[0] ?? '', e.target.value];
+                  updateTournament({ groupLabels: labels[0] || labels[1] ? labels : undefined });
+                }}
+                placeholder={t('organizer.groupLabelBPlaceholder')}
+              />
+            </div>
+          </div>
+        )}
+
+        {formatHasClubs(tournament.format) && (() => {
+          const clubs = tournament.clubs ?? [];
+          return (
+            <div className={styles.clubsSection}>
+              <div className={styles.courtsHeader}>
+                <span>{t('organizer.clubs', { count: clubs.length })}</span>
+                <Button variant="ghost" size="small" onClick={() => {
+                  const usedColors = new Set(clubs.map((c, i) => getClubColor(c, i)));
+                  const freeColor = CLUB_COLORS.find(c => !usedColors.has(c)) ?? CLUB_COLORS[clubs.length % CLUB_COLORS.length];
+                  const newClubs: Club[] = [...clubs, { id: generateId(), name: `Club ${clubs.length + 1}`, color: freeColor }];
+                  updateTournament({ clubs: newClubs });
+                }}>{t('organizer.addClub')}</Button>
+              </div>
+              {clubs.map((club, idx) => {
+                const usedByOthers = new Set(
+                  clubs.map((c, i) => i !== idx ? getClubColor(c, i) : null).filter(Boolean)
+                );
+                const available = CLUB_COLORS.filter(c => !usedByOthers.has(c));
+                return (
+                <EditableItem
+                  key={club.id}
+                  name={club.name}
+                  onChange={name => {
+                    const updated = clubs.map(c =>
+                      c.id === club.id ? { ...c, name } : c
+                    );
+                    updateTournament({ clubs: updated });
+                  }}
+                  onRemove={clubs.length > 2 ? () => {
+                    const updated = clubs.filter(c => c.id !== club.id);
+                    updateTournament({ clubs: updated });
+                  } : undefined}
+                  icon={
+                    <button
+                      className={styles.clubDot}
+                      style={{ backgroundColor: getClubColor(club, idx) }}
+                      onClick={() => {
+                        const currentColor = getClubColor(club, idx);
+                        const pool = available.length > 0 ? available : CLUB_COLORS;
+                        const currentPoolIdx = pool.indexOf(currentColor);
+                        const nextColor = currentPoolIdx >= 0
+                          ? pool[(currentPoolIdx + 1) % pool.length]
+                          : pool[0];
+                        const updated = clubs.map(c =>
+                          c.id === club.id ? { ...c, color: nextColor } : c
+                        );
+                        updateTournament({ clubs: updated });
+                      }}
+                    />
+                  }
+                />
+                );
+              })}
+              {clubs.length === 0 && (
+                <p className={styles.empty}>{t('organizer.noClub')}</p>
+              )}
+              {tournament.format === 'club-ranked' && clubs.length >= 2 && (() => {
+                const slotsPerClub = Math.floor(capacity / clubs.length);
+                return slotsPerClub > 0 ? (
+                  <div className={styles.rankLabelsSection}>
+                    <span className={styles.rankLabelsTitle}>{t('organizer.rankLabels')}</span>
+                    <div className={styles.rankLabelsColumn}>
+                      {Array.from({ length: slotsPerClub }, (_, i) => (
+                        <input
+                          key={i}
+                          className={styles.rankLabelInput}
+                          type="text"
+                          value={tournament.rankLabels?.[i] ?? ''}
+                          onChange={e => {
+                            const labels = [...(tournament.rankLabels ?? [])];
+                            labels[i] = e.target.value;
+                            // Trim trailing empty strings
+                            while (labels.length > 0 && !labels[labels.length - 1]) labels.pop();
+                            updateTournament({ rankLabels: labels.length > 0 ? labels : undefined });
+                          }}
+                          placeholder={t('organizer.rankLabelPlaceholder', { num: i + 1 })}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : null;
+              })()}
+            </div>
+          );
+        })()}
 
         <div className={styles.courtsSection}>
           <div className={styles.courtsHeader}>
@@ -345,35 +457,26 @@ export function OrganizerScreen() {
             <Button variant="ghost" size="small" onClick={handleAddCourt}>{t('organizer.addCourt')}</Button>
           </div>
           {tournament.courts.map((court, courtIdx) => (
-            <div key={court.id} className={isKOTC ? styles.courtItemKotc : styles.courtItem}>
-              <div className={styles.courtMainRow}>
-                <input
-                  className={styles.courtNameInput}
-                  value={court.name}
-                  onChange={e => {
-                    const courts = tournament.courts.map(c =>
-                      c.id === court.id ? { ...c, name: e.target.value } : c
-                    );
-                    updateTournament({ courts });
-                  }}
-                />
-                {tournament.courts.length > 1 && !(isKOTC && tournament.courts.length <= 2) && (
-                  <button
-                    className={styles.removeBtn}
-                    onClick={() => handleRemoveCourt(court.id)}
-                  >
-                    &times;
-                  </button>
-                )}
-              </div>
-              {isKOTC && (
-                <div className={styles.courtKotcFields}>
-                  <span className={styles.courtBonusLabel}>
-                    +{tournament.courts.length - 1 - courtIdx} {t('organizer.courtBonusAuto')}
-                  </span>
-                </div>
-              )}
-            </div>
+            <EditableItem
+              key={court.id}
+              name={court.name}
+              onChange={name => {
+                const courts = tournament.courts.map(c =>
+                  c.id === court.id ? { ...c, name } : c
+                );
+                updateTournament({ courts });
+              }}
+              onRemove={
+                tournament.courts.length > 1 && !(isKOTC && tournament.courts.length <= 2)
+                  ? () => handleRemoveCourt(court.id)
+                  : undefined
+              }
+              subtitle={isKOTC ? (
+                <span className={styles.courtBonusLabel}>
+                  +{tournament.courts.length - 1 - courtIdx} {t('organizer.courtBonusAuto')}
+                </span>
+              ) : undefined}
+            />
           ))}
         </div>
 
@@ -448,6 +551,13 @@ export function OrganizerScreen() {
         toggleConfirmed={toggleConfirmed}
         updatePlayerTelegram={updatePlayerTelegram}
         statuses={statuses}
+        format={tournament.format}
+        clubs={tournament.clubs}
+        groupLabels={tournament.groupLabels}
+        rankLabels={tournament.rankLabels}
+        onSetGroup={updatePlayerGroup}
+        onSetClub={updatePlayerClub}
+        onSetRank={updatePlayerRank}
       />
 
       {/* Export */}
@@ -511,6 +621,7 @@ export function OrganizerScreen() {
       <StartWarningModal
         open={showWarning}
         startedBy={startedBy}
+        reason={warningReason}
         onProceed={() => proceedAnyway(tournament!, players)}
         onClose={dismissWarning}
       />

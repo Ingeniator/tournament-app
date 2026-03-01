@@ -59,6 +59,9 @@ vi.mock('@padel/common', () => ({
   Toast: ({ message }: { message: string | null }) =>
     message ? <div data-testid="toast">{message}</div> : null,
   useToast: () => ({ toastMessage: null, showToast: vi.fn() }),
+  formatHasGroups: (format: string) => format === 'mixicano' || format === 'mixed-americano',
+  formatHasClubs: (format: string) => ['club-americano', 'club-ranked', 'club-team-americano', 'club-team-mexicano'].includes(format),
+  getClubColor: () => '#888',
 }));
 
 vi.mock('../components/rounds/RoundCard', () => ({

@@ -19,10 +19,32 @@
   font-size: var(--text-base);
 }
 
+.nameEditable {
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 2px 4px;
+}
+
+.nameEditable:hover {
+  background-color: var(--color-surface-hover, rgba(0, 0, 0, 0.05));
+}
+
+.editInput {
+  font-size: var(--text-base);
+  padding: 2px 4px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  min-width: 0;
+  width: 100%;
+  outline: none;
+}
+
 .number {
   color: var(--color-text-muted);
   font-size: var(--text-sm);
-  margin-right: var(--space-sm);
+  min-width: 20px;
 }
 
 .left {
@@ -95,4 +117,22 @@
 
 .groupActive:hover {
   background-color: var(--color-primary);
+}
+
+.clubSelect {
+  flex-shrink: 0;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-raised);
+  color: var(--color-text);
+  cursor: pointer;
+  max-width: 80px;
+}
+
+.clubSelect:focus {
+  outline: none;
+  border-color: var(--color-primary);
 }

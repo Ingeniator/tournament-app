@@ -1,4 +1,4 @@
-import type { TournamentFormat, Court } from './tournament';
+import type { TournamentFormat, Court, Club } from './tournament';
 
 export interface PlannerTournament {
   id: string;
@@ -17,6 +17,9 @@ export interface PlannerTournament {
   chatLink?: string;
   description?: string;
   locale?: string;
+  clubs?: Club[];
+  groupLabels?: [string, string];
+  rankLabels?: string[];
 }
 
 export interface TournamentSummary {
@@ -37,6 +40,9 @@ export interface PlannerRegistration {
   timestamp: number;
   confirmed?: boolean;
   telegramUsername?: string;
+  group?: 'A' | 'B';
+  clubId?: string;
+  rankSlot?: number;
 }
 
 export interface TournamentStartInfo {

@@ -9,7 +9,7 @@ export type TournamentAction =
   | { type: 'UPDATE_PLAYER'; payload: { playerId: string; name: string } }
   | { type: 'TOGGLE_PLAYER_AVAILABILITY'; payload: { playerId: string } }
   | { type: 'REPLACE_PLAYER'; payload: { oldPlayerId: string; newPlayerName: string } }
-  | { type: 'SET_PLAYER_GROUP'; payload: { playerId: string; group: 'A' | 'B' } }
+  | { type: 'SET_PLAYER_GROUP'; payload: { playerId: string; group: 'A' | 'B' | null } }
   | { type: 'ADD_PLAYER_LIVE'; payload: { name: string; group?: 'A' | 'B' } }
   | { type: 'REGENERATE_FUTURE_ROUNDS'; payload?: { timeBudgetMs?: number } }
   | { type: 'SET_FUTURE_ROUNDS'; payload: { rounds: Round[] } }
@@ -32,4 +32,12 @@ export type TournamentAction =
   | { type: 'SET_TEAMS_BACK' }
   | { type: 'COMPLETE_TOURNAMENT' }
   | { type: 'COMPLETE_CEREMONY'; payload: { nominations: Nomination[] } }
-  | { type: 'RESET_TOURNAMENT' };
+  | { type: 'RESET_TOURNAMENT' }
+  | { type: 'ADD_CLUB'; payload: { name: string } }
+  | { type: 'REMOVE_CLUB'; payload: { clubId: string } }
+  | { type: 'RENAME_CLUB'; payload: { clubId: string; name: string } }
+  | { type: 'SET_PLAYER_CLUB'; payload: { playerId: string; clubId: string | null } }
+  | { type: 'UPDATE_RANK_LABEL'; payload: { index: number; label: string } }
+  | { type: 'CAST_MALDICION'; payload: { roundId: string; matchId: string; castBy: 'team1' | 'team2'; cardId: string; targetPlayerId: string } }
+  | { type: 'USE_ESCUDO'; payload: { roundId: string; matchId: string } }
+  | { type: 'VETO_MALDICION'; payload: { roundId: string; matchId: string } };

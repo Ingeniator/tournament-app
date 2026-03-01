@@ -25,7 +25,8 @@ test.describe('Settings Advanced', () => {
     await roundsInput.fill('5');
     await roundsInput.press('Enter');
 
-    await expect(page.getByText('5')).toBeVisible();
+    // The field should display the new value in its value span
+    await expect(page.locator('[class*="fieldValue"]', { hasText: '5' })).toBeVisible();
   });
 
   test('rename court', async ({ page }) => {
@@ -46,7 +47,7 @@ test.describe('Settings Advanced', () => {
     await page.getByText('Court 1').click();
 
     // The edit panel should show the availability toggle and replace button
-    await expect(page.locator('button', { hasText: /^Available$/ })).toBeVisible();
+    await expect(page.getByText('Available', { exact: true })).toBeVisible();
     await expect(page.getByText('Replace with...')).toBeVisible();
     await expect(page).toHaveScreenshot('settings-court-edit.png');
   });
@@ -76,7 +77,7 @@ test.describe('Settings Advanced', () => {
   test('export tournament data', async ({ page }) => {
     await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
 
-    await page.getByRole('button', { name: 'Copy Tournament Data' }).click();
+    await page.getByRole('button', { name: 'Export to Clipboard' }).click();
 
     await expect(page.getByText('Tournament copied!')).toBeVisible();
   });
