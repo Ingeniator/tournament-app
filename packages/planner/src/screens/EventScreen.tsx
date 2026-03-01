@@ -16,7 +16,7 @@ interface EventScreenProps {
 
 export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScreenProps) {
   const { event, loading, updateEvent, linkTournament, unlinkTournament, updateTournamentWeight, deleteEvent } = useEvent(eventId);
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const { toastMessage, showToast } = useToast();
   const [linkCode, setLinkCode] = useState('');
   const [linking, setLinking] = useState(false);
@@ -55,9 +55,15 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
     status === 'completed' ? styles.statusCompleted :
     styles.statusDraft;
 
+  const botName = import.meta.env.VITE_TELEGRAM_BOT_NAME as string | undefined;
+  const isTelegram = !!window.Telegram?.WebApp?.initData;
+  const eventShareUrl = isTelegram && botName
+    ? `https://t.me/${botName}?startapp=event_${event.code}`
+    : `${window.location.origin}/plan?event=${event.code}&lang=${locale}`;
+
   const handleCopyEventLink = async () => {
     if (!event.code) return;
-    const url = `${window.location.origin}/plan?event=${event.code}`;
+    const url = eventShareUrl;
     try {
       await navigator.clipboard.writeText(url);
       showToast(t('event.linkCopied'));
