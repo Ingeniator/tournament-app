@@ -17,16 +17,16 @@ export function SetupScreen() {
   const errors = useMemo(() => {
     if (!tournament) return [];
     const strategy = getStrategy(tournament.config.format);
-    const resolvedConfig = resolveConfigDefaults(tournament.config, tournament.players.length);
+    const resolvedConfig = resolveConfigDefaults(tournament.config, tournament.players.length, tournament.clubs?.length);
     return strategy.validateSetup(tournament.players, resolvedConfig);
-  }, [tournament?.players, tournament?.config]);
+  }, [tournament?.players, tournament?.config, tournament?.clubs?.length]);
 
   const warnings = useMemo(() => {
     if (!tournament) return [];
     const strategy = getStrategy(tournament.config.format);
-    const resolvedConfig = resolveConfigDefaults(tournament.config, tournament.players.length);
+    const resolvedConfig = resolveConfigDefaults(tournament.config, tournament.players.length, tournament.clubs?.length);
     return strategy.validateWarnings?.(tournament.players, resolvedConfig) ?? [];
-  }, [tournament?.players, tournament?.config]);
+  }, [tournament?.players, tournament?.config, tournament?.clubs?.length]);
 
   if (!tournament) return null;
 
@@ -114,6 +114,7 @@ export function SetupScreen() {
         <TournamentConfigForm
           config={tournament.config}
           playerCount={tournament.players.length}
+          clubCount={tournament.clubs?.length}
           onUpdate={update => dispatch({ type: 'UPDATE_CONFIG', payload: update })}
         />
       </Card>

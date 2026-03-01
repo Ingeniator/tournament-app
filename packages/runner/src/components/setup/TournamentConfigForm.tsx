@@ -47,21 +47,27 @@ function formatDuration(minutes: number): string {
 interface TournamentConfigFormProps {
   config: TournamentConfig;
   playerCount: number;
+  clubCount?: number;
   onUpdate: (update: Partial<TournamentConfig>) => void;
 }
 
-export function TournamentConfigForm({ config, playerCount, onUpdate }: TournamentConfigFormProps) {
+export function TournamentConfigForm({ config, playerCount, clubCount, onUpdate }: TournamentConfigFormProps) {
   const { t } = useTranslation();
   const maxCourts = Math.max(1, Math.floor(playerCount / 4));
 
   // Resolve: what values will actually be used (fills in defaults for empty fields)
-  const resolved = resolveConfigDefaults(config, playerCount);
+  const resolved = resolveConfigDefaults(config, playerCount, clubCount);
   const effectivePoints = resolved.pointsPerMatch;
   const effectiveRounds = resolved.maxRounds ?? 1;
 
+  // Club formats have a fixed round count based on club count
+  const clubFixedRounds = clubCount && clubCount >= 2
+    ? (clubCount % 2 === 0 ? clubCount - 1 : clubCount)
+    : null;
+
   // Per-field suggestions: what each field would be if cleared, given the other's current value
-  const suggestedRoundsConfig = resolveConfigDefaults({ ...config, maxRounds: null }, playerCount);
-  const suggestedPointsConfig = resolveConfigDefaults({ ...config, pointsPerMatch: 0 }, playerCount);
+  const suggestedRoundsConfig = resolveConfigDefaults({ ...config, maxRounds: null }, playerCount, clubCount);
+  const suggestedPointsConfig = resolveConfigDefaults({ ...config, pointsPerMatch: 0 }, playerCount, clubCount);
   const suggestedRounds = suggestedRoundsConfig.maxRounds ?? 1;
   const suggestedPoints = suggestedPointsConfig.pointsPerMatch;
 
@@ -266,7 +272,11 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
             onUpdate({ maxRounds: val && val > 0 ? val : null });
           }}
         />
-        <span className={styles.hint}>{t('config.recommendedRounds', { rounds: suggestedRounds, players: playerCount, courts: config.courts.length })}</span>
+        <span className={styles.hint}>
+          {clubFixedRounds
+            ? t('config.clubFixedRounds', { rounds: clubFixedRounds, clubs: clubCount! })
+            : t('config.recommendedRounds', { rounds: suggestedRounds, players: playerCount, courts: config.courts.length })}
+        </span>
       </div>
 
       <div className={styles.field}>

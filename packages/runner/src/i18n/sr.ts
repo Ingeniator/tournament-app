@@ -274,6 +274,7 @@ const sr: Translations = {
   'config.maxCourts': 'Maksimalno {max} teren(a) za {players} igrača',
   'config.numberOfRounds': 'Broj rundi',
   'config.recommendedRounds': 'Preporučeno: {rounds} rundi za {players} igrača na {courts} teren(a)',
+  'config.clubFixedRounds': '{rounds} rundi za {clubs} klubova (svako sa svakim)',
   'config.pointsPerMatch': 'Poeni po meču',
   'config.recommendedPoints': 'Preporučeno: {points} poena da stane u {duration}',
   'config.estimatedDuration': 'Procenjeno trajanje: ',

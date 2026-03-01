@@ -274,6 +274,7 @@ const sv: Translations = {
   'config.maxCourts': 'Max {max} bana/banor för {players} spelare',
   'config.numberOfRounds': 'Antal omgångar',
   'config.recommendedRounds': 'Rekommenderat: {rounds} omgångar för {players} spelare på {courts} bana/banor',
+  'config.clubFixedRounds': '{rounds} omgångar för {clubs} klubbar (alla mot alla)',
   'config.pointsPerMatch': 'Poäng per match',
   'config.recommendedPoints': 'Rekommenderat: {points} poäng för att passa i {duration}',
   'config.estimatedDuration': 'Beräknad varaktighet: ',

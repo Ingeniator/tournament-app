@@ -397,7 +397,7 @@ export function tournamentReducer(
     case 'GENERATE_SCHEDULE': {
       if (!state || (state.phase !== 'setup' && state.phase !== 'team-pairing')) return state;
       const players = deduplicateNames(state.players);
-      const resolvedConfig = resolveConfigDefaults(state.config, players.length);
+      const resolvedConfig = resolveConfigDefaults(state.config, players.length, state.clubs?.length);
       const strategy = getStrategy(resolvedConfig.format);
       const { rounds } = strategy.generateSchedule(players, resolvedConfig, state);
 

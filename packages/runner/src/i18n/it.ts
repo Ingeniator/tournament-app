@@ -276,6 +276,7 @@ const it: Translations = {
   'config.maxCourts': 'Max {max} campo/i per {players} giocatori',
   'config.numberOfRounds': 'Numero di turni',
   'config.recommendedRounds': 'Consigliati: {rounds} turni per {players} giocatori su {courts} campo/i',
+  'config.clubFixedRounds': '{rounds} turni per {clubs} club (girone all\'italiana)',
   'config.pointsPerMatch': 'Punti per partita',
   'config.recommendedPoints': 'Consigliati: {points} punti per rientrare in {duration}',
   'config.estimatedDuration': 'Durata stimata: ',

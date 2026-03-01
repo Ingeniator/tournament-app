@@ -49,11 +49,16 @@ export function computeSitOutInfo(playerCount: number, courtCount: number, round
   return { isEqual, sitOutsPerRound, nearestFairBelow, nearestFairAbove };
 }
 
-export function resolveConfigDefaults(config: TournamentConfig, playerCount: number): TournamentConfig {
+export function resolveConfigDefaults(config: TournamentConfig, playerCount: number, clubCount?: number): TournamentConfig {
   const minPoints = config.format === 'king-of-the-court' ? 12 : MIN_POINTS_PER_MATCH;
   const durationMinutes = config.targetDuration ?? DEFAULT_DURATION_MINUTES;
   const courtCount = config.courts.length;
   const playersPerRound = Math.min(courtCount * 4, playerCount);
+
+  // Club formats have a fixed round count based on club count (round-robin fixtures)
+  const clubFixedRounds = clubCount && clubCount >= 2
+    ? (clubCount % 2 === 0 ? clubCount - 1 : clubCount)
+    : null;
 
   const baseRounds = playersPerRound > 0
     ? Math.max(1, Math.ceil((playerCount - 1) * playerCount / playersPerRound))
@@ -65,7 +70,18 @@ export function resolveConfigDefaults(config: TournamentConfig, playerCount: num
   let effectiveRounds: number;
   let effectivePoints: number;
 
-  if (hasExplicitRounds && hasExplicitPoints) {
+  if (clubFixedRounds && !hasExplicitRounds) {
+    // Club format: rounds are determined by club count, only adjust points for duration
+    effectiveRounds = clubFixedRounds;
+    if (hasExplicitPoints) {
+      effectivePoints = config.pointsPerMatch;
+    } else {
+      const rawPts = effectiveRounds > 0
+        ? Math.floor((durationMinutes / effectiveRounds - CHANGEOVER_MINUTES) / MINUTES_PER_POINT)
+        : PREFERRED_POINTS;
+      effectivePoints = Math.min(PREFERRED_POINTS, Math.max(minPoints, rawPts));
+    }
+  } else if (hasExplicitRounds && hasExplicitPoints) {
     // Both set by user — use as-is
     effectiveRounds = config.maxRounds!;
     effectivePoints = config.pointsPerMatch;
