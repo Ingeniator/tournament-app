@@ -1,11 +1,11 @@
 import { useState, useMemo } from 'react';
 import { Button, Card, Toast, useToast, useTranslation } from '@padel/common';
 import type { EventStandingEntry } from '@padel/common';
-import { useEvent } from '../hooks/useLeague';
-import { useEventTournaments } from '../hooks/useLeagueTournaments';
-import type { EventTournamentInfo } from '../hooks/useLeagueTournaments';
-import { computeEventStandings } from '../utils/leagueStandings';
-import styles from './LeagueScreen.module.css';
+import { useEvent } from '../hooks/useEvent';
+import { useEventTournaments } from '../hooks/useEventTournaments';
+import type { EventTournamentInfo } from '../hooks/useEventTournaments';
+import { computeEventStandings } from '../utils/eventStandings';
+import styles from './EventScreen.module.css';
 
 interface EventScreenProps {
   eventId: string;

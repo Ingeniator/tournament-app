@@ -12,7 +12,7 @@ import { useRegisteredTournaments } from '../hooks/useRegisteredTournaments';
 import { useTelegram, type TelegramUser } from '../hooks/useTelegram';
 import { useTelegramSync } from '../hooks/useTelegramSync';
 import { useChatRoomTournaments } from '../hooks/useChatRoomTournaments';
-import { useMyEvents } from '../hooks/useMyLeagues';
+import { useMyEvents } from '../hooks/useMyEvents';
 import { linkTournamentToChat } from '../utils/chatRoom';
 
 export type Screen = 'loading' | 'home' | 'organizer' | 'join' | 'event-detail' | 'event-create';

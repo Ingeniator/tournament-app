@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeEventStandings } from './leagueStandings';
+import { computeEventStandings } from './eventStandings';
 import type { Tournament, EventRankingRules, EventTournamentLink } from '@padel/common';
 
 function makeTournament(overrides: Partial<Tournament> = {}): Tournament {

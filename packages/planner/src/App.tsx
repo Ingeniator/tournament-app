@@ -6,8 +6,8 @@ import { usePlanner } from './state/PlannerContext';
 import { HomeScreen } from './screens/HomeScreen';
 import { OrganizerScreen } from './screens/OrganizerScreen';
 import { JoinScreen } from './screens/JoinScreen';
-import { EventScreen } from './screens/LeagueScreen';
-import { EventFormScreen } from './screens/LeagueFormScreen';
+import { EventScreen } from './screens/EventScreen';
+import { EventFormScreen } from './screens/EventFormScreen';
 import { translations } from './i18n';
 import styles from './App.module.css';
 

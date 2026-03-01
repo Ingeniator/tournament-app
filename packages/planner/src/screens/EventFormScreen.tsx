@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button, Card, useTranslation } from '@padel/common';
-import { useEvent } from '../hooks/useLeague';
-import styles from './LeagueFormScreen.module.css';
+import { useEvent } from '../hooks/useEvent';
+import styles from './EventFormScreen.module.css';
 
 interface EventFormScreenProps {
   uid: string | null;
