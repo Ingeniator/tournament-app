@@ -312,6 +312,14 @@ const en: Translations = {
   'event.col.w': 'W',
   'event.col.members': 'Players',
   'event.col.diff': '+/-',
+  'event.shareWithPlayers': 'Share with Players',
+  'event.shareHint': 'Players use this link to view the event and join tournaments',
+  'event.copyLink': 'Copy Link',
+  'event.linkCopied': 'Link copied!',
+  'event.codeCopied': 'Code copied!',
+
+  // EventJoinScreen
+  'eventJoin.join': 'Join',
 
   // Planner App
   'app.connectionError': 'Connection Error',

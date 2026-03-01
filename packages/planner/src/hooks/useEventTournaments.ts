@@ -6,6 +6,7 @@ import { db } from '../firebase';
 export interface EventTournamentInfo {
   id: string;
   name: string;
+  format?: string;
   date?: string;
   place?: string;
   hasRunnerData: boolean;
@@ -86,6 +87,7 @@ export function useEventTournaments(links: EventTournamentLink[]) {
           infoMap.set(tid, {
             id: tid,
             name,
+            format: data.format as string | undefined,
             date: data.date as string | undefined,
             place: data.place as string | undefined,
             hasRunnerData: !!runnerData,

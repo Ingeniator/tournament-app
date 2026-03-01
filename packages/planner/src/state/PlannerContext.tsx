@@ -13,9 +13,10 @@ import { useTelegram, type TelegramUser } from '../hooks/useTelegram';
 import { useTelegramSync } from '../hooks/useTelegramSync';
 import { useChatRoomTournaments } from '../hooks/useChatRoomTournaments';
 import { useMyEvents } from '../hooks/useMyEvents';
+import { loadEventByCode as loadEventByCodeFn } from '../hooks/useEvent';
 import { linkTournamentToChat } from '../utils/chatRoom';
 
-export type Screen = 'loading' | 'home' | 'organizer' | 'join' | 'event-detail' | 'event-create';
+export type Screen = 'loading' | 'home' | 'organizer' | 'join' | 'event-detail' | 'event-create' | 'event-join';
 
 export interface PlannerContextValue {
   uid: string | null;
@@ -63,6 +64,9 @@ export interface PlannerContextValue {
   eventsLoading: boolean;
   activeEventId: string | null;
   setActiveEventId: (id: string | null) => void;
+  loadEventByCode: (code: string) => Promise<boolean>;
+  joinReturnScreen: Screen;
+  openTournamentFromEvent: (tournamentId: string) => void;
 }
 
 const PlannerCtx = createContext<PlannerContextValue>(null!);
@@ -128,6 +132,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
   const { tournaments: chatRoomTournaments, loading: chatRoomLoading } = useChatRoomTournaments(chatInstance);
   const { events: myEvents, loading: eventsLoading } = useMyEvents(uid);
   const [activeEventId, setActiveEventId] = useState<string | null>(null);
+  const [joinReturnScreen, setJoinReturnScreen] = useState<Screen>('home');
 
   const listingsLoading = myLoading || regLoading;
 
@@ -240,6 +245,21 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     setScreen(targetScreen);
   }, []);
 
+  const loadEventByCode = useCallback(async (code: string): Promise<boolean> => {
+    const id = await loadEventByCodeFn(code);
+    if (id) {
+      setActiveEventId(id);
+      return true;
+    }
+    return false;
+  }, []);
+
+  const openTournamentFromEvent = useCallback((tournamentId: string) => {
+    setJoinReturnScreen('event-join');
+    setTournamentId(tournamentId);
+    setScreen('join');
+  }, []);
+
   const isRegistered = uid ? checkRegistered(uid) : false;
 
   return (
@@ -289,6 +309,9 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       eventsLoading,
       activeEventId,
       setActiveEventId,
+      loadEventByCode,
+      joinReturnScreen,
+      openTournamentFromEvent,
     }}>
       {children}
     </PlannerCtx.Provider>

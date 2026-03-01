@@ -10,7 +10,7 @@ import { StartWarningModal } from '../components/StartWarningModal';
 import styles from './JoinScreen.module.css';
 
 export function JoinScreen() {
-  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, updatePlayerGroup, updatePlayerClub, updatePlayerRank, isRegistered, setScreen, organizerName, userName, telegramUser, completedAt } = usePlanner();
+  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, updatePlayerGroup, updatePlayerClub, updatePlayerRank, isRegistered, setScreen, organizerName, userName, telegramUser, completedAt, joinReturnScreen } = usePlanner();
   const { startedBy, showWarning, warningReason, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
   const { t } = useTranslation();
   // null = not yet edited by user, derive from external sources
@@ -57,7 +57,7 @@ export function JoinScreen() {
     return (
       <div className={styles.container}>
         <header className={styles.header}>
-          <button className={styles.backBtn} onClick={() => setScreen('home')} aria-label={t('join.back')}>&larr;</button>
+          <button className={styles.backBtn} onClick={() => setScreen(joinReturnScreen)} aria-label={t('join.back')}>&larr;</button>
           <h1 className={styles.title}>{tournament.name}</h1>
         </header>
         <main>
@@ -176,7 +176,7 @@ export function JoinScreen() {
   };
 
   const handleBack = () => {
-    setScreen('home');
+    setScreen(joinReturnScreen);
   };
 
   return (

@@ -9,6 +9,7 @@ function toSummary(id: string, data: Record<string, unknown>): PadelEventSummary
     id,
     name: data.name as string,
     date: data.date as string,
+    code: (data.code as string) ?? '',
     tournamentCount: Array.isArray(tournaments) ? (tournaments as EventTournamentLink[]).length : 0,
     createdAt: data.createdAt as number,
   };

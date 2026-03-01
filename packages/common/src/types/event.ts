@@ -9,6 +9,7 @@ export interface PadelEvent {
   id: string;
   name: string;
   date: string;
+  code: string;
   tournaments: EventTournamentLink[];
   organizerId: string;
   createdAt: number;
@@ -19,6 +20,7 @@ export interface PadelEventSummary {
   id: string;
   name: string;
   date: string;
+  code: string;
   tournamentCount: number;
   createdAt: number;
 }

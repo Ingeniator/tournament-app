@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ref, onValue, update as firebaseUpdate } from 'firebase/database';
+import { ref, onValue, get, update as firebaseUpdate } from 'firebase/database';
 import type { PadelEvent, EventTournamentLink } from '@padel/common';
 import { generateId } from '@padel/common';
 import { db } from '../firebase';
+import { generateUniqueCode } from '../utils/shortCode';
 
 function toEvent(id: string, data: Record<string, unknown>): PadelEvent {
   const tournaments = data.tournaments;
@@ -10,6 +11,7 @@ function toEvent(id: string, data: Record<string, unknown>): PadelEvent {
     id,
     name: data.name as string,
     date: data.date as string,
+    code: (data.code as string) ?? '',
     tournaments: Array.isArray(tournaments)
       ? tournaments.map((t: EventTournamentLink) => ({
           tournamentId: t.tournamentId,
@@ -49,11 +51,13 @@ export function useEvent(eventId: string | null) {
   ): Promise<string> => {
     if (!db) throw new Error('Firebase not configured');
     const id = generateId();
+    const code = await generateUniqueCode('eventCodes');
     const now = Date.now();
     const padelEvent: PadelEvent = {
       id,
       name,
       date,
+      code,
       tournaments: [],
       organizerId,
       createdAt: now,
@@ -62,6 +66,7 @@ export function useEvent(eventId: string | null) {
     const updates: Record<string, unknown> = {
       [`events/${id}`]: padelEvent,
       [`users/${organizerId}/events/${id}`]: true,
+      [`eventCodes/${code}`]: id,
     };
     await firebaseUpdate(ref(db), updates);
     return id;
@@ -108,8 +113,12 @@ export function useEvent(eventId: string | null) {
       [`events/${eventId}`]: null,
       [`users/${organizerId}/events/${eventId}`]: null,
     };
+    // Also clean up event code
+    if (event?.code) {
+      deletes[`eventCodes/${event.code}`] = null;
+    }
     await firebaseUpdate(ref(db), deletes);
-  }, [eventId]);
+  }, [eventId, event?.code]);
 
   return {
     event,
@@ -121,4 +130,12 @@ export function useEvent(eventId: string | null) {
     updateTournamentWeight,
     deleteEvent,
   };
+}
+
+/** One-shot lookup: event code → event ID */
+export async function loadEventByCode(code: string): Promise<string | null> {
+  if (!db) return null;
+  const snapshot = await get(ref(db, `eventCodes/${code}`));
+  if (!snapshot.exists()) return null;
+  return snapshot.val() as string;
 }

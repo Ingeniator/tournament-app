@@ -8,6 +8,7 @@ import { OrganizerScreen } from './screens/OrganizerScreen';
 import { JoinScreen } from './screens/JoinScreen';
 import { EventScreen } from './screens/EventScreen';
 import { EventFormScreen } from './screens/EventFormScreen';
+import { EventJoinScreen } from './screens/EventJoinScreen';
 import { translations } from './i18n';
 import styles from './App.module.css';
 
@@ -38,7 +39,7 @@ function FirebaseSetupMessage() {
 }
 
 function AppContent() {
-  const { screen, setScreen, authLoading, authError, loadByCode, tournament, uid, activeEventId, setActiveEventId } = usePlanner();
+  const { screen, setScreen, authLoading, authError, loadByCode, loadEventByCode, tournament, uid, activeEventId, setActiveEventId, openTournamentFromEvent } = usePlanner();
   const { t, setLocale } = useTranslation();
 
   // Apply tournament locale for Telegram deep links (no &lang= in URL)
@@ -51,9 +52,19 @@ function AppContent() {
     } catch {}
   }, [tournament?.locale, setLocale]);
 
-  // Check URL for ?code=XXXXXX or Telegram startapp param on mount
+  // Check URL for ?event=XXXXXX or ?code=XXXXXX or Telegram startapp param on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+
+    // Event link takes priority
+    const eventCode = params.get('event');
+    if (eventCode && eventCode.length === 6) {
+      loadEventByCode(eventCode).then(found => {
+        setScreen(found ? 'event-join' : 'home');
+      });
+      return;
+    }
+
     const code = params.get('code')
       ?? window.Telegram?.WebApp?.initDataUnsafe?.start_param
       ?? null;
@@ -114,6 +125,17 @@ function AppContent() {
         <EventScreen
           eventId={activeEventId!}
           uid={uid}
+          onBack={() => {
+            setActiveEventId(null);
+            setScreen('home');
+          }}
+        />
+      );
+    case 'event-join':
+      return (
+        <EventJoinScreen
+          eventId={activeEventId!}
+          onJoinTournament={openTournamentFromEvent}
           onBack={() => {
             setActiveEventId(null);
             setScreen('home');

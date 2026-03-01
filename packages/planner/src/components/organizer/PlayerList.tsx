@@ -19,9 +19,10 @@ interface PlayerListProps {
   rankLabels?: string[];
   onSetGroup?: (playerId: string, group: 'A' | 'B' | null) => Promise<void>;
   onSetClub?: (playerId: string, clubId: string | null) => Promise<void>;
+  onSetRank?: (playerId: string, rankSlot: number | null) => Promise<void>;
 }
 
-export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, removePlayer, toggleConfirmed, updatePlayerTelegram, statuses, format, clubs, groupLabels, rankLabels, onSetGroup, onSetClub }: PlayerListProps) {
+export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, removePlayer, toggleConfirmed, updatePlayerTelegram, statuses, format, clubs, groupLabels, rankLabels, onSetGroup, onSetClub, onSetRank }: PlayerListProps) {
   const { t } = useTranslation();
   const [newPlayerName, setNewPlayerName] = useState('');
   const addingPlayer = useRef(false);
@@ -83,9 +84,6 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                   {statuses.get(player.id) === 'reserve' && (
                     <span className={styles.reserveBadge}>{t('organizer.reserve')}</span>
                   )}
-                  {format === 'club-ranked' && player.rankSlot != null && rankLabels?.[player.rankSlot] && (
-                    <span className={styles.rankBadge}>{rankLabels[player.rankSlot]}</span>
-                  )}
                 </span>
                 {format === 'mixicano' && onSetGroup && (
                   <div className={styles.groupToggle}>
@@ -117,6 +115,20 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                     {clubs.map(club => (
                       <option key={club.id} value={club.id}>
                         {club.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                {format === 'club-ranked' && onSetRank && rankLabels && rankLabels.length > 0 && (
+                  <select
+                    className={styles.rankSelect}
+                    value={player.rankSlot != null ? String(player.rankSlot) : ''}
+                    onChange={e => onSetRank(player.id, e.target.value ? Number(e.target.value) : null)}
+                  >
+                    <option value="">—</option>
+                    {rankLabels.map((label, idx) => (
+                      <option key={idx} value={String(idx)}>
+                        {label}
                       </option>
                     ))}
                   </select>
