@@ -50,6 +50,7 @@ export interface PlannerContextValue {
   completedAt: number | null;
   undoComplete: () => Promise<void>;
   deleteTournament: () => Promise<void>;
+  deleteTournamentById: (id: string) => Promise<void>;
   telegramUser: TelegramUser | null;
   chatInstance: string | null;
   chatRoomTournaments: TournamentSummary[];
@@ -91,6 +92,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     updateTournament,
     loadByCode: loadByCodeFromDb,
     deleteTournament: deleteInDb,
+    deleteTournamentById: deleteByIdInDb,
     undoComplete,
   } = usePlannerTournament(tournamentId);
 
@@ -220,6 +222,11 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     setScreen('home');
   }, [uid, deleteInDb]);
 
+  const deleteTournamentById = useCallback(async (id: string) => {
+    if (!uid) return;
+    await deleteByIdInDb(id, uid);
+  }, [uid, deleteByIdInDb]);
+
   const openTournament = useCallback((id: string, targetScreen: 'organizer' | 'join') => {
     setTournamentId(id);
     setScreen(targetScreen);
@@ -262,6 +269,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       completedAt,
       undoComplete,
       deleteTournament,
+      deleteTournamentById,
       telegramUser,
       chatInstance,
       chatRoomTournaments,

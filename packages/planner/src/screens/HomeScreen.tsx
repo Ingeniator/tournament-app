@@ -5,6 +5,7 @@ import type { TournamentSummary } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { auth, db } from '../firebase';
 import { randomTournamentName } from '../utils/tournamentNames';
+import { SwipeToDelete } from '../components/SwipeToDelete';
 import styles from './HomeScreen.module.css';
 
 function formatDate(iso: string): string {
@@ -36,7 +37,7 @@ export function HomeScreen() {
     userName, userNameLoading, updateUserName,
     myTournaments, registeredTournaments, listingsLoading,
     chatRoomTournaments, chatRoomLoading,
-    openTournament, skin, setSkin,
+    openTournament, deleteTournamentById, skin, setSkin,
   } = usePlanner();
   const { t } = useTranslation();
 
@@ -113,31 +114,48 @@ export function HomeScreen() {
     await set(feedbackRef, { message, source: 'planner', createdAt: Date.now() });
   };
 
-  const renderTournamentItem = (ti: TournamentSummary, screen: 'organizer' | 'join') => (
-    <div
-      key={ti.id}
-      className={styles.tournamentItem}
-      role="button"
-      tabIndex={0}
-      onClick={() => openTournament(ti.id, screen)}
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTournament(ti.id, screen); } }}
-    >
-      <span className={styles.tournamentNameRow}>
-        <span className={styles.tournamentName}>{ti.name}</span>
-        {ti.completedAt ? (
-          <span className={`${styles.badge} ${styles.badgeCompleted}`}>{t('home.completed')}</span>
-        ) : isExpired(ti) ? (
-          <span className={`${styles.badge} ${styles.badgeExpired}`}>{t('home.expired')}</span>
-        ) : null}
-      </span>
-      <span className={styles.tournamentMeta}>
-        {ti.date && <span>{formatDate(ti.date)}</span>}
-        {ti.place && <span>{ti.place}</span>}
-        {ti.organizerName && <span>by {ti.organizerName}</span>}
-        {!ti.date && <span>{formatCreatedAt(ti.createdAt)}</span>}
-      </span>
-    </div>
-  );
+  const handleDeleteTournament = (id: string) => {
+    if (window.confirm(t('organizer.deleteConfirm'))) {
+      deleteTournamentById(id);
+    }
+  };
+
+  const renderTournamentItem = (ti: TournamentSummary, screen: 'organizer' | 'join', options?: { swipeToDelete?: boolean }) => {
+    const item = (
+      <div
+        className={styles.tournamentItem}
+        role="button"
+        tabIndex={0}
+        onClick={() => openTournament(ti.id, screen)}
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTournament(ti.id, screen); } }}
+      >
+        <span className={styles.tournamentNameRow}>
+          <span className={styles.tournamentName}>{ti.name}</span>
+          {ti.completedAt ? (
+            <span className={`${styles.badge} ${styles.badgeCompleted}`}>{t('home.completed')}</span>
+          ) : isExpired(ti) ? (
+            <span className={`${styles.badge} ${styles.badgeExpired}`}>{t('home.expired')}</span>
+          ) : null}
+        </span>
+        <span className={styles.tournamentMeta}>
+          {ti.date && <span>{formatDate(ti.date)}</span>}
+          {ti.place && <span>{ti.place}</span>}
+          {ti.organizerName && <span>by {ti.organizerName}</span>}
+          {!ti.date && <span>{formatCreatedAt(ti.createdAt)}</span>}
+        </span>
+      </div>
+    );
+
+    if (options?.swipeToDelete) {
+      return (
+        <SwipeToDelete key={ti.id} onDelete={() => handleDeleteTournament(ti.id)} label={t('organizer.deleteTournament')}>
+          {item}
+        </SwipeToDelete>
+      );
+    }
+
+    return <div key={ti.id}>{item}</div>;
+  };
 
   return (
     <div className={styles.container}>
@@ -305,7 +323,7 @@ export function HomeScreen() {
             <p className={styles.empty}>{t('home.noTournamentsCreated')}</p>
           ) : (
             <div className={styles.tournamentList}>
-              {myTournaments.map(ti => renderTournamentItem(ti, 'organizer'))}
+              {myTournaments.map(ti => renderTournamentItem(ti, 'organizer', { swipeToDelete: true }))}
             </div>
           )}
         </Card>

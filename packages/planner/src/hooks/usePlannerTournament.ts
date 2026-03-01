@@ -145,5 +145,25 @@ export function usePlannerTournament(tournamentId: string | null) {
     await set(ref(db, `tournaments/${tournamentId}/completedAt`), null);
   }, [tournamentId]);
 
-  return { tournament, completedAt, loading, createTournament, updateTournament, loadByCode, deleteTournament, undoComplete };
+  const deleteTournamentById = useCallback(async (id: string, organizerId: string) => {
+    if (!db) return;
+    const snapshot = await get(ref(db, `tournaments/${id}`));
+    if (!snapshot.exists()) return;
+    const data = snapshot.val() as Record<string, unknown>;
+
+    const deletes: Record<string, null> = {
+      [`codes/${data.code as string}`]: null,
+      [`tournaments/${id}`]: null,
+      [`users/${organizerId}/organized/${id}`]: null,
+    };
+    const players = data.players as Record<string, unknown> | undefined;
+    if (players) {
+      for (const playerId of Object.keys(players)) {
+        deletes[`users/${playerId}/registrations/${id}`] = null;
+      }
+    }
+    await firebaseUpdate(ref(db), deletes);
+  }, []);
+
+  return { tournament, completedAt, loading, createTournament, updateTournament, loadByCode, deleteTournament, deleteTournamentById, undoComplete };
 }
