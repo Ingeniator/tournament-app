@@ -129,9 +129,13 @@ export function TeamPairingScreen() {
           onChange={e => dispatch({ type: 'RENAME_TEAM', payload: { teamId: team.id, name: e.target.value } })}
         />
         {isSlotMode && slotIndex != null && (
-          <span className={styles.slotBadge}>
-            {t('teams.slotLabel', { num: slotIndex + 1 })}
-          </span>
+          <input
+            className={styles.slotBadgeInput}
+            value={tournament.config.rankLabels?.[slotIndex] ?? ''}
+            placeholder={t('teams.slotLabel', { num: slotIndex + 1 })}
+            onChange={e => dispatch({ type: 'UPDATE_RANK_LABEL', payload: { index: slotIndex, label: e.target.value } })}
+            aria-label={t('teams.rankLabelAriaLabel', { num: slotIndex + 1 })}
+          />
         )}
       </div>
       <div className={styles.teamPlayers}>

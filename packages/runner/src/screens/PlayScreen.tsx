@@ -4,7 +4,7 @@ import { useStandings } from '../hooks/useStandings';
 import { useClubStandings } from '../hooks/useClubStandings';
 import { useNominations } from '../hooks/useNominations';
 import { RoundCard } from '../components/rounds/RoundCard';
-import { StandingsTable, type GroupInfo } from '../components/standings/StandingsTable';
+import { StandingsTable, type GroupInfo, type RankLabelInfo } from '../components/standings/StandingsTable';
 import { ClubStandingsTable } from '../components/standings/ClubStandingsTable';
 import { NominationCard } from '../components/nominations/NominationCard';
 import { Carousel } from '../components/carousel/Carousel';
@@ -82,6 +82,31 @@ export function PlayScreen() {
     for (const club of tournament.clubs) clubNameMap.set(club.id, club.name);
     return { teamClubMap, clubNameMap, clubColorMap };
   }, [tournament, isClubFormat, clubColorMap]);
+  const rankLabelInfo = useMemo<RankLabelInfo | undefined>(() => {
+    if (!tournament || tournament.config.format !== 'club-ranked') return undefined;
+    const rankLabels = tournament.config.rankLabels;
+    if (!rankLabels?.length || !tournament.teams?.length || !tournament.clubs?.length) return undefined;
+    const playerClubMap = new Map<string, string>();
+    for (const p of tournament.players) {
+      if (p.clubId) playerClubMap.set(p.id, p.clubId);
+    }
+    // Group teams by club to find slot index
+    const clubTeamIndex = new Map<string, number>();
+    const clubCounters = new Map<string, number>();
+    for (const team of tournament.teams) {
+      const cid = playerClubMap.get(team.player1Id) ?? playerClubMap.get(team.player2Id);
+      if (!cid) continue;
+      const idx = clubCounters.get(cid) ?? 0;
+      clubTeamIndex.set(team.id, idx);
+      clubCounters.set(cid, idx + 1);
+    }
+    const labelMap = new Map<string, string>();
+    for (const [teamId, slotIdx] of clubTeamIndex) {
+      const label = rankLabels[slotIdx];
+      if (label) labelMap.set(teamId, label);
+    }
+    return labelMap.size > 0 ? { labelMap } : undefined;
+  }, [tournament]);
   const { buildMessengerText } = useShareText(tournament, standings, nominations);
   const [showStandings, setShowStandings] = useState(false);
   const [standingsTab, setStandingsTab] = useState<'pairs' | 'clubs'>('pairs');
@@ -193,7 +218,7 @@ export function PlayScreen() {
         <Carousel>
           {[
             <div key="standings" className={styles.completedStandings}>
-              <StandingsTable standings={standings} groupInfo={groupInfo} clubInfo={clubInfo} />
+              <StandingsTable standings={standings} groupInfo={groupInfo} clubInfo={clubInfo} rankLabelInfo={rankLabelInfo} />
             </div>,
             ...(clubStandings.length > 0 ? [
               <div key="club-standings" className={styles.completedStandings}>
@@ -515,7 +540,7 @@ export function PlayScreen() {
           </div>
         )}
         {standingsTab === 'pairs' || !isClubFormat ? (
-          <StandingsTable standings={standings} plannedGames={plannedGames} groupInfo={groupInfo} clubInfo={clubInfo} />
+          <StandingsTable standings={standings} plannedGames={plannedGames} groupInfo={groupInfo} clubInfo={clubInfo} rankLabelInfo={rankLabelInfo} />
         ) : (
           <ClubStandingsTable standings={clubStandings} clubColorMap={clubColorMap} />
         )}

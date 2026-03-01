@@ -55,6 +55,7 @@ const fr: Translations = {
   'teams.fixedPairsBody': 'Ces paires resteront ensemble pendant tout le tournoi. Vérifiez-les attentivement — vous ne pourrez plus changer de partenaires une fois le tournoi lancé.',
   'teams.fixedSlotsBody': 'Mode Positions Fixes actif : la position de chaque paire (Pos. 1, Pos. 2, etc.) détermine contre qui elle joue. Pos. 1 affronte toujours Pos. 1 du club adverse, et ainsi de suite.',
   'teams.slotLabel': 'Pos. {num}',
+  'teams.rankLabelAriaLabel': 'Nom du rang pour la position {num}',
   'teams.unequalClubsTitle': 'Les clubs ont un nombre de paires différent',
   'teams.unequalClubsBody': 'Les paires au repos reçoivent des points de compensation moyens, donc le club avec plus de paires gagne des points supplémentaires grâce aux repos. Pour un classement équitable, gardez le même nombre de paires dans chaque club.',
 
