@@ -17,14 +17,21 @@ export function PlayerInput({ onAdd, onBulkAdd }: PlayerInputProps) {
     e.preventDefault();
     const trimmed = name.trim();
     if (!trimmed) return;
-    onAdd(trimmed);
+    if (onBulkAdd && trimmed.includes(',')) {
+      const names = parsePlayerList(trimmed);
+      if (names.length > 0) {
+        onBulkAdd(names);
+      }
+    } else {
+      onAdd(trimmed);
+    }
     setName('');
     inputRef.current?.focus();
   };
 
   const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
     const text = e.clipboardData.getData('text');
-    if (!text.includes('\n') || !onBulkAdd) return;
+    if ((!text.includes('\n') && !text.includes(',')) || !onBulkAdd) return;
 
     e.preventDefault();
     const names = parsePlayerList(text);

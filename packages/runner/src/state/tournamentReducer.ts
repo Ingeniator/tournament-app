@@ -590,10 +590,13 @@ export function tournamentReducer(
 
     case 'ADD_CLUB': {
       if (!state || state.phase !== 'setup') return state;
-      const newClub: Club = { id: generateId(), name: action.payload.name, color: CLUB_COLORS[(state.clubs?.length ?? 0) % CLUB_COLORS.length] };
+      const existingClubs = state.clubs ?? [];
+      const usedColors = new Set(existingClubs.map(c => c.color).filter(Boolean));
+      const freeColor = CLUB_COLORS.find(c => !usedColors.has(c)) ?? CLUB_COLORS[existingClubs.length % CLUB_COLORS.length];
+      const newClub: Club = { id: generateId(), name: action.payload.name, color: freeColor };
       return {
         ...state,
-        clubs: [...(state.clubs ?? []), newClub],
+        clubs: [...existingClubs, newClub],
         updatedAt: Date.now(),
       };
     }

@@ -34,9 +34,16 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
   const handleAdd = async () => {
     if (newPlayerName.trim() && !addingPlayer.current) {
       addingPlayer.current = true;
-      const name = newPlayerName.trim();
+      const trimmed = newPlayerName.trim();
       setNewPlayerName('');
-      await addPlayer(name);
+      if (trimmed.includes(',')) {
+        const names = parsePlayerList(trimmed);
+        if (names.length > 0) {
+          await bulkAddPlayers(names);
+        }
+      } else {
+        await addPlayer(trimmed);
+      }
       addingPlayer.current = false;
       addPlayerInputRef.current?.focus();
     }
@@ -149,16 +156,23 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
             onKeyDown={async e => {
               if (e.key === 'Enter' && newPlayerName.trim() && !addingPlayer.current) {
                 addingPlayer.current = true;
-                const name = newPlayerName.trim();
+                const trimmed = newPlayerName.trim();
                 setNewPlayerName('');
-                await addPlayer(name);
+                if (trimmed.includes(',')) {
+                  const names = parsePlayerList(trimmed);
+                  if (names.length > 0) {
+                    await bulkAddPlayers(names);
+                  }
+                } else {
+                  await addPlayer(trimmed);
+                }
                 addingPlayer.current = false;
                 addPlayerInputRef.current?.focus();
               }
             }}
             onPaste={(e: ClipboardEvent<HTMLInputElement>) => {
               const text = e.clipboardData.getData('text');
-              if (!text.includes('\n')) return;
+              if (!text.includes('\n') && !text.includes(',')) return;
               e.preventDefault();
               const names = parsePlayerList(text);
               if (names.length > 0) {

@@ -66,7 +66,7 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
 
   const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
     const text = e.clipboardData.getData('text');
-    if (!text.includes('\n')) return;
+    if (!text.includes('\n') && !text.includes(',')) return;
     e.preventDefault();
     const names = parsePlayerList(text);
     if (names.length === 0) return;

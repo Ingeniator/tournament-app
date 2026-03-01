@@ -372,11 +372,18 @@ export function OrganizerScreen() {
               <div className={styles.courtsHeader}>
                 <span>{t('organizer.clubs', { count: clubs.length })}</span>
                 <Button variant="ghost" size="small" onClick={() => {
-                  const newClubs: Club[] = [...clubs, { id: generateId(), name: `Club ${clubs.length + 1}`, color: CLUB_COLORS[clubs.length % CLUB_COLORS.length] }];
+                  const usedColors = new Set(clubs.map((c, i) => getClubColor(c, i)));
+                  const freeColor = CLUB_COLORS.find(c => !usedColors.has(c)) ?? CLUB_COLORS[clubs.length % CLUB_COLORS.length];
+                  const newClubs: Club[] = [...clubs, { id: generateId(), name: `Club ${clubs.length + 1}`, color: freeColor }];
                   updateTournament({ clubs: newClubs });
                 }}>{t('organizer.addClub')}</Button>
               </div>
-              {clubs.map((club, idx) => (
+              {clubs.map((club, idx) => {
+                const usedByOthers = new Set(
+                  clubs.map((c, i) => i !== idx ? getClubColor(c, i) : null).filter(Boolean)
+                );
+                const available = CLUB_COLORS.filter(c => !usedByOthers.has(c));
+                return (
                 <EditableItem
                   key={club.id}
                   name={club.name}
@@ -396,8 +403,11 @@ export function OrganizerScreen() {
                       style={{ backgroundColor: getClubColor(club, idx) }}
                       onClick={() => {
                         const currentColor = getClubColor(club, idx);
-                        const currentIdx = CLUB_COLORS.indexOf(currentColor);
-                        const nextColor = CLUB_COLORS[(currentIdx + 1) % CLUB_COLORS.length];
+                        const pool = available.length > 0 ? available : CLUB_COLORS;
+                        const currentPoolIdx = pool.indexOf(currentColor);
+                        const nextColor = currentPoolIdx >= 0
+                          ? pool[(currentPoolIdx + 1) % pool.length]
+                          : pool[0];
                         const updated = clubs.map(c =>
                           c.id === club.id ? { ...c, color: nextColor } : c
                         );
@@ -406,7 +416,8 @@ export function OrganizerScreen() {
                     />
                   }
                 />
-              ))}
+                );
+              })}
               {clubs.length === 0 && (
                 <p className={styles.empty}>{t('organizer.noClub')}</p>
               )}
