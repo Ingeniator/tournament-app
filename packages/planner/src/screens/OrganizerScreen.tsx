@@ -554,6 +554,7 @@ export function OrganizerScreen() {
         format={tournament.format}
         clubs={tournament.clubs}
         groupLabels={tournament.groupLabels}
+        rankLabels={tournament.rankLabels}
         onSetGroup={updatePlayerGroup}
         onSetClub={updatePlayerClub}
       />

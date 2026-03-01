@@ -16,11 +16,12 @@ interface PlayerListProps {
   format?: TournamentFormat;
   clubs?: Club[];
   groupLabels?: [string, string];
+  rankLabels?: string[];
   onSetGroup?: (playerId: string, group: 'A' | 'B' | null) => Promise<void>;
   onSetClub?: (playerId: string, clubId: string | null) => Promise<void>;
 }
 
-export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, removePlayer, toggleConfirmed, updatePlayerTelegram, statuses, format, clubs, groupLabels, onSetGroup, onSetClub }: PlayerListProps) {
+export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, removePlayer, toggleConfirmed, updatePlayerTelegram, statuses, format, clubs, groupLabels, rankLabels, onSetGroup, onSetClub }: PlayerListProps) {
   const { t } = useTranslation();
   const [newPlayerName, setNewPlayerName] = useState('');
   const addingPlayer = useRef(false);
@@ -81,6 +82,9 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                   )}
                   {statuses.get(player.id) === 'reserve' && (
                     <span className={styles.reserveBadge}>{t('organizer.reserve')}</span>
+                  )}
+                  {format === 'club-ranked' && player.rankSlot != null && rankLabels?.[player.rankSlot] && (
+                    <span className={styles.rankBadge}>{rankLabels[player.rankSlot]}</span>
                   )}
                 </span>
                 {format === 'mixicano' && onSetGroup && (

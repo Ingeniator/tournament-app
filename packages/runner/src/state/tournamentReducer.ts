@@ -46,8 +46,17 @@ function createCrossGroupTeams(players: Player[]): Team[] {
 
 function createClubTeams(players: Player[], clubs: Club[]): Team[] {
   const teams: Team[] = [];
+  const hasRanks = players.some(p => p.rankSlot != null);
   for (const club of clubs) {
-    const clubPlayers = shuffleArray(players.filter(p => p.clubId === club.id));
+    const raw = players.filter(p => p.clubId === club.id);
+    let clubPlayers: Player[];
+    if (hasRanks) {
+      const ranked = raw.filter(p => p.rankSlot != null).sort((a, b) => a.rankSlot! - b.rankSlot!);
+      const unranked = shuffleArray(raw.filter(p => p.rankSlot == null));
+      clubPlayers = [...ranked, ...unranked];
+    } else {
+      clubPlayers = shuffleArray(raw);
+    }
     for (let i = 0; i < clubPlayers.length - 1; i += 2) {
       teams.push({
         id: generateId(),

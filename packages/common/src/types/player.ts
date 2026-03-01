@@ -4,4 +4,5 @@ export interface Player {
   unavailable?: boolean;
   group?: 'A' | 'B';
   clubId?: string;
+  rankSlot?: number;
 }

@@ -158,6 +158,13 @@ export function usePlayers(tournamentId: string | null) {
     });
   }, [tournamentId]);
 
+  const updatePlayerRank = useCallback(async (playerId: string, rankSlot: number | null) => {
+    if (!tournamentId || !db) return;
+    await update(ref(db, `tournaments/${tournamentId}/players/${playerId}`), {
+      rankSlot: rankSlot ?? null,
+    });
+  }, [tournamentId]);
+
   /**
    * Claim a registration that was manually added by the organizer with a
    * telegramUsername. Moves the player record from the random orphan ID to
@@ -192,5 +199,5 @@ export function usePlayers(tournamentId: string | null) {
     return players.some(p => p.id === uid);
   }, [players]);
 
-  return { players, loading, registerPlayer, removePlayer, updateConfirmed, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, isRegistered, claimOrphanRegistration };
+  return { players, loading, registerPlayer, removePlayer, updateConfirmed, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, updatePlayerRank, isRegistered, claimOrphanRegistration };
 }

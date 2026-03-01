@@ -39,6 +39,7 @@ export interface PlannerContextValue {
   updatePlayerTelegram: (playerId: string, telegramUsername: string | null) => Promise<void>;
   updatePlayerGroup: (playerId: string, group: 'A' | 'B' | null) => Promise<void>;
   updatePlayerClub: (playerId: string, clubId: string | null) => Promise<void>;
+  updatePlayerRank: (playerId: string, rankSlot: number | null) => Promise<void>;
   isRegistered: boolean;
   organizerName: string | null;
   userName: string | null;
@@ -101,7 +102,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     undoComplete,
   } = usePlannerTournament(tournamentId);
 
-  const { players, registerPlayer: registerInDb, removePlayer, updateConfirmed: updateConfirmedInDb, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, isRegistered: checkRegistered, claimOrphanRegistration } = usePlayers(tournamentId);
+  const { players, registerPlayer: registerInDb, removePlayer, updateConfirmed: updateConfirmedInDb, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, updatePlayerRank, isRegistered: checkRegistered, claimOrphanRegistration } = usePlayers(tournamentId);
 
   const { name: userName, skin: userSkin, loading: userNameLoading, updateName: updateUserName, updateSkin: updateUserSkin, updateTelegramId, updateTelegramUsername } = useUserProfile(uid);
 
@@ -264,6 +265,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       updatePlayerTelegram,
       updatePlayerGroup,
       updatePlayerClub,
+      updatePlayerRank,
       isRegistered,
       organizerName,
       userName,

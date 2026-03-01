@@ -42,6 +42,7 @@ export interface PlannerRegistration {
   telegramUsername?: string;
   group?: 'A' | 'B';
   clubId?: string;
+  rankSlot?: number;
 }
 
 export interface TournamentStartInfo {

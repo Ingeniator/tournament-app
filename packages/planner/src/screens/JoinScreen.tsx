@@ -10,7 +10,7 @@ import { StartWarningModal } from '../components/StartWarningModal';
 import styles from './JoinScreen.module.css';
 
 export function JoinScreen() {
-  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, updatePlayerGroup, updatePlayerClub, isRegistered, setScreen, organizerName, userName, telegramUser, completedAt } = usePlanner();
+  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, updatePlayerGroup, updatePlayerClub, updatePlayerRank, isRegistered, setScreen, organizerName, userName, telegramUser, completedAt } = usePlanner();
   const { startedBy, showWarning, warningReason, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
   const { t } = useTranslation();
   // null = not yet edited by user, derive from external sources
@@ -360,6 +360,23 @@ export function JoinScreen() {
                 </div>
               );
             })()}
+
+            {isConfirmed && uid && tournament.format === 'club-ranked' && (tournament.rankLabels ?? []).length > 0 && (
+              <div className={styles.rankPicker}>
+                <span className={styles.rankPickerLabel}>{t('join.selectRank')}</span>
+                <div className={styles.rankOptions}>
+                  {tournament.rankLabels!.map((label, idx) => (
+                    <button
+                      key={idx}
+                      className={myRegistration?.rankSlot === idx ? styles.rankOptionActive : styles.rankOption}
+                      onClick={() => updatePlayerRank(uid, myRegistration?.rankSlot === idx ? null : idx)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className={styles.registerForm}>
@@ -443,6 +460,11 @@ export function JoinScreen() {
                       style={{ backgroundColor: getClubColor(clubs[clubIdx], clubIdx) }}
                     >
                       {clubs[clubIdx].name}
+                    </span>
+                  )}
+                  {tournament.format === 'club-ranked' && player.rankSlot != null && tournament.rankLabels?.[player.rankSlot] && (
+                    <span className={styles.rankBadge}>
+                      {tournament.rankLabels[player.rankSlot]}
                     </span>
                   )}
                 </span>

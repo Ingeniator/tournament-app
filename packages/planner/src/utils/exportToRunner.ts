@@ -23,6 +23,7 @@ export function buildRunnerTournament(
       name: r.name,
       ...(r.group ? { group: r.group } : {}),
       ...(r.clubId ? { clubId: r.clubId } : {}),
+      ...(r.rankSlot != null ? { rankSlot: r.rankSlot } : {}),
     }));
 
   return {
