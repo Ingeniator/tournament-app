@@ -39,6 +39,7 @@ export interface TournamentConfig {
   targetDuration?: number;
   scoringMode?: 'points' | 'games';
   groupLabels?: [string, string];
+  rankLabels?: string[];
   pairMode?: 'fixed' | 'rotating';
   maldiciones?: { enabled: boolean; chaosLevel: ChaosLevel };
 }

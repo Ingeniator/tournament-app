@@ -637,6 +637,23 @@ export function tournamentReducer(
       };
     }
 
+    case 'UPDATE_RANK_LABEL': {
+      if (!state || state.phase !== 'team-pairing') return state;
+      const { index, label } = action.payload;
+      const existing = state.config.rankLabels ?? [];
+      const updated = [...existing];
+      // Expand array if needed
+      while (updated.length <= index) updated.push('');
+      updated[index] = label;
+      // Clean trailing empty labels
+      while (updated.length > 0 && updated[updated.length - 1] === '') updated.pop();
+      return {
+        ...state,
+        config: { ...state.config, rankLabels: updated.length > 0 ? updated : undefined },
+        updatedAt: Date.now(),
+      };
+    }
+
     case 'CAST_MALDICION': {
       if (!state || !state.maldicionesHands || !state.teams) return state;
       const { roundId: crId, matchId: cmId, castBy, cardId, targetPlayerId } = action.payload;

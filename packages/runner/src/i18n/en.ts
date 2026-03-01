@@ -55,6 +55,7 @@ const en: Translations = {
   'teams.fixedPairsBody': 'These pairs will stay together for the entire tournament. Review them carefully — you cannot change partners once the tournament starts.',
   'teams.fixedSlotsBody': 'Fixed Slots mode is active: each pair\'s position (Slot 1, Slot 2, etc.) determines who they play against. Slot 1 always faces Slot 1 from the opposing club, and so on.',
   'teams.slotLabel': 'Slot {num}',
+  'teams.rankLabelAriaLabel': 'Rank name for slot {num}',
   'teams.unequalClubsTitle': 'Clubs have different numbers of pairs',
   'teams.unequalClubsBody': 'Pairs that sit out receive average compensation points, so the club with more pairs gains extra points from sit-outs. For fair standings, keep the same number of pairs in each club.',
 

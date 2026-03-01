@@ -13,14 +13,19 @@ export interface ClubInfo {
   clubColorMap: Map<string, string>;
 }
 
+export interface RankLabelInfo {
+  labelMap: Map<string, string>;
+}
+
 interface StandingsTableProps {
   standings: StandingsEntry[];
   plannedGames?: Map<string, number>;
   groupInfo?: GroupInfo;
   clubInfo?: ClubInfo;
+  rankLabelInfo?: RankLabelInfo;
 }
 
-export function StandingsTable({ standings, plannedGames, groupInfo, clubInfo }: StandingsTableProps) {
+export function StandingsTable({ standings, plannedGames, groupInfo, clubInfo, rankLabelInfo }: StandingsTableProps) {
   const { t } = useTranslation();
 
   if (standings.length === 0) {
@@ -67,6 +72,8 @@ export function StandingsTable({ standings, plannedGames, groupInfo, clubInfo }:
                 const clubId = clubInfo?.teamClubMap.get(entry.playerId);
                 const clubColor = clubId ? clubInfo!.clubColorMap.get(clubId) : undefined;
 
+                const rankLabel = rankLabelInfo?.labelMap.get(entry.playerId);
+
                 if (isPair) {
                   return (
                     <td className={`${styles.name} ${styles.pairCell}`}>
@@ -78,6 +85,9 @@ export function StandingsTable({ standings, plannedGames, groupInfo, clubInfo }:
                           <span>{nameParts[0]}</span>
                           <span className={styles.pairSecondary}>{nameParts[1]}</span>
                         </span>
+                        {rankLabel && (
+                          <span className={styles.rankBadge}>{rankLabel}</span>
+                        )}
                       </div>
                     </td>
                   );
