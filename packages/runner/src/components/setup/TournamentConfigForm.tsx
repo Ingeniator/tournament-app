@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { TournamentConfig } from '@padel/common';
 import { Button, generateId, useTranslation, FormatPicker, formatHasGroups, formatHasClubs } from '@padel/common';
+import { getStrategy } from '../../strategies';
 import { resolveConfigDefaults, computeSitOutInfo } from '../../utils/resolveConfigDefaults';
 import styles from './TournamentConfigForm.module.css';
 
@@ -134,7 +135,7 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
         </div>
       )}
 
-      {config.format === 'team-americano' && (
+      {getStrategy(config.format).hasFixedPartners && (
         <div className={styles.field}>
           <label className={styles.checkboxLabel}>
             <input
