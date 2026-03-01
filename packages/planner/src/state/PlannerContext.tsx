@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, createContext, useContext, type ReactNode } from 'react';
 import { ref, get } from 'firebase/database';
-import type { PlannerTournament, PlannerRegistration, TournamentSummary, SkinId } from '@padel/common';
+import type { PlannerTournament, PlannerRegistration, TournamentSummary, SkinId, PadelEventSummary } from '@padel/common';
 import { useTranslation, useTheme, isValidSkin, DEFAULT_SKIN } from '@padel/common';
 import { useAuth } from '../hooks/useAuth';
 import { usePlannerTournament } from '../hooks/usePlannerTournament';
@@ -12,9 +12,10 @@ import { useRegisteredTournaments } from '../hooks/useRegisteredTournaments';
 import { useTelegram, type TelegramUser } from '../hooks/useTelegram';
 import { useTelegramSync } from '../hooks/useTelegramSync';
 import { useChatRoomTournaments } from '../hooks/useChatRoomTournaments';
+import { useMyEvents } from '../hooks/useMyEvents';
 import { linkTournamentToChat } from '../utils/chatRoom';
 
-export type Screen = 'loading' | 'home' | 'organizer' | 'join';
+export type Screen = 'loading' | 'home' | 'organizer' | 'join' | 'event-detail' | 'event-create';
 
 export interface PlannerContextValue {
   uid: string | null;
@@ -57,6 +58,10 @@ export interface PlannerContextValue {
   chatRoomLoading: boolean;
   skin: SkinId;
   setSkin: (skin: SkinId) => void;
+  myEvents: PadelEventSummary[];
+  eventsLoading: boolean;
+  activeEventId: string | null;
+  setActiveEventId: (id: string | null) => void;
 }
 
 const PlannerCtx = createContext<PlannerContextValue>(null!);
@@ -120,6 +125,8 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
   const { tournaments: myTournaments, loading: myLoading } = useMyTournaments(uid);
   const { tournaments: registeredTournaments, loading: regLoading } = useRegisteredTournaments(uid);
   const { tournaments: chatRoomTournaments, loading: chatRoomLoading } = useChatRoomTournaments(chatInstance);
+  const { events: myEvents, loading: eventsLoading } = useMyEvents(uid);
+  const [activeEventId, setActiveEventId] = useState<string | null>(null);
 
   const listingsLoading = myLoading || regLoading;
 
@@ -276,6 +283,10 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       chatRoomLoading,
       skin,
       setSkin,
+      myEvents,
+      eventsLoading,
+      activeEventId,
+      setActiveEventId,
     }}>
       {children}
     </PlannerCtx.Provider>

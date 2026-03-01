@@ -38,6 +38,7 @@ export function HomeScreen() {
     myTournaments, registeredTournaments, listingsLoading,
     chatRoomTournaments, chatRoomLoading,
     openTournament, deleteTournamentById, skin, setSkin,
+    myEvents, eventsLoading, setActiveEventId,
   } = usePlanner();
   const { t } = useTranslation();
 
@@ -326,6 +327,42 @@ export function HomeScreen() {
               {myTournaments.map(ti => renderTournamentItem(ti, 'organizer', { swipeToDelete: true }))}
             </div>
           )}
+        </Card>
+      )}
+
+      {/* My Events */}
+      {!eventsLoading && (
+        <Card>
+          <h2 className={styles.sectionTitle}>{t('event.myEvents')}</h2>
+          {myEvents.length === 0 ? (
+            <p className={styles.empty}>{t('event.noEvents')}</p>
+          ) : (
+            <div className={styles.tournamentList}>
+              {myEvents.map(ev => (
+                <div
+                  key={ev.id}
+                  className={styles.tournamentItem}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => { setActiveEventId(ev.id); setScreen('event-detail'); }}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveEventId(ev.id); setScreen('event-detail'); } }}
+                >
+                  <span className={styles.tournamentNameRow}>
+                    <span className={styles.tournamentName}>{ev.name}</span>
+                  </span>
+                  <span className={styles.tournamentMeta}>
+                    <span>{ev.date}</span>
+                    <span>{t('event.tournaments', { count: ev.tournamentCount })}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{ marginTop: 'var(--space-md)' }}>
+            <Button variant="secondary" fullWidth onClick={() => setScreen('event-create')} disabled={!userName}>
+              {t('event.createEvent')}
+            </Button>
+          </div>
         </Card>
       )}
 

@@ -6,6 +6,8 @@ import { usePlanner } from './state/PlannerContext';
 import { HomeScreen } from './screens/HomeScreen';
 import { OrganizerScreen } from './screens/OrganizerScreen';
 import { JoinScreen } from './screens/JoinScreen';
+import { EventScreen } from './screens/EventScreen';
+import { EventFormScreen } from './screens/EventFormScreen';
 import { translations } from './i18n';
 import styles from './App.module.css';
 
@@ -36,7 +38,7 @@ function FirebaseSetupMessage() {
 }
 
 function AppContent() {
-  const { screen, setScreen, authLoading, authError, loadByCode, tournament } = usePlanner();
+  const { screen, setScreen, authLoading, authError, loadByCode, tournament, uid, activeEventId, setActiveEventId } = usePlanner();
   const { t, setLocale } = useTranslation();
 
   // Apply tournament locale for Telegram deep links (no &lang= in URL)
@@ -96,6 +98,28 @@ function AppContent() {
       return <OrganizerScreen />;
     case 'join':
       return <JoinScreen />;
+    case 'event-create':
+      return (
+        <EventFormScreen
+          uid={uid}
+          onBack={() => setScreen('home')}
+          onCreated={(id) => {
+            setActiveEventId(id);
+            setScreen('event-detail');
+          }}
+        />
+      );
+    case 'event-detail':
+      return (
+        <EventScreen
+          eventId={activeEventId!}
+          uid={uid}
+          onBack={() => {
+            setActiveEventId(null);
+            setScreen('home');
+          }}
+        />
+      );
     default:
       return <HomeScreen />;
   }
