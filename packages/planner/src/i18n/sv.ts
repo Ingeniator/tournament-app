@@ -128,6 +128,8 @@ const sv: Translations = {
   'organizer.groupLabels': 'Gruppnamn',
   'organizer.groupLabelAPlaceholder': 'Spelare vänster sida',
   'organizer.groupLabelBPlaceholder': 'Spelare höger sida',
+  'organizer.rankLabels': 'Ranknamn',
+  'organizer.rankLabelPlaceholder': 'Slot {num} (t.ex. Pro)',
   'organizer.clubs': 'Klubbar ({count})',
   'organizer.addClub': '+ Lägg till',
   'organizer.noClub': 'Lägg till minst 2 klubbar',

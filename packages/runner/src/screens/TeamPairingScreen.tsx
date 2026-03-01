@@ -128,14 +128,10 @@ export function TeamPairingScreen() {
           placeholder={`${nameOf(team.player1Id)} & ${nameOf(team.player2Id)}`}
           onChange={e => dispatch({ type: 'RENAME_TEAM', payload: { teamId: team.id, name: e.target.value } })}
         />
-        {isSlotMode && slotIndex != null && (
-          <input
-            className={styles.slotBadgeInput}
-            value={tournament.config.rankLabels?.[slotIndex] ?? ''}
-            placeholder={t('teams.slotLabel', { num: slotIndex + 1 })}
-            onChange={e => dispatch({ type: 'UPDATE_RANK_LABEL', payload: { index: slotIndex, label: e.target.value } })}
-            aria-label={t('teams.rankLabelAriaLabel', { num: slotIndex + 1 })}
-          />
+        {isSlotMode && slotIndex != null && tournament.config.rankLabels?.[slotIndex] && (
+          <span className={styles.slotBadge}>
+            {tournament.config.rankLabels[slotIndex]}
+          </span>
         )}
       </div>
       <div className={styles.teamPlayers}>

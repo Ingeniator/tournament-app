@@ -128,6 +128,8 @@ const sr: Translations = {
   'organizer.groupLabels': 'Nazivi grupa',
   'organizer.groupLabelAPlaceholder': 'Igrač leva strana',
   'organizer.groupLabelBPlaceholder': 'Igrač desna strana',
+  'organizer.rankLabels': 'Nazivi rangova',
+  'organizer.rankLabelPlaceholder': 'Slot {num} (npr. Pro)',
   'organizer.clubs': 'Klubovi ({count})',
   'organizer.addClub': '+ Dodaj',
   'organizer.noClub': 'Dodajte najmanje 2 kluba',

@@ -19,6 +19,7 @@ export interface PlannerTournament {
   locale?: string;
   clubs?: Club[];
   groupLabels?: [string, string];
+  rankLabels?: string[];
 }
 
 export interface TournamentSummary {

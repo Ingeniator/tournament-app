@@ -421,6 +421,32 @@ export function OrganizerScreen() {
               {clubs.length === 0 && (
                 <p className={styles.empty}>{t('organizer.noClub')}</p>
               )}
+              {tournament.format === 'club-ranked' && clubs.length >= 2 && (() => {
+                const slotsPerClub = Math.floor(capacity / clubs.length);
+                return slotsPerClub > 0 ? (
+                  <div className={styles.rankLabelsSection}>
+                    <span className={styles.rankLabelsTitle}>{t('organizer.rankLabels')}</span>
+                    <div className={styles.rankLabelsColumn}>
+                      {Array.from({ length: slotsPerClub }, (_, i) => (
+                        <input
+                          key={i}
+                          className={styles.rankLabelInput}
+                          type="text"
+                          value={tournament.rankLabels?.[i] ?? ''}
+                          onChange={e => {
+                            const labels = [...(tournament.rankLabels ?? [])];
+                            labels[i] = e.target.value;
+                            // Trim trailing empty strings
+                            while (labels.length > 0 && !labels[labels.length - 1]) labels.pop();
+                            updateTournament({ rankLabels: labels.length > 0 ? labels : undefined });
+                          }}
+                          placeholder={t('organizer.rankLabelPlaceholder', { num: i + 1 })}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : null;
+              })()}
             </div>
           );
         })()}

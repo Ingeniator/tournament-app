@@ -128,6 +128,8 @@ const en: Translations = {
   'organizer.groupLabels': 'Group labels',
   'organizer.groupLabelAPlaceholder': 'Left side player',
   'organizer.groupLabelBPlaceholder': 'Right side player',
+  'organizer.rankLabels': 'Rank labels',
+  'organizer.rankLabelPlaceholder': 'Slot {num} (e.g. Pro)',
   'organizer.clubs': 'Clubs ({count})',
   'organizer.addClub': '+ Add',
   'organizer.noClub': 'Add at least 2 clubs',

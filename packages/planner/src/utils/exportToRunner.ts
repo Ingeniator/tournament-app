@@ -35,6 +35,7 @@ export function buildRunnerTournament(
       maxRounds: null,
       targetDuration: plannerTournament.duration,
       ...(plannerTournament.groupLabels ? { groupLabels: plannerTournament.groupLabels } : {}),
+      ...(plannerTournament.rankLabels ? { rankLabels: plannerTournament.rankLabels } : {}),
     },
     phase: 'setup',
     players,

@@ -647,6 +647,42 @@
   color: var(--color-text-muted);
 }
 
+/* Rank labels section (Club Ranked) */
+.rankLabelsSection {
+  padding-top: var(--space-sm);
+}
+
+.rankLabelsTitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.rankLabelsColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
+}
+
+.rankLabelInput {
+  width: 100%;
+  padding: var(--space-xs) var(--space-sm);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+.rankLabelInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.rankLabelInput::placeholder {
+  color: var(--color-text-muted);
+}
+
 /* Reopen modal */
 .reopenGap {
   height: var(--space-sm);
