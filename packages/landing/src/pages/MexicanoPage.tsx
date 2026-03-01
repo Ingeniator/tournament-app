@@ -1,7 +1,13 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { AppFooter, FeedbackModal } from '@padel/common';
 import styles from './Article.module.css';
 
-export function MexicanoPage() {
+interface Props {
+  onFeedback: (message: string) => Promise<void>;
+}
+
+export function MexicanoPage({ onFeedback }: Props) {
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   useEffect(() => { document.title = 'Mexicano Padel — Rules, Format & How to Play | PadelDay'; }, []);
 
   return (
@@ -77,6 +83,9 @@ export function MexicanoPage() {
           <a className={styles.ctaButton} href="/play">Try Mexicano Free →</a>
         </div>
       </article>
+
+      <AppFooter onFeedbackClick={() => setFeedbackOpen(true)} />
+      <FeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} onSubmit={onFeedback} />
     </>
   );
 }

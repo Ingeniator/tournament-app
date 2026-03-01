@@ -106,15 +106,15 @@ function AppContent() {
   // Route to SEO pages
   switch (page) {
     case '/formats':
-      return <FormatsPage />;
+      return <FormatsPage onFeedback={handleFeedback} />;
     case '/americano':
-      return <AmericanoPage />;
+      return <AmericanoPage onFeedback={handleFeedback} />;
     case '/mexicano':
-      return <MexicanoPage />;
+      return <MexicanoPage onFeedback={handleFeedback} />;
     case '/awards':
-      return <AwardsPage />;
+      return <AwardsPage onFeedback={handleFeedback} />;
     case '/maldiciones':
-      return <MaldicionesPage />;
+      return <MaldicionesPage onFeedback={handleFeedback} />;
     default:
       return (
         <LandingPage

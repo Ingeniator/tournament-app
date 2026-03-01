@@ -1,7 +1,13 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { AppFooter, FeedbackModal } from '@padel/common';
 import styles from './Article.module.css';
 
-export function AmericanoPage() {
+interface Props {
+  onFeedback: (message: string) => Promise<void>;
+}
+
+export function AmericanoPage({ onFeedback }: Props) {
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   useEffect(() => { document.title = 'Americano Padel — Rules, Format & How to Play | PadelDay'; }, []);
 
   return (
@@ -67,6 +73,9 @@ export function AmericanoPage() {
           <a className={styles.ctaButton} href="/play">Run Americano Now →</a>
         </div>
       </article>
+
+      <AppFooter onFeedbackClick={() => setFeedbackOpen(true)} />
+      <FeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} onSubmit={onFeedback} />
     </>
   );
 }

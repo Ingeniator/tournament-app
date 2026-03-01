@@ -78,7 +78,7 @@ export function LandingPage({ skin, setSkin, telegramName, onFeedback }: Props) 
             <div className={styles.diffDesc}>{t('landing.diffCursesDesc')}</div>
           </div>
           <div className={styles.diffCard}>
-            <div className={styles.diffEmoji}>⚖️</div>
+            <img className={styles.diffImage} src="/play/screenshots/mobile-statistics.png" alt="Quality gates statistics" loading="lazy" width="390" height="844" />
             <div className={styles.diffTitle}>{t('landing.diffFairTitle')}</div>
             <div className={styles.diffDesc}>{t('landing.diffFairDesc')}</div>
           </div>

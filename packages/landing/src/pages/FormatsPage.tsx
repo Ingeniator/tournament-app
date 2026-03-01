@@ -1,5 +1,10 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { AppFooter, FeedbackModal } from '@padel/common';
 import styles from './Article.module.css';
+
+interface Props {
+  onFeedback: (message: string) => Promise<void>;
+}
 
 const formats = [
   { name: 'Americano', category: 'Social', emoji: '🎾', desc: 'Random rotating partners and opponents. Every round you get a new partner, keeping things social and unpredictable. Individual standings.', bestFor: 'Social events, large groups, beginners' },
@@ -24,7 +29,8 @@ const categoryStyle = (cat: string) => {
   }
 };
 
-export function FormatsPage() {
+export function FormatsPage({ onFeedback }: Props) {
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   useEffect(() => { document.title = 'Tournament Formats — Complete Guide | PadelDay'; }, []);
 
   return (
@@ -107,6 +113,9 @@ export function FormatsPage() {
           <a className={styles.ctaButton} href="/play">Start a Tournament →</a>
         </div>
       </article>
+
+      <AppFooter onFeedbackClick={() => setFeedbackOpen(true)} />
+      <FeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} onSubmit={onFeedback} />
     </>
   );
 }

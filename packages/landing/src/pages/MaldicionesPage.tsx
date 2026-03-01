@@ -1,5 +1,10 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { AppFooter, FeedbackModal } from '@padel/common';
 import styles from './Article.module.css';
+
+interface Props {
+  onFeedback: (message: string) => Promise<void>;
+}
 
 const greenCards = [
   { emoji: '🤐', name: 'Los Mudos', subtitle: 'No talking', effect: 'Target team cannot communicate verbally during the entire match. Hand signals only!' },
@@ -45,7 +50,8 @@ function CardSection({ title, color, cards }: { title: string; color: string; ca
   );
 }
 
-export function MaldicionesPage() {
+export function MaldicionesPage({ onFeedback }: Props) {
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   useEffect(() => { document.title = 'Maldiciones del Padel — Curse Cards Party Mode | PadelDay'; }, []);
 
   return (
@@ -103,6 +109,9 @@ export function MaldicionesPage() {
           <a className={styles.ctaButton} href="/play">Start with Maldiciones →</a>
         </div>
       </article>
+
+      <AppFooter onFeedbackClick={() => setFeedbackOpen(true)} />
+      <FeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} onSubmit={onFeedback} />
     </>
   );
 }

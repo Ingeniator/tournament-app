@@ -1,5 +1,10 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { AppFooter, FeedbackModal } from '@padel/common';
 import styles from './Article.module.css';
+
+interface Props {
+  onFeedback: (message: string) => Promise<void>;
+}
 
 const legendaryAwards = [
   { emoji: '⭐', name: 'Undefeated', criteria: 'Won every single match' },
@@ -7,7 +12,6 @@ const legendaryAwards = [
   { emoji: '👑', name: 'Comeback King', criteria: 'Strongest finish after a rough start — 30%+ improvement in second half' },
   { emoji: '😈', name: 'Nemesis', criteria: 'Beat the same opponent 3+ times with 0 losses' },
   { emoji: '🐺', name: 'Underdog', criteria: 'Bottom half of standings but top half in win rate' },
-  { emoji: '🦠', name: 'El Inmune', criteria: '3+ consecutive wins while cursed (Maldiciones mode)' },
 ];
 
 const rareAwards = [
@@ -19,13 +23,9 @@ const rareAwards = [
   { emoji: '🤝', name: 'Best Duo', criteria: 'Highest win rate as a pair (2+ matches together)' },
   { emoji: '🔥', name: 'Hot Streak Duo', criteria: 'Longest winning run as a pair — 3+ wins in a row' },
   { emoji: '🥈', name: 'Nearly There', criteria: 'Finished 2nd — within 10 points of the winner' },
-  { emoji: '🦾', name: 'El Resistente', criteria: 'Best win rate while cursed (Maldiciones mode)' },
   { emoji: '🧗', name: 'Court Climber', criteria: 'Most court promotions (King of the Court)' },
   { emoji: '⭐', name: 'Club MVP', criteria: 'Top points contributor for their club' },
   { emoji: '⚔️', name: 'Club Rivalry', criteria: 'Closest battle between two clubs' },
-  { emoji: '🧙', name: 'El Brujo', criteria: 'Master of curses — 2+ winning curse casts' },
-  { emoji: '💪', name: 'El Superviviente', criteria: 'Won 2+ games while cursed' },
-  { emoji: '👼', name: 'El Intocable', criteria: 'Never cursed — 3+ games, 0 curses received' },
 ];
 
 const commonAwards = [
@@ -42,7 +42,15 @@ const commonAwards = [
   { emoji: '🕊️', name: 'Peacemaker', criteria: '2+ drawn matches — nobody wins, nobody loses' },
   { emoji: '🦋', name: 'Social Butterfly', criteria: 'Played with the most different partners' },
   { emoji: '🤝', name: 'Club Solidarity', criteria: 'Most balanced contributions within a club' },
-  { emoji: '🛡️', name: 'Escudo de Oro', criteria: '1+ successful shield blocks (Maldiciones mode)' },
+];
+
+const maldicionesAwards = [
+  { emoji: '🦠', name: 'El Inmune', criteria: '3+ consecutive wins while cursed' },
+  { emoji: '🧙', name: 'El Brujo', criteria: 'Master of curses — 2+ winning curse casts' },
+  { emoji: '💪', name: 'El Superviviente', criteria: 'Won 2+ games while cursed' },
+  { emoji: '👼', name: 'El Intocable', criteria: 'Never cursed — 3+ games, 0 curses received' },
+  { emoji: '🦾', name: 'El Resistente', criteria: 'Best win rate while cursed' },
+  { emoji: '🛡️', name: 'Escudo de Oro', criteria: '1+ successful shield blocks' },
   { emoji: '☠️', name: 'El Maldito', criteria: 'Most curses received (2+)' },
   { emoji: '🔄', name: 'Karma', criteria: 'Cast 2+ curses but lost the match — backfire!' },
 ];
@@ -67,7 +75,8 @@ function TierSection({ label, tierClass, awards }: { label: string; tierClass: s
   );
 }
 
-export function AwardsPage() {
+export function AwardsPage({ onFeedback }: Props) {
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   useEffect(() => { document.title = '41 Tournament Awards — The Ceremony Everyone Talks About | PadelDay'; }, []);
 
   return (
@@ -102,8 +111,17 @@ export function AwardsPage() {
 
         <h2>Maldiciones Awards</h2>
         <p>
-          When playing with <a href="/maldiciones">Maldiciones (Curse Cards)</a> enabled, additional awards become available — like El Brujo (curse master), El Superviviente (winning while cursed), and El Inmune (unstoppable under curses).
+          When playing with <a href="/maldiciones">Maldiciones (Curse Cards)</a> enabled, 8 additional awards become available. These only appear in tournaments with curse cards active.
         </p>
+        <div className={styles.cardGrid}>
+          {maldicionesAwards.map(a => (
+            <div key={a.name} className={styles.card}>
+              <div className={styles.cardEmoji}>{a.emoji}</div>
+              <div className={styles.cardName}>{a.name}</div>
+              <div className={styles.cardDesc}>{a.criteria}</div>
+            </div>
+          ))}
+        </div>
 
         <h2>Format-Specific Awards</h2>
         <p>
@@ -115,6 +133,9 @@ export function AwardsPage() {
           <a className={styles.ctaButton} href="/play">Start a Tournament →</a>
         </div>
       </article>
+
+      <AppFooter onFeedbackClick={() => setFeedbackOpen(true)} />
+      <FeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} onSubmit={onFeedback} />
     </>
   );
 }
