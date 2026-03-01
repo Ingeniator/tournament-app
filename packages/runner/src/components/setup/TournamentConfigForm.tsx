@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import type { TournamentConfig } from '@padel/common';
-import { Button, generateId, useTranslation, FormatPicker, formatHasGroups, formatHasClubs } from '@padel/common';
+import { Button, generateId, useTranslation, FormatPicker, formatHasGroups, formatHasClubs, Toast, useToast } from '@padel/common';
 import { getStrategy } from '../../strategies';
-import { resolveConfigDefaults, computeSitOutInfo } from '../../utils/resolveConfigDefaults';
+import { resolveConfigDefaults, computeSitOutInfo, MINUTES_PER_POINT, MINUTES_PER_GAME, CHANGEOVER_MINUTES } from '../../utils/resolveConfigDefaults';
 import styles from './TournamentConfigForm.module.css';
 
 function InfoButton({ hint }: { hint: string }) {
@@ -32,8 +32,6 @@ function InfoButton({ hint }: { hint: string }) {
   );
 }
 
-const MINUTES_PER_POINT = 0.5;
-const CHANGEOVER_MINUTES = 3;
 const DEFAULT_DURATION_MINUTES = 120;
 
 function formatDuration(minutes: number): string {
@@ -53,12 +51,20 @@ interface TournamentConfigFormProps {
 
 export function TournamentConfigForm({ config, playerCount, clubCount, onUpdate }: TournamentConfigFormProps) {
   const { t } = useTranslation();
+  const { toastMessage, showToast } = useToast();
+  const lastAutoSwitchRef = useRef(false);
   const maxCourts = Math.max(1, Math.floor(playerCount / 4));
 
   // Resolve: what values will actually be used (fills in defaults for empty fields)
   const resolved = resolveConfigDefaults(config, playerCount, clubCount);
+  const isGamesMode = resolved.scoringMode === 'games';
+  const minutesPer = isGamesMode ? MINUTES_PER_GAME : MINUTES_PER_POINT;
   const effectivePoints = resolved.pointsPerMatch;
   const effectiveRounds = resolved.maxRounds ?? 1;
+
+  // Track auto-switch: if resolver switched to games but user hasn't explicitly set it
+  const autoSwitchedToGames = config.scoringMode === undefined && isGamesMode;
+  lastAutoSwitchRef.current = autoSwitchedToGames;
 
   // Club formats have a fixed round count based on club count
   const clubFixedRounds = clubCount && clubCount >= 2
@@ -73,7 +79,7 @@ export function TournamentConfigForm({ config, playerCount, clubCount, onUpdate 
 
   // Duration estimate
   const durationLimit = config.targetDuration ?? DEFAULT_DURATION_MINUTES;
-  const roundDuration = Math.round(effectivePoints * MINUTES_PER_POINT + CHANGEOVER_MINUTES);
+  const roundDuration = Math.round(effectivePoints * minutesPer + CHANGEOVER_MINUTES);
   const estimatedMinutes = effectiveRounds * roundDuration;
   const exceedsLimit = estimatedMinutes > durationLimit;
 
@@ -103,6 +109,14 @@ export function TournamentConfigForm({ config, playerCount, clubCount, onUpdate 
     onUpdate({
       courts: config.courts.map(c => (c.id === courtId ? { ...c, name } : c)),
     });
+  };
+
+  const handleScoringModeChange = (mode: 'points' | 'games') => {
+    if (mode === 'points' && lastAutoSwitchRef.current) {
+      showToast(t('config.gamesModeSuggestion', { rounds: effectiveRounds }));
+    }
+    // Clear explicit pointsPerMatch so it gets recalculated for the new mode
+    onUpdate({ scoringMode: mode, pointsPerMatch: 0 });
   };
 
   return (
@@ -280,7 +294,11 @@ export function TournamentConfigForm({ config, playerCount, clubCount, onUpdate 
       </div>
 
       <div className={styles.field}>
-        <label className={styles.label} htmlFor="config-points">{t('config.pointsPerMatch')}</label>
+        <div className={styles.labelRow}>
+          <label className={styles.label} htmlFor="config-points">
+            {isGamesMode ? t('config.gamesPerMatch') : t('config.pointsPerMatch')}
+          </label>
+        </div>
         <input
           id="config-points"
           className={styles.input}
@@ -294,10 +312,27 @@ export function TournamentConfigForm({ config, playerCount, clubCount, onUpdate 
           }}
         />
         <span className={styles.hint}>
-          {clubFixedRounds
-            ? t('config.recommendedPointsClub', { points: suggestedPoints })
-            : t('config.recommendedPoints', { points: suggestedPoints, duration: formatDuration(durationLimit) })}
+          {isGamesMode
+            ? (clubFixedRounds
+              ? t('config.recommendedGamesClub', { games: suggestedPoints })
+              : t('config.recommendedGames', { games: suggestedPoints, duration: formatDuration(durationLimit) }))
+            : (clubFixedRounds
+              ? t('config.recommendedPointsClub', { points: suggestedPoints })
+              : t('config.recommendedPoints', { points: suggestedPoints, duration: formatDuration(durationLimit) }))}
         </span>
+      </div>
+
+      <div className={styles.field}>
+        <label className={styles.label} htmlFor="config-scoring-mode">{t('config.scoringMode')}</label>
+        <select
+          id="config-scoring-mode"
+          className={styles.input}
+          value={isGamesMode ? 'games' : 'points'}
+          onChange={e => handleScoringModeChange(e.target.value as 'points' | 'games')}
+        >
+          <option value="points">{t('config.scoringModePoints')}</option>
+          <option value="games">{t('config.scoringModeGames')}</option>
+        </select>
       </div>
 
       <div className={styles.estimate}>
@@ -344,6 +379,8 @@ export function TournamentConfigForm({ config, playerCount, clubCount, onUpdate 
           </div>
         </div>
       )}
+
+      <Toast message={toastMessage} />
     </div>
   );
 }

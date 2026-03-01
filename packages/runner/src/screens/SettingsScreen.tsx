@@ -171,7 +171,7 @@ export function SettingsScreen() {
           </>
         ) : (
           <div className={styles.chipList}>
-            <span className={styles.chip}>{t('settings.pts', { count: tournament.config.pointsPerMatch })}</span>
+            <span className={styles.chip}>{tournament.config.scoringMode === 'games' ? t('settings.games', { count: tournament.config.pointsPerMatch }) : t('settings.pts', { count: tournament.config.pointsPerMatch })}</span>
             {tournament.rounds.length > 0 && (
               <span className={styles.chip}>{t('settings.roundCount', { count: tournament.rounds.length })}</span>
             )}

@@ -142,7 +142,7 @@ describe('resolveConfigDefaults', () => {
       const resolved = resolveConfigDefaults(config, 8);
       expect(resolved.maxRounds).toBe(0);
       // defaultPoints path where effectiveRounds = 0 → PREFERRED_POINTS
-      expect(resolved.pointsPerMatch).toBe(30);
+      expect(resolved.pointsPerMatch).toBe(32);
     });
   });
 

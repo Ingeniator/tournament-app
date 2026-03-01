@@ -37,6 +37,7 @@ export interface TournamentConfig {
   courts: Court[];
   maxRounds: number | null;
   targetDuration?: number;
+  scoringMode?: 'points' | 'games';
   groupLabels?: [string, string];
   pairMode?: 'fixed' | 'rotating';
   maldiciones?: { enabled: boolean; chaosLevel: ChaosLevel };
