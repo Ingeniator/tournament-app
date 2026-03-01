@@ -7,7 +7,7 @@ import { PlayerInput } from '../components/setup/PlayerInput';
 import { PlayerList } from '../components/setup/PlayerList';
 import { TournamentConfigForm } from '../components/setup/TournamentConfigForm';
 import { ClubSection } from '../components/setup/ClubSection';
-import { Button, Card, useTranslation } from '@padel/common';
+import { Button, Card, useTranslation, formatHasClubs } from '@padel/common';
 import styles from './SetupScreen.module.css';
 
 export function SetupScreen() {
@@ -98,7 +98,7 @@ export function SetupScreen() {
         />
       </div>
 
-      {tournament.config.format === 'club-americano' && (
+      {formatHasClubs(tournament.config.format) && (
         <ClubSection
           clubs={tournament.clubs ?? []}
           players={tournament.players}

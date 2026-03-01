@@ -1,6 +1,18 @@
-import type { Tournament, SkinId } from '@padel/common';
+import type { Tournament, TournamentFormat, SkinId } from '@padel/common';
 import { isValidSkin, DEFAULT_SKIN } from '@padel/common';
 import { deduplicateNames } from '../utils/deduplicateNames';
+
+function migrateClubFormat(tournament: Tournament): Tournament {
+  if (tournament.config.format !== ('club-americano' as string)) return tournament;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const raw = tournament.config as any;
+  const matchMode = raw.matchMode as string | undefined;
+  let format: TournamentFormat = 'club-ranked';
+  if (matchMode === 'random') format = 'club-team-americano';
+  else if (matchMode === 'standings') format = 'club-team-mexicano';
+  const { matchMode: _, ...restConfig } = raw;
+  return { ...tournament, config: { ...restConfig, format } as Tournament['config'] };
+}
 
 const STORAGE_KEY = 'padel-tournament-v1';
 const UI_STATE_KEY = 'padel-ui-state-v1';
@@ -24,7 +36,8 @@ export function loadTournament(): Tournament | null {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
     if (!data) return null;
-    const tournament = JSON.parse(data) as Tournament;
+    const raw = JSON.parse(data) as Tournament;
+    const tournament = migrateClubFormat(raw);
     return { ...tournament, players: deduplicateNames(tournament.players) };
   } catch {
     return null;

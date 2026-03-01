@@ -11,6 +11,7 @@ import { AmericanoPage } from './pages/AmericanoPage';
 import { MexicanoPage } from './pages/MexicanoPage';
 import { AwardsPage } from './pages/AwardsPage';
 import { MaldicionesPage } from './pages/MaldicionesPage';
+import { ClubPage } from './pages/ClubPage';
 
 declare global {
   interface Window {
@@ -115,6 +116,8 @@ function AppContent() {
       return <AwardsPage onFeedback={handleFeedback} />;
     case '/maldiciones':
       return <MaldicionesPage onFeedback={handleFeedback} />;
+    case '/club':
+      return <ClubPage onFeedback={handleFeedback} />;
     default:
       return (
         <LandingPage

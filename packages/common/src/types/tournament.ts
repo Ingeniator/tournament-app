@@ -2,7 +2,7 @@ import type { Player } from './player';
 import type { Nomination } from './nomination';
 import type { ChaosLevel, MatchCurse, MaldicionesHands } from './maldiciones';
 
-export type TournamentFormat = 'americano' | 'mexicano' | 'mixicano' | 'mixed-americano' | 'team-americano' | 'team-mexicano' | 'mixed-team-americano' | 'mixed-team-mexicano' | 'round-robin' | 'king-of-the-court' | 'mixed-king-of-the-court' | 'club-americano';
+export type TournamentFormat = 'americano' | 'mexicano' | 'mixicano' | 'mixed-americano' | 'team-americano' | 'team-mexicano' | 'mixed-team-americano' | 'mixed-team-mexicano' | 'round-robin' | 'king-of-the-court' | 'mixed-king-of-the-court' | 'club-americano' | 'club-mexicano' | 'club-ranked' | 'club-team-americano' | 'club-team-mexicano';
 
 export type TournamentPhase = 'setup' | 'team-pairing' | 'in-progress' | 'completed';
 
@@ -28,6 +28,7 @@ export interface Court {
 export interface Club {
   id: string;
   name: string;
+  color?: string;
 }
 
 export interface TournamentConfig {
@@ -38,7 +39,6 @@ export interface TournamentConfig {
   targetDuration?: number;
   groupLabels?: [string, string];
   pairMode?: 'fixed' | 'rotating';
-  matchMode?: 'random' | 'standings' | 'slots';
   maldiciones?: { enabled: boolean; chaosLevel: ChaosLevel };
 }
 

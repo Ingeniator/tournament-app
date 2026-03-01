@@ -140,6 +140,7 @@ export function LandingPage({ skin, setSkin, telegramName, onFeedback }: Props) 
         <a className={styles.seoLink} href="/formats">Tournament Formats</a>
         <a className={styles.seoLink} href="/americano">Americano Guide</a>
         <a className={styles.seoLink} href="/mexicano">Mexicano Guide</a>
+        <a className={styles.seoLink} href="/club">Club Formats</a>
         <a className={styles.seoLink} href="/awards">Awards & Ceremony</a>
         <a className={styles.seoLink} href="/maldiciones">Maldiciones del Padel</a>
       </nav>

@@ -7,27 +7,20 @@ import styles from './FormatPicker.module.css';
 
 interface FormatPickerProps {
   format: TournamentFormat;
-  matchMode?: string;
   onChange: (format: TournamentFormat, defaultConfig?: Partial<TournamentConfig>) => void;
   t: (key: string) => string;
 }
 
-function resolvePresetId(format: TournamentFormat, matchMode?: string): string {
-  if (format === 'club-americano') {
-    const preset = FORMAT_PRESETS.find(
-      p => p.format === format && p.defaultConfig?.matchMode === (matchMode ?? 'slots')
-    );
-    return preset?.id ?? 'club-americano';
-  }
+function resolvePresetId(format: TournamentFormat): string {
   return FORMAT_PRESETS.find(p => p.format === format)?.id ?? format;
 }
 
-export function FormatPicker({ format, matchMode, onChange, t }: FormatPickerProps) {
+export function FormatPicker({ format, onChange, t }: FormatPickerProps) {
   const [mode, setMode] = useState<'list' | 'wizard'>('list');
 
   const selectedPresetId = useMemo(
-    () => resolvePresetId(format, matchMode),
-    [format, matchMode]
+    () => resolvePresetId(format),
+    [format]
   );
 
   const handlePresetChange = (preset: FormatPreset) => {

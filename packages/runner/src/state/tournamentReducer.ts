@@ -1,7 +1,7 @@
 import type { Tournament, Player, Court, TournamentConfig, Round, Team, Club } from '@padel/common';
 import type { TournamentAction } from './actions';
-import { generateId } from '@padel/common';
-import { formatHasGroups } from '@padel/common';
+import { generateId, CLUB_COLORS } from '@padel/common';
+import { formatHasGroups, formatHasClubs } from '@padel/common';
 import { getStrategy } from '../strategies';
 import { deduplicateNames } from '../utils/deduplicateNames';
 import { resolveConfigDefaults } from '../utils/resolveConfigDefaults';
@@ -323,7 +323,7 @@ export function tournamentReducer(
     case 'SET_TEAMS': {
       if (!state || state.phase !== 'setup') return state;
       if (!getStrategy(state.config.format).hasFixedPartners) return state;
-      const teams = state.config.format === 'club-americano' && state.clubs?.length
+      const teams = formatHasClubs(state.config.format) && state.clubs?.length
         ? createClubTeams(state.players, state.clubs)
         : formatHasGroups(state.config.format)
           ? createCrossGroupTeams(state.players)
@@ -338,7 +338,7 @@ export function tournamentReducer(
 
     case 'SHUFFLE_TEAMS': {
       if (!state || state.phase !== 'team-pairing') return state;
-      const teams = state.config.format === 'club-americano' && state.clubs?.length
+      const teams = formatHasClubs(state.config.format) && state.clubs?.length
         ? createClubTeams(state.players, state.clubs)
         : formatHasGroups(state.config.format)
           ? createCrossGroupTeams(state.players)
@@ -475,10 +475,10 @@ export function tournamentReducer(
         const totalTarget = state.config.maxRounds ?? state.players.length - 1;
         const allScored = updatedRounds.every(r => r.matches.every(m => m.score !== null));
         if (allScored && updatedRounds.length < totalTarget) {
-          // For rotating pair mode: regenerate intra-club pairs
+          // Club Americano has rotating partners — regenerate intra-club pairs each round
           let updatedTeams = state.teams;
           const updatedPlayers = state.players;
-          if (state.config.format === 'club-americano' && state.config.pairMode === 'rotating' && state.clubs?.length) {
+          if ((state.config.format === 'club-americano' || state.config.format === 'club-mexicano') && state.clubs?.length) {
             updatedTeams = createClubTeams(state.players, state.clubs);
           }
           const active = updatedPlayers.filter(p => !p.unavailable);
@@ -590,7 +590,7 @@ export function tournamentReducer(
 
     case 'ADD_CLUB': {
       if (!state || state.phase !== 'setup') return state;
-      const newClub: Club = { id: generateId(), name: action.payload.name };
+      const newClub: Club = { id: generateId(), name: action.payload.name, color: CLUB_COLORS[(state.clubs?.length ?? 0) % CLUB_COLORS.length] };
       return {
         ...state,
         clubs: [...(state.clubs ?? []), newClub],

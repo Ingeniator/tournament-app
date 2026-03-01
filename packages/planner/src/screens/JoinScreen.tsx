@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Button, Card, CLUB_COLORS, Toast, useToast, useTranslation, getPresetByFormat, formatHasGroups } from '@padel/common';
+import { Button, Card, getClubColor, Toast, useToast, useTranslation, getPresetByFormat, formatHasGroups, formatHasClubs } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import { downloadICS } from '../utils/icsExport';
@@ -193,7 +193,7 @@ export function JoinScreen() {
           <div className={styles.detailRow}>
             <span className={styles.detailLabel}>{t('join.format')}</span>
             <span>{(() => {
-              const preset = getPresetByFormat(tournament.format, tournament.matchMode);
+              const preset = getPresetByFormat(tournament.format);
               return preset ? t(preset.nameKey) : t('organizer.formatMexicano');
             })()}</span>
           </div>
@@ -340,7 +340,7 @@ export function JoinScreen() {
               </div>
             )}
 
-            {isConfirmed && uid && tournament.format === 'club-americano' && (tournament.clubs ?? []).length > 0 && (() => {
+            {isConfirmed && uid && formatHasClubs(tournament.format) && (tournament.clubs ?? []).length > 0 && (() => {
               const clubs = tournament.clubs!;
               return (
                 <div className={styles.clubPicker}>
@@ -350,7 +350,7 @@ export function JoinScreen() {
                       <button
                         key={club.id}
                         className={myRegistration?.clubId === club.id ? styles.clubOptionActive : styles.clubOption}
-                        style={{ '--club-color': CLUB_COLORS[idx % CLUB_COLORS.length] } as React.CSSProperties}
+                        style={{ '--club-color': getClubColor(club, idx) } as React.CSSProperties}
                         onClick={() => updatePlayerClub(uid, myRegistration?.clubId === club.id ? null : club.id)}
                       >
                         {club.name}
@@ -406,7 +406,7 @@ export function JoinScreen() {
           <div className={styles.playerList}>
             {players.map((player, i) => {
               const isMixicano = formatHasGroups(tournament.format);
-              const isClubAmericano = tournament.format === 'club-americano';
+              const isClubAmericano = formatHasClubs(tournament.format);
               const clubs = tournament.clubs ?? [];
               const clubIdx = isClubAmericano && player.clubId
                 ? clubs.findIndex(c => c.id === player.clubId)
@@ -440,7 +440,7 @@ export function JoinScreen() {
                   {isClubAmericano && clubIdx >= 0 && (
                     <span
                       className={styles.clubBadge}
-                      style={{ backgroundColor: CLUB_COLORS[clubIdx % CLUB_COLORS.length] }}
+                      style={{ backgroundColor: getClubColor(clubs[clubIdx], clubIdx) }}
                     >
                       {clubs[clubIdx].name}
                     </span>

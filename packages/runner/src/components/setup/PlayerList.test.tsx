@@ -5,6 +5,8 @@ import type { Player } from '@padel/common';
 
 vi.mock('@padel/common', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
+  formatHasClubs: (format: string) => ['club-americano', 'club-ranked', 'club-team-americano', 'club-team-mexicano'].includes(format),
+  getClubColor: () => '#888',
 }));
 
 import { PlayerList } from './PlayerList';

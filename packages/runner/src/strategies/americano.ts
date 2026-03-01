@@ -40,61 +40,6 @@ function scorePairing(
   return partnerScore * 100 + o1 * o1 + o2 * o2 + o3 * o3 + o4 * o4;
 }
 
-function scoreGrouping(
-  groups: string[][],
-  partnerCounts: Map<string, number>,
-  opponentCounts: Map<string, number>,
-  courtMates?: Set<string>,
-  rankMap?: Map<string, number>
-): number {
-  let total = 0;
-  for (const group of groups) {
-    const pairings = getPairingsForGroup(group);
-    total += Math.min(...pairings.map(([p1, p2]) => scorePairing(p1, p2, partnerCounts, opponentCounts)));
-
-    // Tiebreaker: prefer groupings that cover new pairs.
-    // Fractional weight (0.01) so it only matters when partner/opponent
-    // scores are equal — never overrides those integer-valued priorities.
-    if (courtMates) {
-      for (let i = 0; i < group.length; i++) {
-        for (let j = i + 1; j < group.length; j++) {
-          if (courtMates.has(partnerKey(group[i], group[j]))) {
-            total += 0.01;
-          }
-        }
-      }
-    }
-
-    // Standings proximity: prefer groups where players have similar rankings.
-    // Weight 0.5 per spread point — acts as a tiebreaker, never overrides
-    // partner repeats (×100) or significant opponent imbalance.
-    if (rankMap) {
-      const ranks = group.map(id => rankMap.get(id) ?? 0);
-      const spread = Math.max(...ranks) - Math.min(...ranks);
-      total += spread * 0.5;
-    }
-  }
-  return total;
-}
-
-function bestPairingForGroup(
-  group: string[],
-  partnerCounts: Map<string, number>,
-  opponentCounts: Map<string, number>
-): Pairing {
-  const pairings = getPairingsForGroup(group);
-  let best = pairings[0];
-  let bestScore = Infinity;
-  for (const pairing of pairings) {
-    const score = scorePairing(pairing[0], pairing[1], partnerCounts, opponentCounts);
-    if (score < bestScore) {
-      bestScore = score;
-      best = pairing;
-    }
-  }
-  return best;
-}
-
 /** Returns all permutations of indices [0..n-1] */
 function indexPermutations(n: number): number[][] {
   if (n <= 1) return [[0]];

@@ -58,7 +58,7 @@ function makeTournament(overrides: Partial<Tournament> = {}): Tournament {
     id: 't1',
     name: 'Test Club Americano',
     config: {
-      format: 'club-americano',
+      format: 'club-ranked',
       pointsPerMatch: 21,
       courts: [{ id: 'c1', name: 'Court 1' }, { id: 'c2', name: 'Court 2' }],
       maxRounds: null,
@@ -100,7 +100,7 @@ function findAward(awards: ReturnType<typeof computeClubAwards>['awards'], id: s
 // ---- Tests ----
 
 describe('computeClubAwards', () => {
-  it('returns empty for non-club-americano format', () => {
+  it('returns empty for non-club format', () => {
     const t = makeTournament({ config: { ...makeTournament().config, format: 'americano' } });
     const standings = makePairStandings([]);
     const result = computeClubAwards(t, standings);

@@ -109,29 +109,44 @@ export const FORMAT_PRESETS: FormatPreset[] = [
     nameKey: 'format.clubAmericano',
     descKey: 'format.clubAmericanoDesc',
     category: 'club',
+    tags: ['rotating', 'random', 'clubs'],
+    requiresClubs: true,
+  },
+  {
+    id: 'club-mexicano',
+    format: 'club-mexicano',
+    nameKey: 'format.clubMexicano',
+    descKey: 'format.clubMexicanoDesc',
+    category: 'club',
+    tags: ['rotating', 'standings', 'clubs'],
+    requiresClubs: true,
+  },
+  {
+    id: 'club-ranked',
+    format: 'club-ranked',
+    nameKey: 'format.clubRanked',
+    descKey: 'format.clubRankedDesc',
+    category: 'club',
     tags: ['fixed', 'slots', 'clubs'],
     requiresClubs: true,
-    defaultConfig: { matchMode: 'slots' },
   },
   {
     id: 'club-team-americano',
-    format: 'club-americano',
+    format: 'club-team-americano',
     nameKey: 'format.clubTeamAmericano',
     descKey: 'format.clubTeamAmericanoDesc',
     category: 'club',
     tags: ['fixed', 'random', 'clubs'],
     requiresClubs: true,
-    defaultConfig: { matchMode: 'random' },
   },
   {
     id: 'club-team-mexicano',
-    format: 'club-americano',
+    format: 'club-team-mexicano',
     nameKey: 'format.clubTeamMexicano',
     descKey: 'format.clubTeamMexicanoDesc',
     category: 'club',
     tags: ['fixed', 'standings', 'clubs'],
     requiresClubs: true,
-    defaultConfig: { matchMode: 'standings' },
   },
 ];
 
@@ -139,10 +154,7 @@ export function getPresetById(id: string): FormatPreset | undefined {
   return FORMAT_PRESETS.find(p => p.id === id);
 }
 
-export function getPresetByFormat(format: TournamentFormat, matchMode?: string): FormatPreset | undefined {
-  if (format === 'club-americano' && matchMode) {
-    return FORMAT_PRESETS.find(p => p.format === format && p.defaultConfig?.matchMode === matchMode);
-  }
+export function getPresetByFormat(format: TournamentFormat): FormatPreset | undefined {
   return FORMAT_PRESETS.find(p => p.format === format);
 }
 
@@ -152,4 +164,8 @@ export function getPresetsByCategory(category: FormatPreset['category']): Format
 
 export function formatHasGroups(format: TournamentFormat): boolean {
   return ['mixicano', 'mixed-americano', 'mixed-team-americano', 'mixed-team-mexicano', 'mixed-king-of-the-court'].includes(format);
+}
+
+export function formatHasClubs(format: TournamentFormat): boolean {
+  return ['club-americano', 'club-mexicano', 'club-ranked', 'club-team-americano', 'club-team-mexicano'].includes(format);
 }

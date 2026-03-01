@@ -125,6 +125,7 @@ export function FormatsPage({ onFeedback }: Props) {
         <p>
           Club formats support 2+ clubs competing against each other with intra-club fixed pairs and inter-club matchups. Choose slots for structured play, random for variety, or standings for competition.
         </p>
+        <p><a href="/club">Read the full Club Formats guide →</a></p>
 
         <div className={styles.cta}>
           <p>Try any format free — no signup needed.</p>

@@ -17,6 +17,11 @@
   max-width: 100%;
 }
 
+.subtitle {
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
 .shielded {
   text-decoration: line-through;
   opacity: 0.5;

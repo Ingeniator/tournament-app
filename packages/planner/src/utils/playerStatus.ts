@@ -1,4 +1,5 @@
 import type { PlannerRegistration, TournamentFormat, Club } from '@padel/common';
+import { formatHasClubs } from '@padel/common';
 
 export type PlayerStatus = 'playing' | 'reserve' | 'cancelled';
 
@@ -68,7 +69,7 @@ export function getPlayerStatuses(
   }
 
   // Club Americano: per-club capacity
-  if (format === 'club-americano' && clubs && clubs.length > 0 && confirmed.some(p => p.clubId)) {
+  if (format && formatHasClubs(format) && clubs && clubs.length > 0 && confirmed.some(p => p.clubId)) {
     const perClubCap = Math.floor(capacity / clubs.length);
 
     for (const club of clubs) {

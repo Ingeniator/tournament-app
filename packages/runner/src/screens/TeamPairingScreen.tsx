@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useTournament } from '../hooks/useTournament';
 import { AppShell } from '../components/layout/AppShell';
-import { Button, useTranslation, CLUB_COLORS, formatHasGroups } from '@padel/common';
+import { Button, useTranslation, CLUB_COLORS, getClubColor, formatHasGroups, formatHasClubs } from '@padel/common';
 import styles from './TeamPairingScreen.module.css';
 
 export function TeamPairingScreen() {
@@ -14,13 +14,13 @@ export function TeamPairingScreen() {
   // Build club color map
   const clubColorMap = useMemo(() => {
     const map = new Map<string, string>();
-    clubs.forEach((c, i) => map.set(c.id, CLUB_COLORS[i % CLUB_COLORS.length]));
+    clubs.forEach((c, i) => map.set(c.id, getClubColor(c, i)));
     return map;
   }, [clubs]);
 
-  // Group teams by club for club-americano
+  // Group teams by club for club formats
   const teamsByClub = useMemo(() => {
-    if (!tournament?.teams || tournament.config.format !== 'club-americano' || clubs.length === 0) return null;
+    if (!tournament?.teams || !formatHasClubs(tournament.config.format) || clubs.length === 0) return null;
     const playerClubOf = (id: string) => tournament.players.find(p => p.id === id)?.clubId;
     const grouped = new Map<string, typeof tournament.teams>();
     for (const club of clubs) {
@@ -37,14 +37,14 @@ export function TeamPairingScreen() {
 
   // Detect unequal club sizes
   const unequalClubs = useMemo(() => {
-    if (!tournament?.teams || tournament.config.format !== 'club-americano' || !teamsByClub) return false;
+    if (!tournament?.teams || !formatHasClubs(tournament.config.format) || !teamsByClub) return false;
     const pairCounts = clubs.map(c => (teamsByClub.get(c.id) ?? []).length);
     return pairCounts.length > 1 && new Set(pairCounts).size > 1;
   }, [tournament, clubs, teamsByClub]);
 
   if (!tournament || !tournament.teams) return null;
 
-  const isClubFormat = tournament.config.format === 'club-americano';
+  const isClubFormat = formatHasClubs(tournament.config.format);
   const isCrossGroupFormat = formatHasGroups(tournament.config.format);
 
   const nameOf = (id: string) => tournament.players.find(p => p.id === id)?.name ?? '?';
@@ -117,7 +117,7 @@ export function TeamPairingScreen() {
   const teamCount = tournament.teams.length;
   const playerCount = tournament.players.length;
 
-  const isSlotMode = isClubFormat && tournament.config.matchMode === 'slots';
+  const isSlotMode = tournament.config.format === 'club-ranked';
 
   const renderTeamCard = (team: typeof tournament.teams[0], slotIndex?: number) => (
     <div key={team.id} className={styles.teamCard}>
@@ -182,7 +182,7 @@ export function TeamPairingScreen() {
           <div className={styles.infoBannerBody}>
             {t('teams.fixedPairsBody')}
           </div>
-          {tournament.config.matchMode === 'slots' && (
+          {tournament.config.format === 'club-ranked' && (
             <div className={styles.infoBannerBody}>
               {t('teams.fixedSlotsBody')}
             </div>

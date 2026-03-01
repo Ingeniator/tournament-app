@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Player, TournamentFormat, Club } from '@padel/common';
-import { useTranslation, CLUB_COLORS } from '@padel/common';
+import { useTranslation, getClubColor, formatHasClubs } from '@padel/common';
 import styles from './PlayerList.module.css';
 
 interface PlayerListProps {
@@ -19,7 +19,7 @@ export function PlayerList({ players, onRemove, onRename, format, groupLabels, o
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const showGroups = format === 'mixicano' && onSetGroup;
-  const showClubs = format === 'club-americano' && onSetClub && clubs && clubs.length > 0;
+  const showClubs = format && formatHasClubs(format) && onSetClub && clubs && clubs.length > 0;
   const labelA = groupLabels?.[0] || t('config.groupLabelAPlaceholder');
   const labelB = groupLabels?.[1] || t('config.groupLabelBPlaceholder');
 
@@ -95,7 +95,7 @@ export function PlayerList({ players, onRemove, onRename, format, groupLabels, o
                 onChange={e => onSetClub(player.id, e.target.value || null)}
                 style={player.clubId ? (() => {
                   const idx = clubs.findIndex(c => c.id === player.clubId);
-                  return idx >= 0 ? { '--club-color': CLUB_COLORS[idx % CLUB_COLORS.length] } as React.CSSProperties : undefined;
+                  return idx >= 0 ? { backgroundColor: getClubColor(clubs[idx], idx), color: 'white', borderColor: 'transparent' } as React.CSSProperties : undefined;
                 })() : undefined}
               >
                 <option value="">—</option>

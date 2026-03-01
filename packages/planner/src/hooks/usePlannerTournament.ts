@@ -5,6 +5,13 @@ import { generateId } from '@padel/common';
 import { db } from '../firebase';
 import { generateUniqueCode } from '../utils/shortCode';
 
+function migrateClubFormat(format: TournamentFormat, matchMode?: string): TournamentFormat {
+  if (format !== ('club-americano' as string)) return format;
+  if (matchMode === 'random') return 'club-team-americano';
+  if (matchMode === 'standings') return 'club-team-mexicano';
+  return 'club-ranked';
+}
+
 function toTournament(id: string, data: Record<string, unknown>): PlannerTournament {
   // Firebase returns the entire node including nested children like `players`.
   // Extract only the known PlannerTournament fields to avoid passing opaque
@@ -15,7 +22,7 @@ function toTournament(id: string, data: Record<string, unknown>): PlannerTournam
   return {
     id,
     name: data.name as string,
-    format: data.format as TournamentFormat,
+    format: migrateClubFormat(data.format as TournamentFormat, data.matchMode as string | undefined),
     courts: Array.isArray(courts)
       ? courts
       : typeof courts === 'object' && courts !== null
@@ -92,7 +99,7 @@ export function usePlannerTournament(tournamentId: string | null) {
     return id;
   }, []);
 
-  const updateTournament = useCallback(async (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'matchMode' | 'courts' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description' | 'clubs' | 'groupLabels'>>) => {
+  const updateTournament = useCallback(async (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'courts' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description' | 'clubs' | 'groupLabels'>>) => {
     if (!tournamentId || !db) return;
     // Convert undefined to null so Firebase deletes the field
     const pathUpdates: Record<string, unknown> = {};

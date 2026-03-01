@@ -31,7 +31,7 @@ describe('getPlayerStatuses', () => {
     });
   });
 
-  describe('club-americano format', () => {
+  describe('club format', () => {
     const clubs: Club[] = [
       { id: 'c1', name: 'Club A' },
       { id: 'c2', name: 'Club B' },
@@ -46,7 +46,7 @@ describe('getPlayerStatuses', () => {
         makePlayer('5', { clubId: 'c2', timestamp: 5 }),
       ];
       // capacity=4, 2 clubs → 2 per club
-      const statuses = getPlayerStatuses(players, 4, { format: 'club-americano', clubs });
+      const statuses = getPlayerStatuses(players, 4, { format: 'club-ranked', clubs });
       expect(statuses.get('1')).toBe('playing');
       expect(statuses.get('2')).toBe('playing');
       expect(statuses.get('3')).toBe('reserve'); // 3rd in club A, only 2 spots
@@ -61,7 +61,7 @@ describe('getPlayerStatuses', () => {
         makePlayer('3', { clubId: 'c2', timestamp: 3 }),
       ];
       // capacity=4, 2 clubs → 2 per club; club A uses 1, club B uses 1 → 2 remaining
-      const statuses = getPlayerStatuses(players, 4, { format: 'club-americano', clubs });
+      const statuses = getPlayerStatuses(players, 4, { format: 'club-ranked', clubs });
       expect(statuses.get('1')).toBe('playing');
       expect(statuses.get('3')).toBe('playing');
       expect(statuses.get('2')).toBe('playing'); // fills remaining slot
@@ -77,7 +77,7 @@ describe('getPlayerStatuses', () => {
         makePlayer('6', { timestamp: 6 }), // unassigned
       ];
       // capacity=4, 2 per club → clubs fill 4 spots, no room for unassigned
-      const statuses = getPlayerStatuses(players, 4, { format: 'club-americano', clubs });
+      const statuses = getPlayerStatuses(players, 4, { format: 'club-ranked', clubs });
       expect(statuses.get('5')).toBe('reserve');
       expect(statuses.get('6')).toBe('reserve');
     });
@@ -88,7 +88,7 @@ describe('getPlayerStatuses', () => {
         makePlayer('2', { timestamp: 2 }),
         makePlayer('3', { timestamp: 3 }),
       ];
-      const statuses = getPlayerStatuses(players, 2, { format: 'club-americano', clubs });
+      const statuses = getPlayerStatuses(players, 2, { format: 'club-ranked', clubs });
       // No clubId on any player → falls through to default logic
       expect(statuses.get('1')).toBe('playing');
       expect(statuses.get('2')).toBe('playing');
@@ -101,7 +101,7 @@ describe('getPlayerStatuses', () => {
         makePlayer('2', { clubId: 'c1', timestamp: 2 }),
         makePlayer('3', { clubId: 'c2', timestamp: 3 }),
       ];
-      const statuses = getPlayerStatuses(players, 4, { format: 'club-americano', clubs });
+      const statuses = getPlayerStatuses(players, 4, { format: 'club-ranked', clubs });
       expect(statuses.get('1')).toBe('cancelled');
       expect(statuses.get('2')).toBe('playing');
       expect(statuses.get('3')).toBe('playing');
@@ -112,7 +112,7 @@ describe('getPlayerStatuses', () => {
         makePlayer('1', { clubId: 'c1', timestamp: 1 }),
         makePlayer('2', { timestamp: 2 }),
       ];
-      const statuses = getPlayerStatuses(players, 2, { format: 'club-americano', clubs: [] });
+      const statuses = getPlayerStatuses(players, 2, { format: 'club-ranked', clubs: [] });
       expect(statuses.get('1')).toBe('playing');
       expect(statuses.get('2')).toBe('playing');
     });

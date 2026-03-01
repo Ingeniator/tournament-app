@@ -1,5 +1,5 @@
 import type { Player, Club } from '@padel/common';
-import { Button, useTranslation, CLUB_COLORS } from '@padel/common';
+import { Button, useTranslation, getClubColor } from '@padel/common';
 import styles from './ClubSection.module.css';
 
 interface ClubSectionProps {
@@ -29,7 +29,7 @@ export function ClubSection({
 
       <div className={styles.clubList}>
         {clubs.map((club, idx) => {
-          const color = CLUB_COLORS[idx % CLUB_COLORS.length];
+          const color = getClubColor(club, idx);
           const clubPlayers = players.filter(p => p.clubId === club.id);
           return (
             <div
@@ -89,7 +89,7 @@ export function ClubSection({
                     <button
                       key={club.id}
                       className={styles.assignBtn}
-                      style={{ '--club-color': CLUB_COLORS[idx % CLUB_COLORS.length] } as React.CSSProperties}
+                      style={{ '--club-color': getClubColor(club, idx) } as React.CSSProperties}
                       onClick={() => onSetPlayerClub(p.id, club.id)}
                     >
                       {club.name}

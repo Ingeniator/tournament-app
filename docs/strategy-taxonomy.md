@@ -84,10 +84,11 @@ All club formats share two grouping rules: `pairs × club: same` (pairs within c
 
 | Format | Pair mode | Match mode | Extra grouping | Standings | Use case |
 |---|---|---|---|---|---|
-| **Club Americano** | fixed | fixed | — | group | Classic inter-club. Pre-set fixtures (club round-robin). Predictable schedule, club pride. Best for organized league-style events. |
+| **Club Americano** | random | random | — | group | Social inter-club. Random partners within club, random opponents from other clubs. Good for mixing club members while keeping club identity. |
+| **Club Ranked** | fixed | fixed | — | group | Classic inter-club. Pre-set fixtures (club round-robin). Predictable schedule, club pride. Best for organized league-style events. |
 | **Club Team Americano** | fixed | random | — | group | Inter-club with random matchups between clubs each round. More variety than fixed fixtures. Good for shorter events where you can't do full round-robin. |
 | **Club Team Mexicano** | fixed | standings | — | group | Competitive inter-club. Strongest teams face strongest teams across clubs. Self-balancing difficulty at team level. Best for competitive club events. |
-| **Club Mexicano** | standings | standings | — | group | Individual players represent clubs but pairs rotate by standings within club. Club winner = aggregate of all player points. Best when club members want to mix pairs but still compete as a club. |
+| **Club Mexicano** (`clubMexicano.ts`) | random | standings | — | group | Individual players represent clubs but pairs rotate randomly within club. Opponents matched by standings. Club winner = aggregate of all player points. Best when club members want to mix pairs but still compete as a club. |
 | **Club Mixed Mexicano** | standings | standings | pairs × segment: `cross` | group | Club competition with cross-segment pairs (e.g., advanced+beginner from same club). Ensures balanced pair skill within each club. |
 
 ### Flight modifier (applies to any format)
@@ -212,16 +213,17 @@ The `club` grouping shorthand below means: `[{ attribute: 'club', appliesTo: 'pa
 | `mixicano.ts` (Mixed Mexicano) | `{ pairMode: 'standings', matchMode: 'standings', grouping: [pairs × group: cross] }` |
 | `teamAmericano.ts` | `{ pairMode: 'fixed', matchMode: 'random', grouping: [] }` |
 | `teamMexicano.ts` | `{ pairMode: 'fixed', matchMode: 'standings', grouping: [] }` |
-| `clubAmericano.ts` (matchMode: slots) | `{ pairMode: 'fixed', matchMode: 'fixed', grouping: [club] }` |
-| `clubAmericano.ts` (matchMode: random) | `{ pairMode: 'fixed', matchMode: 'random', grouping: [club] }` |
-| `clubAmericano.ts` (matchMode: standings) | `{ pairMode: 'fixed', matchMode: 'standings', grouping: [club] }` |
+| `clubAmericano.ts` (Club Americano) | `{ pairMode: 'random', matchMode: 'random', grouping: [club] }` |
+| `clubRanked.ts` (Club Ranked) | `{ pairMode: 'fixed', matchMode: 'fixed', grouping: [club] }` |
+| `clubTeamAmericano.ts` (Club Team Americano) | `{ pairMode: 'fixed', matchMode: 'random', grouping: [club] }` |
+| `clubTeamMexicano.ts` (Club Team Mexicano) | `{ pairMode: 'fixed', matchMode: 'standings', grouping: [club] }` |
+| `clubMexicano.ts` (Club Mexicano) | `{ pairMode: 'random', matchMode: 'standings', grouping: [club] }` |
 | `kingOfTheCourt.ts` | `{ pairMode: 'standings', matchMode: 'promotion', grouping: [] }` |
 
 ### New formats (not yet implemented)
 
 | Format | FormatConfig |
 |---|---|
-| Club Mexicano | `{ pairMode: 'standings', matchMode: 'standings', grouping: [club] }` |
 | Club Mixed Mexicano | `{ pairMode: 'standings', matchMode: 'standings', grouping: [club, pairs × segment: cross] }` |
 
 ---
@@ -295,6 +297,10 @@ Grouped list of named presets. Each entry shows name, one-line description, and 
 │  Club                                            │
 │  ┌────────────────────────────────────────────┐  │
 │  │ ○ Club Americano                           │  │
+│  │   Random partners, random inter-club       │  │
+│  │   [club] [rotating pairs]                  │  │
+│  ├────────────────────────────────────────────┤  │
+│  │ ○ Club Ranked                              │  │
 │  │   Fixed schedule, club round-robin         │  │
 │  │   [club] [fixed pairs] [fixed schedule]    │  │
 │  ├────────────────────────────────────────────┤  │
@@ -401,7 +407,8 @@ const FORMAT_PRESETS: { name: string; config: FormatConfig; category: string; de
   { name: 'Team Americano',      config: { pairMode: 'fixed',     matchMode: 'random',    grouping: [] },                           category: 'team',        description: '...' },
   { name: 'Team Mexicano',       config: { pairMode: 'fixed',     matchMode: 'standings', grouping: [] },                           category: 'team',        description: '...' },
   { name: 'King of the Court',   config: { pairMode: 'standings', matchMode: 'promotion', grouping: [] },                           category: 'social',      description: '...' },
-  { name: 'Club Americano',      config: { pairMode: 'fixed',     matchMode: 'fixed',     grouping: [club] },                       category: 'club',        description: '...' },
+  { name: 'Club Americano',      config: { pairMode: 'random',    matchMode: 'random',    grouping: [club] },                       category: 'club',        description: '...' },
+  { name: 'Club Ranked',         config: { pairMode: 'fixed',     matchMode: 'fixed',     grouping: [club] },                       category: 'club',        description: '...' },
   { name: 'Club Team Americano', config: { pairMode: 'fixed',     matchMode: 'random',    grouping: [club] },                       category: 'club',        description: '...' },
   { name: 'Club Team Mexicano',  config: { pairMode: 'fixed',     matchMode: 'standings', grouping: [club] },                       category: 'club',        description: '...' },
   { name: 'Club Mexicano',       config: { pairMode: 'standings', matchMode: 'standings', grouping: [club] },                       category: 'club',        description: '...' },
@@ -450,9 +457,10 @@ function formatStringToConfig(format: TournamentFormat, config: TournamentConfig
     case 'team-americano':  return { pairMode: 'fixed',     matchMode: 'random',    grouping: [] };
     case 'team-mexicano':   return { pairMode: 'fixed',     matchMode: 'standings', grouping: [] };
     case 'king-of-the-court': return { pairMode: 'standings', matchMode: 'promotion', grouping: [] };
-    case 'club-americano':
-      const mm = config.matchMode === 'slots' ? 'fixed' : config.matchMode ?? 'random';
-      return { pairMode: 'fixed', matchMode: mm, grouping: [club] };
+    case 'club-americano':  return { pairMode: 'random',    matchMode: 'random',    grouping: [club] };
+    case 'club-ranked':     return { pairMode: 'fixed',     matchMode: 'fixed',     grouping: [club] };
+    case 'club-team-americano': return { pairMode: 'fixed', matchMode: 'random',    grouping: [club] };
+    case 'club-team-mexicano':  return { pairMode: 'fixed', matchMode: 'standings', grouping: [club] };
   }
 }
 ```

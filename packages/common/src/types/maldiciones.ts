@@ -6,6 +6,7 @@ export interface CurseCard {
   tier: CardTier;
   emoji: string;
   name: string;
+  subtitle: string;
   description: string;
   details: string;
 }

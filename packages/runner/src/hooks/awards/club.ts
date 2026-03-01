@@ -1,9 +1,10 @@
 import type { Tournament, Nomination, StandingsEntry, ClubStandingsEntry } from '@padel/common';
+import { formatHasClubs } from '@padel/common';
 import { buildClubStandings, buildClubMaps } from '../../utils/clubStandings';
 
 /**
- * Club-specific awards for club-americano format.
- * Called only when tournament.config.format === 'club-americano'.
+ * Club-specific awards for club formats.
+ * Called only when the tournament uses a club format.
  */
 
 interface ClubAwardContext {
@@ -31,7 +32,7 @@ export function computeClubChampion(ctx: ClubAwardContext): Nomination[] {
 }
 
 export function computeClubAwards(tournament: Tournament, pairStandings: StandingsEntry[]): { champion: Nomination[]; awards: Nomination[] } {
-  if (tournament.config.format !== 'club-americano') {
+  if (!formatHasClubs(tournament.config.format)) {
     return { champion: [], awards: [] };
   }
 

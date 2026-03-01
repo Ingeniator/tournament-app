@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { TournamentConfig } from '@padel/common';
-import { Button, generateId, useTranslation, FormatPicker, formatHasGroups } from '@padel/common';
+import { Button, generateId, useTranslation, FormatPicker, formatHasGroups, formatHasClubs } from '@padel/common';
 import { resolveConfigDefaults, computeSitOutInfo } from '../../utils/resolveConfigDefaults';
 import styles from './TournamentConfigForm.module.css';
 
@@ -104,7 +104,6 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
         <label className={styles.label}>{t('config.format')}</label>
         <FormatPicker
           format={config.format}
-          matchMode={config.matchMode}
           onChange={(newFormat, defaultConfig) => {
             const update: Partial<TournamentConfig> = { format: newFormat, ...defaultConfig };
             // KOTC requires at least 2 courts
@@ -117,40 +116,22 @@ export function TournamentConfigForm({ config, playerCount, onUpdate }: Tourname
         />
       </div>
 
-      {config.format === 'club-americano' && (
-        <>
-          <div className={styles.field}>
-            <div className={styles.labelRow}>
-              <label className={styles.label} htmlFor="config-pair-mode">{t('config.pairMode')}</label>
-              <InfoButton hint={t('config.pairModeInfo')} />
-            </div>
-            <select
-              id="config-pair-mode"
-              className={styles.input}
-              value={config.pairMode ?? 'fixed'}
-              onChange={e => onUpdate({ pairMode: e.target.value as 'fixed' | 'rotating' })}
-            >
-              <option value="fixed">{t('config.pairModeFixed')}</option>
-              <option value="rotating">{t('config.pairModeRotating')}</option>
-            </select>
+      {formatHasClubs(config.format) && (
+        <div className={styles.field}>
+          <div className={styles.labelRow}>
+            <label className={styles.label} htmlFor="config-pair-mode">{t('config.pairMode')}</label>
+            <InfoButton hint={t('config.pairModeInfo')} />
           </div>
-          <div className={styles.field}>
-            <div className={styles.labelRow}>
-              <label className={styles.label} htmlFor="config-match-mode">{t('config.matchMode')}</label>
-              <InfoButton hint={t('config.matchModeInfo')} />
-            </div>
-            <select
-              id="config-match-mode"
-              className={styles.input}
-              value={config.matchMode ?? 'random'}
-              onChange={e => onUpdate({ matchMode: e.target.value as 'random' | 'standings' | 'slots' })}
-            >
-              <option value="random">{t('config.matchModeRandom')}</option>
-              <option value="standings">{t('config.matchModeStandings')}</option>
-              <option value="slots">{t('config.matchModeSlots')}</option>
-            </select>
-          </div>
-        </>
+          <select
+            id="config-pair-mode"
+            className={styles.input}
+            value={config.pairMode ?? 'fixed'}
+            onChange={e => onUpdate({ pairMode: e.target.value as 'fixed' | 'rotating' })}
+          >
+            <option value="fixed">{t('config.pairModeFixed')}</option>
+            <option value="rotating">{t('config.pairModeRotating')}</option>
+          </select>
+        </div>
       )}
 
       {config.format === 'team-americano' && (

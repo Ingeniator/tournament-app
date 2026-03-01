@@ -1,7 +1,7 @@
 import { useState, useMemo, type ReactNode } from 'react';
 import { ref, push, set } from 'firebase/database';
-import { Button, Card, CLUB_COLORS, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation, FormatPicker, getPresetByFormat, formatHasGroups } from '@padel/common';
-import type { TournamentFormat, Court, Club } from '@padel/common';
+import { Button, Card, CLUB_COLORS, getClubColor, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation, FormatPicker, getPresetByFormat, formatHasGroups, formatHasClubs } from '@padel/common';
+import type { Court, Club } from '@padel/common';
 import { generateId } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { auth, db } from '../firebase';
@@ -176,15 +176,6 @@ export function OrganizerScreen() {
     setEditingName(false);
   };
 
-  const handleFormatChange = (format: TournamentFormat) => {
-    // Clear matchMode when switching away from club format to avoid stale values
-    if (format !== 'club-americano' && tournament.matchMode) {
-      updateTournament({ format, matchMode: undefined });
-    } else {
-      updateTournament({ format });
-    }
-  };
-
   const handleAddCourt = async () => {
     const newIndex = tournament.courts.length;
     const courts: Court[] = [...tournament.courts, { id: generateId(), name: `Court ${newIndex + 1}` }];
@@ -338,12 +329,8 @@ export function OrganizerScreen() {
           </label>
           <FormatPicker
             format={tournament.format}
-            matchMode={tournament.matchMode}
-            onChange={(format, defaultConfig) => {
-              handleFormatChange(format);
-              if (defaultConfig?.matchMode) {
-                updateTournament({ matchMode: defaultConfig.matchMode });
-              }
+            onChange={(format) => {
+              updateTournament({ format });
             }}
             t={t}
           />
@@ -378,14 +365,14 @@ export function OrganizerScreen() {
           </div>
         )}
 
-        {tournament.format === 'club-americano' && (() => {
+        {formatHasClubs(tournament.format) && (() => {
           const clubs = tournament.clubs ?? [];
           return (
             <div className={styles.clubsSection}>
               <div className={styles.courtsHeader}>
                 <span>{t('organizer.clubs', { count: clubs.length })}</span>
                 <Button variant="ghost" size="small" onClick={() => {
-                  const newClubs: Club[] = [...clubs, { id: generateId(), name: `Club ${clubs.length + 1}` }];
+                  const newClubs: Club[] = [...clubs, { id: generateId(), name: `Club ${clubs.length + 1}`, color: CLUB_COLORS[clubs.length % CLUB_COLORS.length] }];
                   updateTournament({ clubs: newClubs });
                 }}>{t('organizer.addClub')}</Button>
               </div>
@@ -403,7 +390,21 @@ export function OrganizerScreen() {
                     const updated = clubs.filter(c => c.id !== club.id);
                     updateTournament({ clubs: updated });
                   } : undefined}
-                  icon={<span className={styles.clubDot} style={{ backgroundColor: CLUB_COLORS[idx % CLUB_COLORS.length] }} />}
+                  icon={
+                    <button
+                      className={styles.clubDot}
+                      style={{ backgroundColor: getClubColor(club, idx) }}
+                      onClick={() => {
+                        const currentColor = getClubColor(club, idx);
+                        const currentIdx = CLUB_COLORS.indexOf(currentColor);
+                        const nextColor = CLUB_COLORS[(currentIdx + 1) % CLUB_COLORS.length];
+                        const updated = clubs.map(c =>
+                          c.id === club.id ? { ...c, color: nextColor } : c
+                        );
+                        updateTournament({ clubs: updated });
+                      }}
+                    />
+                  }
                 />
               ))}
               {clubs.length === 0 && (

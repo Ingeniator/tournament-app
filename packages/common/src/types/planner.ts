@@ -4,7 +4,6 @@ export interface PlannerTournament {
   id: string;
   name: string;
   format: TournamentFormat;
-  matchMode?: 'random' | 'standings' | 'slots';
   pointsPerMatch?: number;
   courts: Court[];
   maxRounds?: number | null;

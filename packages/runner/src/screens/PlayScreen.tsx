@@ -14,7 +14,7 @@ import { copyToClipboard } from '../utils/clipboard';
 import { shareStandingsImage } from '../utils/standingsImage';
 import { ref, push, set } from 'firebase/database';
 import { auth, db, firebaseConfigured } from '../firebase';
-import { Button, CLUB_COLORS, FeedbackModal, Modal, SupportOverlay, Toast, useToast, useTranslation, formatHasGroups } from '@padel/common';
+import { Button, getClubColor, FeedbackModal, Modal, SupportOverlay, Toast, useToast, useTranslation, formatHasGroups, formatHasClubs } from '@padel/common';
 import { getStrategy } from '../strategies';
 import { MaldicionesRulesModal } from '../components/maldiciones/MaldicionesRulesModal';
 import { CURSE_CARDS } from '../data/curseCards';
@@ -60,10 +60,10 @@ export function PlayScreen() {
     ];
     return { labels, map };
   }, [tournament]);
-  const isClubFormat = tournament?.config.format === 'club-americano';
+  const isClubFormat = tournament != null && formatHasClubs(tournament.config.format);
   const clubColorMap = useMemo(() => {
     const map = new Map<string, string>();
-    (tournament?.clubs ?? []).forEach((c, i) => map.set(c.id, CLUB_COLORS[i % CLUB_COLORS.length]));
+    (tournament?.clubs ?? []).forEach((c, i) => map.set(c.id, getClubColor(c, i)));
     return map;
   }, [tournament?.clubs]);
   const clubInfo = useMemo(() => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { clubAmericanoStrategy } from './clubAmericano';
+import { clubMexicanoStrategy } from './clubMexicano';
 import type { Player, TournamentConfig, Tournament, Round, Club } from '@padel/common';
 
 function makeClubPlayers(clubSizes: { clubId: string; count: number }[]): Player[] {
@@ -23,7 +23,7 @@ function makeClubs(n: number): Club[] {
 
 function makeConfig(numCourts: number, maxRounds: number | null = null): TournamentConfig {
   return {
-    format: 'club-americano',
+    format: 'club-mexicano',
     pointsPerMatch: 21,
     courts: Array.from({ length: numCourts }, (_, i) => ({ id: `c${i + 1}`, name: `Court ${i + 1}` })),
     maxRounds,
@@ -38,7 +38,7 @@ function makeTournament(
 ): Tournament {
   return {
     id: 'test',
-    name: 'Test Club Americano',
+    name: 'Test Club Mexicano',
     config,
     phase: 'in-progress',
     players,
@@ -71,21 +71,21 @@ function makeStandardSetup(numCourts = 2) {
   return { clubs, players, config, tournament };
 }
 
-describe('clubAmericano strategy (individual)', () => {
+describe('clubMexicano strategy (individual)', () => {
   describe('strategy properties', () => {
-    it('is static (not dynamic)', () => {
-      expect(clubAmericanoStrategy.isDynamic).toBe(false);
+    it('is dynamic', () => {
+      expect(clubMexicanoStrategy.isDynamic).toBe(true);
     });
 
     it('does NOT have fixed partners', () => {
-      expect(clubAmericanoStrategy.hasFixedPartners).toBe(false);
+      expect(clubMexicanoStrategy.hasFixedPartners).toBe(false);
     });
   });
 
   describe('validateSetup', () => {
     it('requires at least 2 clubs', () => {
       const players = makeClubPlayers([{ clubId: 'club1', count: 4 }]);
-      const errors = clubAmericanoStrategy.validateSetup(players, makeConfig(1));
+      const errors = clubMexicanoStrategy.validateSetup(players, makeConfig(1));
       expect(errors.some(e => e.includes('2 clubs'))).toBe(true);
     });
 
@@ -94,16 +94,16 @@ describe('clubAmericano strategy (individual)', () => {
         { clubId: 'club1', count: 4 },
         { clubId: 'club2', count: 4 },
       ]);
-      const errors = clubAmericanoStrategy.validateSetup(players, makeConfig(1));
+      const errors = clubMexicanoStrategy.validateSetup(players, makeConfig(1));
       expect(errors).toEqual([]);
     });
   });
 
   describe('generateSchedule', () => {
-    it('generates rounds', () => {
+    it('generates exactly 1 round (dynamic)', () => {
       const { players, config, tournament } = makeStandardSetup(2);
-      const { rounds } = clubAmericanoStrategy.generateSchedule(players, config, tournament);
-      expect(rounds.length).toBeGreaterThanOrEqual(1);
+      const { rounds } = clubMexicanoStrategy.generateSchedule(players, config, tournament);
+      expect(rounds).toHaveLength(1);
     });
 
     it('returns empty with no clubs', () => {
@@ -113,13 +113,13 @@ describe('clubAmericano strategy (individual)', () => {
       ]);
       const config = makeConfig(1);
       const tournament = makeTournament(players, config, []);
-      const { rounds } = clubAmericanoStrategy.generateSchedule(players, config, tournament);
+      const { rounds } = clubMexicanoStrategy.generateSchedule(players, config, tournament);
       expect(rounds).toHaveLength(0);
     });
 
     it('partners are from the same club', () => {
       const { players, config, tournament } = makeStandardSetup(2);
-      const { rounds } = clubAmericanoStrategy.generateSchedule(players, config, tournament);
+      const { rounds } = clubMexicanoStrategy.generateSchedule(players, config, tournament);
 
       const playerClubMap = new Map<string, string>();
       for (const p of players) {
@@ -136,7 +136,7 @@ describe('clubAmericano strategy (individual)', () => {
 
     it('opponents are from different clubs', () => {
       const { players, config, tournament } = makeStandardSetup(2);
-      const { rounds } = clubAmericanoStrategy.generateSchedule(players, config, tournament);
+      const { rounds } = clubMexicanoStrategy.generateSchedule(players, config, tournament);
 
       const playerClubMap = new Map<string, string>();
       for (const p of players) {
@@ -152,7 +152,7 @@ describe('clubAmericano strategy (individual)', () => {
 
     it('no player appears twice in the same round', () => {
       const { players, config, tournament } = makeStandardSetup(2);
-      const { rounds } = clubAmericanoStrategy.generateSchedule(players, config, tournament);
+      const { rounds } = clubMexicanoStrategy.generateSchedule(players, config, tournament);
       for (const round of rounds) {
         const allPlayerIds = round.matches.flatMap(m => [...m.team1, ...m.team2]);
         expect(new Set(allPlayerIds).size).toBe(allPlayerIds.length);
@@ -161,15 +161,42 @@ describe('clubAmericano strategy (individual)', () => {
   });
 
   describe('generateAdditionalRounds', () => {
-    it('generates additional rounds', () => {
+    it('generates additional rounds with standings-based matching', () => {
       const { players, config, clubs } = makeStandardSetup(2);
       const tournament = makeTournament(players, config, clubs);
-      const initial = clubAmericanoStrategy.generateSchedule(players, config, tournament);
-      const scored = scoreRounds(initial.rounds, 11, 10);
-      const { rounds } = clubAmericanoStrategy.generateAdditionalRounds(
-        players, config, scored, 2, undefined, undefined, tournament,
+      const initial = clubMexicanoStrategy.generateSchedule(players, config, tournament);
+      const scored = scoreRounds(initial.rounds, 13, 8);
+      const tournamentWithRounds = makeTournament(players, config, clubs, scored);
+      const { rounds } = clubMexicanoStrategy.generateAdditionalRounds(
+        players, config, scored, 1, undefined, undefined, tournamentWithRounds,
       );
-      expect(rounds).toHaveLength(2);
+      expect(rounds).toHaveLength(1);
+    });
+
+    it('additional rounds maintain club constraints', () => {
+      const { players, config, clubs } = makeStandardSetup(2);
+      const tournament = makeTournament(players, config, clubs);
+      const initial = clubMexicanoStrategy.generateSchedule(players, config, tournament);
+      const scored = scoreRounds(initial.rounds, 13, 8);
+      const tournamentWithRounds = makeTournament(players, config, clubs, scored);
+      const { rounds } = clubMexicanoStrategy.generateAdditionalRounds(
+        players, config, scored, 1, undefined, undefined, tournamentWithRounds,
+      );
+
+      const playerClubMap = new Map<string, string>();
+      for (const p of players) {
+        if (p.clubId) playerClubMap.set(p.id, p.clubId);
+      }
+
+      for (const round of rounds) {
+        for (const match of round.matches) {
+          // Partners are intra-club
+          expect(playerClubMap.get(match.team1[0])).toBe(playerClubMap.get(match.team1[1]));
+          expect(playerClubMap.get(match.team2[0])).toBe(playerClubMap.get(match.team2[1]));
+          // Opponents are inter-club
+          expect(playerClubMap.get(match.team1[0])).not.toBe(playerClubMap.get(match.team2[0]));
+        }
+      }
     });
   });
 
@@ -177,8 +204,7 @@ describe('clubAmericano strategy (individual)', () => {
     it('returns standings for all players (individual)', () => {
       const { players, config, clubs } = makeStandardSetup(2);
       const tournament = makeTournament(players, config, clubs);
-      const standings = clubAmericanoStrategy.calculateStandings(tournament);
-      // Individual standings: one entry per player
+      const standings = clubMexicanoStrategy.calculateStandings(tournament);
       expect(standings).toHaveLength(players.length);
     });
   });
@@ -187,7 +213,7 @@ describe('clubAmericano strategy (individual)', () => {
     it('returns one competitor per player', () => {
       const { players, config, clubs } = makeStandardSetup();
       const tournament = makeTournament(players, config, clubs);
-      const competitors = clubAmericanoStrategy.getCompetitors(tournament);
+      const competitors = clubMexicanoStrategy.getCompetitors(tournament);
       expect(competitors).toHaveLength(players.length);
     });
   });

@@ -1,6 +1,6 @@
 import { useState, useMemo, type Dispatch, type ClipboardEvent } from 'react';
 import type { Tournament } from '@padel/common';
-import { Button, Card, CLUB_COLORS, useTranslation, parsePlayerList, formatHasGroups } from '@padel/common';
+import { Button, Card, getClubColor, useTranslation, parsePlayerList, formatHasGroups, formatHasClubs } from '@padel/common';
 import type { TournamentAction } from '../../state/actions';
 import styles from '../../screens/SettingsScreen.module.css';
 
@@ -213,13 +213,13 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
                       {player.group === 'A' ? (tournament.config.groupLabels?.[0] || 'A') : (tournament.config.groupLabels?.[1] || 'B')}
                     </span>
                   )}
-                  {tournament.config.format === 'club-americano' && player.clubId && tournament.clubs && (() => {
+                  {formatHasClubs(tournament.config.format) && player.clubId && tournament.clubs && (() => {
                     const clubIdx = tournament.clubs.findIndex(c => c.id === player.clubId);
                     if (clubIdx < 0) return null;
                     return (
                       <span
                         className={styles.clubBadge}
-                        style={{ backgroundColor: CLUB_COLORS[clubIdx % CLUB_COLORS.length] }}
+                        style={{ backgroundColor: getClubColor(tournament.clubs[clubIdx], clubIdx) }}
                       >
                         {tournament.clubs[clubIdx].name}
                       </span>

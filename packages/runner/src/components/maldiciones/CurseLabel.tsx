@@ -19,6 +19,9 @@ export function CurseLabel({ curse, canShield, onShield, onVeto }: CurseLabelPro
     <div className={styles.container}>
       <span className={`${styles.cardName} ${curse.shielded ? styles.shielded : ''}`}>
         {card.emoji} {card.name}
+        {t(card.subtitle) !== card.name && (
+          <span className={styles.subtitle}> ({t(card.subtitle)})</span>
+        )}
       </span>
       <div className={styles.actions}>
         {!curse.shielded && canShield && (
