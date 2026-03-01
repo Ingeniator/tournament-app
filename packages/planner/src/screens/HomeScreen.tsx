@@ -38,6 +38,7 @@ export function HomeScreen() {
     myTournaments, registeredTournaments, listingsLoading,
     chatRoomTournaments, chatRoomLoading,
     openTournament, deleteTournamentById, skin, setSkin,
+    myLeagues, leaguesLoading, setActiveLeagueId,
   } = usePlanner();
   const { t } = useTranslation();
 
@@ -326,6 +327,45 @@ export function HomeScreen() {
               {myTournaments.map(ti => renderTournamentItem(ti, 'organizer', { swipeToDelete: true }))}
             </div>
           )}
+        </Card>
+      )}
+
+      {/* My Leagues */}
+      {!leaguesLoading && (
+        <Card>
+          <h2 className={styles.sectionTitle}>{t('league.myLeagues')}</h2>
+          {myLeagues.length === 0 ? (
+            <p className={styles.empty}>{t('league.noLeagues')}</p>
+          ) : (
+            <div className={styles.tournamentList}>
+              {myLeagues.map(league => (
+                <div
+                  key={league.id}
+                  className={styles.tournamentItem}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => { setActiveLeagueId(league.id); setScreen('league-detail'); }}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveLeagueId(league.id); setScreen('league-detail'); } }}
+                >
+                  <span className={styles.tournamentNameRow}>
+                    <span className={styles.tournamentName}>{league.name}</span>
+                    <span className={`${styles.badge} ${league.status === 'completed' ? styles.badgeCompleted : styles.badgeExpired}`}>
+                      {t(`league.status.${league.status}`)}
+                    </span>
+                  </span>
+                  <span className={styles.tournamentMeta}>
+                    <span>{league.date}</span>
+                    <span>{t('league.tournaments', { count: league.tournamentCount })}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{ marginTop: 'var(--space-md)' }}>
+            <Button variant="secondary" fullWidth onClick={() => setScreen('league-create')} disabled={!userName}>
+              {t('league.createLeague')}
+            </Button>
+          </div>
         </Card>
       )}
 

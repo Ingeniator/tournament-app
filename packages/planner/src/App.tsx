@@ -6,6 +6,8 @@ import { usePlanner } from './state/PlannerContext';
 import { HomeScreen } from './screens/HomeScreen';
 import { OrganizerScreen } from './screens/OrganizerScreen';
 import { JoinScreen } from './screens/JoinScreen';
+import { LeagueScreen } from './screens/LeagueScreen';
+import { LeagueFormScreen } from './screens/LeagueFormScreen';
 import { translations } from './i18n';
 import styles from './App.module.css';
 
@@ -36,7 +38,7 @@ function FirebaseSetupMessage() {
 }
 
 function AppContent() {
-  const { screen, setScreen, authLoading, authError, loadByCode, tournament } = usePlanner();
+  const { screen, setScreen, authLoading, authError, loadByCode, tournament, uid, activeLeagueId, setActiveLeagueId } = usePlanner();
   const { t, setLocale } = useTranslation();
 
   // Apply tournament locale for Telegram deep links (no &lang= in URL)
@@ -96,6 +98,28 @@ function AppContent() {
       return <OrganizerScreen />;
     case 'join':
       return <JoinScreen />;
+    case 'league-create':
+      return (
+        <LeagueFormScreen
+          uid={uid}
+          onBack={() => setScreen('home')}
+          onCreated={(id) => {
+            setActiveLeagueId(id);
+            setScreen('league-detail');
+          }}
+        />
+      );
+    case 'league-detail':
+      return (
+        <LeagueScreen
+          leagueId={activeLeagueId!}
+          uid={uid}
+          onBack={() => {
+            setActiveLeagueId(null);
+            setScreen('home');
+          }}
+        />
+      );
     default:
       return <HomeScreen />;
   }
