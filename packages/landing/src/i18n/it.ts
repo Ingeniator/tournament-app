@@ -23,7 +23,7 @@ const it: Translations = {
 
   // Landing - Features
   'landing.featuresTitle': 'Tutto Ciò Di Cui Hai Bisogno',
-  'landing.feat1Title': '10 Formati',
+  'landing.feat1Title': '15 Formati',
   'landing.feat1Desc': 'Americano, Mexicano, King of the Court e altro.',
   'landing.feat2Title': 'Punteggio in Tempo Reale',
   'landing.feat2Desc': 'Inserisci i punteggi, avanzamento automatico dei turni.',

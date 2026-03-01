@@ -23,7 +23,7 @@ const fr: Translations = {
 
   // Landing - Features
   'landing.featuresTitle': 'Tout Ce Dont Vous Avez Besoin',
-  'landing.feat1Title': '10 Formats',
+  'landing.feat1Title': '15 Formats',
   'landing.feat1Desc': 'Americano, Mexicano, King of the Court et plus.',
   'landing.feat2Title': 'Score en Temps Réel',
   'landing.feat2Desc': 'Saisissez les scores, avancement automatique des tours.',

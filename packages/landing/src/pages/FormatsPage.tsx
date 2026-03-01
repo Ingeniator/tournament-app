@@ -41,7 +41,7 @@ export function FormatsPage({ onFeedback }: Props) {
       <article className={styles.article}>
         <h1>Tournament Formats — Complete Guide</h1>
         <p className={styles.lead}>
-          Choose from 10 tournament configurations across 4 categories. Whether you're running a casual social event or a competitive inter-club league, there's a format for you.
+          Choose from 15 tournament configurations across 4 categories. Whether you're running a casual social event or a competitive inter-club league, there's a format for you. Most formats also have a cross-group variant for mixed-gender or skill-group play.
         </p>
 
         <h2>All Formats</h2>
@@ -77,13 +77,31 @@ export function FormatsPage({ onFeedback }: Props) {
             <tr><td>Mexicano</td><td>Rotating</td><td>Standings</td><td>Competitive</td></tr>
             <tr><td>Mixicano</td><td>Rotating (cross-group)</td><td>Standings</td><td>Competitive</td></tr>
             <tr><td>King of the Court</td><td>Rotating</td><td>Court promotion</td><td>Competitive</td></tr>
+            <tr><td>Mixed King of the Court</td><td>Rotating (cross-group)</td><td>Court promotion</td><td>Competitive</td></tr>
             <tr><td>Team Americano</td><td>Fixed</td><td>Random</td><td>Team</td></tr>
             <tr><td>Team Mexicano</td><td>Fixed</td><td>Standings</td><td>Team</td></tr>
+            <tr><td>Mixed Team Americano</td><td>Fixed (cross-group)</td><td>Random</td><td>Team</td></tr>
+            <tr><td>Mixed Team Mexicano</td><td>Fixed (cross-group)</td><td>Standings</td><td>Team</td></tr>
             <tr><td>Club (Slots)</td><td>Fixed</td><td>Positional</td><td>Club</td></tr>
             <tr><td>Club (Random)</td><td>Fixed</td><td>Random</td><td>Club</td></tr>
             <tr><td>Club (Mexicano)</td><td>Fixed</td><td>Standings</td><td>Club</td></tr>
           </tbody>
         </table>
+
+        <h2>Cross-Group Pairing</h2>
+        <p>
+          Five formats support <strong>cross-group pairing</strong> — every team must include one player from each group (e.g., one man + one woman). Split players into two groups at setup and the algorithm guarantees balanced mixed teams every round.
+        </p>
+        <ul>
+          <li><strong>Mixed Americano</strong> — rotating partners, random opponents</li>
+          <li><strong>Mixicano</strong> — rotating partners, standings-based opponents</li>
+          <li><strong>Mixed King of the Court</strong> — rotating partners, court promotion</li>
+          <li><strong>Mixed Team Americano</strong> — fixed cross-group pairs, random opponents</li>
+          <li><strong>Mixed Team Mexicano</strong> — fixed cross-group pairs, standings-based opponents</li>
+        </ul>
+        <p>
+          Cross-group mode works with any group definition — men/women, beginners/advanced, club A/club B. The constraint is simply that each pair on court has exactly one player from each group.
+        </p>
 
         <h2>Which Format Should You Choose?</h2>
         <h3>For Social Events</h3>
@@ -94,13 +112,13 @@ export function FormatsPage({ onFeedback }: Props) {
 
         <h3>For Competitive Play</h3>
         <p>
-          <strong>Mexicano</strong> is the most popular competitive format. Standings-based matchups mean top players always face top players, creating tight matches throughout the tournament. <strong>King of the Court</strong> adds a court hierarchy twist.
+          <strong>Mexicano</strong> is the most popular competitive format. Standings-based matchups mean top players always face top players, creating tight matches throughout the tournament. <strong>King of the Court</strong> adds a court hierarchy twist. Both have cross-group variants (<strong>Mixicano</strong> and <strong>Mixed King of the Court</strong>) for mixed-gender competition.
         </p>
         <p><a href="/mexicano">Read the full Mexicano guide →</a></p>
 
         <h3>For Teams</h3>
         <p>
-          If pairs are already decided, <strong>Team Americano</strong> (random opponents) or <strong>Team Mexicano</strong> (standings-based opponents) are your best options.
+          If pairs are already decided, <strong>Team Americano</strong> (random opponents) or <strong>Team Mexicano</strong> (standings-based opponents) are your best options. Both also support cross-group pairing — <strong>Mixed Team Americano</strong> and <strong>Mixed Team Mexicano</strong> ensure each fixed pair has one player from each group.
         </p>
 
         <h3>For Clubs</h3>

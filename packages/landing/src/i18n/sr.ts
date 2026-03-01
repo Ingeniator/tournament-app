@@ -23,7 +23,7 @@ const sr: Translations = {
 
   // Landing - Features
   'landing.featuresTitle': 'Sve Što Vam Treba',
-  'landing.feat1Title': '10 Formata',
+  'landing.feat1Title': '15 Formata',
   'landing.feat1Desc': 'Americano, Mexicano, King of the Court i više.',
   'landing.feat2Title': 'Rezultati u Realnom Vremenu',
   'landing.feat2Desc': 'Unesite rezultate, automatsko napredovanje rundi.',

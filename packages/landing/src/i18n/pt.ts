@@ -23,7 +23,7 @@ const pt: Translations = {
 
   // Landing - Features
   'landing.featuresTitle': 'Tudo O Que Precisa',
-  'landing.feat1Title': '10 Formatos',
+  'landing.feat1Title': '15 Formatos',
   'landing.feat1Desc': 'Americano, Mexicano, King of the Court e mais.',
   'landing.feat2Title': 'Pontuação em Tempo Real',
   'landing.feat2Desc': 'Registe pontos, avanço automático de rondas.',

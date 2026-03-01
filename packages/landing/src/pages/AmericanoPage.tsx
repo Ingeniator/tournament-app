@@ -64,8 +64,9 @@ export function AmericanoPage({ onFeedback }: Props) {
 
         <h2>Variations</h2>
         <ul>
-          <li><strong>Mixed Americano:</strong> Partners are cross-group (e.g., one man + one woman per pair).</li>
+          <li><strong>Mixed Americano:</strong> Partners are cross-group (e.g., one man + one woman per pair). Every team on court has exactly one player from each group.</li>
           <li><strong>Team Americano:</strong> Partners are fixed throughout the tournament.</li>
+          <li><strong>Mixed Team Americano:</strong> Fixed cross-group pairs with random opponents. Combines team play with mixed-gender pairing.</li>
         </ul>
 
         <div className={styles.cta}>

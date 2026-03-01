@@ -68,6 +68,7 @@ export function MexicanoPage({ onFeedback }: Props) {
         <ul>
           <li><strong>Mixicano:</strong> Mexicano with cross-group pairing (e.g., one man + one woman per pair). Standings-based opponents with group constraints.</li>
           <li><strong>Team Mexicano:</strong> Fixed pairs (no rotation), but opponents are assigned by standings.</li>
+          <li><strong>Mixed Team Mexicano:</strong> Fixed cross-group pairs with standings-based opponents. The most competitive mixed-gender team format.</li>
           <li><strong>Club Mexicano:</strong> Inter-club competition with standings-based matchups.</li>
         </ul>
 

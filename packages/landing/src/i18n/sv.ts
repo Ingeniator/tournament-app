@@ -23,7 +23,7 @@ const sv: Translations = {
 
   // Landing - Features
   'landing.featuresTitle': 'Allt Du Behöver',
-  'landing.feat1Title': '10 Format',
+  'landing.feat1Title': '15 Format',
   'landing.feat1Desc': 'Americano, Mexicano, King of the Court och mer.',
   'landing.feat2Title': 'Poäng i Realtid',
   'landing.feat2Desc': 'Ange poäng, automatisk rundavancering.',
