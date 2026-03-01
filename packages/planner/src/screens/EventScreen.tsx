@@ -14,7 +14,7 @@ interface EventScreenProps {
 }
 
 export function EventScreen({ eventId, uid, onBack }: EventScreenProps) {
-  const { event, loading, updateEvent, linkTournament, unlinkTournament, updateTournamentWeight, deleteEvent } = useEvent(eventId);
+  const { event, loading, linkTournament, unlinkTournament, updateTournamentWeight, deleteEvent } = useEvent(eventId);
   const { t } = useTranslation();
   const { toastMessage, showToast } = useToast();
   const [linkCode, setLinkCode] = useState('');
