@@ -1,4 +1,4 @@
-import type { Tournament, LeagueRankingRules, LeagueStandingEntry } from '@padel/common';
+import type { Tournament, EventRankingRules, EventStandingEntry, EventTournamentLink } from '@padel/common';
 
 interface PlayerAccum {
   playerName: string;
@@ -7,15 +7,21 @@ interface PlayerAccum {
   losses: number;
   gamesWon: number;
   gamesLost: number;
+  weightedPoints: number;
 }
 
-export function computeLeagueStandings(
-  tournaments: Tournament[],
-  rules: LeagueRankingRules,
-): LeagueStandingEntry[] {
+export function computeEventStandings(
+  tournamentLinks: EventTournamentLink[],
+  tournamentData: Map<string, Tournament>,
+  rules: EventRankingRules,
+): EventStandingEntry[] {
   const playerMap = new Map<string, PlayerAccum>();
 
-  for (const tournament of tournaments) {
+  for (const link of tournamentLinks) {
+    const tournament = tournamentData.get(link.tournamentId);
+    if (!tournament) continue;
+
+    const weight = link.weight;
     const nameById = new Map<string, string>();
     for (const p of tournament.players) {
       nameById.set(p.id, p.name);
@@ -30,19 +36,23 @@ export function computeLeagueStandings(
         const team2Won = team2Points > team1Points;
         const isDraw = team1Points === team2Points;
 
+        const winPts = rules.pointsPerWin * weight;
+        const drawPts = rules.pointsPerDraw * weight;
+        const lossPts = rules.pointsPerLoss * weight;
+
         // Process team1 players
         for (const pid of match.team1) {
           const name = nameById.get(pid) ?? pid;
           let acc = playerMap.get(name);
           if (!acc) {
-            acc = { playerName: name, wins: 0, draws: 0, losses: 0, gamesWon: 0, gamesLost: 0 };
+            acc = { playerName: name, wins: 0, draws: 0, losses: 0, gamesWon: 0, gamesLost: 0, weightedPoints: 0 };
             playerMap.set(name, acc);
           }
           acc.gamesWon += team1Points;
           acc.gamesLost += team2Points;
-          if (team1Won) acc.wins++;
-          else if (isDraw) acc.draws++;
-          else acc.losses++;
+          if (team1Won) { acc.wins++; acc.weightedPoints += winPts; }
+          else if (isDraw) { acc.draws++; acc.weightedPoints += drawPts; }
+          else { acc.losses++; acc.weightedPoints += lossPts; }
         }
 
         // Process team2 players
@@ -50,37 +60,31 @@ export function computeLeagueStandings(
           const name = nameById.get(pid) ?? pid;
           let acc = playerMap.get(name);
           if (!acc) {
-            acc = { playerName: name, wins: 0, draws: 0, losses: 0, gamesWon: 0, gamesLost: 0 };
+            acc = { playerName: name, wins: 0, draws: 0, losses: 0, gamesWon: 0, gamesLost: 0, weightedPoints: 0 };
             playerMap.set(name, acc);
           }
           acc.gamesWon += team2Points;
           acc.gamesLost += team1Points;
-          if (team2Won) acc.wins++;
-          else if (isDraw) acc.draws++;
-          else acc.losses++;
+          if (team2Won) { acc.wins++; acc.weightedPoints += winPts; }
+          else if (isDraw) { acc.draws++; acc.weightedPoints += drawPts; }
+          else { acc.losses++; acc.weightedPoints += lossPts; }
         }
       }
     }
   }
 
-  const entries: LeagueStandingEntry[] = Array.from(playerMap.values()).map(acc => {
-    const points =
-      acc.wins * rules.pointsPerWin +
-      acc.draws * rules.pointsPerDraw +
-      acc.losses * rules.pointsPerLoss;
-    return {
-      playerName: acc.playerName,
-      wins: acc.wins,
-      draws: acc.draws,
-      losses: acc.losses,
-      points,
-      gamesWon: acc.gamesWon,
-      gamesLost: acc.gamesLost,
-      pointDifference: acc.gamesWon - acc.gamesLost,
-      matchesPlayed: acc.wins + acc.draws + acc.losses,
-      rank: 0,
-    };
-  });
+  const entries: EventStandingEntry[] = Array.from(playerMap.values()).map(acc => ({
+    playerName: acc.playerName,
+    wins: acc.wins,
+    draws: acc.draws,
+    losses: acc.losses,
+    points: Math.round(acc.weightedPoints * 100) / 100,
+    gamesWon: acc.gamesWon,
+    gamesLost: acc.gamesLost,
+    pointDifference: acc.gamesWon - acc.gamesLost,
+    matchesPlayed: acc.wins + acc.draws + acc.losses,
+    rank: 0,
+  }));
 
   // Sort by points descending, then by tiebreaker
   entries.sort((a, b) => {

@@ -50,6 +50,7 @@
   display: flex;
   gap: var(--space-md);
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .statusBadge {
@@ -91,7 +92,7 @@
 
 .tournamentItem {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   padding: var(--space-sm) 0;
   border-bottom: 1px solid var(--color-border);
@@ -101,28 +102,70 @@
   border-bottom: none;
 }
 
+.tournamentDetails {
+  flex: 1;
+  min-width: 0;
+}
+
 .tournamentName {
   font-weight: 600;
   font-size: var(--text-sm);
 }
 
-.tournamentStatus {
+.tournamentMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.tournamentActive {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.tournamentCompleted {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.weightRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
+}
+
+.weightLabel {
   font-size: var(--text-xs);
   color: var(--color-text-muted);
 }
 
-.noData {
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
+.weightInput {
+  width: 60px;
+  padding: 2px 6px;
+  font-size: var(--text-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+.weightInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
 }
 
 .unlinkBtn {
-  font-size: var(--text-sm);
+  font-size: var(--text-lg);
   color: var(--color-danger);
   padding: var(--space-xs);
   cursor: pointer;
   background: transparent;
   border: none;
+  flex-shrink: 0;
 }
 
 /* Standings table */
@@ -192,16 +235,7 @@
   padding: var(--space-md);
 }
 
-/* Link tournament section */
-.linkSection {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-  padding-top: var(--space-sm);
-  border-top: 1px solid var(--color-border);
-  margin-top: var(--space-sm);
-}
-
+/* Link tournament */
 .linkInput {
   width: 100%;
   padding: var(--space-sm) var(--space-md);

@@ -1,50 +1,49 @@
 import { useState, useEffect, useRef } from 'react';
 import { ref, onValue, get, remove } from 'firebase/database';
-import type { LeagueSummary, League } from '@padel/common';
+import type { PadelEventSummary, EventTournamentLink } from '@padel/common';
 import { db } from '../firebase';
 
-function toSummary(id: string, data: Record<string, unknown>): LeagueSummary {
-  const tournamentIds = data.tournamentIds;
+function toSummary(id: string, data: Record<string, unknown>): PadelEventSummary {
+  const tournaments = data.tournaments;
   return {
     id,
     name: data.name as string,
     date: data.date as string,
-    status: (data.status as League['status']) ?? 'draft',
-    tournamentCount: Array.isArray(tournamentIds) ? tournamentIds.length : 0,
+    tournamentCount: Array.isArray(tournaments) ? (tournaments as EventTournamentLink[]).length : 0,
     createdAt: data.createdAt as number,
   };
 }
 
-export function useMyLeagues(uid: string | null) {
-  const [leagues, setLeagues] = useState<LeagueSummary[]>([]);
+export function useMyEvents(uid: string | null) {
+  const [events, setEvents] = useState<PadelEventSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const versionRef = useRef(0);
 
   useEffect(() => {
     if (!uid || !db) {
-      setLeagues([]);
+      setEvents([]);
       setLoading(false);
       return;
     }
     setLoading(true);
-    const unsubscribe = onValue(ref(db, `users/${uid}/leagues`), async (snapshot) => {
+    const unsubscribe = onValue(ref(db, `users/${uid}/events`), async (snapshot) => {
       const version = ++versionRef.current;
       const data = snapshot.val() as Record<string, boolean> | null;
       if (!data) {
-        setLeagues([]);
+        setEvents([]);
         setLoading(false);
         return;
       }
 
       const ids = Object.keys(data);
-      const results: LeagueSummary[] = [];
+      const results: PadelEventSummary[] = [];
 
       try {
         await Promise.all(ids.map(async (id) => {
-          const snap = await get(ref(db!, `leagues/${id}`));
+          const snap = await get(ref(db!, `events/${id}`));
           if (!snap.exists()) {
-            // League deleted — lazy cleanup
-            remove(ref(db!, `users/${uid}/leagues/${id}`));
+            // Event deleted — lazy cleanup
+            remove(ref(db!, `users/${uid}/events/${id}`));
             return;
           }
           results.push(toSummary(id, snap.val()));
@@ -62,11 +61,11 @@ export function useMyLeagues(uid: string | null) {
         if (b.date) return 1;
         return b.createdAt - a.createdAt;
       });
-      setLeagues(results);
+      setEvents(results);
       setLoading(false);
     });
     return unsubscribe;
   }, [uid]);
 
-  return { leagues, loading };
+  return { events, loading };
 }

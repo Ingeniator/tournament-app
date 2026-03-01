@@ -38,7 +38,7 @@ export function HomeScreen() {
     myTournaments, registeredTournaments, listingsLoading,
     chatRoomTournaments, chatRoomLoading,
     openTournament, deleteTournamentById, skin, setSkin,
-    myLeagues, leaguesLoading, setActiveLeagueId,
+    myEvents, eventsLoading, setActiveEventId,
   } = usePlanner();
   const { t } = useTranslation();
 
@@ -330,40 +330,37 @@ export function HomeScreen() {
         </Card>
       )}
 
-      {/* My Leagues */}
-      {!leaguesLoading && (
+      {/* My Events */}
+      {!eventsLoading && (
         <Card>
-          <h2 className={styles.sectionTitle}>{t('league.myLeagues')}</h2>
-          {myLeagues.length === 0 ? (
-            <p className={styles.empty}>{t('league.noLeagues')}</p>
+          <h2 className={styles.sectionTitle}>{t('event.myEvents')}</h2>
+          {myEvents.length === 0 ? (
+            <p className={styles.empty}>{t('event.noEvents')}</p>
           ) : (
             <div className={styles.tournamentList}>
-              {myLeagues.map(league => (
+              {myEvents.map(ev => (
                 <div
-                  key={league.id}
+                  key={ev.id}
                   className={styles.tournamentItem}
                   role="button"
                   tabIndex={0}
-                  onClick={() => { setActiveLeagueId(league.id); setScreen('league-detail'); }}
-                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveLeagueId(league.id); setScreen('league-detail'); } }}
+                  onClick={() => { setActiveEventId(ev.id); setScreen('event-detail'); }}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveEventId(ev.id); setScreen('event-detail'); } }}
                 >
                   <span className={styles.tournamentNameRow}>
-                    <span className={styles.tournamentName}>{league.name}</span>
-                    <span className={`${styles.badge} ${league.status === 'completed' ? styles.badgeCompleted : styles.badgeExpired}`}>
-                      {t(`league.status.${league.status}`)}
-                    </span>
+                    <span className={styles.tournamentName}>{ev.name}</span>
                   </span>
                   <span className={styles.tournamentMeta}>
-                    <span>{league.date}</span>
-                    <span>{t('league.tournaments', { count: league.tournamentCount })}</span>
+                    <span>{ev.date}</span>
+                    <span>{t('event.tournaments', { count: ev.tournamentCount })}</span>
                   </span>
                 </div>
               ))}
             </div>
           )}
           <div style={{ marginTop: 'var(--space-md)' }}>
-            <Button variant="secondary" fullWidth onClick={() => setScreen('league-create')} disabled={!userName}>
-              {t('league.createLeague')}
+            <Button variant="secondary" fullWidth onClick={() => setScreen('event-create')} disabled={!userName}>
+              {t('event.createEvent')}
             </Button>
           </div>
         </Card>

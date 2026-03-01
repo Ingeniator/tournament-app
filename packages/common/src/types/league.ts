@@ -1,32 +1,37 @@
-export interface LeagueRankingRules {
+export interface EventRankingRules {
   pointsPerWin: number;
   pointsPerDraw: number;
   pointsPerLoss: number;
   tiebreaker: 'pointDifference' | 'headToHead' | 'gamesWon';
 }
 
-export interface League {
+export interface EventTournamentLink {
+  tournamentId: string;
+  weight: number;
+}
+
+export type PadelEventStatus = 'draft' | 'active' | 'completed';
+
+export interface PadelEvent {
   id: string;
   name: string;
   date: string;
-  tournamentIds: string[];
-  rankingRules: LeagueRankingRules;
-  status: 'draft' | 'active' | 'completed';
+  tournaments: EventTournamentLink[];
+  rankingRules: EventRankingRules;
   organizerId: string;
   createdAt: number;
   updatedAt: number;
 }
 
-export interface LeagueSummary {
+export interface PadelEventSummary {
   id: string;
   name: string;
   date: string;
-  status: 'draft' | 'active' | 'completed';
   tournamentCount: number;
   createdAt: number;
 }
 
-export interface LeagueStandingEntry {
+export interface EventStandingEntry {
   playerName: string;
   wins: number;
   draws: number;

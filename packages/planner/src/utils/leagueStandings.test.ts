@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { computeLeagueStandings } from './leagueStandings';
-import type { Tournament, LeagueRankingRules } from '@padel/common';
+import { computeEventStandings } from './leagueStandings';
+import type { Tournament, EventRankingRules, EventTournamentLink } from '@padel/common';
 
 function makeTournament(overrides: Partial<Tournament> = {}): Tournament {
   return {
@@ -26,16 +26,26 @@ function makeTournament(overrides: Partial<Tournament> = {}): Tournament {
   };
 }
 
-const defaultRules: LeagueRankingRules = {
+const defaultRules: EventRankingRules = {
   pointsPerWin: 3,
   pointsPerDraw: 1,
   pointsPerLoss: 0,
   tiebreaker: 'pointDifference',
 };
 
-describe('computeLeagueStandings', () => {
+function makeLinks(...ids: string[]): EventTournamentLink[] {
+  return ids.map(id => ({ tournamentId: id, weight: 1 }));
+}
+
+function makeDataMap(...tournaments: Tournament[]): Map<string, Tournament> {
+  const map = new Map<string, Tournament>();
+  for (const t of tournaments) map.set(t.id, t);
+  return map;
+}
+
+describe('computeEventStandings', () => {
   it('returns empty array for no tournaments', () => {
-    expect(computeLeagueStandings([], defaultRules)).toEqual([]);
+    expect(computeEventStandings([], new Map(), defaultRules)).toEqual([]);
   });
 
   it('returns empty array for tournaments with no scored matches', () => {
@@ -44,7 +54,7 @@ describe('computeLeagueStandings', () => {
         { id: 'm1', courtId: 'c1', team1: ['p1', 'p2'], team2: ['p3', 'p4'], score: null },
       ], sitOuts: [] }],
     });
-    expect(computeLeagueStandings([t], defaultRules)).toEqual([]);
+    expect(computeEventStandings(makeLinks('t1'), makeDataMap(t), defaultRules)).toEqual([]);
   });
 
   it('computes standings for a single tournament with one match', () => {
@@ -63,7 +73,7 @@ describe('computeLeagueStandings', () => {
       }],
     });
 
-    const standings = computeLeagueStandings([t], defaultRules);
+    const standings = computeEventStandings(makeLinks('t1'), makeDataMap(t), defaultRules);
 
     expect(standings).toHaveLength(4);
 
@@ -103,7 +113,7 @@ describe('computeLeagueStandings', () => {
       }],
     });
 
-    const standings = computeLeagueStandings([t], defaultRules);
+    const standings = computeEventStandings(makeLinks('t1'), makeDataMap(t), defaultRules);
     for (const s of standings) {
       expect(s.draws).toBe(1);
       expect(s.wins).toBe(0);
@@ -146,7 +156,11 @@ describe('computeLeagueStandings', () => {
       }],
     });
 
-    const standings = computeLeagueStandings([t1, t2], defaultRules);
+    const standings = computeEventStandings(
+      makeLinks('t1', 't2'),
+      makeDataMap(t1, t2),
+      defaultRules,
+    );
 
     // Charlie won 1, lost 1 = 3 pts, diff = (8-16) + (20-4) = 8
     const charlie = standings.find(s => s.playerName === 'Charlie')!;
@@ -168,7 +182,7 @@ describe('computeLeagueStandings', () => {
   });
 
   it('applies custom ranking rules', () => {
-    const rules: LeagueRankingRules = {
+    const rules: EventRankingRules = {
       pointsPerWin: 2,
       pointsPerDraw: 1,
       pointsPerLoss: 0,
@@ -190,7 +204,7 @@ describe('computeLeagueStandings', () => {
       }],
     });
 
-    const standings = computeLeagueStandings([t], rules);
+    const standings = computeEventStandings(makeLinks('t1'), makeDataMap(t), rules);
     const alice = standings.find(s => s.playerName === 'Alice')!;
     expect(alice.points).toBe(2); // 2 per win instead of 3
   });
@@ -225,7 +239,7 @@ describe('computeLeagueStandings', () => {
       ],
     });
 
-    const standings = computeLeagueStandings([t], defaultRules);
+    const standings = computeEventStandings(makeLinks('t1'), makeDataMap(t), defaultRules);
 
     // Alice: won 2 matches = 6 pts
     const alice = standings.find(s => s.playerName === 'Alice')!;
@@ -251,7 +265,7 @@ describe('computeLeagueStandings', () => {
       }],
     });
 
-    const standings = computeLeagueStandings([t], defaultRules);
+    const standings = computeEventStandings(makeLinks('t1'), makeDataMap(t), defaultRules);
     const alice = standings.find(s => s.playerName === 'Alice')!;
     const bob = standings.find(s => s.playerName === 'Bob')!;
     // Alice and Bob have identical stats — same rank
@@ -310,7 +324,11 @@ describe('computeLeagueStandings', () => {
       }],
     });
 
-    const standings = computeLeagueStandings([t1, t2], defaultRules);
+    const standings = computeEventStandings(
+      makeLinks('t1', 't2'),
+      makeDataMap(t1, t2),
+      defaultRules,
+    );
 
     // Alice should appear once with aggregated stats
     const alices = standings.filter(s => s.playerName === 'Alice');
@@ -318,5 +336,92 @@ describe('computeLeagueStandings', () => {
     expect(alices[0].wins).toBe(2);
     expect(alices[0].matchesPlayed).toBe(2);
     expect(alices[0].gamesWon).toBe(36);
+  });
+
+  it('applies tournament weight to points', () => {
+    const t1 = makeTournament({
+      id: 't1',
+      rounds: [{
+        id: 'r1',
+        roundNumber: 1,
+        matches: [{
+          id: 'm1',
+          courtId: 'c1',
+          team1: ['p1', 'p2'],
+          team2: ['p3', 'p4'],
+          score: { team1Points: 16, team2Points: 8 },
+        }],
+        sitOuts: [],
+      }],
+    });
+
+    const t2 = makeTournament({
+      id: 't2',
+      rounds: [{
+        id: 'r1',
+        roundNumber: 1,
+        matches: [{
+          id: 'm1',
+          courtId: 'c1',
+          team1: ['p1', 'p2'],
+          team2: ['p3', 'p4'],
+          score: { team1Points: 16, team2Points: 8 },
+        }],
+        sitOuts: [],
+      }],
+    });
+
+    // t1 has weight 1.0, t2 has weight 1.5 (knockout)
+    const links: EventTournamentLink[] = [
+      { tournamentId: 't1', weight: 1 },
+      { tournamentId: 't2', weight: 1.5 },
+    ];
+
+    const standings = computeEventStandings(links, makeDataMap(t1, t2), defaultRules);
+
+    const alice = standings.find(s => s.playerName === 'Alice')!;
+    // t1 win: 3 * 1.0 = 3, t2 win: 3 * 1.5 = 4.5, total = 7.5
+    expect(alice.points).toBe(7.5);
+    expect(alice.wins).toBe(2);
+
+    const charlie = standings.find(s => s.playerName === 'Charlie')!;
+    // t1 loss: 0 * 1.0 = 0, t2 loss: 0 * 1.5 = 0, total = 0
+    expect(charlie.points).toBe(0);
+  });
+
+  it('applies weight to loss points when pointsPerLoss > 0', () => {
+    const rules: EventRankingRules = {
+      pointsPerWin: 3,
+      pointsPerDraw: 1,
+      pointsPerLoss: 1,
+      tiebreaker: 'pointDifference',
+    };
+
+    const t = makeTournament({
+      rounds: [{
+        id: 'r1',
+        roundNumber: 1,
+        matches: [{
+          id: 'm1',
+          courtId: 'c1',
+          team1: ['p1', 'p2'],
+          team2: ['p3', 'p4'],
+          score: { team1Points: 16, team2Points: 8 },
+        }],
+        sitOuts: [],
+      }],
+    });
+
+    const links: EventTournamentLink[] = [
+      { tournamentId: 't1', weight: 2 },
+    ];
+
+    const standings = computeEventStandings(links, makeDataMap(t), rules);
+
+    const alice = standings.find(s => s.playerName === 'Alice')!;
+    expect(alice.points).toBe(6); // 3 * 2 = 6
+
+    const charlie = standings.find(s => s.playerName === 'Charlie')!;
+    expect(charlie.points).toBe(2); // 1 * 2 = 2
   });
 });
