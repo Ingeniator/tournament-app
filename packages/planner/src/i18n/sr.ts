@@ -187,6 +187,10 @@ const sr: Translations = {
   'organizer.trySitOutSingle': 'Probajte {rounds} rundi za jednake pauze.',
   'organizer.rankCapacityWarningTitle': 'Nedovoljan kapacitet za rangove',
   'organizer.rankCapacityWarningBody': 'Klub-ranked format zahteva najmanje {minCapacity} igrača ({courts} terena). Trenutni kapacitet je {capacity}. Dodajte više terena ili izaberite drugi format turnira.',
+  'organizer.startDelegate': 'Ko može pokrenuti',
+  'organizer.startDelegateOnlyMe': 'Samo ja',
+  'organizer.startDelegateTelegram': 'Telegram korisnik',
+  'organizer.startDelegateTelegramPlaceholder': '@korisnik',
 
   // JoinScreen
   'join.back': 'Nazad',
@@ -231,6 +235,7 @@ const sr: Translations = {
   'join.welcomeBack': 'Dobrodošli nazad! Potvrđeni ste',
   'join.updateFailed': 'Ažuriranje nije uspelo, pokušajte ponovo',
   'join.letsPlay': 'Igrajmo',
+  'join.startTournament': 'Pokreni Turnir',
   'join.copyForDevice': 'Kopiraj za Drugi Uređaj',
   'join.jsonCopied': 'JSON turnira kopiran!',
   'join.failedCopy': 'Kopiranje neuspešno',

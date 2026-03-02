@@ -24,6 +24,8 @@ export interface PlannerTournament {
   rankColors?: number[];
   scoringMode?: 'points' | 'games';
   maldiciones?: { enabled: boolean; chaosLevel: ChaosLevel };
+  startDelegateId?: string;
+  startDelegateTelegram?: string;
 }
 
 export interface TournamentSummary {

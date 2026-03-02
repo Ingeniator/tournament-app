@@ -187,6 +187,10 @@ const en: Translations = {
   'organizer.trySitOutSingle': 'Try {rounds} rounds for equal sit-outs.',
   'organizer.rankCapacityWarningTitle': 'Not enough capacity for ranks',
   'organizer.rankCapacityWarningBody': 'Club-ranked requires at least {minCapacity} players ({courts} courts). Current capacity is {capacity}. Add more courts or select other tournament format.',
+  'organizer.startDelegate': 'Who can start',
+  'organizer.startDelegateOnlyMe': 'Only me',
+  'organizer.startDelegateTelegram': 'Telegram user',
+  'organizer.startDelegateTelegramPlaceholder': '@username',
 
   // JoinScreen
   'join.back': 'Back',
@@ -231,6 +235,7 @@ const en: Translations = {
   'join.welcomeBack': 'Welcome back! You\'re confirmed',
   'join.updateFailed': 'Could not update, please try again',
   'join.letsPlay': 'Let\'s play',
+  'join.startTournament': 'Start Tournament',
   'join.copyForDevice': 'Copy for Another Device',
   'join.jsonCopied': 'Tournament JSON copied!',
   'join.failedCopy': 'Failed to copy',

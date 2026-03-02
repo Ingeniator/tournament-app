@@ -7,8 +7,8 @@ beforeEach(() => {
   localStorage.clear();
   // Mock fetch so tests don't make real network requests when
   // VITE_FIREBASE_DATABASE_URL is set (e.g. in CI build secrets)
-  vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-    new Response(JSON.stringify(null), { status: 200 }),
+  vi.spyOn(globalThis, 'fetch').mockImplementation(() =>
+    Promise.resolve(new Response(JSON.stringify(null), { status: 200 })),
   );
 });
 

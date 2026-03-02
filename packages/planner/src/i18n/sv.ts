@@ -185,6 +185,10 @@ const sv: Translations = {
   'organizer.trySitOutSingle': 'Prova {rounds} omgångar för jämna vilor.',
   'organizer.rankCapacityWarningTitle': 'Otillräcklig kapacitet för ranger',
   'organizer.rankCapacityWarningBody': 'Club-ranked kräver minst {minCapacity} spelare ({courts} banor). Nuvarande kapacitet är {capacity}. Lägg till fler banor eller välj ett annat turneringsformat.',
+  'organizer.startDelegate': 'Vem kan starta',
+  'organizer.startDelegateOnlyMe': 'Bara jag',
+  'organizer.startDelegateTelegram': 'Telegram-användare',
+  'organizer.startDelegateTelegramPlaceholder': '@användare',
 
   // JoinScreen
   'join.back': 'Tillbaka',
@@ -229,6 +233,7 @@ const sv: Translations = {
   'join.welcomeBack': 'Välkommen tillbaka! Du är bekräftad',
   'join.updateFailed': 'Kunde inte uppdatera, försök igen',
   'join.letsPlay': 'Nu kör vi',
+  'join.startTournament': 'Starta Turnering',
   'join.copyForDevice': 'Kopiera för Annan Enhet',
   'join.jsonCopied': 'Turnerings-JSON kopierad!',
   'join.failedCopy': 'Kopiering misslyckades',

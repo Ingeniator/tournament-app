@@ -98,6 +98,14 @@ export function OrganizerScreen() {
 
   const [showReopenModal, setShowReopenModal] = useState(false);
   const [showTeamPairing, setShowTeamPairing] = useState(false);
+  const [delegateMode, setDelegateMode] = useState<string>(
+    tournament?.startDelegateId
+      ? `player:${tournament.startDelegateId}`
+      : tournament?.startDelegateTelegram !== undefined
+        ? 'telegram'
+        : 'me'
+  );
+  const [tgDelegateInput, setTgDelegateInput] = useState(tournament?.startDelegateTelegram ?? '');
 
   const duplicateNames = useMemo(() => {
     const counts = new Map<string, number>();
@@ -514,6 +522,51 @@ export function OrganizerScreen() {
         <Button variant="secondary" fullWidth onClick={handleCopyLink}>
           {t('organizer.copyLink')}
         </Button>
+      </Card>
+      )}
+
+      {/* Who can start — only in share mode */}
+      {playerMode === 'share' && (
+      <Card>
+        <h2 className={styles.sectionTitle}>{t('organizer.startDelegate')}</h2>
+        <select
+          className={styles.select}
+          value={delegateMode}
+          onChange={e => {
+            const val = e.target.value;
+            setDelegateMode(val);
+            if (val === 'me') {
+              updateTournament({ startDelegateId: undefined, startDelegateTelegram: undefined });
+              setTgDelegateInput('');
+            } else if (val === 'telegram') {
+              updateTournament({ startDelegateId: undefined, startDelegateTelegram: tgDelegateInput || undefined });
+            } else if (val.startsWith('player:')) {
+              const playerId = val.slice('player:'.length);
+              updateTournament({ startDelegateId: playerId, startDelegateTelegram: undefined });
+              setTgDelegateInput('');
+            }
+          }}
+        >
+          <option value="me">{t('organizer.startDelegateOnlyMe')}</option>
+          {players.filter(p => p.id !== uid).map(p => (
+            <option key={p.id} value={`player:${p.id}`}>{p.name}</option>
+          ))}
+          <option value="telegram">{t('organizer.startDelegateTelegram')}</option>
+        </select>
+        {delegateMode === 'telegram' && (
+          <input
+            className={styles.configInput}
+            type="text"
+            value={tgDelegateInput}
+            onChange={e => {
+              const raw = e.target.value.replace(/^@/, '');
+              setTgDelegateInput(raw);
+              updateTournament({ startDelegateTelegram: raw || undefined });
+            }}
+            placeholder={t('organizer.startDelegateTelegramPlaceholder')}
+            style={{ marginTop: 'var(--space-sm)' }}
+          />
+        )}
       </Card>
       )}
 

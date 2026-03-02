@@ -187,6 +187,10 @@ const fr: Translations = {
   'organizer.trySitOutSingle': 'Essayez {rounds} tours pour des repos égaux.',
   'organizer.rankCapacityWarningTitle': 'Capacité insuffisante pour les rangs',
   'organizer.rankCapacityWarningBody': 'Le format club-ranked nécessite au moins {minCapacity} joueurs ({courts} terrains). La capacité actuelle est de {capacity}. Ajoutez des terrains ou sélectionnez un autre format de tournoi.',
+  'organizer.startDelegate': 'Qui peut démarrer',
+  'organizer.startDelegateOnlyMe': 'Moi seul',
+  'organizer.startDelegateTelegram': 'Utilisateur Telegram',
+  'organizer.startDelegateTelegramPlaceholder': '@utilisateur',
 
   // JoinScreen
   'join.back': 'Retour',
@@ -231,6 +235,7 @@ const fr: Translations = {
   'join.welcomeBack': 'Content de vous revoir ! Vous êtes confirmé',
   'join.updateFailed': 'Mise à jour échouée, veuillez réessayer',
   'join.letsPlay': 'C\'est parti',
+  'join.startTournament': 'Démarrer le Tournoi',
   'join.copyForDevice': 'Copier pour un Autre Appareil',
   'join.jsonCopied': 'JSON du tournoi copié !',
   'join.failedCopy': 'Échec de la copie',

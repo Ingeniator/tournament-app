@@ -733,12 +733,17 @@ export function JoinScreen() {
         )}
       </Card>
 
+      {(uid === tournament.organizerId
+        || uid === tournament.startDelegateId
+        || (telegramUser?.username && telegramUser.username === tournament.startDelegateTelegram)
+      ) && (<>
       <Button fullWidth onClick={handleLaunch} disabled={players.length === 0}>
-        {t('join.letsPlay')}
+        {t('join.startTournament')}
       </Button>
       <Button variant="secondary" fullWidth onClick={handleCopyExport} disabled={players.length === 0}>
         {t('join.copyForDevice')}
       </Button>
+      </>)}
       </main>
 
       <Toast message={toastMessage} className={styles.toast} />
