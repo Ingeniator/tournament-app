@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Player, TournamentFormat, Club } from '@padel/common';
-import { useTranslation, getClubColor, formatHasClubs } from '@padel/common';
+import { useTranslation, getClubColor, formatHasClubs, formatHasGroups } from '@padel/common';
 import styles from './PlayerList.module.css';
 
 interface PlayerListProps {
@@ -18,7 +18,7 @@ export function PlayerList({ players, onRemove, onRename, format, groupLabels, o
   const { t } = useTranslation();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
-  const showGroups = format === 'mixicano' && onSetGroup;
+  const showGroups = format && formatHasGroups(format) && onSetGroup;
   const showClubs = format && formatHasClubs(format) && onSetClub && clubs && clubs.length > 0;
   const labelA = groupLabels?.[0] || t('config.groupLabelAPlaceholder');
   const labelB = groupLabels?.[1] || t('config.groupLabelBPlaceholder');
