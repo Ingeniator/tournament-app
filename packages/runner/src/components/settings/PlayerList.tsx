@@ -1,6 +1,6 @@
 import { useState, useMemo, type Dispatch, type ClipboardEvent } from 'react';
 import type { Tournament } from '@padel/common';
-import { Button, Card, getClubColor, useTranslation, parsePlayerList, formatHasGroups, formatHasClubs } from '@padel/common';
+import { Button, Card, NO_COLOR, getClubColor, useTranslation, parsePlayerList, formatHasGroups, formatHasClubs } from '@padel/common';
 import type { TournamentAction } from '../../state/actions';
 import styles from '../../screens/SettingsScreen.module.css';
 
@@ -219,7 +219,7 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
                     return (
                       <span
                         className={styles.clubBadge}
-                        style={{ backgroundColor: getClubColor(tournament.clubs[clubIdx], clubIdx) }}
+                        style={getClubColor(tournament.clubs[clubIdx], clubIdx) !== NO_COLOR ? { backgroundColor: getClubColor(tournament.clubs[clubIdx], clubIdx) } : undefined}
                       >
                         {tournament.clubs[clubIdx].name}
                       </span>

@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import type { Team, Club, TournamentFormat } from '@padel/common';
 import type { PlannerRegistration } from '@padel/common';
-import { Modal, Button, CLUB_COLORS, getClubColor, shortLabel, formatHasGroups, formatHasClubs, useTranslation, deduplicateNames } from '@padel/common';
+import { Modal, Button, NO_COLOR, CLUB_COLORS, getClubColor, shortLabel, formatHasGroups, formatHasClubs, useTranslation, deduplicateNames } from '@padel/common';
 import { createTeams, createCrossGroupTeams, createClubTeams } from '@padel/common';
 import styles from './TeamPairingModal.module.css';
 
@@ -248,7 +248,7 @@ export function TeamPairingModal({ open, players, format, clubs, rankLabels, onS
               const color = clubColorMap.get(club.id) ?? CLUB_COLORS[0];
               return (
                 <div key={club.id}>
-                  <div className={styles.clubGroupHeader} style={{ color }}>
+                  <div className={styles.clubGroupHeader} style={color !== NO_COLOR ? { color } : undefined}>
                     {club.name}
                   </div>
                   {clubTeams.map((team, idx) => renderTeamCard(team, idx))}

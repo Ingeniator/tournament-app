@@ -1,5 +1,5 @@
 import type { PlannerRegistration, Club } from '@padel/common';
-import { useTranslation, getClubColor } from '@padel/common';
+import { useTranslation, NO_COLOR, getClubColor } from '@padel/common';
 import styles from './ClubPanel.module.css';
 
 interface ClubPanelProps {
@@ -27,7 +27,7 @@ export function ClubPanel({ clubs, players, onSetClub }: ClubPanelProps) {
             <div
               key={club.id}
               className={styles.clubCard}
-              style={{ '--club-color': color } as React.CSSProperties}
+              style={color !== NO_COLOR ? { '--club-color': color } as React.CSSProperties : undefined}
             >
               <div className={styles.clubHeader}>
                 <span className={styles.clubName}>{club.name}</span>
@@ -64,7 +64,7 @@ export function ClubPanel({ clubs, players, onSetClub }: ClubPanelProps) {
                     <button
                       key={club.id}
                       className={styles.assignBtn}
-                      style={{ '--club-color': getClubColor(club, idx) } as React.CSSProperties}
+                      style={getClubColor(club, idx) !== NO_COLOR ? { '--club-color': getClubColor(club, idx) } as React.CSSProperties : undefined}
                       onClick={() => onSetClub(p.id, club.id)}
                     >
                       {club.name}

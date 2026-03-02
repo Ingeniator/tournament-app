@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import type { ClubStandingsEntry } from '@padel/common';
-import { useTranslation, CLUB_COLORS } from '@padel/common';
+import { useTranslation, NO_COLOR, CLUB_COLORS } from '@padel/common';
 import styles from './ClubStandingsTable.module.css';
 
 interface ClubStandingsTableProps {
@@ -36,7 +36,7 @@ export const ClubStandingsTable = memo(function ClubStandingsTable({ standings, 
               <tr key={entry.clubId}>
                 <td className={`${styles.rank} ${rankClass}`}>{entry.rank}</td>
                 <td className={styles.name}>
-                  <span className={styles.clubDot} style={{ backgroundColor: color }} />
+                  {color !== NO_COLOR && <span className={styles.clubDot} style={{ backgroundColor: color }} />}
                   {entry.clubName}
                 </td>
                 <td className={`${styles.right} ${styles.points}`}>{entry.totalPoints}</td>

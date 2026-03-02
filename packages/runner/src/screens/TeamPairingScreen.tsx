@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useTournament } from '../hooks/useTournament';
 import { AppShell } from '../components/layout/AppShell';
-import { Button, useTranslation, CLUB_COLORS, getClubColor, formatHasGroups, formatHasClubs } from '@padel/common';
+import { Button, useTranslation, NO_COLOR, CLUB_COLORS, getClubColor, formatHasGroups, formatHasClubs } from '@padel/common';
 import styles from './TeamPairingScreen.module.css';
 
 export function TeamPairingScreen() {
@@ -208,7 +208,7 @@ export function TeamPairingScreen() {
               <div key={club.id}>
                 <div
                   className={styles.clubGroupHeader}
-                  style={{ color }}
+                  style={color !== NO_COLOR ? { color } : undefined}
                 >
                   {club.name}
                 </div>

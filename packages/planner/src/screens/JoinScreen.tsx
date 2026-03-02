@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Button, Card, getClubColor, getRankColor, shortLabel, Toast, useToast, useTranslation, getPresetByFormat, formatHasGroups, formatHasClubs } from '@padel/common';
+import { Button, Card, NO_COLOR, getClubColor, getRankColor, shortLabel, Toast, useToast, useTranslation, getPresetByFormat, formatHasGroups, formatHasClubs } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import { downloadICS } from '../utils/icsExport';
@@ -356,7 +356,7 @@ export function JoinScreen() {
                     className={styles.joinSelect}
                     value={myRegistration?.clubId ?? ''}
                     onChange={e => updatePlayerClub(uid, e.target.value || null)}
-                    style={clubIdx >= 0 ? { backgroundColor: getClubColor(clubs[clubIdx], clubIdx), color: 'white', borderColor: 'transparent' } : undefined}
+                    style={clubIdx >= 0 && getClubColor(clubs[clubIdx], clubIdx) !== NO_COLOR ? { backgroundColor: getClubColor(clubs[clubIdx], clubIdx), color: 'white', borderColor: 'transparent' } : undefined}
                   >
                     <option value="">{t('join.selectClub')}</option>
                     {clubs.map(club => (
@@ -375,7 +375,7 @@ export function JoinScreen() {
                   onChange={e => updatePlayerRank(uid, e.target.value ? Number(e.target.value) : null)}
                   style={myRegistration?.rankSlot != null ? (() => {
                     const rc = getRankColor(myRegistration.rankSlot, tournament.rankColors?.[myRegistration.rankSlot]);
-                    return { backgroundColor: rc.bg, color: rc.text, borderColor: rc.border };
+                    return rc.bg !== NO_COLOR ? { backgroundColor: rc.bg, color: rc.text, borderColor: rc.border } : undefined;
                   })() : undefined}
                 >
                   <option value="">{t('join.selectRank')}</option>
@@ -472,7 +472,7 @@ export function JoinScreen() {
                     {isClubAmericano && clubIdx >= 0 && (
                       <span
                         className={styles.clubBadge}
-                        style={{ backgroundColor: getClubColor(clubs[clubIdx], clubIdx) }}
+                        style={getClubColor(clubs[clubIdx], clubIdx) !== NO_COLOR ? { backgroundColor: getClubColor(clubs[clubIdx], clubIdx) } : undefined}
                       >
                         {shortLabel(clubs[clubIdx].name)}
                       </span>
@@ -482,7 +482,7 @@ export function JoinScreen() {
                       return (
                         <span
                           className={styles.rankBadge}
-                          style={{ backgroundColor: rc.bg, color: rc.text, borderColor: rc.border }}
+                          style={rc.bg !== NO_COLOR ? { backgroundColor: rc.bg, color: rc.text, borderColor: rc.border } : undefined}
                         >
                           {shortLabel(tournament.rankLabels[player.rankSlot])}
                         </span>

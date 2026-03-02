@@ -1,5 +1,5 @@
 import { useState, useRef, type ClipboardEvent } from 'react';
-import { Button, Card, getClubColor, getRankColor, shortLabel, Modal, useTranslation, formatHasGroups, formatHasClubs } from '@padel/common';
+import { Button, Card, NO_COLOR, getClubColor, getRankColor, shortLabel, Modal, useTranslation, formatHasGroups, formatHasClubs } from '@padel/common';
 import type { PlannerRegistration, TournamentFormat, Club } from '@padel/common';
 import { parsePlayerList } from '@padel/common';
 import styles from '../../screens/OrganizerScreen.module.css';
@@ -119,7 +119,9 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                         onChange={e => onSetClub(player.id, e.target.value || null)}
                         style={player.clubId ? (() => {
                           const idx = clubs.findIndex(c => c.id === player.clubId);
-                          return idx >= 0 ? { backgroundColor: getClubColor(clubs[idx], idx), color: 'white', borderColor: 'transparent' } as React.CSSProperties : undefined;
+                          if (idx < 0) return undefined;
+                          const cc = getClubColor(clubs[idx], idx);
+                          return cc !== NO_COLOR ? { backgroundColor: cc, color: 'white', borderColor: 'transparent' } as React.CSSProperties : undefined;
                         })() : undefined}
                       >
                         <option value="">{t('organizer.selectClub')}</option>
@@ -137,7 +139,7 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                         onChange={e => onSetRank(player.id, e.target.value ? Number(e.target.value) : null)}
                         style={player.rankSlot != null ? (() => {
                           const rc = getRankColor(player.rankSlot, rankColors?.[player.rankSlot]);
-                          return { backgroundColor: rc.bg, color: rc.text, borderColor: rc.border } as React.CSSProperties;
+                          return rc.bg !== NO_COLOR ? { backgroundColor: rc.bg, color: rc.text, borderColor: rc.border } as React.CSSProperties : undefined;
                         })() : undefined}
                       >
                         <option value="">{t('organizer.selectRank')}</option>

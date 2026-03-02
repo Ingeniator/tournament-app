@@ -687,6 +687,12 @@
   border-color: var(--color-text-muted);
 }
 
+/* No-color dot: outlined circle with dashed border */
+.noColorDot {
+  background: transparent !important;
+  border: 2px dashed var(--color-text-muted) !important;
+}
+
 /* Clubs section */
 .clubsSection {
   padding-top: var(--space-sm);

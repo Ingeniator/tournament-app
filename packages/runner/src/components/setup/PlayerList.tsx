@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Player, TournamentFormat, Club } from '@padel/common';
-import { useTranslation, getClubColor, formatHasClubs, formatHasGroups } from '@padel/common';
+import { useTranslation, NO_COLOR, getClubColor, formatHasClubs, formatHasGroups } from '@padel/common';
 import styles from './PlayerList.module.css';
 
 interface PlayerListProps {
@@ -95,7 +95,9 @@ export function PlayerList({ players, onRemove, onRename, format, groupLabels, o
                 onChange={e => onSetClub(player.id, e.target.value || null)}
                 style={player.clubId ? (() => {
                   const idx = clubs.findIndex(c => c.id === player.clubId);
-                  return idx >= 0 ? { backgroundColor: getClubColor(clubs[idx], idx), color: 'white', borderColor: 'transparent' } as React.CSSProperties : undefined;
+                  if (idx < 0) return undefined;
+                  const cc = getClubColor(clubs[idx], idx);
+                  return cc !== NO_COLOR ? { backgroundColor: cc, color: 'white', borderColor: 'transparent' } as React.CSSProperties : undefined;
                 })() : undefined}
               >
                 <option value="">—</option>

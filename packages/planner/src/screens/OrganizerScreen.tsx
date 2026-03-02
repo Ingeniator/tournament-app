@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, type ReactNode } from 'react';
 import { ref, push, set } from 'firebase/database';
-import { Button, Card, CLUB_COLORS, getClubColor, RANK_COLORS, getRankColor, cycleColor, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation, FormatPicker, getPresetByFormat, formatHasGroups, formatHasClubs, formatHasFixedPartners, resolveConfigDefaults, computeSitOutInfo, MINUTES_PER_POINT, MINUTES_PER_GAME, CHANGEOVER_MINUTES } from '@padel/common';
+import { Button, Card, NO_COLOR, CLUB_COLORS, getClubColor, RANK_COLORS, getRankColor, cycleColor, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation, FormatPicker, getPresetByFormat, formatHasGroups, formatHasClubs, formatHasFixedPartners, resolveConfigDefaults, computeSitOutInfo, MINUTES_PER_POINT, MINUTES_PER_GAME, CHANGEOVER_MINUTES } from '@padel/common';
 import type { Court, Club, ChaosLevel, Team } from '@padel/common';
 import { generateId } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
@@ -606,7 +606,7 @@ export function OrganizerScreen() {
                 <span>{t('organizer.clubs', { count: clubs.length })}</span>
                 <Button variant="ghost" size="small" onClick={() => {
                   const usedColors = new Set(clubs.map((c, i) => getClubColor(c, i)));
-                  const freeColor = CLUB_COLORS.find(c => !usedColors.has(c)) ?? CLUB_COLORS[clubs.length % CLUB_COLORS.length];
+                  const freeColor = CLUB_COLORS.find(c => c !== NO_COLOR && !usedColors.has(c)) ?? CLUB_COLORS[clubs.length % (CLUB_COLORS.length - 1)];
                   const newClubs: Club[] = [...clubs, { id: generateId(), name: `Club ${clubs.length + 1}`, color: freeColor }];
                   updateTournament({ clubs: newClubs });
                 }}>{t('organizer.addClub')}</Button>
@@ -632,8 +632,8 @@ export function OrganizerScreen() {
                   } : undefined}
                   icon={
                     <button
-                      className={styles.clubDot}
-                      style={{ backgroundColor: getClubColor(club, idx) }}
+                      className={`${styles.clubDot} ${getClubColor(club, idx) === NO_COLOR ? styles.noColorDot : ''}`}
+                      style={getClubColor(club, idx) !== NO_COLOR ? { backgroundColor: getClubColor(club, idx) } : undefined}
                       onClick={() => {
                         const nextIdx = cycleColor(CLUB_COLORS, currentClubIdx >= 0 ? currentClubIdx : idx, usedClubIndices);
                         const updated = clubs.map(c =>
@@ -662,8 +662,8 @@ export function OrganizerScreen() {
                           <div key={i} className={styles.rankLabelRow}>
                             <button
                               type="button"
-                              className={styles.rankDot}
-                              style={{ backgroundColor: rc.bg, borderColor: rc.border }}
+                              className={`${styles.rankDot} ${rc.bg === NO_COLOR ? styles.noColorDot : ''}`}
+                              style={rc.bg !== NO_COLOR ? { backgroundColor: rc.bg, borderColor: rc.border } : undefined}
                               onClick={() => {
                                 const colors = [...(tournament.rankColors ?? Array.from({ length: slotsPerClub }, (__, j) => j))];
                                 const current = colors[i] ?? i;
