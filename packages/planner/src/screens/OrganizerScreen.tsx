@@ -87,6 +87,12 @@ export function OrganizerScreen() {
     return dupes;
   }, [players]);
 
+  // Filter to playing-only registrations for team pairing and validation
+  const playingPlayers = useMemo(() =>
+    players.filter(p => statuses.get(p.id) === 'playing'),
+    [players, statuses]
+  );
+
   if (!tournament) return null;
 
   if (completedAt) {
@@ -174,12 +180,6 @@ export function OrganizerScreen() {
       showToast(t('organizer.failedCopy'));
     }
   };
-
-  // Filter to playing-only registrations for team pairing and validation
-  const playingPlayers = useMemo(() =>
-    players.filter(p => statuses.get(p.id) === 'playing'),
-    [players, statuses]
-  );
 
   const validateLaunch = (): string | null => {
     const count = playingPlayers.length;
