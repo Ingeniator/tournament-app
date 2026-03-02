@@ -16,6 +16,7 @@ export function buildRunnerTournament(
   const statuses = getPlayerStatuses(registrations, capacity, {
     format: plannerTournament.format,
     clubs: plannerTournament.clubs,
+    rankLabels: plannerTournament.rankLabels,
   });
 
   const players: Player[] = registrations

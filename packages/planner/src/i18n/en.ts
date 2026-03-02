@@ -46,7 +46,7 @@ const en: Translations = {
   'organizer.by': 'by {name}',
   'organizer.modeQuickPlay': 'Quick Play',
   'organizer.modeShare': 'Share & Invite',
-  'organizer.playersSimple': 'Players ({count})',
+  'organizer.playersSimple': 'Players ({confirmed} / {capacity})',
   'organizer.shareWithPlayers': 'Share with Players',
   'organizer.playersEnterCode': 'Players enter this code to register',
   'organizer.copyLink': 'Copy Link',
@@ -185,6 +185,8 @@ const en: Translations = {
   'organizer.sitOutBody': 'With {rounds} rounds, {sitOuts} player(s) sit out each round \u2014 sit-outs cannot be split equally across {players} players.',
   'organizer.trySitOut': 'Try {below} or {above} rounds for equal sit-outs.',
   'organizer.trySitOutSingle': 'Try {rounds} rounds for equal sit-outs.',
+  'organizer.rankCapacityWarningTitle': 'Not enough capacity for ranks',
+  'organizer.rankCapacityWarningBody': 'Club-ranked requires at least {minCapacity} players ({courts} courts). Current capacity is {capacity}. Add more courts or select other tournament format.',
 
   // JoinScreen
   'join.back': 'Back',

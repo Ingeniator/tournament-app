@@ -62,10 +62,11 @@ export function cycleColor<T>(palette: T[], current: number, usedByOthers: Set<n
   return pool[(idx + 1) % pool.length];
 }
 
-/** "Middle: Some description" → "Middle"; also works for club names */
-export function shortLabel(label: string): string {
+/** "Middle: Some description" → "Middle"; also truncates long names */
+export function shortLabel(label: string, maxLength = 12): string {
   const idx = label.indexOf(':');
-  return idx >= 0 ? label.slice(0, idx).trim() : label;
+  const short = idx >= 0 ? label.slice(0, idx).trim() : label;
+  return short.length > maxLength ? short.slice(0, maxLength).trimEnd() + '…' : short;
 }
 
 /** @deprecated Use shortLabel instead */

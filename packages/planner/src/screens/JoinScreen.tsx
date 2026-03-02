@@ -96,7 +96,8 @@ export function JoinScreen() {
   const statuses = useMemo(() => getPlayerStatuses(players, capacity, {
     format: tournament?.format,
     clubs: tournament?.clubs,
-  }), [players, capacity, tournament?.format, tournament?.clubs]);
+    rankLabels: tournament?.rankLabels,
+  }), [players, capacity, tournament?.format, tournament?.clubs, tournament?.rankLabels]);
   const myRegistration = uid ? players.find(p => p.id === uid) : undefined;
   const myStatus = myRegistration ? statuses.get(myRegistration.id) : undefined;
 

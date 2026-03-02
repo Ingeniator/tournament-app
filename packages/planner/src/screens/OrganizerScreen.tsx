@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, type ReactNode } from 'react';
+import { useState, useMemo, useEffect, useRef, type ReactNode } from 'react';
 import { ref, push, set } from 'firebase/database';
 import { Button, Card, NO_COLOR, CLUB_COLORS, getClubColor, RANK_COLORS, getRankColor, cycleColor, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation, FormatPicker, getPresetByFormat, formatHasGroups, formatHasClubs, formatHasFixedPartners, resolveConfigDefaults, computeSitOutInfo, MINUTES_PER_POINT, MINUTES_PER_GAME, CHANGEOVER_MINUTES } from '@padel/common';
 import type { Court, Club, ChaosLevel, Team } from '@padel/common';
@@ -68,7 +68,33 @@ export function OrganizerScreen() {
   const statuses = useMemo(() => getPlayerStatuses(players, capacity, {
     format: tournament?.format,
     clubs: tournament?.clubs,
-  }), [players, capacity, tournament?.format, tournament?.clubs]);
+    rankLabels: tournament?.rankLabels,
+  }), [players, capacity, tournament?.format, tournament?.clubs, tournament?.rankLabels]);
+
+  // Auto-trim rankLabels/rankColors and clear player rankSlots when maxRanks decreases
+  useEffect(() => {
+    if (!tournament || tournament.format !== 'club-ranked') return;
+    const clubs = tournament.clubs ?? [];
+    if (clubs.length < 2) return;
+    const slotsPerClub = Math.floor(capacity / clubs.length);
+    const maxRanks = Math.max(2, Math.floor(slotsPerClub / 2));
+    const tournamentUpdates: Record<string, unknown> = {};
+    if (tournament.rankLabels && tournament.rankLabels.length > maxRanks) {
+      tournamentUpdates.rankLabels = tournament.rankLabels.slice(0, maxRanks);
+    }
+    if (tournament.rankColors && tournament.rankColors.length > maxRanks) {
+      tournamentUpdates.rankColors = tournament.rankColors.slice(0, maxRanks);
+    }
+    if (Object.keys(tournamentUpdates).length > 0) {
+      updateTournament(tournamentUpdates);
+      // Clear rankSlot from players whose rank was removed
+      for (const p of players) {
+        if (p.rankSlot != null && p.rankSlot >= maxRanks) {
+          updatePlayerRank(p.id, null);
+        }
+      }
+    }
+  }, [capacity, tournament?.clubs?.length, tournament?.format]);
 
   const [showReopenModal, setShowReopenModal] = useState(false);
   const [showTeamPairing, setShowTeamPairing] = useState(false);
@@ -651,11 +677,12 @@ export function OrganizerScreen() {
               )}
               {tournament.format === 'club-ranked' && clubs.length >= 2 && (() => {
                 const slotsPerClub = Math.floor(capacity / clubs.length);
-                return slotsPerClub > 0 ? (
+                const maxRanks = Math.max(2, Math.floor(slotsPerClub / 2));
+                return (
                   <div className={styles.rankLabelsSection}>
                     <span className={styles.rankLabelsTitle}>{t('organizer.rankLabels')}</span>
                     <div className={styles.rankLabelsColumn}>
-                      {Array.from({ length: slotsPerClub }, (_, i) => {
+                      {Array.from({ length: maxRanks }, (_, i) => {
                         const customIdx = tournament.rankColors?.[i];
                         const rc = getRankColor(i, customIdx);
                         return (
@@ -665,7 +692,7 @@ export function OrganizerScreen() {
                               className={`${styles.rankDot} ${rc.bg === NO_COLOR ? styles.noColorDot : ''}`}
                               style={rc.bg !== NO_COLOR ? { backgroundColor: rc.bg, borderColor: rc.border } : undefined}
                               onClick={() => {
-                                const colors = [...(tournament.rankColors ?? Array.from({ length: slotsPerClub }, (__, j) => j))];
+                                const colors = [...(tournament.rankColors ?? Array.from({ length: maxRanks }, (__, j) => j))];
                                 const current = colors[i] ?? i;
                                 const usedByOthers = new Set(
                                   colors.map((c, j) => j !== i ? c : -1).filter(c => c >= 0)
@@ -692,7 +719,7 @@ export function OrganizerScreen() {
                       })}
                     </div>
                   </div>
-                ) : null;
+                );
               })()}
             </div>
           );
@@ -735,6 +762,21 @@ export function OrganizerScreen() {
             )}
           </>
         )}
+        {tournament.format === 'club-ranked' && (() => {
+          const clubCount = (tournament.clubs ?? []).length;
+          const minCapacity = clubCount * 2 * 2; // clubs × min 2 ranks × 2 per pair
+          if (clubCount >= 2 && capacity < minCapacity) {
+            return (
+              <div className={styles.matchWarning}>
+                <div className={styles.matchWarningTitle}>{t('organizer.rankCapacityWarningTitle')}</div>
+                <div className={styles.matchWarningBody}>
+                  {t('organizer.rankCapacityWarningBody', { capacity, minCapacity, courts: Math.ceil(minCapacity / 4) })}
+                </div>
+              </div>
+            );
+          }
+          return null;
+        })()}
       </CollapsibleSection>
 
       {/* Match Settings section */}

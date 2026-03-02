@@ -1,10 +1,19 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useSupporters, getSavedName } from './useSupporters';
 
 beforeEach(() => {
   localStorage.clear();
+  // Mock fetch so tests don't make real network requests when
+  // VITE_FIREBASE_DATABASE_URL is set (e.g. in CI build secrets)
+  vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+    new Response(JSON.stringify(null), { status: 200 }),
+  );
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe('getSavedName', () => {

@@ -46,7 +46,7 @@ const pt: Translations = {
   'organizer.by': 'por {name}',
   'organizer.modeQuickPlay': 'Jogo Rápido',
   'organizer.modeShare': 'Compartilhar e Convidar',
-  'organizer.playersSimple': 'Jogadores ({count})',
+  'organizer.playersSimple': 'Jogadores ({confirmed} / {capacity})',
   'organizer.shareWithPlayers': 'Partilhar com Jogadores',
   'organizer.playersEnterCode': 'Os jogadores inserem este código para se inscreverem',
   'organizer.copyLink': 'Copiar Link',
@@ -185,6 +185,8 @@ const pt: Translations = {
   'organizer.sitOutBody': 'Com {rounds} rondas, {sitOuts} jogador(es) descansam em cada ronda \u2014 os descansos não podem ser divididos igualmente entre {players} jogadores.',
   'organizer.trySitOut': 'Experimente {below} ou {above} rondas para descansos iguais.',
   'organizer.trySitOutSingle': 'Experimente {rounds} rondas para descansos iguais.',
+  'organizer.rankCapacityWarningTitle': 'Capacidade insuficiente para ranks',
+  'organizer.rankCapacityWarningBody': 'O formato club-ranked requer pelo menos {minCapacity} jogadores ({courts} campos). A capacidade atual é {capacity}. Adicione mais campos ou selecione outro formato de torneio.',
 
   // JoinScreen
   'join.back': 'Voltar',

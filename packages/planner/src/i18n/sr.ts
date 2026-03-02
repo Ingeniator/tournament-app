@@ -46,7 +46,7 @@ const sr: Translations = {
   'organizer.by': 'od {name}',
   'organizer.modeQuickPlay': 'Brza Igra',
   'organizer.modeShare': 'Podeli i Pozovi',
-  'organizer.playersSimple': 'Igrači ({count})',
+  'organizer.playersSimple': 'Igrači ({confirmed} / capacity})',
   'organizer.shareWithPlayers': 'Podeli sa Igračima',
   'organizer.playersEnterCode': 'Igrači unose ovaj kod za registraciju',
   'organizer.copyLink': 'Kopiraj Link',
@@ -185,6 +185,8 @@ const sr: Translations = {
   'organizer.sitOutBody': 'Sa {rounds} rundi, {sitOuts} igrač(a) pauzira svaku rundu \u2014 pauze se ne mogu ravnomerno rasporediti na {players} igrača.',
   'organizer.trySitOut': 'Probajte {below} ili {above} rundi za jednake pauze.',
   'organizer.trySitOutSingle': 'Probajte {rounds} rundi za jednake pauze.',
+  'organizer.rankCapacityWarningTitle': 'Nedovoljan kapacitet za rangove',
+  'organizer.rankCapacityWarningBody': 'Klub-ranked format zahteva najmanje {minCapacity} igrača ({courts} terena). Trenutni kapacitet je {capacity}. Dodajte više terena ili izaberite drugi format turnira.',
 
   // JoinScreen
   'join.back': 'Nazad',

@@ -46,7 +46,7 @@ const sv: Translations = {
   'organizer.by': 'av {name}',
   'organizer.modeQuickPlay': 'Snabbspel',
   'organizer.modeShare': 'Dela och Bjud in',
-  'organizer.playersSimple': 'Spelare ({count})',
+  'organizer.playersSimple': 'Spelare ({confirmed} / {capacity})',
   'organizer.shareWithPlayers': 'Dela med Spelare',
   'organizer.playersEnterCode': 'Spelare anger denna kod för att registrera sig',
   'organizer.copyLink': 'Kopiera Länk',
@@ -183,6 +183,8 @@ const sv: Translations = {
   'organizer.sitOutBody': 'Med {rounds} omgångar vilar {sitOuts} spelare varje omgång \u2014 vilorna kan inte fördelas jämnt mellan {players} spelare.',
   'organizer.trySitOut': 'Prova {below} eller {above} omgångar för jämna vilor.',
   'organizer.trySitOutSingle': 'Prova {rounds} omgångar för jämna vilor.',
+  'organizer.rankCapacityWarningTitle': 'Otillräcklig kapacitet för ranger',
+  'organizer.rankCapacityWarningBody': 'Club-ranked kräver minst {minCapacity} spelare ({courts} banor). Nuvarande kapacitet är {capacity}. Lägg till fler banor eller välj ett annat turneringsformat.',
 
   // JoinScreen
   'join.back': 'Tillbaka',

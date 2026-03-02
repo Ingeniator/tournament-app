@@ -86,7 +86,7 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
       <Card>
         <h2 className={styles.sectionTitle}>
           {simplified
-            ? t('organizer.playersSimple', { count: players.length })
+            ? t('organizer.playersSimple', { confirmed: confirmedCount, capacity })
             : t('organizer.players', {
                 confirmed: confirmedCount,
                 capacity,
