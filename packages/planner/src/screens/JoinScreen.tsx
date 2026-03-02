@@ -545,7 +545,7 @@ export function JoinScreen() {
                     {isClubAmericano && clubIdx >= 0 && (
                       <span
                         className={styles.clubBadge}
-                        style={getClubColor(clubs[clubIdx], clubIdx) !== NO_COLOR ? { backgroundColor: getClubColor(clubs[clubIdx], clubIdx) } : undefined}
+                        style={getClubColor(clubs[clubIdx], clubIdx) !== NO_COLOR ? { backgroundColor: getClubColor(clubs[clubIdx], clubIdx), color: 'white' } : undefined}
                       >
                         {shortLabel(clubs[clubIdx].name)}
                       </span>
