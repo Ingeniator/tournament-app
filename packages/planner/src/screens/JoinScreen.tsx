@@ -1,5 +1,7 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { Button, Card, NO_COLOR, getClubColor, getRankColor, shortLabel, Toast, useToast, useTranslation, getPresetByFormat, formatHasGroups, formatHasClubs } from '@padel/common';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { Button, Card, NO_COLOR, getClubColor, getRankColor, shortLabel, Toast, useToast, useTranslation, getPresetByFormat, formatHasGroups, formatHasClubs, formatHasFixedPartners } from '@padel/common';
+import type { PartnerRejection, PartnerConstraints } from '../utils/partnerLogic';
+import { rejectionMessage } from '../utils/partnerRejectionMessage';
 import { usePlanner } from '../state/PlannerContext';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import { downloadICS } from '../utils/icsExport';
@@ -9,8 +11,67 @@ import { useStartGuard } from '../hooks/useStartGuard';
 import { StartWarningModal } from '../components/StartWarningModal';
 import styles from './JoinScreen.module.css';
 
+function PartnerEditor({ partnerName, partnerTelegram, onSave }: {
+  partnerName: string;
+  partnerTelegram: string;
+  onSave: (name: string | null, telegram: string | null) => Promise<PartnerRejection | null>;
+}) {
+  const { t } = useTranslation();
+  const [nameVal, setNameVal] = useState(partnerName);
+  const [tgVal, setTgVal] = useState(partnerTelegram ? `@${partnerTelegram}` : '');
+  const [dirty, setDirty] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setNameVal(partnerName);
+    setTgVal(partnerTelegram ? `@${partnerTelegram}` : '');
+    setDirty(false);
+    setError(null);
+  }, [partnerName, partnerTelegram]);
+
+  const handleSave = useCallback(async () => {
+    const pName = nameVal.trim() || null;
+    const pTg = tgVal.trim().replace(/^@/, '') || null;
+    const rejection = await onSave(pName, pTg);
+    if (rejection) {
+      setError(rejectionMessage(rejection, t));
+    } else {
+      setDirty(false);
+      setError(null);
+    }
+  }, [nameVal, tgVal, onSave, t]);
+
+  return (
+    <div className={styles.partnerPicker}>
+      <span className={styles.groupPickerLabel}>{t('join.partnerLabel')}</span>
+      <input
+        className={styles.nameInput}
+        type="text"
+        value={nameVal}
+        onChange={e => { setNameVal(e.target.value); setDirty(true); }}
+        placeholder={t('join.partnerName')}
+      />
+      <input
+        className={styles.nameInput}
+        type="text"
+        value={tgVal}
+        onChange={e => { setTgVal(e.target.value); setDirty(true); }}
+        placeholder={t('join.partnerTelegram')}
+      />
+      {error && (
+        <span style={{ color: 'var(--color-error, #e53935)', fontSize: 'var(--text-sm)' }}>{error}</span>
+      )}
+      {dirty && (
+        <Button size="small" onClick={handleSave}>
+          {t('join.save')}
+        </Button>
+      )}
+    </div>
+  );
+}
+
 export function JoinScreen() {
-  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, updatePlayerGroup, updatePlayerClub, updatePlayerRank, isRegistered, setScreen, organizerName, userName, telegramUser, completedAt, joinReturnScreen } = usePlanner();
+  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, updatePlayerGroup, updatePlayerClub, updatePlayerRank, updatePlayerPartner, isRegistered, setScreen, organizerName, userName, telegramUser, completedAt, joinReturnScreen } = usePlanner();
   const { startedBy, showWarning, warningReason, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
   const { t } = useTranslation();
   // null = not yet edited by user, derive from external sources
@@ -19,6 +80,8 @@ export function JoinScreen() {
   const [regGroup, setRegGroup] = useState<'A' | 'B' | null>(null);
   const [regClubId, setRegClubId] = useState<string>('');
   const [regRankSlot, setRegRankSlot] = useState<string>('');
+  const [regPartnerName, setRegPartnerName] = useState('');
+  const [regPartnerTelegram, setRegPartnerTelegram] = useState('');
   const [registering, setRegistering] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [editingName, setEditingName] = useState(false);
@@ -123,6 +186,19 @@ export function JoinScreen() {
       if (regClubId) extras.clubId = regClubId;
       if (regRankSlot) extras.rankSlot = Number(regRankSlot);
       await registerPlayer(trimmed, Object.keys(extras).length > 0 ? extras : undefined);
+      if (uid && (regPartnerName.trim() || regPartnerTelegram.trim())) {
+        const pName = regPartnerName.trim() || null;
+        const pTg = regPartnerTelegram.trim().replace(/^@/, '') || null;
+        const constraints: PartnerConstraints = {
+          requireSameClub: formatHasClubs(tournament.format),
+          requireSameRank: tournament.format === 'club-ranked',
+          requireOppositeGroup: formatHasGroups(tournament.format),
+        };
+        const rejection = await updatePlayerPartner(uid, pName, pTg, constraints);
+        if (rejection) {
+          showToast(rejectionMessage(rejection, t));
+        }
+      }
       if (willBeReserve) {
         showToast(t('join.reserveToast'));
       } else if (tournament.date) {
@@ -392,6 +468,21 @@ export function JoinScreen() {
                 </select>
               </div>
             )}
+
+            {isConfirmed && uid && formatHasFixedPartners(tournament.format) && (
+              <PartnerEditor
+                partnerName={myRegistration?.partnerName ?? ''}
+                partnerTelegram={myRegistration?.partnerTelegram ?? ''}
+                onSave={(pName, pTg) => {
+                  const constraints: PartnerConstraints = {
+                    requireSameClub: formatHasClubs(tournament.format),
+                    requireSameRank: tournament.format === 'club-ranked',
+                    requireOppositeGroup: formatHasGroups(tournament.format),
+                  };
+                  return updatePlayerPartner(uid, pName, pTg, constraints);
+                }}
+              />
+            )}
           </div>
         ) : (
           <div className={styles.registerForm}>
@@ -471,6 +562,26 @@ export function JoinScreen() {
               </div>
             )}
 
+            {formatHasFixedPartners(tournament.format) && (
+              <div className={styles.partnerPicker}>
+                <span className={styles.groupPickerLabel}>{t('join.partnerLabel')}</span>
+                <input
+                  className={styles.nameInput}
+                  type="text"
+                  value={regPartnerName}
+                  onChange={e => setRegPartnerName(e.target.value)}
+                  placeholder={t('join.partnerName')}
+                />
+                <input
+                  className={styles.nameInput}
+                  type="text"
+                  value={regPartnerTelegram}
+                  onChange={e => setRegPartnerTelegram(e.target.value)}
+                  placeholder={t('join.partnerTelegram')}
+                />
+              </div>
+            )}
+
             <Button
               fullWidth
               onClick={handleRegister}
@@ -532,7 +643,8 @@ export function JoinScreen() {
                 {(
                   (isMixicano && player.group) ||
                   (isClubAmericano && clubIdx >= 0) ||
-                  (tournament.format === 'club-ranked' && player.rankSlot != null && tournament.rankLabels?.[player.rankSlot])
+                  (tournament.format === 'club-ranked' && player.rankSlot != null && tournament.rankLabels?.[player.rankSlot]) ||
+                  (formatHasFixedPartners(tournament.format) && player.partnerName)
                 ) && (
                   <div className={styles.playerBadges}>
                     {isMixicano && player.group && (
@@ -561,6 +673,9 @@ export function JoinScreen() {
                         </span>
                       );
                     })()}
+                    {formatHasFixedPartners(tournament.format) && player.partnerName && (
+                      <span className={styles.groupBadge}>{'\uD83E\uDD1D'} {player.partnerName}</span>
+                    )}
                   </div>
                 )}
                 <span className={player.confirmed !== false ? styles.statusConfirmed : styles.statusCancelled}>

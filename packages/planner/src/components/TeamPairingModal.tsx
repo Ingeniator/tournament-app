@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import type { Team, Club, TournamentFormat } from '@padel/common';
 import type { PlannerRegistration } from '@padel/common';
-import { Modal, Button, NO_COLOR, CLUB_COLORS, getClubColor, shortLabel, formatHasGroups, formatHasClubs, useTranslation, deduplicateNames } from '@padel/common';
+import { Modal, Button, NO_COLOR, CLUB_COLORS, getClubColor, shortLabel, formatHasGroups, formatHasClubs, useTranslation, deduplicateNames, generateId } from '@padel/common';
 import { createTeams, createCrossGroupTeams, createClubTeams } from '@padel/common';
 import styles from './TeamPairingModal.module.css';
 
@@ -15,29 +15,70 @@ interface TeamPairingModalProps {
   onClose: () => void;
 }
 
+function matchPartnerPairs(players: PlannerRegistration[]): { prePaired: Team[]; remaining: PlannerRegistration[] } {
+  const paired = new Set<string>();
+  const prePaired: Team[] = [];
+
+  for (const p of players) {
+    if (paired.has(p.id) || !p.partnerName) continue;
+    // Try to match by telegram first, then by name
+    const match = players.find(other => {
+      if (other.id === p.id || paired.has(other.id)) return false;
+      // Match: p's partnerTelegram matches other's telegramUsername
+      if (p.partnerTelegram && other.telegramUsername &&
+          p.partnerTelegram.toLowerCase() === other.telegramUsername.toLowerCase()) return true;
+      // Match: other's partnerTelegram matches p's telegramUsername
+      if (other.partnerTelegram && p.telegramUsername &&
+          other.partnerTelegram.toLowerCase() === p.telegramUsername.toLowerCase()) return true;
+      // Match: p's partnerName matches other's name (case-insensitive)
+      if (p.partnerName!.toLowerCase() === other.name.toLowerCase()) return true;
+      // Match: other's partnerName matches p's name
+      if (other.partnerName && other.partnerName.toLowerCase() === p.name.toLowerCase()) return true;
+      return false;
+    });
+    if (match) {
+      paired.add(p.id);
+      paired.add(match.id);
+      prePaired.push({ id: generateId(), player1Id: p.id, player2Id: match.id });
+    }
+  }
+
+  const remaining = players.filter(p => !paired.has(p.id));
+  return { prePaired, remaining };
+}
+
 function generateTeams(players: PlannerRegistration[], format: TournamentFormat, clubs?: Club[]): Team[] {
+  // Pre-pair players with partner preferences
+  const { prePaired, remaining } = matchPartnerPairs(players);
+
   // PlannerRegistration is compatible with Player for team creation
-  const asPlayers = players.map(p => ({
+  const toPlayer = (p: PlannerRegistration) => ({
     id: p.id,
     name: p.name,
     group: p.group,
     clubId: p.clubId,
     rankSlot: p.rankSlot,
-  }));
+  });
+
+  const remainingPlayers = remaining.map(toPlayer);
+
   if (formatHasClubs(format) && clubs?.length) {
-    return createClubTeams(asPlayers, clubs);
+    const autoTeams = createClubTeams(remainingPlayers, clubs);
+    return [...prePaired, ...autoTeams];
   }
   if (formatHasGroups(format)) {
     // Auto-assign missing groups alternately so no players are dropped
-    const unassigned = asPlayers.filter(p => !p.group);
+    const unassigned = remainingPlayers.filter(p => !p.group);
     let nextGroup: 'A' | 'B' = 'A';
     for (const p of unassigned) {
       p.group = nextGroup;
       nextGroup = nextGroup === 'A' ? 'B' : 'A';
     }
-    return createCrossGroupTeams(asPlayers);
+    const autoTeams = createCrossGroupTeams(remainingPlayers);
+    return [...prePaired, ...autoTeams];
   }
-  return createTeams(asPlayers);
+  const autoTeams = createTeams(remainingPlayers);
+  return [...prePaired, ...autoTeams];
 }
 
 export function TeamPairingModal({ open, players, format, clubs, rankLabels, onStart, onClose }: TeamPairingModalProps) {

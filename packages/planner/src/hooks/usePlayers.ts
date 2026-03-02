@@ -3,6 +3,7 @@ import { ref, get, set, update, onValue } from 'firebase/database';
 import type { PlannerRegistration } from '@padel/common';
 import { generateId } from '@padel/common';
 import { db } from '../firebase';
+import { resolvePartnerUpdate, type PartnerConstraints, type PartnerRejection } from '../utils/partnerLogic';
 
 export function usePlayers(tournamentId: string | null) {
   const [players, setPlayers] = useState<PlannerRegistration[]>([]);
@@ -84,6 +85,14 @@ export function usePlayers(tournamentId: string | null) {
     const playerSnap = await get(ref(db, `tournaments/${tournamentId}/players/${uid}`));
     const tgUsername = playerSnap.exists() ? playerSnap.val()?.telegramUsername : undefined;
 
+    // When cancelling, disconnect the partner link (bidirectional clear)
+    if (!confirmed) {
+      const { writes } = resolvePartnerUpdate(uid, null, null, players);
+      for (const w of writes) {
+        await update(ref(db, `tournaments/${tournamentId}/players/${w.playerId}`), w.fields);
+      }
+    }
+
     // Update confirmed flag on player record
     await update(ref(db, `tournaments/${tournamentId}/players/${uid}`), {
       confirmed,
@@ -98,7 +107,7 @@ export function usePlayers(tournamentId: string | null) {
       indexUpdates[`telegramUsers/${tgUsername}/registrations/${tournamentId}`] = confirmed ? true : null;
     }
     await update(ref(db), indexUpdates);
-  }, [tournamentId]);
+  }, [tournamentId, players]);
 
   const addPlayer = useCallback(async (name: string, telegramUsername?: string) => {
     if (!tournamentId || !db) return;
@@ -129,11 +138,20 @@ export function usePlayers(tournamentId: string | null) {
   const toggleConfirmed = useCallback(async (playerId: string, currentConfirmed: boolean) => {
     if (!tournamentId || !db) return;
     const confirmed = !currentConfirmed;
+
+    // When cancelling, disconnect the partner link (bidirectional clear)
+    if (!confirmed) {
+      const { writes } = resolvePartnerUpdate(playerId, null, null, players);
+      for (const w of writes) {
+        await update(ref(db, `tournaments/${tournamentId}/players/${w.playerId}`), w.fields);
+      }
+    }
+
     await update(ref(db, `tournaments/${tournamentId}/players/${playerId}`), {
       confirmed,
       ...(confirmed ? { timestamp: Date.now() } : {}),
     });
-  }, [tournamentId]);
+  }, [tournamentId, players]);
 
   const updatePlayerName = useCallback(async (playerId: string, name: string) => {
     if (!tournamentId || !db) return;
@@ -167,6 +185,22 @@ export function usePlayers(tournamentId: string | null) {
       rankSlot: rankSlot ?? null,
     });
   }, [tournamentId]);
+
+  const updatePlayerPartner = useCallback(async (playerId: string, partnerName: string | null, partnerTelegram: string | null, constraints?: PartnerConstraints): Promise<PartnerRejection | null> => {
+    if (!tournamentId || !db) return null;
+    const { writes, newPlayer, rejected } = resolvePartnerUpdate(playerId, partnerName, partnerTelegram, players, constraints);
+
+    if (rejected) return rejected;
+
+    for (const w of writes) {
+      await update(ref(db, `tournaments/${tournamentId}/players/${w.playerId}`), w.fields);
+    }
+    if (newPlayer) {
+      const partnerId = generateId();
+      await set(ref(db, `tournaments/${tournamentId}/players/${partnerId}`), newPlayer.data);
+    }
+    return null;
+  }, [tournamentId, players]);
 
   /**
    * Claim a registration that was manually added by the organizer with a
@@ -202,5 +236,5 @@ export function usePlayers(tournamentId: string | null) {
     return players.some(p => p.id === uid);
   }, [players]);
 
-  return { players, loading, registerPlayer, removePlayer, updateConfirmed, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, updatePlayerRank, isRegistered, claimOrphanRegistration };
+  return { players, loading, registerPlayer, removePlayer, updateConfirmed, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, updatePlayerRank, updatePlayerPartner, isRegistered, claimOrphanRegistration };
 }

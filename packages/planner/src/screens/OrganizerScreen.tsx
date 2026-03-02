@@ -50,7 +50,7 @@ function formatDuration(minutes: number): string {
 type PlayerMode = 'quick' | 'share';
 
 export function OrganizerScreen() {
-  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, updatePlayerRank, deleteTournament, completedAt, undoComplete, uid } = usePlanner();
+  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerTelegram, updatePlayerPartner, updatePlayerGroup, updatePlayerClub, updatePlayerRank, deleteTournament, completedAt, undoComplete, uid } = usePlanner();
   const { startedBy, showWarning, warningReason, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
   const { t, locale } = useTranslation();
   const { toastMessage, showToast } = useToast();
@@ -859,6 +859,7 @@ export function OrganizerScreen() {
         removePlayer={removePlayer}
         toggleConfirmed={toggleConfirmed}
         updatePlayerTelegram={updatePlayerTelegram}
+        updatePlayerPartner={updatePlayerPartner}
         statuses={statuses}
         format={tournament.format}
         clubs={tournament.clubs}

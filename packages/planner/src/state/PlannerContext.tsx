@@ -41,6 +41,7 @@ export interface PlannerContextValue {
   updatePlayerGroup: (playerId: string, group: 'A' | 'B' | null) => Promise<void>;
   updatePlayerClub: (playerId: string, clubId: string | null) => Promise<void>;
   updatePlayerRank: (playerId: string, rankSlot: number | null) => Promise<void>;
+  updatePlayerPartner: (playerId: string, partnerName: string | null, partnerTelegram: string | null, constraints?: import('../utils/partnerLogic').PartnerConstraints) => Promise<import('../utils/partnerLogic').PartnerRejection | null>;
   isRegistered: boolean;
   organizerName: string | null;
   userName: string | null;
@@ -106,7 +107,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     undoComplete,
   } = usePlannerTournament(tournamentId);
 
-  const { players, registerPlayer: registerInDb, removePlayer, updateConfirmed: updateConfirmedInDb, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, updatePlayerRank, isRegistered: checkRegistered, claimOrphanRegistration } = usePlayers(tournamentId);
+  const { players, registerPlayer: registerInDb, removePlayer, updateConfirmed: updateConfirmedInDb, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, updatePlayerRank, updatePlayerPartner, isRegistered: checkRegistered, claimOrphanRegistration } = usePlayers(tournamentId);
 
   const { name: userName, skin: userSkin, loading: userNameLoading, updateName: updateUserName, updateSkin: updateUserSkin, updateTelegramId, updateTelegramUsername } = useUserProfile(uid);
 
@@ -298,6 +299,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       updatePlayerGroup,
       updatePlayerClub,
       updatePlayerRank,
+      updatePlayerPartner,
       isRegistered,
       organizerName,
       userName,

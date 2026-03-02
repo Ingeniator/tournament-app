@@ -47,6 +47,9 @@ export interface PlannerRegistration {
   group?: 'A' | 'B';
   clubId?: string;
   rankSlot?: number;
+  partnerName?: string;
+  partnerTelegram?: string;
+  addedByPartner?: string | boolean;
 }
 
 export interface TournamentStartInfo {

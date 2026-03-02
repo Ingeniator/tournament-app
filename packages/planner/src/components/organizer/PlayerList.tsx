@@ -1,7 +1,9 @@
 import { useState, useRef, type ClipboardEvent } from 'react';
-import { Button, Card, NO_COLOR, getClubColor, getRankColor, shortLabel, Modal, useTranslation, formatHasGroups, formatHasClubs } from '@padel/common';
+import { Button, Card, NO_COLOR, getClubColor, getRankColor, shortLabel, Modal, useTranslation, formatHasGroups, formatHasClubs, formatHasFixedPartners } from '@padel/common';
 import type { PlannerRegistration, TournamentFormat, Club } from '@padel/common';
 import { parsePlayerList } from '@padel/common';
+import type { PartnerRejection, PartnerConstraints } from '../../utils/partnerLogic';
+import { rejectionMessage } from '../../utils/partnerRejectionMessage';
 import styles from '../../screens/OrganizerScreen.module.css';
 
 interface PlayerListProps {
@@ -12,6 +14,7 @@ interface PlayerListProps {
   removePlayer: (playerId: string) => Promise<void>;
   toggleConfirmed: (playerId: string, currentConfirmed: boolean) => Promise<void>;
   updatePlayerTelegram: (playerId: string, telegramUsername: string | null) => Promise<void>;
+  updatePlayerPartner?: (playerId: string, partnerName: string | null, partnerTelegram: string | null, constraints?: PartnerConstraints) => Promise<PartnerRejection | null>;
   statuses: Map<string, string>;
   format?: TournamentFormat;
   clubs?: Club[];
@@ -24,13 +27,16 @@ interface PlayerListProps {
   simplified?: boolean;
 }
 
-export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, removePlayer, toggleConfirmed, updatePlayerTelegram, statuses, format, clubs, groupLabels, rankLabels, rankColors, onSetGroup, onSetClub, onSetRank, simplified }: PlayerListProps) {
+export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, removePlayer, toggleConfirmed, updatePlayerTelegram, updatePlayerPartner, statuses, format, clubs, groupLabels, rankLabels, rankColors, onSetGroup, onSetClub, onSetRank, simplified }: PlayerListProps) {
   const { t } = useTranslation();
   const [newPlayerName, setNewPlayerName] = useState('');
   const addingPlayer = useRef(false);
   const addPlayerInputRef = useRef<HTMLInputElement>(null);
-  const [linkingPlayer, setLinkingPlayer] = useState<{ id: string; name: string; telegramUsername?: string } | null>(null);
+  const [linkingPlayer, setLinkingPlayer] = useState<{ id: string; name: string; telegramUsername?: string; partnerName?: string; partnerTelegram?: string } | null>(null);
   const [linkDraft, setLinkDraft] = useState('');
+  const [partnerNameDraft, setPartnerNameDraft] = useState('');
+  const [partnerTelegramDraft, setPartnerTelegramDraft] = useState('');
+  const showPartner = format ? formatHasFixedPartners(format) : false;
 
   const confirmedCount = players.filter(p => p.confirmed !== false).length;
   const reserveCount = [...statuses.values()].filter(s => s === 'reserve').length;
@@ -88,6 +94,9 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                   )}
                   {statuses.get(player.id) === 'reserve' && (
                     <span className={styles.reserveBadge}>{t('organizer.reserve')}</span>
+                  )}
+                  {showPartner && player.partnerName && (
+                    <span className={styles.reserveBadge}>{'\uD83E\uDD1D'} {player.partnerName}</span>
                   )}
                 </span>
                 {(
@@ -156,8 +165,10 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                   <button
                     className={player.telegramUsername ? styles.linkBtnActive : styles.linkBtn}
                     onClick={() => {
-                      setLinkingPlayer({ id: player.id, name: player.name, telegramUsername: player.telegramUsername });
+                      setLinkingPlayer({ id: player.id, name: player.name, telegramUsername: player.telegramUsername, partnerName: player.partnerName, partnerTelegram: player.partnerTelegram });
                       setLinkDraft(player.telegramUsername ? `@${player.telegramUsername}` : '');
+                      setPartnerNameDraft(player.partnerName ?? '');
+                      setPartnerTelegramDraft(player.partnerTelegram ? `@${player.partnerTelegram}` : '');
                     }}
                     title={t('organizer.linkProfile')}
                   >
@@ -244,14 +255,27 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
             onChange={e => setLinkDraft(e.target.value)}
             placeholder={t('organizer.telegramPlaceholder')}
             autoFocus
-            onKeyDown={e => {
-              if (e.key === 'Enter' && linkingPlayer) {
-                const username = linkDraft.trim().replace(/^@/, '') || null;
-                updatePlayerTelegram(linkingPlayer.id, username);
-                setLinkingPlayer(null);
-              }
-            }}
           />
+          {showPartner && updatePlayerPartner && (
+            <>
+              <hr style={{ border: 'none', borderTop: '1px solid var(--color-border)', margin: 'var(--space-xs) 0' }} />
+              <label className={styles.linkLabel}>{t('organizer.partnerSection')}</label>
+              <input
+                className={styles.linkInput}
+                type="text"
+                value={partnerNameDraft}
+                onChange={e => setPartnerNameDraft(e.target.value)}
+                placeholder={t('organizer.partnerName')}
+              />
+              <input
+                className={styles.linkInput}
+                type="text"
+                value={partnerTelegramDraft}
+                onChange={e => setPartnerTelegramDraft(e.target.value)}
+                placeholder={t('organizer.partnerTelegram')}
+              />
+            </>
+          )}
           <div className={styles.linkActions}>
             {linkingPlayer?.telegramUsername && (
               <Button
@@ -265,15 +289,44 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                 {t('organizer.removeLink')}
               </Button>
             )}
+            {showPartner && updatePlayerPartner && linkingPlayer?.partnerName && (
+              <Button
+                variant="secondary"
+                size="small"
+                onClick={() => {
+                  if (!linkingPlayer) return;
+                  updatePlayerPartner(linkingPlayer.id, null, null);
+                  setPartnerNameDraft('');
+                  setPartnerTelegramDraft('');
+                  setLinkingPlayer(null);
+                }}
+              >
+                {t('organizer.removePartner')}
+              </Button>
+            )}
             <Button
               size="small"
-              onClick={() => {
+              onClick={async () => {
                 if (!linkingPlayer) return;
                 const username = linkDraft.trim().replace(/^@/, '') || null;
                 updatePlayerTelegram(linkingPlayer.id, username);
+                if (showPartner && updatePlayerPartner) {
+                  const pName = partnerNameDraft.trim() || null;
+                  const pTg = partnerTelegramDraft.trim().replace(/^@/, '') || null;
+                  const constraints: PartnerConstraints = {
+                    requireSameClub: format ? formatHasClubs(format) : false,
+                    requireSameRank: format === 'club-ranked',
+                    requireOppositeGroup: format ? formatHasGroups(format) : false,
+                  };
+                  const rejection = await updatePlayerPartner(linkingPlayer.id, pName, pTg, constraints);
+                  if (rejection) {
+                    alert(rejectionMessage(rejection, t));
+                    return;
+                  }
+                }
                 setLinkingPlayer(null);
               }}
-              disabled={!linkDraft.trim()}
+              disabled={!linkDraft.trim() && !(showPartner && partnerNameDraft.trim())}
             >
               {t('organizer.saveLink')}
             </Button>

@@ -401,6 +401,13 @@
   width: 100%;
 }
 
+.partnerPicker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
 .joinSelect {
   width: 100%;
   padding: var(--space-sm) var(--space-md);
