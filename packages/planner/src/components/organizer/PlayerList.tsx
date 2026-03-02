@@ -241,7 +241,7 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                   onClick={() => removePlayer(player.id)}
                   title={t('organizer.removePlayer')}
                 >
-                  &times;
+                  &#x1F5D1;
                 </button>
               </div>
             ))}
