@@ -69,6 +69,8 @@ const sr: Translations = {
   'organizer.markCancelled': 'Označi kao otkazano',
   'organizer.markConfirmed': 'Označi kao potvrđeno',
   'organizer.removePlayer': 'Ukloni igrača',
+  'organizer.selectClub': 'Klub',
+  'organizer.selectRank': 'Rang',
   'organizer.settings': 'Podešavanja',
   'organizer.whenWhere': 'Kada i Gde',
   'organizer.formatAndCourts': 'Format i Tereni',

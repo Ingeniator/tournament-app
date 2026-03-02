@@ -69,6 +69,8 @@ const pt: Translations = {
   'organizer.markCancelled': 'Marcar como cancelado',
   'organizer.markConfirmed': 'Marcar como confirmado',
   'organizer.removePlayer': 'Remover jogador',
+  'organizer.selectClub': 'Clube',
+  'organizer.selectRank': 'Rank',
   'organizer.settings': 'Definições',
   'organizer.whenWhere': 'Quando e Onde',
   'organizer.formatAndCourts': 'Formato e Campos',

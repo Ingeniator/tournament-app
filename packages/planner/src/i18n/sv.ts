@@ -68,6 +68,8 @@ const sv: Translations = {
   'organizer.markCancelled': 'Markera som avbokad',
   'organizer.markConfirmed': 'Markera som bekräftad',
   'organizer.removePlayer': 'Ta bort spelare',
+  'organizer.selectClub': 'Klubb',
+  'organizer.selectRank': 'Rank',
   'organizer.settings': 'Inställningar',
   'organizer.whenWhere': 'När och Var',
   'organizer.formatAndCourts': 'Format och Banor',

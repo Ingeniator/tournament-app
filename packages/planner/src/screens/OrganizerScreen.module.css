@@ -120,6 +120,14 @@
   min-height: 44px;
 }
 
+.playerControls {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+}
+
 .playerNum {
   font-size: var(--text-sm);
   color: var(--color-text-muted);
@@ -636,7 +644,7 @@
   background-color: var(--color-surface-raised);
   color: var(--color-text);
   cursor: pointer;
-  max-width: 80px;
+  max-width: 120px;
 }
 
 .clubSelect:focus {
@@ -654,7 +662,7 @@
   background-color: var(--color-surface-raised);
   color: var(--color-text);
   cursor: pointer;
-  max-width: 80px;
+  max-width: 120px;
 }
 
 .rankSelect:focus {

@@ -238,6 +238,16 @@
 
 .playerName {
   flex: 1;
+  min-width: 0;
+}
+
+.playerBadges {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+  max-width: 100px;
 }
 
 .playerLink {
@@ -310,26 +320,30 @@
 }
 
 .groupBadge {
-  display: inline-block;
+  display: block;
   font-size: 11px;
   font-weight: 600;
   background-color: var(--color-primary);
   color: white;
   border-radius: var(--radius-full);
   padding: 1px 8px;
-  margin-left: var(--space-sm);
-  vertical-align: middle;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .clubBadge {
-  display: inline-block;
+  display: block;
   font-size: 11px;
   font-weight: 600;
   color: white;
   border-radius: var(--radius-full);
   padding: 1px 8px;
-  margin-left: var(--space-sm);
-  vertical-align: middle;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Group picker (Mixicano) */
@@ -484,15 +498,17 @@
 }
 
 .rankBadge {
-  display: inline-block;
+  display: block;
   font-size: 11px;
   font-weight: 600;
   background-color: var(--color-primary);
   color: white;
   border-radius: var(--radius-full);
   padding: 1px 8px;
-  margin-left: var(--space-sm);
-  vertical-align: middle;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .toast {

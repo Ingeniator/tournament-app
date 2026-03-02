@@ -452,27 +452,35 @@ export function JoinScreen() {
                   {statuses.get(player.id) === 'reserve' && (
                     <span className={styles.reserveBadge}>{t('join.reserve')}</span>
                   )}
-                  {isMixicano && player.group && (
-                    <span className={styles.groupBadge}>
-                      {player.group === 'A'
-                        ? (tournament.groupLabels?.[0] || 'A')
-                        : (tournament.groupLabels?.[1] || 'B')}
-                    </span>
-                  )}
-                  {isClubAmericano && clubIdx >= 0 && (
-                    <span
-                      className={styles.clubBadge}
-                      style={{ backgroundColor: getClubColor(clubs[clubIdx], clubIdx) }}
-                    >
-                      {clubs[clubIdx].name}
-                    </span>
-                  )}
-                  {tournament.format === 'club-ranked' && player.rankSlot != null && tournament.rankLabels?.[player.rankSlot] && (
-                    <span className={styles.rankBadge}>
-                      {tournament.rankLabels[player.rankSlot]}
-                    </span>
-                  )}
                 </span>
+                {(
+                  (isMixicano && player.group) ||
+                  (isClubAmericano && clubIdx >= 0) ||
+                  (tournament.format === 'club-ranked' && player.rankSlot != null && tournament.rankLabels?.[player.rankSlot])
+                ) && (
+                  <div className={styles.playerBadges}>
+                    {isMixicano && player.group && (
+                      <span className={styles.groupBadge}>
+                        {player.group === 'A'
+                          ? (tournament.groupLabels?.[0] || 'A')
+                          : (tournament.groupLabels?.[1] || 'B')}
+                      </span>
+                    )}
+                    {isClubAmericano && clubIdx >= 0 && (
+                      <span
+                        className={styles.clubBadge}
+                        style={{ backgroundColor: getClubColor(clubs[clubIdx], clubIdx) }}
+                      >
+                        {clubs[clubIdx].name}
+                      </span>
+                    )}
+                    {tournament.format === 'club-ranked' && player.rankSlot != null && tournament.rankLabels?.[player.rankSlot] && (
+                      <span className={styles.rankBadge}>
+                        {tournament.rankLabels[player.rankSlot]}
+                      </span>
+                    )}
+                  </div>
+                )}
                 <span className={player.confirmed !== false ? styles.statusConfirmed : styles.statusCancelled}>
                   {player.confirmed !== false ? '\u2713' : '\u2717'}
                 </span>

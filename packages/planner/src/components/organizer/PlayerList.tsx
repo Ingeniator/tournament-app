@@ -89,53 +89,61 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                     <span className={styles.reserveBadge}>{t('organizer.reserve')}</span>
                   )}
                 </span>
-                {format && formatHasGroups(format) && onSetGroup && (
-                  <div className={styles.groupToggle}>
-                    <button
-                      className={player.group === 'A' ? styles.groupBtnActive : styles.groupBtn}
-                      onClick={() => onSetGroup(player.id, player.group === 'A' ? null : 'A')}
-                    >
-                      {groupLabels?.[0] || 'A'}
-                    </button>
-                    <button
-                      className={player.group === 'B' ? styles.groupBtnActive : styles.groupBtn}
-                      onClick={() => onSetGroup(player.id, player.group === 'B' ? null : 'B')}
-                    >
-                      {groupLabels?.[1] || 'B'}
-                    </button>
+                {(
+                  (format && formatHasGroups(format) && onSetGroup) ||
+                  (format && formatHasClubs(format) && onSetClub && clubs && clubs.length > 0) ||
+                  (format === 'club-ranked' && onSetRank && rankLabels && rankLabels.length > 0)
+                ) && (
+                  <div className={styles.playerControls}>
+                    {format && formatHasGroups(format) && onSetGroup && (
+                      <div className={styles.groupToggle}>
+                        <button
+                          className={player.group === 'A' ? styles.groupBtnActive : styles.groupBtn}
+                          onClick={() => onSetGroup(player.id, player.group === 'A' ? null : 'A')}
+                        >
+                          {groupLabels?.[0] || 'A'}
+                        </button>
+                        <button
+                          className={player.group === 'B' ? styles.groupBtnActive : styles.groupBtn}
+                          onClick={() => onSetGroup(player.id, player.group === 'B' ? null : 'B')}
+                        >
+                          {groupLabels?.[1] || 'B'}
+                        </button>
+                      </div>
+                    )}
+                    {format && formatHasClubs(format) && onSetClub && clubs && clubs.length > 0 && (
+                      <select
+                        className={styles.clubSelect}
+                        value={player.clubId ?? ''}
+                        onChange={e => onSetClub(player.id, e.target.value || null)}
+                        style={player.clubId ? (() => {
+                          const idx = clubs.findIndex(c => c.id === player.clubId);
+                          return idx >= 0 ? { backgroundColor: getClubColor(clubs[idx], idx), color: 'white', borderColor: 'transparent' } as React.CSSProperties : undefined;
+                        })() : undefined}
+                      >
+                        <option value="">{t('organizer.selectClub')}</option>
+                        {clubs.map(club => (
+                          <option key={club.id} value={club.id}>
+                            {club.name}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    {format === 'club-ranked' && onSetRank && rankLabels && rankLabels.length > 0 && (
+                      <select
+                        className={styles.rankSelect}
+                        value={player.rankSlot != null ? String(player.rankSlot) : ''}
+                        onChange={e => onSetRank(player.id, e.target.value ? Number(e.target.value) : null)}
+                      >
+                        <option value="">{t('organizer.selectRank')}</option>
+                        {rankLabels.map((label, idx) => (
+                          <option key={idx} value={String(idx)}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                    )}
                   </div>
-                )}
-                {format && formatHasClubs(format) && onSetClub && clubs && clubs.length > 0 && (
-                  <select
-                    className={styles.clubSelect}
-                    value={player.clubId ?? ''}
-                    onChange={e => onSetClub(player.id, e.target.value || null)}
-                    style={player.clubId ? (() => {
-                      const idx = clubs.findIndex(c => c.id === player.clubId);
-                      return idx >= 0 ? { backgroundColor: getClubColor(clubs[idx], idx), color: 'white', borderColor: 'transparent' } as React.CSSProperties : undefined;
-                    })() : undefined}
-                  >
-                    <option value="">—</option>
-                    {clubs.map(club => (
-                      <option key={club.id} value={club.id}>
-                        {club.name}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                {format === 'club-ranked' && onSetRank && rankLabels && rankLabels.length > 0 && (
-                  <select
-                    className={styles.rankSelect}
-                    value={player.rankSlot != null ? String(player.rankSlot) : ''}
-                    onChange={e => onSetRank(player.id, e.target.value ? Number(e.target.value) : null)}
-                  >
-                    <option value="">—</option>
-                    {rankLabels.map((label, idx) => (
-                      <option key={idx} value={String(idx)}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
                 )}
                 {!simplified && (
                   <button
