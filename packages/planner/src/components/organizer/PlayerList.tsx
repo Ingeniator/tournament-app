@@ -1,5 +1,5 @@
 import { useState, useRef, type ClipboardEvent } from 'react';
-import { Button, Card, getClubColor, Modal, useTranslation, formatHasClubs } from '@padel/common';
+import { Button, Card, getClubColor, Modal, useTranslation, formatHasGroups, formatHasClubs } from '@padel/common';
 import type { PlannerRegistration, TournamentFormat, Club } from '@padel/common';
 import { parsePlayerList } from '@padel/common';
 import styles from '../../screens/OrganizerScreen.module.css';
@@ -89,7 +89,7 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                     <span className={styles.reserveBadge}>{t('organizer.reserve')}</span>
                   )}
                 </span>
-                {!simplified && format === 'mixicano' && onSetGroup && (
+                {!simplified && format && formatHasGroups(format) && onSetGroup && (
                   <div className={styles.groupToggle}>
                     <button
                       className={player.group === 'A' ? styles.groupBtnActive : styles.groupBtn}
