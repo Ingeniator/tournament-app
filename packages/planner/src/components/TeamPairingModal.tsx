@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import type { Team, Club, TournamentFormat } from '@padel/common';
 import type { PlannerRegistration } from '@padel/common';
-import { Modal, Button, CLUB_COLORS, getClubColor, formatHasGroups, formatHasClubs, useTranslation, deduplicateNames } from '@padel/common';
+import { Modal, Button, CLUB_COLORS, getClubColor, shortLabel, formatHasGroups, formatHasClubs, useTranslation, deduplicateNames } from '@padel/common';
 import { createTeams, createCrossGroupTeams, createClubTeams } from '@padel/common';
 import styles from './TeamPairingModal.module.css';
 
@@ -206,7 +206,7 @@ export function TeamPairingModal({ open, players, format, clubs, rankLabels, onS
           onChange={e => handleRename(team.id, e.target.value)}
         />
         {isSlotMode && slotIndex != null && rankLabels?.[slotIndex] && (
-          <span className={styles.slotBadge}>{rankLabels[slotIndex]}</span>
+          <span className={styles.slotBadge}>{shortLabel(rankLabels[slotIndex])}</span>
         )}
       </div>
       <div className={styles.teamPlayers}>

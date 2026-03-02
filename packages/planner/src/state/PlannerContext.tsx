@@ -29,7 +29,7 @@ export interface PlannerContextValue {
   setScreen: (screen: Screen) => void;
   createTournament: (name: string) => Promise<void>;
   loadByCode: (code: string) => Promise<boolean>;
-  updateTournament: (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'pointsPerMatch' | 'courts' | 'maxRounds' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description' | 'clubs' | 'groupLabels' | 'rankLabels' | 'scoringMode' | 'maldiciones'>>) => Promise<void>;
+  updateTournament: (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'pointsPerMatch' | 'courts' | 'maxRounds' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description' | 'clubs' | 'groupLabels' | 'rankLabels' | 'rankColors' | 'scoringMode' | 'maldiciones'>>) => Promise<void>;
   registerPlayer: (name: string) => Promise<void>;
   removePlayer: (playerId: string) => Promise<void>;
   updateConfirmed: (confirmed: boolean) => Promise<void>;

@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, type ReactNode } from 'react';
 import { ref, push, set } from 'firebase/database';
-import { Button, Card, CLUB_COLORS, getClubColor, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation, FormatPicker, getPresetByFormat, formatHasGroups, formatHasClubs, formatHasFixedPartners, resolveConfigDefaults, computeSitOutInfo, MINUTES_PER_POINT, MINUTES_PER_GAME, CHANGEOVER_MINUTES } from '@padel/common';
+import { Button, Card, CLUB_COLORS, getClubColor, RANK_COLORS, getRankColor, cycleColor, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation, FormatPicker, getPresetByFormat, formatHasGroups, formatHasClubs, formatHasFixedPartners, resolveConfigDefaults, computeSitOutInfo, MINUTES_PER_POINT, MINUTES_PER_GAME, CHANGEOVER_MINUTES } from '@padel/common';
 import type { Court, Club, ChaosLevel, Team } from '@padel/common';
 import { generateId } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
@@ -612,10 +612,10 @@ export function OrganizerScreen() {
                 }}>{t('organizer.addClub')}</Button>
               </div>
               {clubs.map((club, idx) => {
-                const usedByOthers = new Set(
-                  clubs.map((c, i) => i !== idx ? getClubColor(c, i) : null).filter(Boolean)
+                const currentClubIdx = CLUB_COLORS.indexOf(getClubColor(club, idx));
+                const usedClubIndices = new Set(
+                  clubs.map((c, i) => i !== idx ? CLUB_COLORS.indexOf(getClubColor(c, i)) : -1).filter(i => i >= 0)
                 );
-                const available = CLUB_COLORS.filter(c => !usedByOthers.has(c));
                 return (
                 <EditableItem
                   key={club.id}
@@ -635,14 +635,9 @@ export function OrganizerScreen() {
                       className={styles.clubDot}
                       style={{ backgroundColor: getClubColor(club, idx) }}
                       onClick={() => {
-                        const currentColor = getClubColor(club, idx);
-                        const pool = available.length > 0 ? available : CLUB_COLORS;
-                        const currentPoolIdx = pool.indexOf(currentColor);
-                        const nextColor = currentPoolIdx >= 0
-                          ? pool[(currentPoolIdx + 1) % pool.length]
-                          : pool[0];
+                        const nextIdx = cycleColor(CLUB_COLORS, currentClubIdx >= 0 ? currentClubIdx : idx, usedClubIndices);
                         const updated = clubs.map(c =>
-                          c.id === club.id ? { ...c, color: nextColor } : c
+                          c.id === club.id ? { ...c, color: CLUB_COLORS[nextIdx] } : c
                         );
                         updateTournament({ clubs: updated });
                       }}
@@ -660,22 +655,41 @@ export function OrganizerScreen() {
                   <div className={styles.rankLabelsSection}>
                     <span className={styles.rankLabelsTitle}>{t('organizer.rankLabels')}</span>
                     <div className={styles.rankLabelsColumn}>
-                      {Array.from({ length: slotsPerClub }, (_, i) => (
-                        <input
-                          key={i}
-                          className={styles.rankLabelInput}
-                          type="text"
-                          value={tournament.rankLabels?.[i] ?? ''}
-                          onChange={e => {
-                            const labels = [...(tournament.rankLabels ?? [])];
-                            labels[i] = e.target.value;
-                            // Trim trailing empty strings
-                            while (labels.length > 0 && !labels[labels.length - 1]) labels.pop();
-                            updateTournament({ rankLabels: labels.length > 0 ? labels : undefined });
-                          }}
-                          placeholder={t('organizer.rankLabelPlaceholder', { num: i + 1 })}
-                        />
-                      ))}
+                      {Array.from({ length: slotsPerClub }, (_, i) => {
+                        const customIdx = tournament.rankColors?.[i];
+                        const rc = getRankColor(i, customIdx);
+                        return (
+                          <div key={i} className={styles.rankLabelRow}>
+                            <button
+                              type="button"
+                              className={styles.rankDot}
+                              style={{ backgroundColor: rc.bg, borderColor: rc.border }}
+                              onClick={() => {
+                                const colors = [...(tournament.rankColors ?? Array.from({ length: slotsPerClub }, (__, j) => j))];
+                                const current = colors[i] ?? i;
+                                const usedByOthers = new Set(
+                                  colors.map((c, j) => j !== i ? c : -1).filter(c => c >= 0)
+                                );
+                                colors[i] = cycleColor(RANK_COLORS, current, usedByOthers);
+                                updateTournament({ rankColors: colors });
+                              }}
+                            />
+                            <input
+                              className={styles.rankLabelInput}
+                              type="text"
+                              value={tournament.rankLabels?.[i] ?? ''}
+                              onChange={e => {
+                                const labels = [...(tournament.rankLabels ?? [])];
+                                labels[i] = e.target.value;
+                                // Trim trailing empty strings
+                                while (labels.length > 0 && !labels[labels.length - 1]) labels.pop();
+                                updateTournament({ rankLabels: labels.length > 0 ? labels : undefined });
+                              }}
+                              placeholder={t('organizer.rankLabelPlaceholder', { num: i + 1 })}
+                            />
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 ) : null;
@@ -850,6 +864,7 @@ export function OrganizerScreen() {
         clubs={tournament.clubs}
         groupLabels={tournament.groupLabels}
         rankLabels={tournament.rankLabels}
+        rankColors={tournament.rankColors}
         onSetGroup={updatePlayerGroup}
         onSetClub={updatePlayerClub}
         onSetRank={updatePlayerRank}

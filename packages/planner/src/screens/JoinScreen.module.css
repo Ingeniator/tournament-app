@@ -247,7 +247,7 @@
   align-items: stretch;
   gap: var(--space-xs);
   flex-shrink: 0;
-  max-width: 100px;
+  width: 90px;
 }
 
 .playerLink {
@@ -396,115 +396,36 @@
 }
 
 /* Club picker (Club Americano) */
-.clubPicker {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-sm);
-  width: 100%;
-}
-
-.clubPickerLabel {
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-}
-
-.clubOptions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-  justify-content: center;
-}
-
-.clubOption {
-  padding: var(--space-sm) var(--space-md);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  border: 2px solid var(--club-color, var(--color-border));
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--club-color, var(--color-text));
-  cursor: pointer;
-}
-
-.clubOption:active {
-  opacity: 0.7;
-}
-
-.clubOptionActive {
-  padding: var(--space-sm) var(--space-md);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  border: 2px solid var(--club-color, var(--color-primary));
-  border-radius: var(--radius-md);
-  background-color: var(--club-color, var(--color-primary));
-  color: white;
-  cursor: pointer;
-}
-
-.clubOptionActive:active {
-  opacity: 0.8;
-}
-
-/* Rank picker (Club Ranked) */
+.clubPicker,
 .rankPicker {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-sm);
   width: 100%;
 }
 
-.rankPickerLabel {
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-}
-
-.rankOptions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-  justify-content: center;
-}
-
-.rankOption {
+.joinSelect {
+  width: 100%;
   padding: var(--space-sm) var(--space-md);
   font-size: var(--text-sm);
   font-weight: 600;
-  border: 2px solid var(--color-primary);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--color-primary);
+  background-color: var(--color-surface-raised);
+  color: var(--color-text);
   cursor: pointer;
+  appearance: auto;
 }
 
-.rankOption:active {
-  opacity: 0.7;
-}
-
-.rankOptionActive {
-  padding: var(--space-sm) var(--space-md);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  border: 2px solid var(--color-primary);
-  border-radius: var(--radius-md);
-  background-color: var(--color-primary);
-  color: white;
-  cursor: pointer;
-}
-
-.rankOptionActive:active {
-  opacity: 0.8;
+.joinSelect:focus {
+  outline: none;
+  border-color: var(--color-primary);
 }
 
 .rankBadge {
   display: block;
   font-size: 11px;
   font-weight: 600;
-  background-color: var(--color-primary);
-  color: white;
   border-radius: var(--radius-full);
   padding: 1px 8px;
+  border: 1px solid transparent;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;

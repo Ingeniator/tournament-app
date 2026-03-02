@@ -44,6 +44,11 @@ function toTournament(id: string, data: Record<string, unknown>): PlannerTournam
       : typeof data.rankLabels === 'object' && data.rankLabels !== null
         ? Object.values(data.rankLabels) as string[]
         : undefined,
+    rankColors: Array.isArray(data.rankColors)
+      ? data.rankColors as number[]
+      : typeof data.rankColors === 'object' && data.rankColors !== null
+        ? Object.values(data.rankColors) as number[]
+        : undefined,
     scoringMode: data.scoringMode as 'points' | 'games' | undefined,
     maldiciones: data.maldiciones as PlannerTournament['maldiciones'],
   };
@@ -101,7 +106,7 @@ export function usePlannerTournament(tournamentId: string | null) {
     return id;
   }, []);
 
-  const updateTournament = useCallback(async (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'courts' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description' | 'clubs' | 'groupLabels' | 'rankLabels' | 'scoringMode' | 'maldiciones' | 'pointsPerMatch' | 'maxRounds'>>) => {
+  const updateTournament = useCallback(async (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'courts' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description' | 'clubs' | 'groupLabels' | 'rankLabels' | 'rankColors' | 'scoringMode' | 'maldiciones' | 'pointsPerMatch' | 'maxRounds'>>) => {
     if (!tournamentId || !db) return;
     // Convert undefined to null so Firebase deletes the field
     const pathUpdates: Record<string, unknown> = {};

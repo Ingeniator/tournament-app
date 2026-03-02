@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Button, Card, getClubColor, Toast, useToast, useTranslation, getPresetByFormat, formatHasGroups, formatHasClubs } from '@padel/common';
+import { Button, Card, getClubColor, getRankColor, shortLabel, Toast, useToast, useTranslation, getPresetByFormat, formatHasGroups, formatHasClubs } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import { downloadICS } from '../utils/icsExport';
@@ -347,39 +347,42 @@ export function JoinScreen() {
 
             {isConfirmed && uid && formatHasClubs(tournament.format) && (tournament.clubs ?? []).length > 0 && (() => {
               const clubs = tournament.clubs!;
+              const clubIdx = myRegistration?.clubId
+                ? clubs.findIndex(c => c.id === myRegistration.clubId)
+                : -1;
               return (
                 <div className={styles.clubPicker}>
-                  <span className={styles.clubPickerLabel}>{t('join.selectClub')}</span>
-                  <div className={styles.clubOptions}>
-                    {clubs.map((club, idx) => (
-                      <button
-                        key={club.id}
-                        className={myRegistration?.clubId === club.id ? styles.clubOptionActive : styles.clubOption}
-                        style={{ '--club-color': getClubColor(club, idx) } as React.CSSProperties}
-                        onClick={() => updatePlayerClub(uid, myRegistration?.clubId === club.id ? null : club.id)}
-                      >
-                        {club.name}
-                      </button>
+                  <select
+                    className={styles.joinSelect}
+                    value={myRegistration?.clubId ?? ''}
+                    onChange={e => updatePlayerClub(uid, e.target.value || null)}
+                    style={clubIdx >= 0 ? { backgroundColor: getClubColor(clubs[clubIdx], clubIdx), color: 'white', borderColor: 'transparent' } : undefined}
+                  >
+                    <option value="">{t('join.selectClub')}</option>
+                    {clubs.map(club => (
+                      <option key={club.id} value={club.id}>{club.name}</option>
                     ))}
-                  </div>
+                  </select>
                 </div>
               );
             })()}
 
             {isConfirmed && uid && tournament.format === 'club-ranked' && (tournament.rankLabels ?? []).length > 0 && (
               <div className={styles.rankPicker}>
-                <span className={styles.rankPickerLabel}>{t('join.selectRank')}</span>
-                <div className={styles.rankOptions}>
+                <select
+                  className={styles.joinSelect}
+                  value={myRegistration?.rankSlot != null ? String(myRegistration.rankSlot) : ''}
+                  onChange={e => updatePlayerRank(uid, e.target.value ? Number(e.target.value) : null)}
+                  style={myRegistration?.rankSlot != null ? (() => {
+                    const rc = getRankColor(myRegistration.rankSlot, tournament.rankColors?.[myRegistration.rankSlot]);
+                    return { backgroundColor: rc.bg, color: rc.text, borderColor: rc.border };
+                  })() : undefined}
+                >
+                  <option value="">{t('join.selectRank')}</option>
                   {tournament.rankLabels!.map((label, idx) => (
-                    <button
-                      key={idx}
-                      className={myRegistration?.rankSlot === idx ? styles.rankOptionActive : styles.rankOption}
-                      onClick={() => updatePlayerRank(uid, myRegistration?.rankSlot === idx ? null : idx)}
-                    >
-                      {label}
-                    </button>
+                    <option key={idx} value={String(idx)}>{label}</option>
                   ))}
-                </div>
+                </select>
               </div>
             )}
           </div>
@@ -471,14 +474,20 @@ export function JoinScreen() {
                         className={styles.clubBadge}
                         style={{ backgroundColor: getClubColor(clubs[clubIdx], clubIdx) }}
                       >
-                        {clubs[clubIdx].name}
+                        {shortLabel(clubs[clubIdx].name)}
                       </span>
                     )}
-                    {tournament.format === 'club-ranked' && player.rankSlot != null && tournament.rankLabels?.[player.rankSlot] && (
-                      <span className={styles.rankBadge}>
-                        {tournament.rankLabels[player.rankSlot]}
-                      </span>
-                    )}
+                    {tournament.format === 'club-ranked' && player.rankSlot != null && tournament.rankLabels?.[player.rankSlot] && (() => {
+                      const rc = getRankColor(player.rankSlot, tournament.rankColors?.[player.rankSlot]);
+                      return (
+                        <span
+                          className={styles.rankBadge}
+                          style={{ backgroundColor: rc.bg, color: rc.text, borderColor: rc.border }}
+                        >
+                          {shortLabel(tournament.rankLabels[player.rankSlot])}
+                        </span>
+                      );
+                    })()}
                   </div>
                 )}
                 <span className={player.confirmed !== false ? styles.statusConfirmed : styles.statusCancelled}>

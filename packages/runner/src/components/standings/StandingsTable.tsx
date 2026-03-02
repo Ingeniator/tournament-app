@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import type { StandingsEntry } from '@padel/common';
-import { useTranslation } from '@padel/common';
+import { useTranslation, shortLabel } from '@padel/common';
 import styles from './StandingsTable.module.css';
 
 export interface GroupInfo {
@@ -87,7 +87,7 @@ export const StandingsTable = memo(function StandingsTable({ standings, plannedG
                           <span className={styles.pairSecondary}>{nameParts[1]}</span>
                         </span>
                         {rankLabel && (
-                          <span className={styles.rankBadge}>{rankLabel}</span>
+                          <span className={styles.rankBadge}>{shortLabel(rankLabel)}</span>
                         )}
                       </div>
                     </td>

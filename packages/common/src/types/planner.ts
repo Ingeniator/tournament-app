@@ -21,6 +21,7 @@ export interface PlannerTournament {
   clubs?: Club[];
   groupLabels?: [string, string];
   rankLabels?: string[];
+  rankColors?: number[];
   scoringMode?: 'points' | 'games';
   maldiciones?: { enabled: boolean; chaosLevel: ChaosLevel };
 }

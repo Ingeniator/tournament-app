@@ -18,7 +18,7 @@ export type { ChaosLevel, CardTier, CurseCard, MatchCurse, MaldicionesHands } fr
 export type { Supporter, GroupedSupporter } from './types/supporter';
 export type { PlannerTournament, PlannerRegistration, TournamentSummary, TournamentStartInfo } from './types/planner';
 export type { PadelEvent, EventTournamentLink, PadelEventSummary, PadelEventStatus, EventStandingEntry, EventClubStandingEntry } from './types/event';
-export { CLUB_COLORS, getClubColor } from './constants/clubColors';
+export { CLUB_COLORS, getClubColor, RANK_COLORS, getRankColor, cycleColor, shortLabel, shortRankLabel } from './constants/clubColors';
 export { generateId } from './utils/id';
 export { parsePlayerList } from './utils/parsePlayerList';
 export { groupSupporters } from './utils/groupSupporters';

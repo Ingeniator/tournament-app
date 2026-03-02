@@ -1,5 +1,5 @@
 import { useState, useRef, type ClipboardEvent } from 'react';
-import { Button, Card, getClubColor, Modal, useTranslation, formatHasGroups, formatHasClubs } from '@padel/common';
+import { Button, Card, getClubColor, getRankColor, shortLabel, Modal, useTranslation, formatHasGroups, formatHasClubs } from '@padel/common';
 import type { PlannerRegistration, TournamentFormat, Club } from '@padel/common';
 import { parsePlayerList } from '@padel/common';
 import styles from '../../screens/OrganizerScreen.module.css';
@@ -17,13 +17,14 @@ interface PlayerListProps {
   clubs?: Club[];
   groupLabels?: [string, string];
   rankLabels?: string[];
+  rankColors?: number[];
   onSetGroup?: (playerId: string, group: 'A' | 'B' | null) => Promise<void>;
   onSetClub?: (playerId: string, clubId: string | null) => Promise<void>;
   onSetRank?: (playerId: string, rankSlot: number | null) => Promise<void>;
   simplified?: boolean;
 }
 
-export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, removePlayer, toggleConfirmed, updatePlayerTelegram, statuses, format, clubs, groupLabels, rankLabels, onSetGroup, onSetClub, onSetRank, simplified }: PlayerListProps) {
+export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, removePlayer, toggleConfirmed, updatePlayerTelegram, statuses, format, clubs, groupLabels, rankLabels, rankColors, onSetGroup, onSetClub, onSetRank, simplified }: PlayerListProps) {
   const { t } = useTranslation();
   const [newPlayerName, setNewPlayerName] = useState('');
   const addingPlayer = useRef(false);
@@ -124,7 +125,7 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                         <option value="">{t('organizer.selectClub')}</option>
                         {clubs.map(club => (
                           <option key={club.id} value={club.id}>
-                            {club.name}
+                            {shortLabel(club.name)}
                           </option>
                         ))}
                       </select>
@@ -134,11 +135,15 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                         className={styles.rankSelect}
                         value={player.rankSlot != null ? String(player.rankSlot) : ''}
                         onChange={e => onSetRank(player.id, e.target.value ? Number(e.target.value) : null)}
+                        style={player.rankSlot != null ? (() => {
+                          const rc = getRankColor(player.rankSlot, rankColors?.[player.rankSlot]);
+                          return { backgroundColor: rc.bg, color: rc.text, borderColor: rc.border } as React.CSSProperties;
+                        })() : undefined}
                       >
                         <option value="">{t('organizer.selectRank')}</option>
                         {rankLabels.map((label, idx) => (
                           <option key={idx} value={String(idx)}>
-                            {label}
+                            {shortLabel(label)}
                           </option>
                         ))}
                       </select>
