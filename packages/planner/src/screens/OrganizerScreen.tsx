@@ -196,10 +196,8 @@ export function OrganizerScreen() {
   };
 
   const playerCount = confirmedCount || capacity;
-  const maxCourts = Math.max(1, Math.floor(playerCount / 4));
 
   const handleAddCourt = async () => {
-    if (tournament.courts.length >= maxCourts) return;
     const newIndex = tournament.courts.length;
     const courts: Court[] = [...tournament.courts, { id: generateId(), name: `Court ${newIndex + 1}` }];
     await updateTournament({ courts });
@@ -420,7 +418,7 @@ export function OrganizerScreen() {
         <div className={styles.courtsSection}>
           <div className={styles.courtsHeader}>
             <span>{t('organizer.courts', { count: tournament.courts.length })}</span>
-            <Button variant="ghost" size="small" onClick={handleAddCourt} disabled={tournament.courts.length >= maxCourts}>{t('organizer.addCourt')}</Button>
+            <Button variant="ghost" size="small" onClick={handleAddCourt}>{t('organizer.addCourt')}</Button>
           </div>
           {tournament.courts.map((court, courtIdx) => (
             <EditableItem
