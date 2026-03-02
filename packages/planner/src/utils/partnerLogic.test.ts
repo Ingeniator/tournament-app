@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { PlannerRegistration } from '@padel/common';
-import { resolvePartnerUpdate } from './partnerLogic';
+import { resolvePartnerUpdate, findPartner, wouldBreakPartnerLink } from './partnerLogic';
 
 function player(overrides: Partial<PlannerRegistration> & { id: string; name: string }): PlannerRegistration {
   return { timestamp: 1000, ...overrides };
@@ -549,5 +549,158 @@ describe('resolvePartnerUpdate', () => {
       expect(r2.writes).toHaveLength(1);
       expect(r2.writes[0].playerId).toBe('b');
     });
+  });
+
+  // ─── AUTO-CANCEL: orphaned partner-added players ───
+
+  describe('auto-cancel orphaned partner-added players', () => {
+    it('sets confirmed: false on unclaimed partner when removing link', () => {
+      const players = [
+        player({ id: 'a', name: 'Alice', partnerName: 'Bob' }),
+        player({ id: 'b', name: 'Bob', partnerName: 'Alice', addedByPartner: 'Alice' }),
+      ];
+      const result = resolvePartnerUpdate('a', null, null, players);
+
+      const bobWrite = result.writes.find(w => w.playerId === 'b');
+      expect(bobWrite).toBeDefined();
+      expect(bobWrite!.fields.confirmed).toBe(false);
+      expect(bobWrite!.fields.partnerName).toBeNull();
+    });
+
+    it('does NOT set confirmed: false on claimed partner (no addedByPartner)', () => {
+      const players = [
+        player({ id: 'a', name: 'Alice', partnerName: 'Bob' }),
+        player({ id: 'b', name: 'Bob', partnerName: 'Alice' }),
+      ];
+      const result = resolvePartnerUpdate('a', null, null, players);
+
+      const bobWrite = result.writes.find(w => w.playerId === 'b');
+      expect(bobWrite).toBeDefined();
+      expect(bobWrite!.fields).not.toHaveProperty('confirmed');
+    });
+
+    it('auto-cancels unclaimed partner when switching to a different partner', () => {
+      const players = [
+        player({ id: 'a', name: 'Alice', partnerName: 'Bob' }),
+        player({ id: 'b', name: 'Bob', partnerName: 'Alice', addedByPartner: 'Alice' }),
+        player({ id: 'c', name: 'Charlie' }),
+      ];
+      const result = resolvePartnerUpdate('a', 'Charlie', null, players);
+
+      expect(result.rejected).toBeNull();
+      const bobWrite = result.writes.find(w => w.playerId === 'b');
+      expect(bobWrite).toBeDefined();
+      expect(bobWrite!.fields.confirmed).toBe(false);
+    });
+
+    it('does NOT auto-cancel when switching and old partner has no addedByPartner', () => {
+      const players = [
+        player({ id: 'a', name: 'Alice', partnerName: 'Bob' }),
+        player({ id: 'b', name: 'Bob', partnerName: 'Alice' }),
+        player({ id: 'c', name: 'Charlie' }),
+      ];
+      const result = resolvePartnerUpdate('a', 'Charlie', null, players);
+
+      const bobWrite = result.writes.find(w => w.playerId === 'b');
+      expect(bobWrite).toBeDefined();
+      expect(bobWrite!.fields).not.toHaveProperty('confirmed');
+    });
+
+    it('handles addedByPartner: true (boolean fallback)', () => {
+      const players = [
+        player({ id: 'a', name: 'Alice', partnerName: 'Bob' }),
+        player({ id: 'b', name: 'Bob', partnerName: 'Alice', addedByPartner: true as unknown as string }),
+      ];
+      const result = resolvePartnerUpdate('a', null, null, players);
+
+      const bobWrite = result.writes.find(w => w.playerId === 'b');
+      expect(bobWrite!.fields.confirmed).toBe(false);
+    });
+  });
+});
+
+describe('findPartner', () => {
+  it('finds partner by name', () => {
+    const alice = player({ id: 'a', name: 'Alice', partnerName: 'Bob' });
+    const bob = player({ id: 'b', name: 'Bob' });
+    expect(findPartner(alice, [alice, bob])).toBe(bob);
+  });
+
+  it('finds partner by telegram', () => {
+    const alice = player({ id: 'a', name: 'Alice', partnerName: 'Roberto', partnerTelegram: 'bob_tg' });
+    const bob = player({ id: 'b', name: 'Roberto', telegramUsername: 'bob_tg' });
+    expect(findPartner(alice, [alice, bob])).toBe(bob);
+  });
+
+  it('returns undefined when no partner set', () => {
+    const alice = player({ id: 'a', name: 'Alice' });
+    expect(findPartner(alice, [alice])).toBeUndefined();
+  });
+
+  it('returns undefined when partner not in list', () => {
+    const alice = player({ id: 'a', name: 'Alice', partnerName: 'Ghost' });
+    expect(findPartner(alice, [alice])).toBeUndefined();
+  });
+});
+
+describe('wouldBreakPartnerLink', () => {
+  it('returns null when club change is compatible', () => {
+    const partner = player({ id: 'b', name: 'Bob', clubId: 'c1' });
+    expect(wouldBreakPartnerLink({ clubId: 'c1' }, partner, { requireSameClub: true })).toBeNull();
+  });
+
+  it('returns different_club when club changes to a different one', () => {
+    const partner = player({ id: 'b', name: 'Bob', clubId: 'c1' });
+    expect(wouldBreakPartnerLink({ clubId: 'c2' }, partner, { requireSameClub: true })).toBe('different_club');
+  });
+
+  it('returns different_club when club cleared (null vs set)', () => {
+    const partner = player({ id: 'b', name: 'Bob', clubId: 'c1' });
+    expect(wouldBreakPartnerLink({ clubId: null }, partner, { requireSameClub: true })).toBe('different_club');
+  });
+
+  it('returns null when requireSameClub is false', () => {
+    const partner = player({ id: 'b', name: 'Bob', clubId: 'c1' });
+    expect(wouldBreakPartnerLink({ clubId: 'c2' }, partner, { requireSameClub: false })).toBeNull();
+  });
+
+  it('returns different_rank when rank changes', () => {
+    const partner = player({ id: 'b', name: 'Bob', rankSlot: 0 });
+    expect(wouldBreakPartnerLink({ rankSlot: 1 }, partner, { requireSameRank: true })).toBe('different_rank');
+  });
+
+  it('returns null when rank stays the same', () => {
+    const partner = player({ id: 'b', name: 'Bob', rankSlot: 2 });
+    expect(wouldBreakPartnerLink({ rankSlot: 2 }, partner, { requireSameRank: true })).toBeNull();
+  });
+
+  it('returns same_group when group changes to match partner', () => {
+    const partner = player({ id: 'b', name: 'Bob', group: 'A' });
+    expect(wouldBreakPartnerLink({ group: 'A' }, partner, { requireOppositeGroup: true })).toBe('same_group');
+  });
+
+  it('returns null when group is opposite', () => {
+    const partner = player({ id: 'b', name: 'Bob', group: 'A' });
+    expect(wouldBreakPartnerLink({ group: 'B' }, partner, { requireOppositeGroup: true })).toBeNull();
+  });
+
+  it('returns null when group cleared (null) — not enforced', () => {
+    const partner = player({ id: 'b', name: 'Bob', group: 'A' });
+    expect(wouldBreakPartnerLink({ group: null }, partner, { requireOppositeGroup: true })).toBeNull();
+  });
+
+  it('returns null when partner has no group', () => {
+    const partner = player({ id: 'b', name: 'Bob' });
+    expect(wouldBreakPartnerLink({ group: 'A' }, partner, { requireOppositeGroup: true })).toBeNull();
+  });
+
+  it('ignores fields not in the change object', () => {
+    const partner = player({ id: 'b', name: 'Bob', clubId: 'c1', rankSlot: 0 });
+    // Only changing group — should not check club or rank
+    expect(wouldBreakPartnerLink({ group: 'B' }, partner, {
+      requireSameClub: true,
+      requireSameRank: true,
+      requireOppositeGroup: true,
+    })).toBeNull();
   });
 });

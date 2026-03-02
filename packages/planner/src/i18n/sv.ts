@@ -68,6 +68,7 @@ const sv: Translations = {
   'organizer.partnerName': 'Partners namn',
   'organizer.partnerTelegram': 'Partners telegram (valfritt)',
   'organizer.removePartner': 'Ta bort partner',
+  'organizer.addedBy': 'Tillagd av {name}',
   'organizer.reserve': 'reserv',
   'organizer.markCancelled': 'Markera som avbokad',
   'organizer.markConfirmed': 'Markera som bekräftad',
@@ -242,6 +243,7 @@ const sv: Translations = {
   'join.partnerDifferentClub': '{name} tillhör en annan klubb',
   'join.partnerDifferentRank': '{name} har en annan rank',
   'join.partnerSameGroup': '{name} är i samma grupp — partnern måste vara från den andra gruppen',
+  'join.changeBreaksLink': 'Denna ändring kommer att koppla bort din partnerlänk med {name}. Fortsätta?',
   'join.edit': 'Redigera',
 
   // SupportOverlay

@@ -222,9 +222,11 @@ export function usePlayers(tournamentId: string | null) {
     if (existing.exists()) return;
 
     // Move player record atomically (delete orphan + create under real UID)
+    // Clear addedByPartner — the player has claimed their spot
+    const { addedByPartner: _, ...cleanData } = playerData;
     await update(ref(db), {
       [`tournaments/${tournamentId}/players/${orphanId}`]: null,
-      [`tournaments/${tournamentId}/players/${newUid}`]: { ...playerData, telegramUsername },
+      [`tournaments/${tournamentId}/players/${newUid}`]: { ...cleanData, telegramUsername },
     });
 
     // Set up indexes separately to avoid cross-node permission issues

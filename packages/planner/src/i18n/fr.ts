@@ -69,6 +69,7 @@ const fr: Translations = {
   'organizer.partnerName': 'Nom du partenaire',
   'organizer.partnerTelegram': 'Telegram du partenaire (optionnel)',
   'organizer.removePartner': 'Supprimer le partenaire',
+  'organizer.addedBy': 'Ajouté par {name}',
   'organizer.reserve': 'réserve',
   'organizer.markCancelled': 'Marquer comme annulé',
   'organizer.markConfirmed': 'Marquer comme confirmé',
@@ -244,6 +245,7 @@ const fr: Translations = {
   'join.partnerDifferentClub': '{name} est dans un autre club',
   'join.partnerDifferentRank': '{name} a un rang différent',
   'join.partnerSameGroup': '{name} est dans le même groupe — le partenaire doit être de l\'autre groupe',
+  'join.changeBreaksLink': 'Ce changement déconnectera votre lien partenaire avec {name}. Continuer ?',
   'join.edit': 'Modifier',
 
   // SupportOverlay

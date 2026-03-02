@@ -3,6 +3,7 @@ import { Button, Card, NO_COLOR, getClubColor, getRankColor, shortLabel, Modal, 
 import type { PlannerRegistration, TournamentFormat, Club } from '@padel/common';
 import { parsePlayerList } from '@padel/common';
 import type { PartnerRejection, PartnerConstraints } from '../../utils/partnerLogic';
+import { findPartner, wouldBreakPartnerLink } from '../../utils/partnerLogic';
 import { rejectionMessage } from '../../utils/partnerRejectionMessage';
 import styles from '../../screens/OrganizerScreen.module.css';
 
@@ -37,6 +38,27 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
   const [partnerNameDraft, setPartnerNameDraft] = useState('');
   const [partnerTelegramDraft, setPartnerTelegramDraft] = useState('');
   const showPartner = format ? formatHasFixedPartners(format) : false;
+
+  const constraints: PartnerConstraints = {
+    requireSameClub: format ? formatHasClubs(format) : false,
+    requireSameRank: format === 'club-ranked',
+    requireOppositeGroup: format ? formatHasGroups(format) : false,
+  };
+
+  /** Confirm + disconnect partner link if a change would break constraints. */
+  const guardPartnerLink = async (
+    p: PlannerRegistration,
+    change: { clubId?: string | null; rankSlot?: number | null; group?: 'A' | 'B' | null },
+  ): Promise<boolean> => {
+    if (!p.partnerName || !showPartner || !updatePlayerPartner) return true;
+    const partner = findPartner(p, players);
+    if (!partner) return true;
+    const reason = wouldBreakPartnerLink(change, partner, constraints);
+    if (!reason) return true;
+    if (!window.confirm(t('join.changeBreaksLink', { name: partner.name }))) return false;
+    await updatePlayerPartner(p.id, null, null);
+    return true;
+  };
 
   const confirmedCount = players.filter(p => p.confirmed !== false).length;
   const reserveCount = [...statuses.values()].filter(s => s === 'reserve').length;
@@ -80,42 +102,55 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
               <div key={player.id} className={styles.playerItem}>
                 <span className={styles.playerNum}>{i + 1}</span>
                 <span className={styles.playerName}>
-                  {!simplified && player.telegramUsername ? (
-                    <a
-                      href={`https://t.me/${player.telegramUsername}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={styles.playerLink}
-                    >
-                      {player.name}
-                    </a>
-                  ) : (
-                    player.name
-                  )}
-                  {statuses.get(player.id) === 'reserve' && (
-                    <span className={styles.reserveBadge}>{t('organizer.reserve')}</span>
-                  )}
-                  {showPartner && player.partnerName && (
-                    <span className={styles.reserveBadge}>{'\uD83E\uDD1D'} {player.partnerName}</span>
+                  <span>
+                    {!simplified && player.telegramUsername ? (
+                      <a
+                        href={`https://t.me/${player.telegramUsername}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.playerLink}
+                      >
+                        {player.name}
+                      </a>
+                    ) : (
+                      player.name
+                    )}
+                    {statuses.get(player.id) === 'reserve' && (
+                      <span className={styles.reserveBadge}>{t('organizer.reserve')}</span>
+                    )}
+                  </span>
+                  {player.addedByPartner && (
+                    <span className={styles.addedByHint}>
+                      {t('organizer.addedBy', { name: typeof player.addedByPartner === 'string' ? player.addedByPartner : '?' })}
+                    </span>
                   )}
                 </span>
                 {(
                   (format && formatHasGroups(format) && onSetGroup) ||
                   (format && formatHasClubs(format) && onSetClub && clubs && clubs.length > 0) ||
-                  (format === 'club-ranked' && onSetRank && rankLabels && rankLabels.length > 0)
+                  (format === 'club-ranked' && onSetRank && rankLabels && rankLabels.length > 0) ||
+                  (showPartner && player.partnerName)
                 ) && (
                   <div className={styles.playerControls}>
                     {format && formatHasGroups(format) && onSetGroup && (
                       <div className={styles.groupToggle}>
                         <button
                           className={player.group === 'A' ? styles.groupBtnActive : styles.groupBtn}
-                          onClick={() => onSetGroup(player.id, player.group === 'A' ? null : 'A')}
+                          onClick={async () => {
+                            const val = player.group === 'A' ? null : 'A';
+                            if (!(await guardPartnerLink(player, { group: val }))) return;
+                            onSetGroup(player.id, val);
+                          }}
                         >
                           {groupLabels?.[0] || 'A'}
                         </button>
                         <button
                           className={player.group === 'B' ? styles.groupBtnActive : styles.groupBtn}
-                          onClick={() => onSetGroup(player.id, player.group === 'B' ? null : 'B')}
+                          onClick={async () => {
+                            const val = player.group === 'B' ? null : 'B';
+                            if (!(await guardPartnerLink(player, { group: val }))) return;
+                            onSetGroup(player.id, val);
+                          }}
                         >
                           {groupLabels?.[1] || 'B'}
                         </button>
@@ -125,7 +160,14 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                       <select
                         className={styles.clubSelect}
                         value={player.clubId ?? ''}
-                        onChange={e => onSetClub(player.id, e.target.value || null)}
+                        onChange={async e => {
+                          const val = e.target.value || null;
+                          if (!(await guardPartnerLink(player, { clubId: val }))) {
+                            e.target.value = player.clubId ?? '';
+                            return;
+                          }
+                          onSetClub(player.id, val);
+                        }}
                         style={player.clubId ? (() => {
                           const idx = clubs.findIndex(c => c.id === player.clubId);
                           if (idx < 0) return undefined;
@@ -145,7 +187,14 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                       <select
                         className={styles.rankSelect}
                         value={player.rankSlot != null ? String(player.rankSlot) : ''}
-                        onChange={e => onSetRank(player.id, e.target.value ? Number(e.target.value) : null)}
+                        onChange={async e => {
+                          const val = e.target.value ? Number(e.target.value) : null;
+                          if (!(await guardPartnerLink(player, { rankSlot: val }))) {
+                            e.target.value = player.rankSlot != null ? String(player.rankSlot) : '';
+                            return;
+                          }
+                          onSetRank(player.id, val);
+                        }}
                         style={player.rankSlot != null ? (() => {
                           const rc = getRankColor(player.rankSlot, rankColors?.[player.rankSlot]);
                           return rc.bg !== NO_COLOR ? { backgroundColor: rc.bg, color: rc.text, borderColor: rc.border } as React.CSSProperties : undefined;
@@ -158,6 +207,9 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                           </option>
                         ))}
                       </select>
+                    )}
+                    {showPartner && player.partnerName && (
+                      <span className={styles.reserveBadge}>{'\uD83E\uDD1D'} {player.partnerName}</span>
                     )}
                   </div>
                 )}

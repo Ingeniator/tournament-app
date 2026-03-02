@@ -69,6 +69,7 @@ const it: Translations = {
   'organizer.partnerName': 'Nome del partner',
   'organizer.partnerTelegram': 'Telegram del partner (opzionale)',
   'organizer.removePartner': 'Rimuovi partner',
+  'organizer.addedBy': 'Aggiunto da {name}',
   'organizer.reserve': 'riserva',
   'organizer.markCancelled': 'Segna come cancellato',
   'organizer.markConfirmed': 'Segna come confermato',
@@ -244,6 +245,7 @@ const it: Translations = {
   'join.partnerDifferentClub': '{name} è in un altro club',
   'join.partnerDifferentRank': '{name} ha un rango diverso',
   'join.partnerSameGroup': '{name} è nello stesso gruppo — il partner deve essere dell\'altro gruppo',
+  'join.changeBreaksLink': 'Questa modifica disconnetterà il tuo legame con {name}. Continuare?',
   'join.edit': 'Modifica',
 
   // SupportOverlay

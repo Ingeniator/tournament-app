@@ -69,6 +69,7 @@ const sr: Translations = {
   'organizer.partnerName': 'Ime partnera',
   'organizer.partnerTelegram': 'Telegram partnera (opciono)',
   'organizer.removePartner': 'Ukloni partnera',
+  'organizer.addedBy': 'Dodao/la {name}',
   'organizer.reserve': 'rezerva',
   'organizer.markCancelled': 'Označi kao otkazano',
   'organizer.markConfirmed': 'Označi kao potvrđeno',
@@ -244,6 +245,7 @@ const sr: Translations = {
   'join.partnerDifferentClub': '{name} je u drugom klubu',
   'join.partnerDifferentRank': '{name} ima drugi rang',
   'join.partnerSameGroup': '{name} je u istoj grupi — partner mora biti iz druge grupe',
+  'join.changeBreaksLink': 'Ova promena će prekinuti vezu sa partnerom {name}. Nastaviti?',
   'join.edit': 'Uredi',
 
   // SupportOverlay

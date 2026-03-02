@@ -51,6 +51,41 @@ function findPlayerByNameOrTelegram(
   });
 }
 
+/** Find the linked partner of a player in the player list. */
+export function findPartner(
+  player: PlannerRegistration,
+  players: PlannerRegistration[],
+): PlannerRegistration | undefined {
+  if (!player.partnerName) return undefined;
+  return findPlayerByNameOrTelegram(
+    players,
+    player.partnerName,
+    player.partnerTelegram ?? null,
+    player.id,
+  );
+}
+
+/**
+ * Check whether a proposed club/rank/group change on a linked player would
+ * violate partner constraints. Returns the violation reason, or null if OK.
+ */
+export function wouldBreakPartnerLink(
+  change: { clubId?: string | null; rankSlot?: number | null; group?: 'A' | 'B' | null },
+  partner: PlannerRegistration,
+  constraints: PartnerConstraints,
+): RejectionReason | null {
+  if (change.clubId !== undefined && constraints.requireSameClub) {
+    if (change.clubId !== partner.clubId) return 'different_club';
+  }
+  if (change.rankSlot !== undefined && constraints.requireSameRank) {
+    if (change.rankSlot !== partner.rankSlot) return 'different_rank';
+  }
+  if (change.group !== undefined && constraints.requireOppositeGroup) {
+    if (change.group && partner.group && change.group === partner.group) return 'same_group';
+  }
+  return null;
+}
+
 /**
  * Pure function that computes all DB writes needed for a partner update.
  * Returns writes for existing players + optional new player to create.
@@ -86,10 +121,12 @@ export function resolvePartnerUpdate(
         playerId,
       );
       if (oldPartner) {
-        writes.push({
-          playerId: oldPartner.id,
-          fields: { partnerName: null, partnerTelegram: null },
-        });
+        const fields: Record<string, unknown> = { partnerName: null, partnerTelegram: null };
+        // Auto-cancel unclaimed partner-added players (never opened the tournament)
+        if (oldPartner.addedByPartner) {
+          fields.confirmed = false;
+        }
+        writes.push({ playerId: oldPartner.id, fields });
       }
     }
 
@@ -142,10 +179,12 @@ export function resolvePartnerUpdate(
       playerId,
     );
     if (oldPartner && oldPartner.id !== existingPartner?.id) {
-      writes.push({
-        playerId: oldPartner.id,
-        fields: { partnerName: null, partnerTelegram: null },
-      });
+      const fields: Record<string, unknown> = { partnerName: null, partnerTelegram: null };
+      // Auto-cancel unclaimed partner-added players (never opened the tournament)
+      if (oldPartner.addedByPartner) {
+        fields.confirmed = false;
+      }
+      writes.push({ playerId: oldPartner.id, fields });
     }
   }
 

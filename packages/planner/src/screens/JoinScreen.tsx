@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Button, Card, NO_COLOR, getClubColor, getRankColor, shortLabel, Toast, useToast, useTranslation, getPresetByFormat, formatHasGroups, formatHasClubs, formatHasFixedPartners } from '@padel/common';
 import type { PartnerRejection, PartnerConstraints } from '../utils/partnerLogic';
+import { findPartner, wouldBreakPartnerLink } from '../utils/partnerLogic';
 import { rejectionMessage } from '../utils/partnerRejectionMessage';
 import { usePlanner } from '../state/PlannerContext';
 import { getPlayerStatuses } from '../utils/playerStatus';
@@ -258,6 +259,27 @@ export function JoinScreen() {
     }
   };
 
+  /**
+   * Check if a club/rank/group change would break the partner link.
+   * If it would, ask the user to confirm and disconnect the link.
+   * Returns false if the user cancelled (change should not proceed).
+   */
+  const guardPartnerLink = async (change: { clubId?: string | null; rankSlot?: number | null; group?: 'A' | 'B' | null }): Promise<boolean> => {
+    if (!uid || !myRegistration?.partnerName || !formatHasFixedPartners(tournament.format)) return true;
+    const partner = findPartner(myRegistration, players);
+    if (!partner) return true;
+    const constraints: PartnerConstraints = {
+      requireSameClub: formatHasClubs(tournament.format),
+      requireSameRank: tournament.format === 'club-ranked',
+      requireOppositeGroup: formatHasGroups(tournament.format),
+    };
+    const reason = wouldBreakPartnerLink(change, partner, constraints);
+    if (!reason) return true;
+    if (!window.confirm(t('join.changeBreaksLink', { name: partner.name }))) return false;
+    await updatePlayerPartner(uid, null, null);
+    return true;
+  };
+
   const handleBack = () => {
     setScreen(joinReturnScreen);
   };
@@ -414,13 +436,21 @@ export function JoinScreen() {
                 <div className={styles.groupToggle}>
                   <button
                     className={myRegistration?.group === 'A' ? styles.groupBtnActive : styles.groupBtn}
-                    onClick={() => updatePlayerGroup(uid, myRegistration?.group === 'A' ? null : 'A')}
+                    onClick={async () => {
+                      const val = myRegistration?.group === 'A' ? null : 'A';
+                      if (!(await guardPartnerLink({ group: val }))) return;
+                      updatePlayerGroup(uid, val);
+                    }}
                   >
                     {tournament.groupLabels?.[0] || 'A'}
                   </button>
                   <button
                     className={myRegistration?.group === 'B' ? styles.groupBtnActive : styles.groupBtn}
-                    onClick={() => updatePlayerGroup(uid, myRegistration?.group === 'B' ? null : 'B')}
+                    onClick={async () => {
+                      const val = myRegistration?.group === 'B' ? null : 'B';
+                      if (!(await guardPartnerLink({ group: val }))) return;
+                      updatePlayerGroup(uid, val);
+                    }}
                   >
                     {tournament.groupLabels?.[1] || 'B'}
                   </button>
@@ -438,7 +468,14 @@ export function JoinScreen() {
                   <select
                     className={styles.joinSelect}
                     value={myRegistration?.clubId ?? ''}
-                    onChange={e => updatePlayerClub(uid, e.target.value || null)}
+                    onChange={async e => {
+                      const val = e.target.value || null;
+                      if (!(await guardPartnerLink({ clubId: val }))) {
+                        e.target.value = myRegistration?.clubId ?? '';
+                        return;
+                      }
+                      updatePlayerClub(uid, val);
+                    }}
                     style={clubIdx >= 0 && getClubColor(clubs[clubIdx], clubIdx) !== NO_COLOR ? { backgroundColor: getClubColor(clubs[clubIdx], clubIdx), color: 'white', borderColor: 'transparent' } : undefined}
                   >
                     <option value="">{t('join.selectClub')}</option>
@@ -455,7 +492,14 @@ export function JoinScreen() {
                 <select
                   className={styles.joinSelect}
                   value={myRegistration?.rankSlot != null ? String(myRegistration.rankSlot) : ''}
-                  onChange={e => updatePlayerRank(uid, e.target.value ? Number(e.target.value) : null)}
+                  onChange={async e => {
+                    const val = e.target.value ? Number(e.target.value) : null;
+                    if (!(await guardPartnerLink({ rankSlot: val }))) {
+                      e.target.value = myRegistration?.rankSlot != null ? String(myRegistration.rankSlot) : '';
+                      return;
+                    }
+                    updatePlayerRank(uid, val);
+                  }}
                   style={myRegistration?.rankSlot != null ? (() => {
                     const rc = getRankColor(myRegistration.rankSlot, tournament.rankColors?.[myRegistration.rankSlot]);
                     return rc.bg !== NO_COLOR ? { backgroundColor: rc.bg, color: rc.text, borderColor: rc.border } : undefined;
