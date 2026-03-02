@@ -50,12 +50,15 @@ export function getRankColor(index: number, customColorIndex?: number): { bg: st
   return RANK_COLORS[ci % RANK_COLORS.length];
 }
 
-/** Cycle to next color in a palette, skipping colors used by others */
+/** Cycle to next color in a palette, skipping colors used by others.
+ *  The last palette entry (NO_COLOR) is never skipped — multiple items can share it. */
 export function cycleColor<T>(palette: T[], current: number, usedByOthers: Set<number>): number {
+  const noColorIdx = palette.length - 1;
   const available = Array.from({ length: palette.length }, (_, i) => i)
-    .filter(i => i !== current && !usedByOthers.has(i));
+    .filter(i => i === noColorIdx || !usedByOthers.has(i));
   const pool = available.length > 0 ? available : Array.from({ length: palette.length }, (_, i) => i);
   const idx = pool.indexOf(current);
+  if (idx < 0) return pool[0];
   return pool[(idx + 1) % pool.length];
 }
 
