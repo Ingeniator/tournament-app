@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, createContext, useContext, type ReactNode } from 'react';
-import { ref, get } from 'firebase/database';
+import { ref, get, update as firebaseUpdate } from 'firebase/database';
 import type { PlannerTournament, PlannerRegistration, TournamentSummary, SkinId, PadelEventSummary } from '@padel/common';
 import { useTranslation, useTheme, isValidSkin, DEFAULT_SKIN } from '@padel/common';
 import { useAuth } from '../hooks/useAuth';
@@ -127,6 +127,18 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
   }, [rawSetSkin, updateUserSkin]);
 
   const { user: telegramUser, chatInstance } = useTelegram();
+
+  // Wrap updateTournament to sync name/date changes to chat room entries
+  const wrappedUpdateTournament = useCallback(async (updates: Parameters<typeof updateTournament>[0]) => {
+    await updateTournament(updates);
+    if (chatInstance && tournamentId && db && (updates.name !== undefined || updates.date !== undefined)) {
+      const chatUpdates: Record<string, unknown> = {};
+      if (updates.name !== undefined) chatUpdates[`chatRooms/${chatInstance}/tournaments/${tournamentId}/name`] = updates.name;
+      if (updates.date !== undefined) chatUpdates[`chatRooms/${chatInstance}/tournaments/${tournamentId}/date`] = updates.date ?? null;
+      firebaseUpdate(ref(db), chatUpdates).catch(() => {});
+    }
+  }, [updateTournament, chatInstance, tournamentId]);
+
   const { tournaments: myTournaments, loading: myLoading } = useMyTournaments(uid);
   const { tournaments: registeredTournaments, loading: regLoading } = useRegisteredTournaments(uid);
   const { tournaments: chatRoomTournaments, loading: chatRoomLoading } = useChatRoomTournaments(chatInstance);
@@ -274,7 +286,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       setScreen,
       createTournament,
       loadByCode,
-      updateTournament,
+      updateTournament: wrappedUpdateTournament,
       registerPlayer,
       removePlayer,
       updateConfirmed,
