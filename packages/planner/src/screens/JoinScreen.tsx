@@ -16,6 +16,9 @@ export function JoinScreen() {
   // null = not yet edited by user, derive from external sources
   const [nameInput, setNameInput] = useState<string | null>(null);
   const name = nameInput ?? userName ?? telegramUser?.displayName ?? '';
+  const [regGroup, setRegGroup] = useState<'A' | 'B' | null>(null);
+  const [regClubId, setRegClubId] = useState<string>('');
+  const [regRankSlot, setRegRankSlot] = useState<string>('');
   const [registering, setRegistering] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [editingName, setEditingName] = useState(false);
@@ -115,7 +118,11 @@ export function JoinScreen() {
     setRegistering(true);
     try {
       const willBeReserve = confirmedCount >= capacity;
-      await registerPlayer(trimmed);
+      const extras: { group?: 'A' | 'B'; clubId?: string; rankSlot?: number } = {};
+      if (regGroup) extras.group = regGroup;
+      if (regClubId) extras.clubId = regClubId;
+      if (regRankSlot) extras.rankSlot = Number(regRankSlot);
+      await registerPlayer(trimmed, Object.keys(extras).length > 0 ? extras : undefined);
       if (willBeReserve) {
         showToast(t('join.reserveToast'));
       } else if (tournament.date) {
@@ -398,6 +405,72 @@ export function JoinScreen() {
               onKeyDown={e => e.key === 'Enter' && handleRegister()}
               autoFocus
             />
+
+            {formatHasGroups(tournament.format) && (
+              <div className={styles.groupPicker}>
+                <span className={styles.groupPickerLabel}>{t('join.selectGroup')}</span>
+                <div className={styles.groupToggle}>
+                  <button
+                    type="button"
+                    className={regGroup === 'A' ? styles.groupBtnActive : styles.groupBtn}
+                    onClick={() => setRegGroup(regGroup === 'A' ? null : 'A')}
+                  >
+                    {tournament.groupLabels?.[0] || 'A'}
+                  </button>
+                  <button
+                    type="button"
+                    className={regGroup === 'B' ? styles.groupBtnActive : styles.groupBtn}
+                    onClick={() => setRegGroup(regGroup === 'B' ? null : 'B')}
+                  >
+                    {tournament.groupLabels?.[1] || 'B'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {formatHasClubs(tournament.format) && (tournament.clubs ?? []).length > 0 && (
+              <div className={styles.clubPicker}>
+                <select
+                  className={styles.joinSelect}
+                  value={regClubId}
+                  onChange={e => setRegClubId(e.target.value)}
+                  style={(() => {
+                    if (!regClubId) return undefined;
+                    const clubs = tournament.clubs!;
+                    const idx = clubs.findIndex(c => c.id === regClubId);
+                    if (idx < 0) return undefined;
+                    const color = getClubColor(clubs[idx], idx);
+                    return color !== NO_COLOR ? { backgroundColor: color, color: 'white', borderColor: 'transparent' } : undefined;
+                  })()}
+                >
+                  <option value="">{t('join.selectClub')}</option>
+                  {tournament.clubs!.map(club => (
+                    <option key={club.id} value={club.id}>{club.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {tournament.format === 'club-ranked' && (tournament.rankLabels ?? []).length > 0 && (
+              <div className={styles.rankPicker}>
+                <select
+                  className={styles.joinSelect}
+                  value={regRankSlot}
+                  onChange={e => setRegRankSlot(e.target.value)}
+                  style={(() => {
+                    if (!regRankSlot) return undefined;
+                    const rc = getRankColor(Number(regRankSlot), tournament.rankColors?.[Number(regRankSlot)]);
+                    return rc.bg !== NO_COLOR ? { backgroundColor: rc.bg, color: rc.text, borderColor: rc.border } : undefined;
+                  })()}
+                >
+                  <option value="">{t('join.selectRank')}</option>
+                  {tournament.rankLabels!.map((label, idx) => (
+                    <option key={idx} value={String(idx)}>{label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <Button
               fullWidth
               onClick={handleRegister}

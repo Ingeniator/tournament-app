@@ -30,7 +30,7 @@ export interface PlannerContextValue {
   createTournament: (name: string) => Promise<void>;
   loadByCode: (code: string) => Promise<boolean>;
   updateTournament: (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'pointsPerMatch' | 'courts' | 'maxRounds' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description' | 'clubs' | 'groupLabels' | 'rankLabels' | 'rankColors' | 'scoringMode' | 'maldiciones'>>) => Promise<void>;
-  registerPlayer: (name: string) => Promise<void>;
+  registerPlayer: (name: string, extras?: { group?: 'A' | 'B'; clubId?: string; rankSlot?: number }) => Promise<void>;
   removePlayer: (playerId: string) => Promise<void>;
   updateConfirmed: (confirmed: boolean) => Promise<void>;
   addPlayer: (name: string, telegramUsername?: string) => Promise<void>;
@@ -226,9 +226,9 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     return false;
   }, [loadByCodeFromDb]);
 
-  const registerPlayer = useCallback(async (name: string) => {
+  const registerPlayer = useCallback(async (name: string, extras?: { group?: 'A' | 'B'; clubId?: string; rankSlot?: number }) => {
     if (!uid) return;
-    await registerInDb(name, uid, telegramUser?.username);
+    await registerInDb(name, uid, telegramUser?.username, extras);
     // Also write name to user profile if not set yet
     if (!userName) {
       await updateUserName(name);

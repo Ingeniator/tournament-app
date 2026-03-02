@@ -28,7 +28,7 @@ export function usePlayers(tournamentId: string | null) {
     return unsubscribe;
   }, [tournamentId]);
 
-  const registerPlayer = useCallback(async (name: string, uid: string, telegramUsername?: string) => {
+  const registerPlayer = useCallback(async (name: string, uid: string, telegramUsername?: string, extras?: { group?: 'A' | 'B'; clubId?: string; rankSlot?: number }) => {
     if (!tournamentId || !db) return;
 
     // Prevent duplicate: skip if this UID is already registered
@@ -43,6 +43,9 @@ export function usePlayers(tournamentId: string | null) {
       name,
       timestamp: Date.now(),
       ...(telegramUsername ? { telegramUsername } : {}),
+      ...(extras?.group ? { group: extras.group } : {}),
+      ...(extras?.clubId ? { clubId: extras.clubId } : {}),
+      ...(extras?.rankSlot != null ? { rankSlot: extras.rankSlot } : {}),
     };
 
     // Atomic write: player record + per-device index + per-person index (if Telegram)
