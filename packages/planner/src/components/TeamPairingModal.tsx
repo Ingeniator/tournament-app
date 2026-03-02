@@ -90,6 +90,15 @@ export function TeamPairingModal({ open, players, format, clubs, rankLabels, onS
   const [editDraft, setEditDraft] = useState('');
   const editInputRef = useRef<HTMLInputElement>(null);
 
+  // Regenerate teams when modal opens (state may be stale from previous open)
+  useEffect(() => {
+    if (open) {
+      setTeams(generateTeams(players, format, clubs));
+      setAliases(deduplicateNames(players));
+      setSelectedPlayerId(null);
+    }
+  }, [open]);
+
   const isClubFormat = formatHasClubs(format);
   const isCrossGroupFormat = formatHasGroups(format);
   const isSlotMode = format === 'club-ranked';
@@ -115,6 +124,44 @@ export function TeamPairingModal({ open, players, format, clubs, rankLabels, onS
     }
     return grouped;
   }, [teams, players, clubs, isClubFormat]);
+
+  // Compute slot label per team from players' actual rankSlot (with suffix for duplicates)
+  const teamSlotLabel = useMemo(() => {
+    if (!isSlotMode || !rankLabels?.length) return new Map<string, string>();
+    const labels = new Map<string, string>();
+    const playerRankOf = (id: string) => players.find(p => p.id === id)?.rankSlot;
+    // Count occurrences of each rank per club to add suffixes
+    const clubRankCount = new Map<string, Map<number, number>>(); // clubId → rank → count
+    if (teamsByClub && clubs) {
+      for (const club of clubs) {
+        const rankCounts = new Map<number, number>();
+        clubRankCount.set(club.id, rankCounts);
+        for (const team of teamsByClub.get(club.id) ?? []) {
+          const rank = playerRankOf(team.player1Id) ?? playerRankOf(team.player2Id);
+          if (rank != null) {
+            rankCounts.set(rank, (rankCounts.get(rank) ?? 0) + 1);
+          }
+        }
+      }
+    }
+    // Second pass: assign labels with suffix when rank appears more than once in a club
+    if (teamsByClub && clubs) {
+      for (const club of clubs) {
+        const seen = new Map<number, number>(); // rank → occurrence index
+        for (const team of teamsByClub.get(club.id) ?? []) {
+          const rank = playerRankOf(team.player1Id) ?? playerRankOf(team.player2Id);
+          if (rank != null && rankLabels[rank]) {
+            const base = shortLabel(rankLabels[rank]);
+            const totalForRank = clubRankCount.get(club.id)?.get(rank) ?? 1;
+            const idx = (seen.get(rank) ?? 0) + 1;
+            seen.set(rank, idx);
+            labels.set(team.id, totalForRank > 1 ? `${base} [${idx}]` : base);
+          }
+        }
+      }
+    }
+    return labels;
+  }, [isSlotMode, rankLabels, teamsByClub, clubs, players]);
 
   const displayName = useCallback((id: string) =>
     aliases.get(id) ?? players.find(p => p.id === id)?.name ?? '?',
@@ -237,7 +284,7 @@ export function TeamPairingModal({ open, players, format, clubs, rankLabels, onS
     );
   };
 
-  const renderTeamCard = (team: Team, slotIndex?: number) => (
+  const renderTeamCard = (team: Team) => (
     <div key={team.id} className={styles.teamCard}>
       <div className={styles.teamCardHeader}>
         <input
@@ -246,8 +293,8 @@ export function TeamPairingModal({ open, players, format, clubs, rankLabels, onS
           placeholder={`${displayName(team.player1Id)} & ${displayName(team.player2Id)}`}
           onChange={e => handleRename(team.id, e.target.value)}
         />
-        {isSlotMode && slotIndex != null && rankLabels?.[slotIndex] && (
-          <span className={styles.slotBadge}>{shortLabel(rankLabels[slotIndex])}</span>
+        {isSlotMode && teamSlotLabel.has(team.id) && (
+          <span className={styles.slotBadge}>{teamSlotLabel.get(team.id)}</span>
         )}
       </div>
       <div className={styles.teamPlayers}>
@@ -292,7 +339,7 @@ export function TeamPairingModal({ open, players, format, clubs, rankLabels, onS
                   <div className={styles.clubGroupHeader} style={color !== NO_COLOR ? { color } : undefined}>
                     {club.name}
                   </div>
-                  {clubTeams.map((team, idx) => renderTeamCard(team, idx))}
+                  {clubTeams.map(team => renderTeamCard(team))}
                 </div>
               );
             })}

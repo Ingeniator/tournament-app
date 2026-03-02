@@ -45,7 +45,15 @@ export function createClubTeams(players: Player[], clubs: Club[]): Team[] {
     const raw = players.filter(p => p.clubId === club.id);
     let clubPlayers: Player[];
     if (hasRanks) {
-      const ranked = raw.filter(p => p.rankSlot != null).sort((a, b) => a.rankSlot! - b.rankSlot!);
+      // Group by rank, shuffle within each rank, then concatenate in rank order
+      const byRank = new Map<number, Player[]>();
+      for (const p of raw.filter(p => p.rankSlot != null)) {
+        const arr = byRank.get(p.rankSlot!) ?? [];
+        arr.push(p);
+        byRank.set(p.rankSlot!, arr);
+      }
+      const ranks = [...byRank.keys()].sort((a, b) => a - b);
+      const ranked = ranks.flatMap(r => shuffleArray(byRank.get(r)!));
       const unranked = shuffleArray(raw.filter(p => p.rankSlot == null));
       clubPlayers = [...ranked, ...unranked];
     } else {
