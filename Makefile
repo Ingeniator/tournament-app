@@ -1,8 +1,10 @@
 .PHONY: dev build deploy-build clean test e2e e2e-ui e2e-staging coverage coverage-unit coverage-e2e
 
 dev:
+	@pkill -9 -f 'vite.*padel' 2>/dev/null || true
+	@pkill -9 -f 'dev-proxy' 2>/dev/null || true
 	@lsof -ti :5190,:5191,:5192,:3000 2>/dev/null | xargs kill -9 2>/dev/null || true
-	@sleep 1
+	@sleep 2
 	npm -w @padel/runner run dev & npm -w @padel/planner run dev & npm -w @padel/landing run dev & node dev-proxy.mjs & wait
 
 build:

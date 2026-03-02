@@ -1,14 +1,35 @@
 import { useState } from 'react';
-import { FORMAT_PRESETS, type FormatPreset } from './formatPresets';
+import type { TournamentFormat } from '../../types/tournament';
+import { FORMAT_PRESETS, getPresetByFormat, type FormatPreset } from './formatPresets';
 import styles from './FormatPicker.module.css';
 
 interface FormatWizardProps {
+  format: TournamentFormat;
   onChange: (preset: FormatPreset) => void;
   t: (key: string) => string;
 }
 
 type PartnerMode = 'rotating' | 'fixed' | null;
 type OpponentMode = 'random' | 'standings' | 'promotion' | null;
+
+function deriveWizardState(format: TournamentFormat): {
+  partnerMode: PartnerMode;
+  opponentMode: OpponentMode;
+  crossGroup: boolean;
+  clubMode: boolean;
+} {
+  const preset = getPresetByFormat(format);
+  if (!preset) return { partnerMode: null, opponentMode: null, crossGroup: false, clubMode: false };
+  const tags = preset.tags;
+  const partnerMode: PartnerMode = tags.includes('rotating') ? 'rotating' : tags.includes('fixed') ? 'fixed' : null;
+  const opponentMode: OpponentMode = tags.includes('random') ? 'random' : tags.includes('standings') ? 'standings' : tags.includes('promotion') ? 'promotion' : null;
+  return {
+    partnerMode,
+    opponentMode,
+    crossGroup: tags.includes('groups'),
+    clubMode: tags.includes('clubs'),
+  };
+}
 
 function matchesFilters(
   p: FormatPreset,
@@ -38,11 +59,12 @@ function resolvePreset(
   return FORMAT_PRESETS.find(p => matchesFilters(p, partnerMode, opponentMode, crossGroup, clubMode)) ?? null;
 }
 
-export function FormatWizard({ onChange, t }: FormatWizardProps) {
-  const [partnerMode, setPartnerMode] = useState<PartnerMode>(null);
-  const [opponentMode, setOpponentMode] = useState<OpponentMode>(null);
-  const [crossGroup, setCrossGroup] = useState(false);
-  const [clubMode, setClubMode] = useState(false);
+export function FormatWizard({ format, onChange, t }: FormatWizardProps) {
+  const initial = deriveWizardState(format);
+  const [partnerMode, setPartnerMode] = useState<PartnerMode>(initial.partnerMode);
+  const [opponentMode, setOpponentMode] = useState<OpponentMode>(initial.opponentMode);
+  const [crossGroup, setCrossGroup] = useState(initial.crossGroup);
+  const [clubMode, setClubMode] = useState(initial.clubMode);
 
   const handlePartnerMode = (mode: PartnerMode) => {
     setPartnerMode(mode);
