@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ref, onValue, set } from 'firebase/database';
-import type { PlannerTournament, PlannerRegistration, TournamentStartInfo } from '@padel/common';
+import type { PlannerTournament, PlannerRegistration, TournamentStartInfo, Team } from '@padel/common';
 import { db } from '../firebase';
 import { launchInRunner } from '../utils/exportToRunner';
 
@@ -10,6 +10,7 @@ export function useStartGuard(tournamentId: string | null, uid: string | null, u
   const [startedBy, setStartedBy] = useState<TournamentStartInfo | null>(null);
   const [showWarning, setShowWarning] = useState(false);
   const [warningReason, setWarningReason] = useState<WarningReason>('different-user');
+  const [pendingTeams, setPendingTeams] = useState<Team[] | undefined>();
 
   useEffect(() => {
     if (!tournamentId || !db) return;
@@ -26,24 +27,27 @@ export function useStartGuard(tournamentId: string | null, uid: string | null, u
     set(startedByRef, { uid, name: userName ?? 'Unknown', timestamp: Date.now() });
   };
 
-  const handleLaunch = (tournament: PlannerTournament, players: PlannerRegistration[]) => {
+  const handleLaunch = (tournament: PlannerTournament, players: PlannerRegistration[], teams?: Team[]) => {
     if (startedBy) {
       setWarningReason(startedBy.uid === uid ? 'same-user' : 'different-user');
+      setPendingTeams(teams);
       setShowWarning(true);
       return;
     }
     writeStartedBy(tournament);
-    launchInRunner(tournament, players);
+    launchInRunner(tournament, players, teams);
   };
 
   const proceedAnyway = (tournament: PlannerTournament, players: PlannerRegistration[]) => {
     setShowWarning(false);
     writeStartedBy(tournament);
-    launchInRunner(tournament, players);
+    launchInRunner(tournament, players, pendingTeams);
+    setPendingTeams(undefined);
   };
 
   const dismissWarning = () => {
     setShowWarning(false);
+    setPendingTeams(undefined);
   };
 
   return { startedBy, showWarning, warningReason, handleLaunch, proceedAnyway, dismissWarning };

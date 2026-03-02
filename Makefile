@@ -4,7 +4,7 @@ dev:
 	@pkill -9 -f 'vite.*padel' 2>/dev/null || true
 	@pkill -9 -f 'dev-proxy' 2>/dev/null || true
 	@lsof -ti :5190,:5191,:5192,:3000 2>/dev/null | xargs kill -9 2>/dev/null || true
-	@sleep 2
+	@sleep 3
 	npm -w @padel/runner run dev & npm -w @padel/planner run dev & npm -w @padel/landing run dev & node dev-proxy.mjs & wait
 
 build:

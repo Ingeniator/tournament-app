@@ -23,6 +23,7 @@ export { generateId } from './utils/id';
 export { parsePlayerList } from './utils/parsePlayerList';
 export { groupSupporters } from './utils/groupSupporters';
 export { resolveConfigDefaults, computeSitOutInfo, MINUTES_PER_POINT, MINUTES_PER_GAME, CHANGEOVER_MINUTES } from './utils/resolveConfigDefaults';
+export { shuffleArray, createTeams, createCrossGroupTeams, createClubTeams } from './utils/teamCreation';
 export type { SitOutInfo } from './utils/resolveConfigDefaults';
 export { Button } from './components/Button';
 export { Card } from './components/Card';

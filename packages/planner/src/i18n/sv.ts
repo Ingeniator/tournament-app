@@ -114,6 +114,10 @@ const sv: Translations = {
   'organizer.courtsMultiple': 'alla {count} banor',
   'organizer.notFullGames': ' Vissa banor kommer inte ha fulla matcher.',
   'organizer.duplicateNames': 'Dubblettnamn: {names}. Samma person registrerad två gånger?',
+  'organizer.validationMinPlayers': 'Minst 4 spelare krävs för att starta',
+  'organizer.validationEvenPlayers': 'Lagformat kräver ett jämnt antal spelare',
+  'organizer.validationUnassignedClubs': '{count} spelare inte tilldelad(e) en klubb',
+  'organizer.validationTooManyCourts': 'För många banor: {courts} banor men bara {max} kan användas',
   'organizer.letsPlay': 'Nu kör vi',
   'organizer.copyForDevice': 'Kopiera för Annan Enhet',
   'organizer.jsonCopied': 'Turnerings-JSON kopierad!',
@@ -307,6 +311,14 @@ const sv: Translations = {
   'format.wizardClub': 'Klubbtävling',
   'format.wizardResult': 'Rekommenderat format',
   'format.wizardNotYet': 'Denna kombination är inte tillgänglig ännu',
+
+  // Team Pairing
+  'teams.title': 'Lag',
+  'teams.subtitle': '{playerCount} spelare \u2192 {teamCount} lag',
+  'teams.hint': 'Tryck på två spelare för att byta dem mellan lag',
+  'teams.hintClub': 'Tryck på två spelare från samma klubb för att byta dem',
+  'teams.shuffle': 'Blanda Lag',
+  'teams.start': 'Starta Turnering',
 
   // Planner App
   'app.connectionError': 'Anslutningsfel',

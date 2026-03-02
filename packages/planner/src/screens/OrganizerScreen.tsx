@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, type ReactNode } from 'react';
 import { ref, push, set } from 'firebase/database';
 import { Button, Card, CLUB_COLORS, getClubColor, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation, FormatPicker, getPresetByFormat, formatHasGroups, formatHasClubs, formatHasFixedPartners, resolveConfigDefaults, computeSitOutInfo, MINUTES_PER_POINT, MINUTES_PER_GAME, CHANGEOVER_MINUTES } from '@padel/common';
-import type { Court, Club, ChaosLevel } from '@padel/common';
+import type { Court, Club, ChaosLevel, Team } from '@padel/common';
 import { generateId } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { auth, db } from '../firebase';
@@ -9,6 +9,7 @@ import { exportRunnerTournamentJSON } from '../utils/exportToRunner';
 import { restoreFromBackup } from '../utils/restoreFromBackup';
 import { useStartGuard } from '../hooks/useStartGuard';
 import { StartWarningModal } from '../components/StartWarningModal';
+import { TeamPairingModal } from '../components/TeamPairingModal';
 import { PlayerList } from '../components/organizer/PlayerList';
 import { ClubPanel } from '../components/organizer/ClubPanel';
 import { EditableItem } from '../components/organizer/EditableItem';
@@ -70,6 +71,7 @@ export function OrganizerScreen() {
   }), [players, capacity, tournament?.format, tournament?.clubs]);
 
   const [showReopenModal, setShowReopenModal] = useState(false);
+  const [showTeamPairing, setShowTeamPairing] = useState(false);
 
   const duplicateNames = useMemo(() => {
     const counts = new Map<string, number>();
@@ -173,8 +175,44 @@ export function OrganizerScreen() {
     }
   };
 
+  // Filter to playing-only registrations for team pairing and validation
+  const playingPlayers = useMemo(() =>
+    players.filter(p => statuses.get(p.id) === 'playing'),
+    [players, statuses]
+  );
+
+  const validateLaunch = (): string | null => {
+    const count = playingPlayers.length;
+    if (count < 4) return t('organizer.validationMinPlayers');
+    const isTeamFormat = formatHasFixedPartners(tournament!.format);
+    if (isTeamFormat && count % 2 !== 0) return t('organizer.validationEvenPlayers');
+    const isClub = formatHasClubs(tournament!.format);
+    if (isClub) {
+      const unassigned = playingPlayers.filter(p => !p.clubId).length;
+      if (unassigned > 0) return t('organizer.validationUnassignedClubs', { count: unassigned });
+    }
+    const maxCourts = isTeamFormat
+      ? Math.floor(Math.floor(count / 2) / 2)
+      : Math.floor(count / 4);
+    if (tournament!.courts.length > maxCourts && maxCourts > 0) {
+      return t('organizer.validationTooManyCourts', { courts: tournament!.courts.length, max: maxCourts });
+    }
+    return null;
+  };
+
   const handleLaunch = () => {
+    const error = validateLaunch();
+    if (error) { showToast(error); return; }
+    if (formatHasFixedPartners(tournament!.format)) {
+      setShowTeamPairing(true);
+      return;
+    }
     handleGuardedLaunch(tournament!, players);
+  };
+
+  const handleTeamStart = (teams: Team[]) => {
+    setShowTeamPairing(false);
+    handleGuardedLaunch(tournament!, players, teams);
   };
 
   const handleCopyExport = async () => {
@@ -887,6 +925,16 @@ export function OrganizerScreen() {
       />
 
       <Toast message={toastMessage} className={styles.toast} />
+
+      <TeamPairingModal
+        open={showTeamPairing}
+        players={playingPlayers}
+        format={tournament.format}
+        clubs={tournament.clubs}
+        rankLabels={tournament.rankLabels}
+        onStart={handleTeamStart}
+        onClose={() => setShowTeamPairing(false)}
+      />
 
       <StartWarningModal
         open={showWarning}

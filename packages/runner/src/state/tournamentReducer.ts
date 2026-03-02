@@ -1,72 +1,13 @@
-import type { Tournament, Player, Court, TournamentConfig, Round, Team, Club } from '@padel/common';
+import type { Tournament, Player, Court, Club, TournamentConfig, Round } from '@padel/common';
 import type { TournamentAction } from './actions';
 import { generateId, CLUB_COLORS } from '@padel/common';
 import { formatHasGroups, formatHasClubs } from '@padel/common';
+import { createTeams, createCrossGroupTeams, createClubTeams } from '@padel/common';
 import { getStrategy } from '../strategies';
 import { deduplicateNames } from '../utils/deduplicateNames';
 import { resolveConfigDefaults } from '../utils/resolveConfigDefaults';
 import { dealMaldicionesHands } from '../utils/maldiciones';
 import { findTeamByPair } from '../strategies/shared';
-
-function shuffleArray<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-function createTeams(players: Player[]): Team[] {
-  const shuffled = shuffleArray(players);
-  const teams: Team[] = [];
-  for (let i = 0; i < shuffled.length - 1; i += 2) {
-    teams.push({
-      id: generateId(),
-      player1Id: shuffled[i].id,
-      player2Id: shuffled[i + 1].id,
-    });
-  }
-  return teams;
-}
-
-function createCrossGroupTeams(players: Player[]): Team[] {
-  const groupA = shuffleArray(players.filter(p => p.group === 'A'));
-  const groupB = shuffleArray(players.filter(p => p.group === 'B'));
-  const teams: Team[] = [];
-  for (let i = 0; i < Math.min(groupA.length, groupB.length); i++) {
-    teams.push({
-      id: generateId(),
-      player1Id: groupA[i].id,
-      player2Id: groupB[i].id,
-    });
-  }
-  return teams;
-}
-
-function createClubTeams(players: Player[], clubs: Club[]): Team[] {
-  const teams: Team[] = [];
-  const hasRanks = players.some(p => p.rankSlot != null);
-  for (const club of clubs) {
-    const raw = players.filter(p => p.clubId === club.id);
-    let clubPlayers: Player[];
-    if (hasRanks) {
-      const ranked = raw.filter(p => p.rankSlot != null).sort((a, b) => a.rankSlot! - b.rankSlot!);
-      const unranked = shuffleArray(raw.filter(p => p.rankSlot == null));
-      clubPlayers = [...ranked, ...unranked];
-    } else {
-      clubPlayers = shuffleArray(raw);
-    }
-    for (let i = 0; i < clubPlayers.length - 1; i += 2) {
-      teams.push({
-        id: generateId(),
-        player1Id: clubPlayers[i].id,
-        player2Id: clubPlayers[i + 1].id,
-      });
-    }
-  }
-  return teams;
-}
 
 function regenerateUnscoredRounds(
   state: Tournament, players: Player[], config: TournamentConfig, timeBudgetMs?: number

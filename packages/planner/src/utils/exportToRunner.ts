@@ -1,4 +1,4 @@
-import type { Tournament, Player } from '@padel/common';
+import type { Tournament, Player, Team } from '@padel/common';
 import type { PlannerTournament, PlannerRegistration } from '@padel/common';
 import { generateId } from '@padel/common';
 import { getPlayerStatuses } from './playerStatus';
@@ -8,7 +8,8 @@ const EXPORT_FORMAT = 'padel-tournament-v1';
 
 export function buildRunnerTournament(
   plannerTournament: PlannerTournament,
-  registrations: PlannerRegistration[]
+  registrations: PlannerRegistration[],
+  teams?: Team[]
 ): Tournament {
   const capacity = plannerTournament.courts.length * 4 + (plannerTournament.extraSpots ?? 0);
   const statuses = getPlayerStatuses(registrations, capacity, {
@@ -26,6 +27,22 @@ export function buildRunnerTournament(
       ...(r.rankSlot != null ? { rankSlot: r.rankSlot } : {}),
     }));
 
+  // When teams are provided from planner, remap player IDs from registration IDs to new runner IDs
+  let remappedTeams: Team[] | undefined;
+  if (teams) {
+    const regIdToRunnerId = new Map<string, string>();
+    registrations
+      .filter(r => statuses.get(r.id) === 'playing')
+      .forEach((r, i) => {
+        regIdToRunnerId.set(r.id, players[i].id);
+      });
+    remappedTeams = teams.map(t => ({
+      ...t,
+      player1Id: regIdToRunnerId.get(t.player1Id) ?? t.player1Id,
+      player2Id: regIdToRunnerId.get(t.player2Id) ?? t.player2Id,
+    }));
+  }
+
   return {
     id: generateId(),
     name: plannerTournament.name,
@@ -40,9 +57,10 @@ export function buildRunnerTournament(
       ...(plannerTournament.groupLabels ? { groupLabels: plannerTournament.groupLabels } : {}),
       ...(plannerTournament.rankLabels ? { rankLabels: plannerTournament.rankLabels } : {}),
     },
-    phase: 'setup',
+    phase: remappedTeams ? 'team-pairing' : 'setup',
     players,
     rounds: [],
+    ...(remappedTeams ? { teams: remappedTeams } : {}),
     ...(plannerTournament.clubs ? { clubs: plannerTournament.clubs } : {}),
     plannerTournamentId: plannerTournament.id,
     createdAt: Date.now(),
@@ -60,9 +78,10 @@ export function exportRunnerTournamentJSON(
 
 export function launchInRunner(
   plannerTournament: PlannerTournament,
-  registrations: PlannerRegistration[]
+  registrations: PlannerRegistration[],
+  teams?: Team[]
 ): void {
-  const tournament = buildRunnerTournament(plannerTournament, registrations);
+  const tournament = buildRunnerTournament(plannerTournament, registrations, teams);
   localStorage.setItem(RUNNER_STORAGE_KEY, JSON.stringify(tournament));
   window.location.href = '/play';
 }

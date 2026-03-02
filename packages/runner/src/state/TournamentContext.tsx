@@ -9,11 +9,24 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
   const [tournament, dispatch] = useReducer(tournamentReducer, null, () => loadTournament());
   const [saveError, setSaveError] = useState(false);
   const prevPhaseRef = useRef(tournament?.phase);
+  const autoStartedRef = useRef(false);
 
   useEffect(() => {
     const ok = saveTournament(tournament);
     setSaveError(!ok);
   }, [tournament]);
+
+  // Auto-start when launched from planner: skip setup/team-pairing screens
+  useEffect(() => {
+    if (
+      !autoStartedRef.current &&
+      tournament?.plannerTournamentId &&
+      (tournament.phase === 'setup' || tournament.phase === 'team-pairing')
+    ) {
+      autoStartedRef.current = true;
+      dispatch({ type: 'GENERATE_SCHEDULE' });
+    }
+  }, [tournament?.plannerTournamentId, tournament?.phase]);
 
   // Write completedAt to Firebase when tournament transitions to completed
   useEffect(() => {

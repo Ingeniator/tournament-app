@@ -116,6 +116,10 @@ const sr: Translations = {
   'organizer.notFullGames': ' Neki tereni neće imati pune igre.',
   'organizer.notEnoughPlayers': 'Nema dovoljno igrača: {count} potvrđeno, potrebno najmanje {needed}.',
   'organizer.duplicateNames': 'Duplikati imena: {names}. Ista osoba registrovana dva puta?',
+  'organizer.validationMinPlayers': 'Potrebno je najmanje 4 igrača za početak',
+  'organizer.validationEvenPlayers': 'Timski formati zahtevaju paran broj igrača',
+  'organizer.validationUnassignedClubs': '{count} igrač(a) nije dodeljen(o) klubu',
+  'organizer.validationTooManyCourts': 'Previše terena: {courts} terena ali samo {max} može da se koristi',
   'organizer.letsPlay': 'Igrajmo',
   'organizer.copyForDevice': 'Kopiraj za Drugi Uređaj',
   'organizer.jsonCopied': 'JSON turnira kopiran!',
@@ -309,6 +313,14 @@ const sr: Translations = {
   'format.wizardClub': 'Klubsko takmičenje',
   'format.wizardResult': 'Preporučeni format',
   'format.wizardNotYet': 'Ova kombinacija još nije dostupna',
+
+  // Team Pairing
+  'teams.title': 'Timovi',
+  'teams.subtitle': '{playerCount} igrača \u2192 {teamCount} timova',
+  'teams.hint': 'Dodirnite dva igrača da ih zamenite između timova',
+  'teams.hintClub': 'Dodirnite dva igrača iz istog kluba da ih zamenite',
+  'teams.shuffle': 'Pomešaj Timove',
+  'teams.start': 'Pokreni Turnir',
 
   // Planner App
   'app.connectionError': 'Greška u Povezivanju',

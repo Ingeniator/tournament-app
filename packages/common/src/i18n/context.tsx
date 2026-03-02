@@ -4,6 +4,17 @@ import type { Locale, TranslationMap } from './types';
 const STORAGE_KEY = 'padel-locale';
 const SUPPORTED_LOCALES: Locale[] = ['en', 'es', 'it', 'pt', 'sr', 'fr', 'sv'];
 
+const paramRegexCache = new Map<string, RegExp>();
+function getParamRegex(key: string): RegExp {
+  let re = paramRegexCache.get(key);
+  if (!re) {
+    re = new RegExp(`\\{${key}\\}`, 'g');
+    paramRegexCache.set(key, re);
+  }
+  re.lastIndex = 0;
+  return re;
+}
+
 function detectLocale(): Locale {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -46,7 +57,7 @@ export function I18nProvider({ translations, children }: I18nProviderProps) {
     let text = translations[locale]?.[key] ?? translations.en?.[key] ?? key;
     if (params) {
       for (const [k, v] of Object.entries(params)) {
-        text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v));
+        text = text.replace(getParamRegex(k), String(v));
       }
     }
     return text;

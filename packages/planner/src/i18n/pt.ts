@@ -116,6 +116,10 @@ const pt: Translations = {
   'organizer.notFullGames': ' Alguns campos não terão jogos completos.',
   'organizer.notEnoughPlayers': 'Jogadores insuficientes: {count} confirmados, necessário pelo menos {needed}.',
   'organizer.duplicateNames': 'Nomes duplicados: {names}. A mesma pessoa inscreveu-se duas vezes?',
+  'organizer.validationMinPlayers': 'São necessários pelo menos 4 jogadores para começar',
+  'organizer.validationEvenPlayers': 'Formatos de equipa requerem um número par de jogadores',
+  'organizer.validationUnassignedClubs': '{count} jogador(es) sem clube atribuído',
+  'organizer.validationTooManyCourts': 'Demasiados campos: {courts} campos mas só {max} pode(m) ser usado(s)',
   'organizer.letsPlay': 'Vamos jogar',
   'organizer.copyForDevice': 'Copiar para Outro Dispositivo',
   'organizer.jsonCopied': 'JSON do torneio copiado!',
@@ -309,6 +313,14 @@ const pt: Translations = {
   'format.wizardClub': 'Competição de clube',
   'format.wizardResult': 'Formato recomendado',
   'format.wizardNotYet': 'Esta combinação ainda não está disponível',
+
+  // Team Pairing
+  'teams.title': 'Equipas',
+  'teams.subtitle': '{playerCount} jogadores \u2192 {teamCount} equipas',
+  'teams.hint': 'Toca em dois jogadores para os trocar entre equipas',
+  'teams.hintClub': 'Toca em dois jogadores do mesmo clube para os trocar',
+  'teams.shuffle': 'Baralhar Equipas',
+  'teams.start': 'Iniciar Torneio',
 
   // Planner App
   'app.connectionError': 'Erro de Ligação',

@@ -116,6 +116,10 @@ const en: Translations = {
   'organizer.notFullGames': ' Some courts won\'t have full games.',
   'organizer.notEnoughPlayers': 'Not enough players: {count} confirmed, need at least {needed}.',
   'organizer.duplicateNames': 'Duplicate names: {names}. Same person registered twice?',
+  'organizer.validationMinPlayers': 'At least 4 players are needed to start',
+  'organizer.validationEvenPlayers': 'Team formats require an even number of players',
+  'organizer.validationUnassignedClubs': '{count} player(s) not assigned to a club',
+  'organizer.validationTooManyCourts': 'Too many courts: {courts} courts but only {max} can be used',
   'organizer.letsPlay': 'Let\'s play',
   'organizer.copyForDevice': 'Copy for Another Device',
   'organizer.jsonCopied': 'Tournament JSON copied!',
@@ -364,6 +368,14 @@ const en: Translations = {
   // EventJoinScreen
   'eventJoin.join': 'Join',
   'eventJoin.edit': 'Edit',
+
+  // Team Pairing (shared with runner)
+  'teams.title': 'Teams',
+  'teams.subtitle': '{playerCount} players \u2192 {teamCount} teams',
+  'teams.hint': 'Tap two players to swap them between teams',
+  'teams.hintClub': 'Tap two players from the same club to swap them',
+  'teams.shuffle': 'Shuffle Teams',
+  'teams.start': 'Start Tournament',
 
   // Planner App
   'app.connectionError': 'Connection Error',
