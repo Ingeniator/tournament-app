@@ -9,7 +9,8 @@ const EXPORT_FORMAT = 'padel-tournament-v1';
 export function buildRunnerTournament(
   plannerTournament: PlannerTournament,
   registrations: PlannerRegistration[],
-  teams?: Team[]
+  teams?: Team[],
+  aliases?: Map<string, string>
 ): Tournament {
   const capacity = plannerTournament.courts.length * 4 + (plannerTournament.extraSpots ?? 0);
   const statuses = getPlayerStatuses(registrations, capacity, {
@@ -21,7 +22,7 @@ export function buildRunnerTournament(
     .filter(r => statuses.get(r.id) === 'playing')
     .map(r => ({
       id: generateId(),
-      name: r.name,
+      name: aliases?.get(r.id) ?? r.name,
       ...(r.group ? { group: r.group } : {}),
       ...(r.clubId ? { clubId: r.clubId } : {}),
       ...(r.rankSlot != null ? { rankSlot: r.rankSlot } : {}),
@@ -79,9 +80,10 @@ export function exportRunnerTournamentJSON(
 export function launchInRunner(
   plannerTournament: PlannerTournament,
   registrations: PlannerRegistration[],
-  teams?: Team[]
+  teams?: Team[],
+  aliases?: Map<string, string>
 ): void {
-  const tournament = buildRunnerTournament(plannerTournament, registrations, teams);
+  const tournament = buildRunnerTournament(plannerTournament, registrations, teams, aliases);
   localStorage.setItem(RUNNER_STORAGE_KEY, JSON.stringify(tournament));
   window.location.href = '/play';
 }

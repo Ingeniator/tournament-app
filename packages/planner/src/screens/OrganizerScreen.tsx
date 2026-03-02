@@ -210,9 +210,9 @@ export function OrganizerScreen() {
     handleGuardedLaunch(tournament!, players);
   };
 
-  const handleTeamStart = (teams: Team[]) => {
+  const handleTeamStart = (teams: Team[], aliases: Map<string, string>) => {
     setShowTeamPairing(false);
-    handleGuardedLaunch(tournament!, players, teams);
+    handleGuardedLaunch(tournament!, players, teams, aliases);
   };
 
   const handleCopyExport = async () => {

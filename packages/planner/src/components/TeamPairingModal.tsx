@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import type { Team, Club, TournamentFormat } from '@padel/common';
 import type { PlannerRegistration } from '@padel/common';
 import { Modal, Button, CLUB_COLORS, getClubColor, formatHasGroups, formatHasClubs, useTranslation } from '@padel/common';
@@ -11,8 +11,25 @@ interface TeamPairingModalProps {
   format: TournamentFormat;
   clubs?: Club[];
   rankLabels?: string[];
-  onStart: (teams: Team[]) => void;
+  onStart: (teams: Team[], aliases: Map<string, string>) => void;
   onClose: () => void;
+}
+
+function buildInitialAliases(players: PlannerRegistration[]): Map<string, string> {
+  const nameGroups = new Map<string, string[]>();
+  for (const p of players) {
+    const ids = nameGroups.get(p.name) ?? [];
+    ids.push(p.id);
+    nameGroups.set(p.name, ids);
+  }
+  const map = new Map<string, string>();
+  for (const [name, ids] of nameGroups) {
+    if (ids.length <= 1) continue;
+    ids.forEach((id, i) => {
+      map.set(id, `${name} (${i + 1})`);
+    });
+  }
+  return map;
 }
 
 function generateTeams(players: PlannerRegistration[], format: TournamentFormat, clubs?: Club[]): Team[] {
@@ -43,7 +60,11 @@ function generateTeams(players: PlannerRegistration[], format: TournamentFormat,
 export function TeamPairingModal({ open, players, format, clubs, rankLabels, onStart, onClose }: TeamPairingModalProps) {
   const { t } = useTranslation();
   const [teams, setTeams] = useState<Team[]>(() => generateTeams(players, format, clubs));
+  const [aliases, setAliases] = useState<Map<string, string>>(() => buildInitialAliases(players));
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState('');
+  const editInputRef = useRef<HTMLInputElement>(null);
 
   const isClubFormat = formatHasClubs(format);
   const isCrossGroupFormat = formatHasGroups(format);
@@ -71,17 +92,45 @@ export function TeamPairingModal({ open, players, format, clubs, rankLabels, onS
     return grouped;
   }, [teams, players, clubs, isClubFormat]);
 
-  const nameOf = useCallback((id: string) => players.find(p => p.id === id)?.name ?? '?', [players]);
+  const displayName = useCallback((id: string) =>
+    aliases.get(id) ?? players.find(p => p.id === id)?.name ?? '?',
+    [aliases, players]
+  );
   const playerClub = useCallback((id: string) => players.find(p => p.id === id)?.clubId, [players]);
   const playerGroup = useCallback((id: string) => players.find(p => p.id === id)?.group, [players]);
 
+  useEffect(() => {
+    if (editingPlayerId && editInputRef.current) {
+      editInputRef.current.focus();
+      editInputRef.current.select();
+    }
+  }, [editingPlayerId]);
+
+  const handleEditSave = () => {
+    if (editingPlayerId && editDraft.trim()) {
+      setAliases(prev => {
+        const next = new Map(prev);
+        next.set(editingPlayerId, editDraft.trim());
+        return next;
+      });
+    }
+    setEditingPlayerId(null);
+  };
+
   const handlePlayerTap = (playerId: string) => {
+    if (editingPlayerId) {
+      handleEditSave();
+      return;
+    }
     if (!selectedPlayerId) {
       setSelectedPlayerId(playerId);
       return;
     }
     if (selectedPlayerId === playerId) {
+      // Second tap on same chip → edit mode
       setSelectedPlayerId(null);
+      setEditingPlayerId(playerId);
+      setEditDraft(displayName(playerId));
       return;
     }
     // Check if same team
@@ -119,6 +168,7 @@ export function TeamPairingModal({ open, players, format, clubs, rankLabels, onS
 
   const handleShuffle = () => {
     setSelectedPlayerId(null);
+    setEditingPlayerId(null);
     setTeams(generateTeams(players, format, clubs));
   };
 
@@ -128,13 +178,48 @@ export function TeamPairingModal({ open, players, format, clubs, rankLabels, onS
     ));
   };
 
+  const renderPlayerChip = (playerId: string) => {
+    if (editingPlayerId === playerId) {
+      return (
+        <div key={playerId} className={`${styles.playerChip} ${styles.playerChipEditing}`}>
+          {isCrossGroupFormat && playerGroup(playerId) && (
+            <span className={styles.groupBadge}>{playerGroup(playerId)}</span>
+          )}
+          <input
+            ref={editInputRef}
+            className={styles.playerNameInput}
+            value={editDraft}
+            onChange={e => setEditDraft(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') handleEditSave();
+              if (e.key === 'Escape') setEditingPlayerId(null);
+            }}
+            onBlur={handleEditSave}
+          />
+        </div>
+      );
+    }
+    return (
+      <button
+        key={playerId}
+        className={`${styles.playerChip} ${selectedPlayerId === playerId ? styles.playerChipSelected : ''}`}
+        onClick={() => handlePlayerTap(playerId)}
+      >
+        {isCrossGroupFormat && playerGroup(playerId) && (
+          <span className={styles.groupBadge}>{playerGroup(playerId)}</span>
+        )}
+        {displayName(playerId)}
+      </button>
+    );
+  };
+
   const renderTeamCard = (team: Team, slotIndex?: number) => (
     <div key={team.id} className={styles.teamCard}>
       <div className={styles.teamCardHeader}>
         <input
           className={styles.teamNameInput}
           value={team.name ?? ''}
-          placeholder={`${nameOf(team.player1Id)} & ${nameOf(team.player2Id)}`}
+          placeholder={`${displayName(team.player1Id)} & ${displayName(team.player2Id)}`}
           onChange={e => handleRename(team.id, e.target.value)}
         />
         {isSlotMode && slotIndex != null && rankLabels?.[slotIndex] && (
@@ -142,24 +227,8 @@ export function TeamPairingModal({ open, players, format, clubs, rankLabels, onS
         )}
       </div>
       <div className={styles.teamPlayers}>
-        <button
-          className={`${styles.playerChip} ${selectedPlayerId === team.player1Id ? styles.playerChipSelected : ''}`}
-          onClick={() => handlePlayerTap(team.player1Id)}
-        >
-          {isCrossGroupFormat && playerGroup(team.player1Id) && (
-            <span className={styles.groupBadge}>{playerGroup(team.player1Id)}</span>
-          )}
-          {nameOf(team.player1Id)}
-        </button>
-        <button
-          className={`${styles.playerChip} ${selectedPlayerId === team.player2Id ? styles.playerChipSelected : ''}`}
-          onClick={() => handlePlayerTap(team.player2Id)}
-        >
-          {isCrossGroupFormat && playerGroup(team.player2Id) && (
-            <span className={styles.groupBadge}>{playerGroup(team.player2Id)}</span>
-          )}
-          {nameOf(team.player2Id)}
-        </button>
+        {renderPlayerChip(team.player1Id)}
+        {renderPlayerChip(team.player2Id)}
       </div>
     </div>
   );
@@ -214,7 +283,7 @@ export function TeamPairingModal({ open, players, format, clubs, rankLabels, onS
           <Button variant="secondary" fullWidth onClick={handleShuffle}>
             {t('teams.shuffle')}
           </Button>
-          <Button fullWidth onClick={() => onStart(teams)}>
+          <Button fullWidth onClick={() => onStart(teams, aliases)}>
             {t('teams.start')}
           </Button>
         </div>

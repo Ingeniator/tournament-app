@@ -11,6 +11,7 @@ export function useStartGuard(tournamentId: string | null, uid: string | null, u
   const [showWarning, setShowWarning] = useState(false);
   const [warningReason, setWarningReason] = useState<WarningReason>('different-user');
   const [pendingTeams, setPendingTeams] = useState<Team[] | undefined>();
+  const [pendingAliases, setPendingAliases] = useState<Map<string, string> | undefined>();
 
   useEffect(() => {
     if (!tournamentId || !db) return;
@@ -27,27 +28,30 @@ export function useStartGuard(tournamentId: string | null, uid: string | null, u
     set(startedByRef, { uid, name: userName ?? 'Unknown', timestamp: Date.now() });
   };
 
-  const handleLaunch = (tournament: PlannerTournament, players: PlannerRegistration[], teams?: Team[]) => {
+  const handleLaunch = (tournament: PlannerTournament, players: PlannerRegistration[], teams?: Team[], aliases?: Map<string, string>) => {
     if (startedBy) {
       setWarningReason(startedBy.uid === uid ? 'same-user' : 'different-user');
       setPendingTeams(teams);
+      setPendingAliases(aliases);
       setShowWarning(true);
       return;
     }
     writeStartedBy(tournament);
-    launchInRunner(tournament, players, teams);
+    launchInRunner(tournament, players, teams, aliases);
   };
 
   const proceedAnyway = (tournament: PlannerTournament, players: PlannerRegistration[]) => {
     setShowWarning(false);
     writeStartedBy(tournament);
-    launchInRunner(tournament, players, pendingTeams);
+    launchInRunner(tournament, players, pendingTeams, pendingAliases);
     setPendingTeams(undefined);
+    setPendingAliases(undefined);
   };
 
   const dismissWarning = () => {
     setShowWarning(false);
     setPendingTeams(undefined);
+    setPendingAliases(undefined);
   };
 
   return { startedBy, showWarning, warningReason, handleLaunch, proceedAnyway, dismissWarning };

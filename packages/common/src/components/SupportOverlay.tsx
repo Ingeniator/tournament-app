@@ -85,7 +85,7 @@ export function SupportOverlay({ open, onClose, auth }: SupportOverlayProps) {
             className={styles.input}
             type="text"
             value={message}
-            onChange={e => setMessage(e.target.value.slice(0, 50))}
+            onChange={e => setMessage(e.target.value)}
             placeholder={t('support.leaveMessage')}
             maxLength={50}
           />
