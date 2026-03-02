@@ -182,6 +182,12 @@ export function TeamPairingModal({ open, players, format, clubs, rankLabels, onS
       setAliases(prev => {
         const next = new Map(prev);
         next.set(editingPlayerId, editDraft.trim());
+        // Re-deduplicate all effective names to resolve collisions
+        const items = players.map(p => ({ id: p.id, name: next.get(p.id) ?? p.name }));
+        const deduped = deduplicateNames(items);
+        for (const [id, name] of deduped) {
+          next.set(id, name);
+        }
         return next;
       });
     }
