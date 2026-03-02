@@ -13,8 +13,11 @@ build:
 	npm -w @padel/planner run build
 	npm -w @padel/landing run build
 
+unit-test:
+	npm test --workspaces --if-present
+
 # Cloudflare Pages: merge both outputs into dist/
-deploy-build: build
+deploy-build: build unit-test
 	rm -rf dist
 	mkdir -p dist/play dist/plan
 	cp -r packages/runner/dist/* dist/play/
