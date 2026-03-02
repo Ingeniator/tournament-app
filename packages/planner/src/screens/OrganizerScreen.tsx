@@ -1,7 +1,7 @@
 import { useState, useMemo, type ReactNode } from 'react';
 import { ref, push, set } from 'firebase/database';
-import { Button, Card, CLUB_COLORS, getClubColor, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation, FormatPicker, getPresetByFormat, formatHasGroups, formatHasClubs } from '@padel/common';
-import type { Court, Club } from '@padel/common';
+import { Button, Card, CLUB_COLORS, getClubColor, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation, FormatPicker, getPresetByFormat, formatHasGroups, formatHasClubs, formatHasFixedPartners, resolveConfigDefaults, MINUTES_PER_POINT, MINUTES_PER_GAME, CHANGEOVER_MINUTES } from '@padel/common';
+import type { Court, Club, ChaosLevel } from '@padel/common';
 import { generateId } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { auth, db } from '../firebase';
@@ -197,7 +197,7 @@ export function OrganizerScreen() {
 
   // Determine which settings groups have values (for auto-collapse)
   const hasWhenWhere = !!(tournament.date || tournament.place);
-  const hasFormatCourts = tournament.courts.length > 1 || (tournament.extraSpots ?? 0) > 0;
+  const hasCourtsConfig = tournament.courts.length > 1 || (tournament.extraSpots ?? 0) > 0;
   const hasDetails = !!(tournament.chatLink || tournament.description);
 
   // Build summaries for collapsed state
@@ -212,9 +212,10 @@ export function OrganizerScreen() {
   if (tournament.place) whenWhereParts.push(tournament.place);
   const whenWhereSummary = whenWhereParts.join(' \u00b7 ');
 
+  const courtsSummary = `${t('organizer.courts', { count: tournament.courts.length })} \u00b7 ${tournament.courts.length * 4 + (tournament.extraSpots ?? 0)} spots`;
+
   const formatPreset = getPresetByFormat(tournament.format);
   const formatLabel = formatPreset ? t(formatPreset.nameKey) : t('organizer.formatMexicano');
-  const formatCourtsSummary = `${formatLabel} \u00b7 ${t('organizer.courts', { count: tournament.courts.length })}`;
 
   const detailsParts: string[] = [];
   if (tournament.chatLink) detailsParts.push(t('organizer.groupChat'));
@@ -225,6 +226,41 @@ export function OrganizerScreen() {
     detailsParts.push(desc);
   }
   const detailsSummary = detailsParts.join(' \u00b7 ');
+
+  // Match Settings: resolve config defaults
+  const clubCount = formatHasClubs(tournament.format) ? (tournament.clubs?.length ?? 0) : undefined;
+  const resolved = resolveConfigDefaults({
+    format: tournament.format,
+    pointsPerMatch: tournament.pointsPerMatch ?? 0,
+    courts: tournament.courts,
+    maxRounds: tournament.maxRounds ?? null,
+    targetDuration: tournament.duration,
+    scoringMode: tournament.scoringMode,
+  }, confirmedCount || capacity, clubCount);
+  const isGamesMode = resolved.scoringMode === 'games';
+  const minutesPer = isGamesMode ? MINUTES_PER_GAME : MINUTES_PER_POINT;
+  const effectivePoints = resolved.pointsPerMatch;
+  const effectiveRounds = resolved.maxRounds ?? 1;
+
+  // Per-field suggestions
+  const suggestedRoundsConfig = resolveConfigDefaults({ ...resolved, maxRounds: null, pointsPerMatch: tournament.pointsPerMatch ?? 0 }, confirmedCount || capacity, clubCount);
+  const suggestedPointsConfig = resolveConfigDefaults({ ...resolved, pointsPerMatch: 0, maxRounds: tournament.maxRounds ?? null }, confirmedCount || capacity, clubCount);
+  const suggestedRounds = suggestedRoundsConfig.maxRounds ?? 1;
+  const suggestedPoints = suggestedPointsConfig.pointsPerMatch;
+
+  const clubFixedRounds = clubCount && clubCount >= 2
+    ? (clubCount % 2 === 0 ? clubCount - 1 : clubCount)
+    : null;
+
+  const roundDuration = Math.round(effectivePoints * minutesPer + CHANGEOVER_MINUTES);
+  const estimatedMinutes = effectiveRounds * roundDuration;
+  const estimatedH = Math.floor(estimatedMinutes / 60);
+  const estimatedM = Math.round(estimatedMinutes % 60);
+  const estimatedStr = estimatedH > 0
+    ? (estimatedM > 0 ? `~${estimatedH}h ${estimatedM}min` : `~${estimatedH}h`)
+    : `~${estimatedM}min`;
+
+  const matchSettingsSummary = `${effectiveRounds} rounds \u00b7 ${effectivePoints} ${isGamesMode ? 'games' : 'pts'} \u00b7 ${estimatedStr}`;
 
   return (
     <div className={styles.container}>
@@ -318,10 +354,69 @@ export function OrganizerScreen() {
         </div>
       </CollapsibleSection>
 
+      {/* Courts section */}
       <CollapsibleSection
-        title={t('organizer.formatAndCourts')}
-        summary={formatCourtsSummary}
-        defaultOpen={!hasFormatCourts}
+        title={t('organizer.courts_section')}
+        summary={courtsSummary}
+        defaultOpen={!hasCourtsConfig}
+      >
+        <div className={styles.courtsSection}>
+          <div className={styles.courtsHeader}>
+            <span>{t('organizer.courts', { count: tournament.courts.length })}</span>
+            <Button variant="ghost" size="small" onClick={handleAddCourt}>{t('organizer.addCourt')}</Button>
+          </div>
+          {tournament.courts.map((court, courtIdx) => (
+            <EditableItem
+              key={court.id}
+              name={court.name}
+              onChange={name => {
+                const courts = tournament.courts.map(c =>
+                  c.id === court.id ? { ...c, name } : c
+                );
+                updateTournament({ courts });
+              }}
+              onRemove={
+                tournament.courts.length > 1 && !(isKOTC && tournament.courts.length <= 2)
+                  ? () => handleRemoveCourt(court.id)
+                  : undefined
+              }
+              subtitle={isKOTC ? (
+                <span className={styles.courtBonusLabel}>
+                  +{tournament.courts.length - 1 - courtIdx} {t('organizer.courtBonusAuto')}
+                </span>
+              ) : undefined}
+            />
+          ))}
+        </div>
+
+        <div className={styles.capacitySection}>
+          <label className={styles.configLabel}>{t('organizer.extraSpots')}</label>
+          <input
+            className={styles.configInput}
+            type="number"
+            value={tournament.extraSpots || ''}
+            onChange={e => {
+              const v = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
+              updateTournament({ extraSpots: isNaN(v) ? 0 : Math.max(0, v) });
+            }}
+            min={0}
+            placeholder="0"
+          />
+          <span className={styles.capacityTotal}>
+            {t('organizer.totalSpots', {
+              total: tournament.courts.length * 4 + (tournament.extraSpots ?? 0),
+              courts: tournament.courts.length,
+              extra: (tournament.extraSpots ?? 0) > 0 ? t('organizer.extraSuffix', { count: tournament.extraSpots ?? 0 }) : '',
+            })}
+          </span>
+        </div>
+      </CollapsibleSection>
+
+      {/* Format section */}
+      <CollapsibleSection
+        title={t('organizer.formatSection')}
+        summary={formatLabel}
+        defaultOpen={false}
       >
         <div className={styles.configGrid}>
           <div className={styles.configFullWidth}>
@@ -452,54 +547,113 @@ export function OrganizerScreen() {
           );
         })()}
 
-        <div className={styles.courtsSection}>
-          <div className={styles.courtsHeader}>
-            <span>{t('organizer.courts', { count: tournament.courts.length })}</span>
-            <Button variant="ghost" size="small" onClick={handleAddCourt}>{t('organizer.addCourt')}</Button>
-          </div>
-          {tournament.courts.map((court, courtIdx) => (
-            <EditableItem
-              key={court.id}
-              name={court.name}
-              onChange={name => {
-                const courts = tournament.courts.map(c =>
-                  c.id === court.id ? { ...c, name } : c
-                );
-                updateTournament({ courts });
-              }}
-              onRemove={
-                tournament.courts.length > 1 && !(isKOTC && tournament.courts.length <= 2)
-                  ? () => handleRemoveCourt(court.id)
-                  : undefined
-              }
-              subtitle={isKOTC ? (
-                <span className={styles.courtBonusLabel}>
-                  +{tournament.courts.length - 1 - courtIdx} {t('organizer.courtBonusAuto')}
-                </span>
-              ) : undefined}
-            />
-          ))}
-        </div>
+        {/* Modes subsection */}
+        {formatHasFixedPartners(tournament.format) && (
+          <>
+            <div className={styles.modesSubtitle}>{t('organizer.modesSubtitle')}</div>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={tournament.maldiciones?.enabled ?? false}
+                onChange={e => {
+                  updateTournament({
+                    maldiciones: e.target.checked
+                      ? { enabled: true, chaosLevel: tournament.maldiciones?.chaosLevel ?? 'medium' }
+                      : undefined,
+                  });
+                }}
+              />
+              <span>{t('organizer.maldicionesEnabled')}</span>
+            </label>
+            <span className={styles.hint}>{t('organizer.maldicionesHint')}</span>
+            {tournament.maldiciones?.enabled && (
+              <div className={styles.configGrid}>
+                <label className={styles.configLabel}>{t('organizer.chaosLevel')}</label>
+                <select
+                  className={styles.select}
+                  value={tournament.maldiciones.chaosLevel}
+                  onChange={e => updateTournament({
+                    maldiciones: { enabled: true, chaosLevel: e.target.value as ChaosLevel },
+                  })}
+                >
+                  <option value="lite">{t('organizer.chaosLite')}</option>
+                  <option value="medium">{t('organizer.chaosMedium')}</option>
+                  <option value="hardcore">{t('organizer.chaosHardcore')}</option>
+                </select>
+              </div>
+            )}
+          </>
+        )}
+      </CollapsibleSection>
 
-        <div className={styles.capacitySection}>
-          <label className={styles.configLabel}>{t('organizer.extraSpots')}</label>
+      {/* Match Settings section */}
+      <CollapsibleSection
+        title={t('organizer.matchSettings')}
+        summary={matchSettingsSummary}
+        defaultOpen={false}
+      >
+        <div className={styles.configGrid}>
+          <label className={styles.configLabel}>{t('organizer.numberOfRounds')}</label>
           <input
             className={styles.configInput}
             type="number"
-            value={tournament.extraSpots || ''}
+            min={1}
+            value={tournament.maxRounds ?? ''}
+            placeholder={String(suggestedRounds)}
+            onChange={e => {
+              const val = e.target.value === '' ? undefined : parseInt(e.target.value, 10);
+              updateTournament({ maxRounds: val && val > 0 ? val : undefined });
+            }}
+          />
+        </div>
+        <span className={styles.hint}>
+          {clubFixedRounds
+            ? t('organizer.clubFixedRounds', { rounds: clubFixedRounds, clubs: clubCount! })
+            : t('organizer.recommendedRounds', { rounds: suggestedRounds, players: confirmedCount || capacity, courts: tournament.courts.length })}
+        </span>
+
+        <div className={styles.configGrid}>
+          <label className={styles.configLabel}>
+            {isGamesMode ? t('organizer.gamesPerMatch') : t('organizer.pointsPerMatch')}
+          </label>
+          <input
+            className={styles.configInput}
+            type="number"
+            min={1}
+            value={tournament.pointsPerMatch || ''}
+            placeholder={String(suggestedPoints)}
             onChange={e => {
               const v = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
-              updateTournament({ extraSpots: isNaN(v) ? 0 : Math.max(0, v) });
+              updateTournament({ pointsPerMatch: isNaN(v) ? 0 : Math.max(0, v) });
             }}
-            min={0}
-            placeholder="0"
           />
-          <span className={styles.capacityTotal}>
-            {t('organizer.totalSpots', {
-              total: tournament.courts.length * 4 + (tournament.extraSpots ?? 0),
-              courts: tournament.courts.length,
-              extra: (tournament.extraSpots ?? 0) > 0 ? t('organizer.extraSuffix', { count: tournament.extraSpots ?? 0 }) : '',
-            })}
+        </div>
+        <span className={styles.hint}>
+          {isGamesMode
+            ? t('organizer.recommendedGames', { games: suggestedPoints })
+            : t('organizer.recommendedPoints', { points: suggestedPoints })}
+        </span>
+
+        <div className={styles.configGrid}>
+          <label className={styles.configLabel}>{t('organizer.scoringMode')}</label>
+          <select
+            className={styles.select}
+            value={isGamesMode ? 'games' : 'points'}
+            onChange={e => {
+              const mode = e.target.value as 'points' | 'games';
+              // Clear explicit pointsPerMatch so it recalculates for new mode
+              updateTournament({ scoringMode: mode, pointsPerMatch: undefined });
+            }}
+          >
+            <option value="points">{t('organizer.scoringPoints')}</option>
+            <option value="games">{t('organizer.scoringGames')}</option>
+          </select>
+        </div>
+
+        <div className={styles.estimate}>
+          {t('organizer.estimatedDuration')}<strong>{estimatedStr}</strong>
+          <span className={styles.estimateBreakdown}>
+            {t('organizer.estimateBreakdown', { rounds: effectiveRounds, minutes: roundDuration })}
           </span>
         </div>
       </CollapsibleSection>

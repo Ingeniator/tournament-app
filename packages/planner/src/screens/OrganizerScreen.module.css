@@ -713,6 +713,50 @@
   color: var(--color-text-muted);
 }
 
+/* Modes subtitle within Format section */
+.modesSubtitle {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  padding-top: var(--space-md);
+  margin-bottom: var(--space-xs);
+}
+
+/* Checkbox + label row */
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.checkboxLabel input[type="checkbox"] {
+  accent-color: var(--color-primary);
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* Duration estimate */
+.estimate {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  padding: var(--space-sm) 0;
+}
+
+.estimate strong {
+  color: var(--color-text);
+}
+
+.estimateBreakdown {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
 /* Reopen modal */
 .reopenGap {
   height: var(--space-sm);

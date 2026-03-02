@@ -1,4 +1,5 @@
 import type { TournamentFormat, Court, Club } from './tournament';
+import type { ChaosLevel } from './maldiciones';
 
 export interface PlannerTournament {
   id: string;
@@ -20,6 +21,8 @@ export interface PlannerTournament {
   clubs?: Club[];
   groupLabels?: [string, string];
   rankLabels?: string[];
+  scoringMode?: 'points' | 'games';
+  maldiciones?: { enabled: boolean; chaosLevel: ChaosLevel };
 }
 
 export interface TournamentSummary {
