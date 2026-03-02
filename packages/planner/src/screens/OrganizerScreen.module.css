@@ -757,6 +757,27 @@
   margin-top: 2px;
 }
 
+/* Match settings warnings */
+.matchWarning {
+  border-left: 3px solid var(--color-warning);
+  background-color: var(--color-surface-raised);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  margin-top: var(--space-sm);
+}
+
+.matchWarningTitle {
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--color-warning);
+  margin-bottom: var(--space-xs);
+}
+
+.matchWarningBody {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
 /* Reopen modal */
 .reopenGap {
   height: var(--space-sm);

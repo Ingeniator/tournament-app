@@ -157,6 +157,17 @@ const sv: Translations = {
   'organizer.recommendedGames': 'Max: {games} games per match',
   'organizer.clubPanel': 'Clubs',
   'organizer.clubUnassigned': 'Unassigned',
+  'organizer.gamesModeSuggestion': 'Med bara {rounds} omgångar passar gem-läge (15/30/40 poängsättning) bättre för måltiden',
+  'organizer.somePlayersWontPlay': 'Vissa spelare kommer inte att spela',
+  'organizer.playersPerRound': 'Bara {playing} av {total} spelare spelar varje omgång. Minst {minRounds} omgångar behövs för att alla ska delta.',
+  'organizer.mayExceed': 'Kan överskrida {duration}',
+  'organizer.fitWithin': 'För att passa inom {duration}, prova',
+  'organizer.pointsSuggestion': '{points} poäng per match eller ',
+  'organizer.roundsSuggestion': '{rounds} omgångar',
+  'organizer.unequalSitOuts': 'Ojämna vilor',
+  'organizer.sitOutBody': 'Med {rounds} omgångar vilar {sitOuts} spelare varje omgång \u2014 vilorna kan inte fördelas jämnt mellan {players} spelare.',
+  'organizer.trySitOut': 'Prova {below} eller {above} omgångar för jämna vilor.',
+  'organizer.trySitOutSingle': 'Prova {rounds} omgångar för jämna vilor.',
 
   // JoinScreen
   'join.back': 'Tillbaka',

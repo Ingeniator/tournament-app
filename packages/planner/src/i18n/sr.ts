@@ -157,6 +157,17 @@ const sr: Translations = {
   'organizer.recommendedGames': 'Max: {games} games per match',
   'organizer.clubPanel': 'Clubs',
   'organizer.clubUnassigned': 'Unassigned',
+  'organizer.gamesModeSuggestion': 'Sa samo {rounds} rundi, režim gemova (bodovanje 15/30/40) bolje popunjava ciljano trajanje',
+  'organizer.somePlayersWontPlay': 'Neki igrači neće igrati',
+  'organizer.playersPerRound': 'Samo {playing} od {total} igrača igra svaku rundu. Potrebno je najmanje {minRounds} rundi da svi učestvuju.',
+  'organizer.mayExceed': 'Može premašiti {duration}',
+  'organizer.fitWithin': 'Da stane u {duration}, probajte',
+  'organizer.pointsSuggestion': '{points} poena po meču ili ',
+  'organizer.roundsSuggestion': '{rounds} rundi',
+  'organizer.unequalSitOuts': 'Nejednake pauze',
+  'organizer.sitOutBody': 'Sa {rounds} rundi, {sitOuts} igrač(a) pauzira svaku rundu \u2014 pauze se ne mogu ravnomerno rasporediti na {players} igrača.',
+  'organizer.trySitOut': 'Probajte {below} ili {above} rundi za jednake pauze.',
+  'organizer.trySitOutSingle': 'Probajte {rounds} rundi za jednake pauze.',
 
   // JoinScreen
   'join.back': 'Nazad',

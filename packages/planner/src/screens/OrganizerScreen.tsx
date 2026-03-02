@@ -1,6 +1,6 @@
-import { useState, useMemo, type ReactNode } from 'react';
+import { useState, useMemo, useRef, type ReactNode } from 'react';
 import { ref, push, set } from 'firebase/database';
-import { Button, Card, CLUB_COLORS, getClubColor, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation, FormatPicker, getPresetByFormat, formatHasGroups, formatHasClubs, formatHasFixedPartners, resolveConfigDefaults, MINUTES_PER_POINT, MINUTES_PER_GAME, CHANGEOVER_MINUTES } from '@padel/common';
+import { Button, Card, CLUB_COLORS, getClubColor, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation, FormatPicker, getPresetByFormat, formatHasGroups, formatHasClubs, formatHasFixedPartners, resolveConfigDefaults, computeSitOutInfo, MINUTES_PER_POINT, MINUTES_PER_GAME, CHANGEOVER_MINUTES } from '@padel/common';
 import type { Court, Club, ChaosLevel } from '@padel/common';
 import { generateId } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
@@ -36,6 +36,16 @@ function CollapsibleSection({ title, summary, defaultOpen, children }: {
   );
 }
 
+const DEFAULT_DURATION_MINUTES = 120;
+
+function formatDuration(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = Math.round(minutes % 60);
+  if (h === 0) return `${m}min`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}min`;
+}
+
 export function OrganizerScreen() {
   const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, updatePlayerRank, deleteTournament, completedAt, undoComplete, uid } = usePlanner();
   const { startedBy, showWarning, warningReason, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
@@ -44,6 +54,7 @@ export function OrganizerScreen() {
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const lastAutoSwitchRef = useRef(false);
 
   const capacity = tournament ? tournament.courts.length * 4 + (tournament.extraSpots ?? 0) : 0;
   const statuses = useMemo(() => getPlayerStatuses(players, capacity, {
@@ -177,7 +188,11 @@ export function OrganizerScreen() {
     setEditingName(false);
   };
 
+  const playerCount = confirmedCount || capacity;
+  const maxCourts = Math.max(1, Math.floor(playerCount / 4));
+
   const handleAddCourt = async () => {
+    if (tournament.courts.length >= maxCourts) return;
     const newIndex = tournament.courts.length;
     const courts: Court[] = [...tournament.courts, { id: generateId(), name: `Court ${newIndex + 1}` }];
     await updateTournament({ courts });
@@ -237,15 +252,19 @@ export function OrganizerScreen() {
     maxRounds: tournament.maxRounds ?? null,
     targetDuration: tournament.duration,
     scoringMode: tournament.scoringMode,
-  }, confirmedCount || capacity, clubCount);
+  }, playerCount, clubCount);
   const isGamesMode = resolved.scoringMode === 'games';
   const minutesPer = isGamesMode ? MINUTES_PER_GAME : MINUTES_PER_POINT;
   const effectivePoints = resolved.pointsPerMatch;
   const effectiveRounds = resolved.maxRounds ?? 1;
 
+  // Track auto-switch to games mode
+  const autoSwitchedToGames = tournament.scoringMode === undefined && isGamesMode;
+  lastAutoSwitchRef.current = autoSwitchedToGames;
+
   // Per-field suggestions
-  const suggestedRoundsConfig = resolveConfigDefaults({ ...resolved, maxRounds: null, pointsPerMatch: tournament.pointsPerMatch ?? 0 }, confirmedCount || capacity, clubCount);
-  const suggestedPointsConfig = resolveConfigDefaults({ ...resolved, pointsPerMatch: 0, maxRounds: tournament.maxRounds ?? null }, confirmedCount || capacity, clubCount);
+  const suggestedRoundsConfig = resolveConfigDefaults({ ...resolved, maxRounds: null, pointsPerMatch: tournament.pointsPerMatch ?? 0 }, playerCount, clubCount);
+  const suggestedPointsConfig = resolveConfigDefaults({ ...resolved, pointsPerMatch: 0, maxRounds: tournament.maxRounds ?? null }, playerCount, clubCount);
   const suggestedRounds = suggestedRoundsConfig.maxRounds ?? 1;
   const suggestedPoints = suggestedPointsConfig.pointsPerMatch;
 
@@ -262,6 +281,18 @@ export function OrganizerScreen() {
     : `~${estimatedM}min`;
 
   const matchSettingsSummary = `${effectiveRounds} rounds \u00b7 ${effectivePoints} ${isGamesMode ? 'games' : 'pts'} \u00b7 ${estimatedStr}`;
+
+  // Duration warning
+  const durationLimit = tournament.duration ?? DEFAULT_DURATION_MINUTES;
+  const exceedsLimit = estimatedMinutes > durationLimit;
+
+  // Some players won't play warning
+  const playersPerRound = Math.min(tournament.courts.length * 4, playerCount);
+  const minRoundsForAll = playersPerRound > 0 ? Math.ceil(playerCount / playersPerRound) : 0;
+  const somePlayersExcluded = playersPerRound < playerCount && effectiveRounds < minRoundsForAll;
+
+  // Sit-out fairness
+  const sitOutInfo = computeSitOutInfo(playerCount, tournament.courts.length, effectiveRounds);
 
   return (
     <div className={styles.container}>
@@ -364,7 +395,7 @@ export function OrganizerScreen() {
         <div className={styles.courtsSection}>
           <div className={styles.courtsHeader}>
             <span>{t('organizer.courts', { count: tournament.courts.length })}</span>
-            <Button variant="ghost" size="small" onClick={handleAddCourt}>{t('organizer.addCourt')}</Button>
+            <Button variant="ghost" size="small" onClick={handleAddCourt} disabled={tournament.courts.length >= maxCourts}>{t('organizer.addCourt')}</Button>
           </div>
           {tournament.courts.map((court, courtIdx) => (
             <EditableItem
@@ -642,6 +673,9 @@ export function OrganizerScreen() {
             value={isGamesMode ? 'games' : 'points'}
             onChange={e => {
               const mode = e.target.value as 'points' | 'games';
+              if (mode === 'points' && lastAutoSwitchRef.current) {
+                showToast(t('organizer.gamesModeSuggestion', { rounds: effectiveRounds }));
+              }
               // Clear explicit pointsPerMatch so it recalculates for new mode
               updateTournament({ scoringMode: mode, pointsPerMatch: undefined });
             }}
@@ -657,6 +691,44 @@ export function OrganizerScreen() {
             {t('organizer.estimateBreakdown', { rounds: effectiveRounds, minutes: roundDuration })}
           </span>
         </div>
+
+        {somePlayersExcluded && (
+          <div className={styles.matchWarning}>
+            <div className={styles.matchWarningTitle}>{t('organizer.somePlayersWontPlay')}</div>
+            <div className={styles.matchWarningBody}>
+              {t('organizer.playersPerRound', { playing: playersPerRound, total: playerCount, minRounds: minRoundsForAll })}
+            </div>
+          </div>
+        )}
+
+        {exceedsLimit && (
+          <div className={styles.matchWarning}>
+            <div className={styles.matchWarningTitle}>{t('organizer.mayExceed', { duration: formatDuration(durationLimit) })}</div>
+            <div className={styles.matchWarningBody}>
+              {t('organizer.fitWithin', { duration: formatDuration(durationLimit) })}{' '}
+              {suggestedPoints !== effectivePoints && (
+                <><strong>{t('organizer.pointsSuggestion', { points: suggestedPoints })}</strong></>
+              )}
+              <strong>{t('organizer.roundsSuggestion', { rounds: suggestedRounds })}</strong>.
+            </div>
+          </div>
+        )}
+
+        {!sitOutInfo.isEqual && sitOutInfo.sitOutsPerRound > 0 && (
+          <div className={styles.matchWarning}>
+            <div className={styles.matchWarningTitle}>{t('organizer.unequalSitOuts')}</div>
+            <div className={styles.matchWarningBody}>
+              {t('organizer.sitOutBody', { rounds: effectiveRounds, sitOuts: sitOutInfo.sitOutsPerRound, players: playerCount })}
+              {sitOutInfo.nearestFairBelow && sitOutInfo.nearestFairAbove && sitOutInfo.nearestFairBelow !== sitOutInfo.nearestFairAbove ? (
+                <> {t('organizer.trySitOut', { below: sitOutInfo.nearestFairBelow, above: sitOutInfo.nearestFairAbove })}</>
+              ) : sitOutInfo.nearestFairAbove ? (
+                <> {t('organizer.trySitOutSingle', { rounds: sitOutInfo.nearestFairAbove })}</>
+              ) : sitOutInfo.nearestFairBelow ? (
+                <> {t('organizer.trySitOutSingle', { rounds: sitOutInfo.nearestFairBelow })}</>
+              ) : null}
+            </div>
+          </div>
+        )}
       </CollapsibleSection>
 
       <CollapsibleSection

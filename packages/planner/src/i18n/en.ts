@@ -157,6 +157,17 @@ const en: Translations = {
   'organizer.recommendedGames': 'Max: {games} games per match',
   'organizer.clubPanel': 'Clubs',
   'organizer.clubUnassigned': 'Unassigned',
+  'organizer.gamesModeSuggestion': 'With only {rounds} rounds, games mode (15/30/40 scoring) fills the target duration better',
+  'organizer.somePlayersWontPlay': 'Some players won\'t play',
+  'organizer.playersPerRound': 'Only {playing} of {total} players play each round. Need at least {minRounds} rounds for everyone to participate.',
+  'organizer.mayExceed': 'May exceed {duration}',
+  'organizer.fitWithin': 'To fit within {duration}, try',
+  'organizer.pointsSuggestion': '{points} points per match or ',
+  'organizer.roundsSuggestion': '{rounds} rounds',
+  'organizer.unequalSitOuts': 'Unequal sit-outs',
+  'organizer.sitOutBody': 'With {rounds} rounds, {sitOuts} player(s) sit out each round \u2014 sit-outs cannot be split equally across {players} players.',
+  'organizer.trySitOut': 'Try {below} or {above} rounds for equal sit-outs.',
+  'organizer.trySitOutSingle': 'Try {rounds} rounds for equal sit-outs.',
 
   // JoinScreen
   'join.back': 'Back',
