@@ -155,6 +155,8 @@ const pt: Translations = {
   'organizer.clubFixedRounds': '{rounds} rounds for {clubs} clubs (round-robin)',
   'organizer.recommendedPoints': 'Max: {points} points per match',
   'organizer.recommendedGames': 'Max: {games} games per match',
+  'organizer.clubPanel': 'Clubs',
+  'organizer.clubUnassigned': 'Unassigned',
 
   // JoinScreen
   'join.back': 'Voltar',

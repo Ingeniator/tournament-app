@@ -10,6 +10,7 @@ import { restoreFromBackup } from '../utils/restoreFromBackup';
 import { useStartGuard } from '../hooks/useStartGuard';
 import { StartWarningModal } from '../components/StartWarningModal';
 import { PlayerList } from '../components/organizer/PlayerList';
+import { ClubPanel } from '../components/organizer/ClubPanel';
 import { EditableItem } from '../components/organizer/EditableItem';
 import { getPlayerStatuses } from '../utils/playerStatus';
 import styles from './OrganizerScreen.module.css';
@@ -715,6 +716,17 @@ export function OrganizerScreen() {
         onSetClub={updatePlayerClub}
         onSetRank={updatePlayerRank}
       />
+
+      {/* Club panel — visual overview of club assignments */}
+      {formatHasClubs(tournament.format) && (tournament.clubs?.length ?? 0) >= 2 && (
+        <Card>
+          <ClubPanel
+            clubs={tournament.clubs!}
+            players={players}
+            onSetClub={updatePlayerClub}
+          />
+        </Card>
+      )}
 
       {/* Export */}
       {confirmedCount > 0 && confirmedCount < capacity && (() => {
