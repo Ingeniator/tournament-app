@@ -89,7 +89,7 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                     <span className={styles.reserveBadge}>{t('organizer.reserve')}</span>
                   )}
                 </span>
-                {!simplified && format && formatHasGroups(format) && onSetGroup && (
+                {format && formatHasGroups(format) && onSetGroup && (
                   <div className={styles.groupToggle}>
                     <button
                       className={player.group === 'A' ? styles.groupBtnActive : styles.groupBtn}
@@ -105,7 +105,7 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                     </button>
                   </div>
                 )}
-                {!simplified && format && formatHasClubs(format) && onSetClub && clubs && clubs.length > 0 && (
+                {format && formatHasClubs(format) && onSetClub && clubs && clubs.length > 0 && (
                   <select
                     className={styles.clubSelect}
                     value={player.clubId ?? ''}
@@ -123,7 +123,7 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                     ))}
                   </select>
                 )}
-                {!simplified && format === 'club-ranked' && onSetRank && rankLabels && rankLabels.length > 0 && (
+                {format === 'club-ranked' && onSetRank && rankLabels && rankLabels.length > 0 && (
                   <select
                     className={styles.rankSelect}
                     value={player.rankSlot != null ? String(player.rankSlot) : ''}

@@ -116,6 +116,7 @@ const en: Translations = {
   'organizer.notFullGames': ' Some courts won\'t have full games.',
   'organizer.notEnoughPlayers': 'Not enough players: {count} confirmed, need at least {needed}.',
   'organizer.duplicateNames': 'Duplicate names: {names}. Same person registered twice?',
+  'organizer.unassignedGroups': '{count} player(s) not assigned to a group — will be assigned automatically',
   'organizer.validationMinPlayers': 'At least 4 players are needed to start',
   'organizer.validationEvenPlayers': 'Team formats require an even number of players',
   'organizer.validationUnassignedClubs': '{count} player(s) not assigned to a club',
@@ -376,6 +377,7 @@ const en: Translations = {
   'teams.hintClub': 'Tap two players from the same club to swap them',
   'teams.shuffle': 'Shuffle Teams',
   'teams.start': 'Start Tournament',
+  'teams.groupsAutoAssigned': '{count} player(s) had no group — assigned automatically',
 
   // Planner App
   'app.connectionError': 'Connection Error',

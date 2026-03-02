@@ -116,6 +116,7 @@ const sr: Translations = {
   'organizer.notFullGames': ' Neki tereni neće imati pune igre.',
   'organizer.notEnoughPlayers': 'Nema dovoljno igrača: {count} potvrđeno, potrebno najmanje {needed}.',
   'organizer.duplicateNames': 'Duplikati imena: {names}. Ista osoba registrovana dva puta?',
+  'organizer.unassignedGroups': '{count} igrač(a) bez grupe — biće automatski raspoređeni',
   'organizer.validationMinPlayers': 'Potrebno je najmanje 4 igrača za početak',
   'organizer.validationEvenPlayers': 'Timski formati zahtevaju paran broj igrača',
   'organizer.validationUnassignedClubs': '{count} igrač(a) nije dodeljen(o) klubu',
@@ -321,6 +322,7 @@ const sr: Translations = {
   'teams.hintClub': 'Dodirnite dva igrača iz istog kluba da ih zamenite',
   'teams.shuffle': 'Pomešaj Timove',
   'teams.start': 'Pokreni Turnir',
+  'teams.groupsAutoAssigned': '{count} igrač(a) bez grupe — automatski dodeljeno',
 
   // Planner App
   'app.connectionError': 'Greška u Povezivanju',

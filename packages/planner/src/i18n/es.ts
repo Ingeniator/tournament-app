@@ -116,6 +116,7 @@ const es: Translations = {
   'organizer.notFullGames': ' Algunas pistas no tendrán partidos completos.',
   'organizer.notEnoughPlayers': 'No hay suficientes jugadores: {count} confirmados, se necesitan al menos {needed}.',
   'organizer.duplicateNames': 'Nombres duplicados: {names}. ¿La misma persona registrada dos veces?',
+  'organizer.unassignedGroups': '{count} jugador(es) sin grupo asignado — se asignarán automáticamente',
   'organizer.validationMinPlayers': 'Se necesitan al menos 4 jugadores para empezar',
   'organizer.validationEvenPlayers': 'Los formatos de equipo requieren un número par de jugadores',
   'organizer.validationUnassignedClubs': '{count} jugador(es) sin club asignado',
@@ -321,6 +322,7 @@ const es: Translations = {
   'teams.hintClub': 'Toca dos jugadores del mismo club para intercambiarlos',
   'teams.shuffle': 'Mezclar Equipos',
   'teams.start': 'Iniciar Torneo',
+  'teams.groupsAutoAssigned': '{count} jugador(es) sin grupo — asignado automáticamente',
 
   // Planner App
   'app.connectionError': 'Error de Conexión',

@@ -447,6 +447,50 @@ export function OrganizerScreen() {
       </CollapsibleSection>
       )}
 
+      {/* Details — only in share mode */}
+      {playerMode === 'share' && (
+      <CollapsibleSection
+        title={t('organizer.details')}
+        summary={detailsSummary}
+        defaultOpen={!hasDetails}
+      >
+        <div className={styles.configGrid}>
+          <label className={styles.configLabel}>{t('organizer.groupChat')}</label>
+          <input
+            className={styles.configInput}
+            type="url"
+            value={tournament.chatLink ?? ''}
+            onChange={e => updateTournament({ chatLink: e.target.value || undefined })}
+            placeholder={t('organizer.groupChatPlaceholder')}
+          />
+
+          <label className={styles.configLabel}>{t('organizer.description')}</label>
+          <textarea
+            className={styles.configTextarea}
+            value={tournament.description ?? ''}
+            onChange={e => updateTournament({ description: e.target.value || undefined })}
+            placeholder={t('organizer.descriptionPlaceholder')}
+            rows={3}
+            maxLength={2000}
+          />
+        </div>
+      </CollapsibleSection>
+      )}
+
+      {/* Share section — only in share mode */}
+      {playerMode === 'share' && (
+      <Card>
+        <h2 className={styles.sectionTitle}>{t('organizer.shareWithPlayers')}</h2>
+        <div className={styles.codeDisplay}>
+          <span className={styles.code} onClick={handleCopyCode}>{tournament.code}</span>
+        </div>
+        <p className={styles.hint}>{t('organizer.playersEnterCode')}</p>
+        <Button variant="secondary" fullWidth onClick={handleCopyLink}>
+          {t('organizer.copyLink')}
+        </Button>
+      </Card>
+      )}
+
       {/* Courts section */}
       <CollapsibleSection
         title={t('organizer.courts_section')}
@@ -792,49 +836,6 @@ export function OrganizerScreen() {
         )}
       </CollapsibleSection>
 
-      {playerMode === 'share' && (
-      <CollapsibleSection
-        title={t('organizer.details')}
-        summary={detailsSummary}
-        defaultOpen={!hasDetails}
-      >
-        <div className={styles.configGrid}>
-          <label className={styles.configLabel}>{t('organizer.groupChat')}</label>
-          <input
-            className={styles.configInput}
-            type="url"
-            value={tournament.chatLink ?? ''}
-            onChange={e => updateTournament({ chatLink: e.target.value || undefined })}
-            placeholder={t('organizer.groupChatPlaceholder')}
-          />
-
-          <label className={styles.configLabel}>{t('organizer.description')}</label>
-          <textarea
-            className={styles.configTextarea}
-            value={tournament.description ?? ''}
-            onChange={e => updateTournament({ description: e.target.value || undefined })}
-            placeholder={t('organizer.descriptionPlaceholder')}
-            rows={3}
-            maxLength={2000}
-          />
-        </div>
-      </CollapsibleSection>
-      )}
-
-      {/* Share section — only in share mode */}
-      {playerMode === 'share' && (
-      <Card>
-        <h2 className={styles.sectionTitle}>{t('organizer.shareWithPlayers')}</h2>
-        <div className={styles.codeDisplay}>
-          <span className={styles.code} onClick={handleCopyCode}>{tournament.code}</span>
-        </div>
-        <p className={styles.hint}>{t('organizer.playersEnterCode')}</p>
-        <Button variant="secondary" fullWidth onClick={handleCopyLink}>
-          {t('organizer.copyLink')}
-        </Button>
-      </Card>
-      )}
-
       {/* Player list */}
       <PlayerList
         players={players}
@@ -887,6 +888,14 @@ export function OrganizerScreen() {
           {t('organizer.duplicateNames', { names: duplicateNames.join(', ') })}
         </div>
       )}
+      {formatHasGroups(tournament.format) && (() => {
+        const unassigned = playingPlayers.filter(p => !p.group).length;
+        return unassigned > 0 ? (
+          <div className={styles.warning}>
+            {t('organizer.unassignedGroups', { count: unassigned })}
+          </div>
+        ) : null;
+      })()}
       <Button fullWidth onClick={handleLaunch} disabled={players.length === 0}>
         {t('organizer.letsPlay')}
       </Button>

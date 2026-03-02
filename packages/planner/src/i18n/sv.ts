@@ -114,6 +114,7 @@ const sv: Translations = {
   'organizer.courtsMultiple': 'alla {count} banor',
   'organizer.notFullGames': ' Vissa banor kommer inte ha fulla matcher.',
   'organizer.duplicateNames': 'Dubblettnamn: {names}. Samma person registrerad två gånger?',
+  'organizer.unassignedGroups': '{count} spelare utan grupp — tilldelas automatiskt',
   'organizer.validationMinPlayers': 'Minst 4 spelare krävs för att starta',
   'organizer.validationEvenPlayers': 'Lagformat kräver ett jämnt antal spelare',
   'organizer.validationUnassignedClubs': '{count} spelare inte tilldelad(e) en klubb',
@@ -319,6 +320,7 @@ const sv: Translations = {
   'teams.hintClub': 'Tryck på två spelare från samma klubb för att byta dem',
   'teams.shuffle': 'Blanda Lag',
   'teams.start': 'Starta Turnering',
+  'teams.groupsAutoAssigned': '{count} spelare utan grupp — tilldelad(e) automatiskt',
 
   // Planner App
   'app.connectionError': 'Anslutningsfel',

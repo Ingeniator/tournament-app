@@ -28,6 +28,13 @@ function generateTeams(players: PlannerRegistration[], format: TournamentFormat,
     return createClubTeams(asPlayers, clubs);
   }
   if (formatHasGroups(format)) {
+    // Auto-assign missing groups alternately so no players are dropped
+    const unassigned = asPlayers.filter(p => !p.group);
+    let nextGroup: 'A' | 'B' = 'A';
+    for (const p of unassigned) {
+      p.group = nextGroup;
+      nextGroup = nextGroup === 'A' ? 'B' : 'A';
+    }
     return createCrossGroupTeams(asPlayers);
   }
   return createTeams(asPlayers);
@@ -157,6 +164,10 @@ export function TeamPairingModal({ open, players, format, clubs, rankLabels, onS
     </div>
   );
 
+  const unassignedGroupCount = isCrossGroupFormat
+    ? players.filter(p => !p.group).length
+    : 0;
+
   if (!open) return null;
 
   const teamCount = teams.length;
@@ -171,6 +182,12 @@ export function TeamPairingModal({ open, players, format, clubs, rankLabels, onS
         <div className={styles.hint}>
           {isClubFormat ? t('teams.hintClub') : t('teams.hint')}
         </div>
+
+        {unassignedGroupCount > 0 && (
+          <div className={styles.warningBanner}>
+            {t('teams.groupsAutoAssigned', { count: unassignedGroupCount })}
+          </div>
+        )}
 
         {isClubFormat && teamsByClub && clubs ? (
           <div className={styles.teamList}>
