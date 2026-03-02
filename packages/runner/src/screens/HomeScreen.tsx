@@ -3,9 +3,8 @@ import { ref, push, set } from 'firebase/database';
 import { useTournament } from '../hooks/useTournament';
 import { useRunnerTheme } from '../state/ThemeContext';
 import { validateImport } from '../utils/importExport';
-import { randomTournamentName } from '../utils/tournamentNames';
 import { auth, db } from '../firebase';
-import { Button, FeedbackModal, AppFooter, generateId, SkinPicker, useTranslation } from '@padel/common';
+import { Button, FeedbackModal, AppFooter, SkinPicker, useTranslation } from '@padel/common';
 import styles from './HomeScreen.module.css';
 
 export function HomeScreen() {
@@ -17,21 +16,6 @@ export function HomeScreen() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importOpen, setImportOpen] = useState(false);
   const importRef = useRef<HTMLDivElement>(null);
-
-  const handleNew = () => {
-    dispatch({
-      type: 'CREATE_TOURNAMENT',
-      payload: {
-        name: randomTournamentName(),
-        config: {
-          format: 'americano',
-          pointsPerMatch: 0,
-          courts: [{ id: generateId(), name: 'Court 1' }],
-          maxRounds: null,
-        },
-      },
-    });
-  };
 
   const handleResume = () => {
     // Tournament already in state, navigation handled by App
@@ -79,6 +63,7 @@ export function HomeScreen() {
     const feedbackRef = push(ref(db, 'feedback'));
     await set(feedbackRef, { message, source: 'runner', createdAt: Date.now() });
   };
+
 
   useEffect(() => {
     if (!importOpen) return;
@@ -137,11 +122,8 @@ export function HomeScreen() {
 
         {!hasSaved && (
           <>
-            <Button onClick={handleNew} fullWidth>
-              {t('home.newPlay')}
-            </Button>
             <a href="/plan" className={styles.planLink}>
-              <Button variant="secondary" fullWidth>
+              <Button fullWidth>
                 {t('home.planShare')}
               </Button>
             </a>
