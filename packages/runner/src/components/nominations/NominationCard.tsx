@@ -1,4 +1,4 @@
-import { useRef, type Ref } from 'react';
+import { memo, useRef, type Ref } from 'react';
 import type { Nomination, AwardTier } from '../../hooks/useNominations';
 import styles from './NominationCard.module.css';
 
@@ -20,7 +20,7 @@ const TIER_STYLES: Record<AwardTier, string | undefined> = {
   legendary: styles.tierLegendary,
 };
 
-export function NominationCard({ nomination, cardRef, minHeight }: NominationCardProps) {
+export const NominationCard = memo(function NominationCard({ nomination, cardRef, minHeight }: NominationCardProps) {
   const isMultiPlayer = nomination.playerNames.length > 2;
   const fallbackRef = useRef<HTMLDivElement>(null);
   const tier = nomination.tier;
@@ -59,4 +59,4 @@ export function NominationCard({ nomination, cardRef, minHeight }: NominationCar
       <div className={styles.description}>{nomination.description}</div>
     </div>
   );
-}
+});

@@ -5,7 +5,7 @@ export default defineConfig({
     exclude: ['e2e/**', '**/node_modules/**'],
     coverage: {
       provider: 'v8',
-      include: ['packages/runner/src/**'],
+      include: ['packages/runner/src/**', 'packages/common/src/**', 'packages/planner/src/**'],
       exclude: ['**/*.test.ts', '**/*.test.tsx', '**/node_modules/**'],
       reporter: ['text', 'html'],
       reportsDirectory: 'coverage/unit',

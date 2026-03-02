@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import type { Match, MatchScore, Player, Court, TournamentFormat, MaldicionesHands, Team } from '@padel/common';
 import { useTranslation } from '@padel/common';
 import { ScoreInput } from './ScoreInput';
@@ -26,7 +26,7 @@ interface MatchCardProps {
   onVeto?: () => void;
 }
 
-export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, format, maldicionesEnabled, maldicionesHands, teams, onScore, onClear, onTapScore, onCast, onEscudo, onVeto }: MatchCardProps) {
+export const MatchCard = memo(function MatchCard({ match, players, courts, pointsPerMatch, readOnly, format, maldicionesEnabled, maldicionesHands, teams, onScore, onClear, onTapScore, onCast, onEscudo, onVeto }: MatchCardProps) {
   const { t } = useTranslation();
   const [pickingSide, setPickingSide] = useState<'team1' | 'team2' | null>(null);
 
@@ -198,4 +198,4 @@ export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, fo
       )}
     </div>
   );
-}
+});

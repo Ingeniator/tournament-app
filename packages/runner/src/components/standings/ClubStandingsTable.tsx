@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { ClubStandingsEntry } from '@padel/common';
 import { useTranslation, CLUB_COLORS } from '@padel/common';
 import styles from './ClubStandingsTable.module.css';
@@ -7,7 +8,7 @@ interface ClubStandingsTableProps {
   clubColorMap?: Map<string, string>;
 }
 
-export function ClubStandingsTable({ standings, clubColorMap }: ClubStandingsTableProps) {
+export const ClubStandingsTable = memo(function ClubStandingsTable({ standings, clubColorMap }: ClubStandingsTableProps) {
   const { t } = useTranslation();
 
   if (standings.length === 0) return null;
@@ -47,4 +48,4 @@ export function ClubStandingsTable({ standings, clubColorMap }: ClubStandingsTab
       </table>
     </div>
   );
-}
+});

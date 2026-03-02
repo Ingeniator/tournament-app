@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import type { Team, Club, TournamentFormat } from '@padel/common';
 import type { PlannerRegistration } from '@padel/common';
-import { Modal, Button, CLUB_COLORS, getClubColor, formatHasGroups, formatHasClubs, useTranslation } from '@padel/common';
+import { Modal, Button, CLUB_COLORS, getClubColor, formatHasGroups, formatHasClubs, useTranslation, deduplicateNames } from '@padel/common';
 import { createTeams, createCrossGroupTeams, createClubTeams } from '@padel/common';
 import styles from './TeamPairingModal.module.css';
 
@@ -13,23 +13,6 @@ interface TeamPairingModalProps {
   rankLabels?: string[];
   onStart: (teams: Team[], aliases: Map<string, string>) => void;
   onClose: () => void;
-}
-
-function buildInitialAliases(players: PlannerRegistration[]): Map<string, string> {
-  const nameGroups = new Map<string, string[]>();
-  for (const p of players) {
-    const ids = nameGroups.get(p.name) ?? [];
-    ids.push(p.id);
-    nameGroups.set(p.name, ids);
-  }
-  const map = new Map<string, string>();
-  for (const [name, ids] of nameGroups) {
-    if (ids.length <= 1) continue;
-    ids.forEach((id, i) => {
-      map.set(id, `${name} (${i + 1})`);
-    });
-  }
-  return map;
 }
 
 function generateTeams(players: PlannerRegistration[], format: TournamentFormat, clubs?: Club[]): Team[] {
@@ -60,7 +43,7 @@ function generateTeams(players: PlannerRegistration[], format: TournamentFormat,
 export function TeamPairingModal({ open, players, format, clubs, rankLabels, onStart, onClose }: TeamPairingModalProps) {
   const { t } = useTranslation();
   const [teams, setTeams] = useState<Team[]>(() => generateTeams(players, format, clubs));
-  const [aliases, setAliases] = useState<Map<string, string>>(() => buildInitialAliases(players));
+  const [aliases, setAliases] = useState<Map<string, string>>(() => deduplicateNames(players));
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState('');
