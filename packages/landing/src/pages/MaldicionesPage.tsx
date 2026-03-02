@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { AppFooter, FeedbackModal } from '@padel/common';
 import styles from './Article.module.css';
 
@@ -52,7 +52,6 @@ function CardSection({ title, color, cards }: { title: string; color: string; ca
 
 export function MaldicionesPage({ onFeedback }: Props) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  useEffect(() => { document.title = 'Maldiciones del Padel — Curse Cards Party Mode | PadelDay'; }, []);
 
   return (
     <>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { AppFooter, FeedbackModal } from '@padel/common';
 import styles from './Article.module.css';
 
@@ -8,7 +8,6 @@ interface Props {
 
 export function AmericanoPage({ onFeedback }: Props) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  useEffect(() => { document.title = 'Americano Padel — Rules, Format & How to Play | PadelDay'; }, []);
 
   return (
     <>

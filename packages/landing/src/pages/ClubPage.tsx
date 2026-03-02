@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { AppFooter, FeedbackModal } from '@padel/common';
 import styles from './Article.module.css';
 
@@ -8,7 +8,6 @@ interface Props {
 
 export function ClubPage({ onFeedback }: Props) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  useEffect(() => { document.title = 'Club Tournament Formats — Inter-Club Padel Competition | PadelDay'; }, []);
 
   return (
     <>
@@ -92,23 +91,25 @@ export function ClubPage({ onFeedback }: Props) {
         </ul>
 
         <h2>Comparison</h2>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Format</th>
-              <th>Partners</th>
-              <th>Opponents</th>
-              <th>Schedule</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>Club Americano</td><td>Rotating</td><td>Random</td><td>Static</td></tr>
-            <tr><td>Club Mexicano</td><td>Rotating</td><td>Standings</td><td>Dynamic</td></tr>
-            <tr><td>Club Ranked</td><td>Fixed</td><td>Positional</td><td>Static</td></tr>
-            <tr><td>Club Team Americano</td><td>Fixed</td><td>Random</td><td>Static</td></tr>
-            <tr><td>Club Team Mexicano</td><td>Fixed</td><td>Standings</td><td>Dynamic</td></tr>
-          </tbody>
-        </table>
+        <div className={styles.tableWrapper}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Format</th>
+                <th>Partners</th>
+                <th>Opponents</th>
+                <th>Schedule</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Club Americano</td><td>Rotating</td><td>Random</td><td>Static</td></tr>
+              <tr><td>Club Mexicano</td><td>Rotating</td><td>Standings</td><td>Dynamic</td></tr>
+              <tr><td>Club Ranked</td><td>Fixed</td><td>Positional</td><td>Static</td></tr>
+              <tr><td>Club Team Americano</td><td>Fixed</td><td>Random</td><td>Static</td></tr>
+              <tr><td>Club Team Mexicano</td><td>Fixed</td><td>Standings</td><td>Dynamic</td></tr>
+            </tbody>
+          </table>
+        </div>
 
         <h2>How Rounds Work</h2>
         <p>

@@ -85,7 +85,7 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                   ) : (
                     player.name
                   )}
-                  {!simplified && statuses.get(player.id) === 'reserve' && (
+                  {statuses.get(player.id) === 'reserve' && (
                     <span className={styles.reserveBadge}>{t('organizer.reserve')}</span>
                   )}
                 </span>
