@@ -648,6 +648,25 @@ export function OrganizerScreen() {
         defaultOpen={false}
       >
         <div className={styles.configGrid}>
+          <label className={styles.configLabel}>{t('organizer.scoringMode')}</label>
+          <select
+            className={styles.select}
+            value={isGamesMode ? 'games' : 'points'}
+            onChange={e => {
+              const mode = e.target.value as 'points' | 'games';
+              if (mode === 'points' && lastAutoSwitchRef.current) {
+                showToast(t('organizer.gamesModeSuggestion', { rounds: effectiveRounds }));
+              }
+              // Clear explicit pointsPerMatch so it recalculates for new mode
+              updateTournament({ scoringMode: mode, pointsPerMatch: undefined });
+            }}
+          >
+            <option value="points">{t('organizer.scoringPoints')}</option>
+            <option value="games">{t('organizer.scoringGames')}</option>
+          </select>
+        </div>
+
+        <div className={styles.configGrid}>
           <label className={styles.configLabel}>{t('organizer.numberOfRounds')}</label>
           <input
             className={styles.configInput}
@@ -688,25 +707,6 @@ export function OrganizerScreen() {
             ? t('organizer.recommendedGames', { games: suggestedPoints })
             : t('organizer.recommendedPoints', { points: suggestedPoints })}
         </span>
-
-        <div className={styles.configGrid}>
-          <label className={styles.configLabel}>{t('organizer.scoringMode')}</label>
-          <select
-            className={styles.select}
-            value={isGamesMode ? 'games' : 'points'}
-            onChange={e => {
-              const mode = e.target.value as 'points' | 'games';
-              if (mode === 'points' && lastAutoSwitchRef.current) {
-                showToast(t('organizer.gamesModeSuggestion', { rounds: effectiveRounds }));
-              }
-              // Clear explicit pointsPerMatch so it recalculates for new mode
-              updateTournament({ scoringMode: mode, pointsPerMatch: undefined });
-            }}
-          >
-            <option value="points">{t('organizer.scoringPoints')}</option>
-            <option value="games">{t('organizer.scoringGames')}</option>
-          </select>
-        </div>
 
         <div className={styles.estimate}>
           {t('organizer.estimatedDuration')}<strong>{estimatedStr}</strong>

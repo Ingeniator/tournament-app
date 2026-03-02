@@ -250,6 +250,11 @@
   align-items: center;
 }
 
+.configGrid + .configGrid,
+.hint + .configGrid {
+  margin-top: var(--space-md);
+}
+
 .configLabel {
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
