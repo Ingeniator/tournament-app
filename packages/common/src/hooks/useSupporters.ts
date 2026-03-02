@@ -81,8 +81,9 @@ export function useSupporters(auth?: FirebaseAuth | null) {
       setSupporters(list);
     } catch {
       setSupporters([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => {
