@@ -2,6 +2,7 @@ import type { TournamentStrategy, ScheduleResult } from './types';
 import type { Player, TournamentConfig, Round, Match, Tournament } from '@padel/common';
 import { generateId } from '@padel/common';
 import { shuffle, partnerKey, commonValidateSetup, commonValidateScore, calculateCompetitorStandings, calculateIndividualStandings, seedFromRounds, selectSitOuts, scoreSchedule } from './shared';
+import { getBaseline, instantiateBaseline } from './baselines';
 
 type Pairing = [[string, string], [string, string]];
 
@@ -472,6 +473,27 @@ function generateRoundsWithRetry(
   let bestResult: ScheduleResult | null = null;
   let bestScore: [number, number, number, number] = [Infinity, Infinity, Infinity, Infinity];
   const deadline = performance.now() + timeBudgetMs;
+
+  // Try precomputed baseline for fresh tournaments (not additional rounds, not cross-group)
+  if (startRoundNumber === 1 && seedPartnerCounts.size === 0) {
+    const availableCourts = config.courts.filter(c => !c.unavailable);
+    const numCourts = Math.min(availableCourts.length, Math.floor(players.length / 4));
+    if (!players.some(p => p.group)) {
+      const baseline = getBaseline(players.length, numCourts);
+      if (baseline) {
+        const courtIds = availableCourts.slice(0, numCourts).map(c => c.id);
+        const rounds = instantiateBaseline(baseline, players, courtIds, count, startRoundNumber);
+        if (rounds) {
+          const score = scoreSchedule(rounds);
+          bestResult = { rounds, warnings: [] };
+          bestScore = score;
+          if (score[0] === 0 && score[1] <= 1 && score[2] === 0 && score[3] <= 1) {
+            return bestResult;
+          }
+        }
+      }
+    }
+  }
 
   do {
     const result = generateRounds(
