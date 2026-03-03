@@ -77,7 +77,9 @@ test.describe('Settings Advanced', () => {
   test('export tournament data', async ({ page }) => {
     await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
 
-    await page.getByRole('button', { name: 'Export to Clipboard' }).click();
+    // Open the Export dropdown, then click "Export to Clipboard"
+    await page.getByRole('button', { name: /^Export/ }).click();
+    await page.getByText('Export to Clipboard').click();
 
     await expect(page.getByText('Tournament copied!')).toBeVisible();
   });

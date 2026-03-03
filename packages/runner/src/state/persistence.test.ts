@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { saveTournament, loadTournament, saveUIState, loadUIState } from './persistence';
+import { saveTournament, loadTournament, saveUIState, loadUIState, saveSkin, loadSkin, isIOSInstallDismissed } from './persistence';
 import type { Tournament } from '@padel/common';
+import { DEFAULT_SKIN } from '@padel/common';
 
 // Mock localStorage
 const storage = new Map<string, string>();
@@ -120,5 +121,68 @@ describe('loadUIState', () => {
     storage.set('padel-ui-state-v1', 'not-json');
     const result = loadUIState();
     expect(result).toBeNull();
+  });
+});
+
+describe('saveSkin', () => {
+  it('saves skin to localStorage', () => {
+    saveSkin('midnight');
+    expect(localStorageMock.setItem).toHaveBeenCalledWith('padel-skin', 'midnight');
+  });
+
+  it('does not throw when localStorage fails', () => {
+    localStorageMock.setItem.mockImplementationOnce(() => { throw new Error('fail'); });
+    expect(() => saveSkin('midnight')).not.toThrow();
+  });
+});
+
+describe('loadSkin', () => {
+  it('loads a valid skin from localStorage', () => {
+    storage.set('padel-skin', 'midnight');
+    const result = loadSkin();
+    expect(result).toBe('midnight');
+  });
+
+  it('returns default skin when value is invalid', () => {
+    storage.set('padel-skin', 'nonexistent-skin');
+    const result = loadSkin();
+    expect(result).toBe(DEFAULT_SKIN);
+  });
+
+  it('returns default skin when no data', () => {
+    const result = loadSkin();
+    expect(result).toBe(DEFAULT_SKIN);
+  });
+
+  it('returns default skin when localStorage throws', () => {
+    localStorageMock.getItem.mockImplementationOnce(() => { throw new Error('fail'); });
+    const result = loadSkin();
+    expect(result).toBe(DEFAULT_SKIN);
+  });
+});
+
+describe('isIOSInstallDismissed', () => {
+  it('returns false when not dismissed', () => {
+    const result = isIOSInstallDismissed();
+    expect(result).toBe(false);
+  });
+
+  it('returns true when recently dismissed (< 30 days)', () => {
+    storage.set('padel-ios-install-dismissed', String(Date.now() - 1000));
+    const result = isIOSInstallDismissed();
+    expect(result).toBe(true);
+  });
+
+  it('returns false when dismissed more than 30 days ago', () => {
+    const thirtyOneDaysAgo = Date.now() - 31 * 24 * 60 * 60 * 1000;
+    storage.set('padel-ios-install-dismissed', String(thirtyOneDaysAgo));
+    const result = isIOSInstallDismissed();
+    expect(result).toBe(false);
+  });
+
+  it('returns false when localStorage throws', () => {
+    localStorageMock.getItem.mockImplementationOnce(() => { throw new Error('fail'); });
+    const result = isIOSInstallDismissed();
+    expect(result).toBe(false);
   });
 });

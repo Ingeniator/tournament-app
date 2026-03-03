@@ -56,7 +56,8 @@ export function ScoreInput({ score, pointsPerMatch, scoringMode, onSave, onClear
             setGridPage(0);
           } else {
             // team2 picked — save both
-            onSave({ team1Points: pendingTeam1!, team2Points: value });
+            if (pendingTeam1 == null) return;
+            onSave({ team1Points: pendingTeam1, team2Points: value });
             setPendingTeam1(null);
             setPickingSide(null);
             setGridPage(0);
@@ -68,7 +69,8 @@ export function ScoreInput({ score, pointsPerMatch, scoringMode, onSave, onClear
           setPickingSide('team2');
           setGridPage(0);
         } else {
-          onSave({ team1Points: pendingTeam1!, team2Points: value });
+          if (pendingTeam1 == null) return;
+          onSave({ team1Points: pendingTeam1, team2Points: value });
           setPendingTeam1(null);
           setPickingSide(null);
           setGridPage(0);

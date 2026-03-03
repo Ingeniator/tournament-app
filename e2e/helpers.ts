@@ -7,9 +7,29 @@ export async function clearState(page: Page) {
   await page.getByRole('heading', { name: 'Tournament Manager' }).waitFor();
 }
 
-/** Click "Quick Play" to create a tournament and wait for setup screen. */
+/** Create a new tournament via localStorage and reload into setup screen. */
 export async function createTournament(page: Page) {
-  await page.getByRole('button', { name: 'Quick Play' }).click();
+  await page.evaluate(() => {
+    const id = Math.random().toString(36).slice(2, 10);
+    const now = Date.now();
+    const tournament = {
+      id,
+      name: 'Test Cup',
+      config: {
+        format: 'americano',
+        pointsPerMatch: 24,
+        courts: [{ id: 'c1', name: 'Court 1' }],
+        maxRounds: null,
+      },
+      phase: 'setup',
+      players: [],
+      rounds: [],
+      createdAt: now,
+      updatedAt: now,
+    };
+    localStorage.setItem('padel-tournament-v1', JSON.stringify(tournament));
+  });
+  await page.reload();
   await page.getByPlaceholder('Tournament name').waitFor();
 }
 
@@ -79,8 +99,9 @@ export async function scoreMatch(page: Page, team1Score = 15) {
   const dashBtn = page.getByRole('button', { name: '–' }).first();
   await dashBtn.click();
 
-  // The picker grid appears. Click the score value.
-  await page.getByRole('button', { name: String(team1Score), exact: true }).click();
+  // The picker grid appears. Click the score value inside the grid (not the scoreBtn display).
+  const picker = page.locator('[data-picking]');
+  await picker.locator('[class*="cell"]', { hasText: new RegExp(`^${team1Score}$`) }).click();
 
   // Wait for the score animation to complete (280ms fly animation, then state commits).
   // The picker has a data-picking attribute while open; it's removed when score is saved.
@@ -131,15 +152,63 @@ export async function addPlayers(page: Page, names: string[]) {
 }
 
 /** Select a tournament format from the FormatPicker radio list. */
-export async function selectFormat(page: Page, format: 'americano' | 'team-americano' | 'mexicano') {
+export async function selectFormat(
+  page: Page,
+  format: 'americano' | 'team-americano' | 'mexicano' | 'mixicano' | 'king-of-the-court' | 'team-mexicano',
+) {
   const labels: Record<string, string> = {
     'americano': 'Americano',
     'team-americano': 'Team Americano',
     'mexicano': 'Mexicano',
+    'mixicano': 'Mixicano',
+    'king-of-the-court': 'King of the Court',
+    'team-mexicano': 'Team Mexicano',
   };
   const label = labels[format];
   // Click the exact preset name span — this selects the parent label's radio.
   await page.getByText(label, { exact: true }).click();
+}
+
+/**
+ * Add eight standard players (needed for King of the Court which requires 8+).
+ */
+export async function addEightPlayers(page: Page) {
+  for (const name of ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry']) {
+    await addPlayer(page, name);
+  }
+}
+
+/**
+ * Assign group A/B to players for cross-group formats (mixicano, etc.).
+ * Default group labels are "Left Side" / "Right Side" from i18n placeholders.
+ * Uses the "Remove {name}" button to locate the correct player row.
+ */
+export async function assignGroups(page: Page, groupANames: string[], groupBNames: string[]) {
+  for (const name of groupANames) {
+    const removeBtn = page.getByRole('button', { name: `Remove ${name}` });
+    const rightSection = removeBtn.locator('..');
+    await rightSection.getByRole('button', { name: 'Left Side' }).click();
+  }
+  for (const name of groupBNames) {
+    const removeBtn = page.getByRole('button', { name: `Remove ${name}` });
+    const rightSection = removeBtn.locator('..');
+    await rightSection.getByRole('button', { name: 'Right Side' }).click();
+  }
+}
+
+/**
+ * Create a team-mexicano setup: clear state → create tournament → add 6 players
+ * → select team-mexicano format → click "Set up Teams".
+ * Lands on the team-pairing screen.
+ */
+export async function createTeamMexicanoSetup(page: Page) {
+  await clearState(page);
+  await createTournament(page);
+  await addPlayers(page, ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank']);
+  await selectFormat(page, 'team-mexicano');
+  await page.getByRole('button', { name: 'Set up Teams' }).click();
+  // Wait for team pairing screen
+  await page.getByRole('heading', { name: 'Teams' }).waitFor();
 }
 
 /**

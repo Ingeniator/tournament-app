@@ -158,8 +158,8 @@ test.describe('Empty tournament states', () => {
     await clearState(page);
   });
 
-  test('home screen with no tournaments shows create button', async ({ page }) => {
-    await expect(page.getByRole('button', { name: 'Quick Play' })).toBeVisible();
+  test('home screen with no tournaments shows plan ahead', async ({ page }) => {
+    await expect(page.getByRole('button', { name: 'Plan Ahead' })).toBeVisible();
     await expect(page.getByRole('heading', { name: /Round/ })).not.toBeVisible();
   });
 

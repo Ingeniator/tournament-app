@@ -450,4 +450,103 @@ describe('computeIndividualAwards', () => {
       }
     });
   });
+
+  describe('court-climber (KOTC only)', () => {
+    it('awards court climber for player with 2+ promotions', () => {
+      // KOTC tournament: courts c1 (King), c2 (lower)
+      // Player p1 climbs from c2 → c1 over rounds (court index decreasing)
+      const rounds = [
+        {
+          id: 'r1', roundNumber: 1,
+          matches: [
+            { id: 'm1-1', courtId: 'c2', team1: ['p1', 'p2'] as [string, string], team2: ['p3', 'p4'] as [string, string], score: { team1Points: 14, team2Points: 10 } },
+            { id: 'm1-2', courtId: 'c1', team1: ['p5', 'p6'] as [string, string], team2: ['p7', 'p8'] as [string, string], score: { team1Points: 12, team2Points: 12 } },
+          ],
+          sitOuts: [] as string[],
+        },
+        {
+          id: 'r2', roundNumber: 2,
+          matches: [
+            { id: 'm2-1', courtId: 'c1', team1: ['p1', 'p5'] as [string, string], team2: ['p6', 'p7'] as [string, string], score: { team1Points: 14, team2Points: 10 } },
+            { id: 'm2-2', courtId: 'c2', team1: ['p2', 'p3'] as [string, string], team2: ['p4', 'p8'] as [string, string], score: { team1Points: 10, team2Points: 14 } },
+          ],
+          sitOuts: [] as string[],
+        },
+        {
+          id: 'r3', roundNumber: 3,
+          matches: [
+            { id: 'm3-1', courtId: 'c2', team1: ['p1', 'p3'] as [string, string], team2: ['p4', 'p7'] as [string, string], score: { team1Points: 14, team2Points: 10 } },
+            { id: 'm3-2', courtId: 'c1', team1: ['p2', 'p5'] as [string, string], team2: ['p6', 'p8'] as [string, string], score: { team1Points: 12, team2Points: 12 } },
+          ],
+          sitOuts: [] as string[],
+        },
+        {
+          id: 'r4', roundNumber: 4,
+          matches: [
+            { id: 'm4-1', courtId: 'c1', team1: ['p1', 'p6'] as [string, string], team2: ['p5', 'p3'] as [string, string], score: { team1Points: 14, team2Points: 10 } },
+            { id: 'm4-2', courtId: 'c2', team1: ['p2', 'p7'] as [string, string], team2: ['p4', 'p8'] as [string, string], score: { team1Points: 10, team2Points: 14 } },
+          ],
+          sitOuts: [] as string[],
+        },
+      ];
+      // p1 court history: c2(idx 1) → c1(idx 0) → c2(idx 1) → c1(idx 0) = 2 promotions (1→0, 1→0)
+      const t = makeTournament({
+        config: {
+          format: 'king-of-the-court',
+          pointsPerMatch: 24,
+          courts: [{ id: 'c1', name: 'King Court' }, { id: 'c2', name: 'Court 2' }],
+          maxRounds: null,
+        },
+        rounds,
+      });
+      const ctx = buildContext(t);
+      const awards = computeIndividualAwards(ctx, t);
+      const climber = findAward(awards, 'court-climber');
+      expect(climber).toBeDefined();
+      expect(climber!.playerNames).toContain('Player 1');
+      expect(climber!.stat).toContain('promotions');
+    });
+
+    it('does not emit court-climber for non-KOTC format', () => {
+      // Same rounds but americano format
+      const rounds = [
+        {
+          id: 'r1', roundNumber: 1,
+          matches: [
+            { id: 'm1-1', courtId: 'c2', team1: ['p1', 'p2'] as [string, string], team2: ['p3', 'p4'] as [string, string], score: { team1Points: 14, team2Points: 10 } },
+            { id: 'm1-2', courtId: 'c1', team1: ['p5', 'p6'] as [string, string], team2: ['p7', 'p8'] as [string, string], score: { team1Points: 12, team2Points: 12 } },
+          ],
+          sitOuts: [] as string[],
+        },
+        {
+          id: 'r2', roundNumber: 2,
+          matches: [
+            { id: 'm2-1', courtId: 'c1', team1: ['p1', 'p5'] as [string, string], team2: ['p6', 'p7'] as [string, string], score: { team1Points: 14, team2Points: 10 } },
+            { id: 'm2-2', courtId: 'c2', team1: ['p2', 'p3'] as [string, string], team2: ['p4', 'p8'] as [string, string], score: { team1Points: 10, team2Points: 14 } },
+          ],
+          sitOuts: [] as string[],
+        },
+        {
+          id: 'r3', roundNumber: 3,
+          matches: [
+            { id: 'm3-1', courtId: 'c2', team1: ['p1', 'p3'] as [string, string], team2: ['p4', 'p7'] as [string, string], score: { team1Points: 14, team2Points: 10 } },
+            { id: 'm3-2', courtId: 'c1', team1: ['p2', 'p5'] as [string, string], team2: ['p6', 'p8'] as [string, string], score: { team1Points: 12, team2Points: 12 } },
+          ],
+          sitOuts: [] as string[],
+        },
+        {
+          id: 'r4', roundNumber: 4,
+          matches: [
+            { id: 'm4-1', courtId: 'c1', team1: ['p1', 'p6'] as [string, string], team2: ['p5', 'p3'] as [string, string], score: { team1Points: 14, team2Points: 10 } },
+            { id: 'm4-2', courtId: 'c2', team1: ['p2', 'p7'] as [string, string], team2: ['p4', 'p8'] as [string, string], score: { team1Points: 10, team2Points: 14 } },
+          ],
+          sitOuts: [] as string[],
+        },
+      ];
+      const t = makeTournament({ rounds }); // default americano format
+      const ctx = buildContext(t);
+      const awards = computeIndividualAwards(ctx, t);
+      expect(findAward(awards, 'court-climber')).toBeUndefined();
+    });
+  });
 });
