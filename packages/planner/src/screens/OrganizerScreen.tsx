@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef, type ReactNode } from 'react';
 import { ref, push, set } from 'firebase/database';
-import { Button, Card, NO_COLOR, CLUB_COLORS, getClubColor, RANK_COLORS, getRankColor, cycleColor, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation, FormatPicker, getPresetByFormat, formatHasGroups, formatHasClubs, formatHasFixedPartners, resolveConfigDefaults, computeSitOutInfo, MINUTES_PER_POINT, MINUTES_PER_GAME, CHANGEOVER_MINUTES } from '@padel/common';
+import { Button, Card, NO_COLOR, CLUB_COLORS, getClubColor, RANK_COLORS, getRankColor, cycleColor, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation, FormatPicker, getPresetByFormat, formatHasGroups, formatHasClubs, formatHasFixedPartners, resolveConfigDefaults, computeSitOutInfo, MINUTES_PER_POINT, MINUTES_PER_GAME, MINUTES_PER_SET, CHANGEOVER_MINUTES } from '@padel/common';
 import type { Court, Club, ChaosLevel, Team } from '@padel/common';
 import { generateId } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
@@ -329,9 +329,12 @@ export function OrganizerScreen() {
     maxRounds: tournament.maxRounds ?? null,
     targetDuration: tournament.duration,
     scoringMode: tournament.scoringMode,
+    minutesPerRound: tournament.minutesPerRound,
   }, playerCount, clubCount);
   const isGamesMode = resolved.scoringMode === 'games';
-  const minutesPer = isGamesMode ? MINUTES_PER_GAME : MINUTES_PER_POINT;
+  const isSetsMode = resolved.scoringMode === 'sets';
+  const isTimedMode = resolved.scoringMode === 'timed';
+  const minutesPer = isSetsMode ? MINUTES_PER_SET : isGamesMode ? MINUTES_PER_GAME : MINUTES_PER_POINT;
   const effectivePoints = resolved.pointsPerMatch;
   const effectiveRounds = resolved.maxRounds ?? 1;
 
@@ -343,13 +346,15 @@ export function OrganizerScreen() {
   const suggestedRoundsConfig = resolveConfigDefaults({ ...resolved, maxRounds: null, pointsPerMatch: tournament.pointsPerMatch ?? 0 }, playerCount, clubCount);
   const suggestedPointsConfig = resolveConfigDefaults({ ...resolved, pointsPerMatch: 0, maxRounds: tournament.maxRounds ?? null }, playerCount, clubCount);
   const suggestedRounds = suggestedRoundsConfig.maxRounds ?? 1;
+  const suggestedMinutes = suggestedRoundsConfig.minutesPerRound ?? 20;
   const suggestedPoints = suggestedPointsConfig.pointsPerMatch;
 
   const clubFixedRounds = clubCount && clubCount >= 2
     ? (clubCount % 2 === 0 ? clubCount - 1 : clubCount)
     : null;
 
-  const roundDuration = Math.round(effectivePoints * minutesPer + CHANGEOVER_MINUTES);
+  const timedRoundDuration = resolved.minutesPerRound ?? 20;
+  const roundDuration = isTimedMode ? timedRoundDuration : Math.round(effectivePoints * minutesPer + CHANGEOVER_MINUTES);
   const estimatedMinutes = effectiveRounds * roundDuration;
   const estimatedH = Math.floor(estimatedMinutes / 60);
   const estimatedM = Math.round(estimatedMinutes % 60);
@@ -357,7 +362,9 @@ export function OrganizerScreen() {
     ? (estimatedM > 0 ? `~${estimatedH}h ${estimatedM}min` : `~${estimatedH}h`)
     : `~${estimatedM}min`;
 
-  const matchSettingsSummary = `${effectiveRounds} rounds \u00b7 ${effectivePoints} ${isGamesMode ? 'games' : 'pts'} \u00b7 ${estimatedStr}`;
+  const matchSettingsSummary = isTimedMode
+    ? `${effectiveRounds} rounds \u00b7 ${timedRoundDuration} min \u00b7 ${estimatedStr}`
+    : `${effectiveRounds} rounds \u00b7 ${effectivePoints} ${isSetsMode ? 'sets' : isGamesMode ? 'games' : 'pts'} \u00b7 ${estimatedStr}`;
 
   // Duration warning
   const durationLimit = tournament.duration ?? DEFAULT_DURATION_MINUTES;
@@ -842,18 +849,24 @@ export function OrganizerScreen() {
           <label className={styles.configLabel}>{t('organizer.scoringMode')}</label>
           <select
             className={styles.select}
-            value={isGamesMode ? 'games' : 'points'}
+            value={isTimedMode ? 'timed' : isSetsMode ? 'sets' : isGamesMode ? 'games' : 'points'}
             onChange={e => {
-              const mode = e.target.value as 'points' | 'games';
+              const mode = e.target.value as 'points' | 'games' | 'sets' | 'timed';
               if (mode === 'points' && lastAutoSwitchRef.current) {
                 showToast(t('organizer.gamesModeSuggestion', { rounds: effectiveRounds }));
               }
-              // Clear explicit pointsPerMatch so it recalculates for new mode
-              updateTournament({ scoringMode: mode, pointsPerMatch: undefined });
+              if (mode === 'timed') {
+                updateTournament({ scoringMode: 'timed', pointsPerMatch: undefined });
+              } else {
+                // Clear explicit pointsPerMatch so it recalculates for new mode
+                updateTournament({ scoringMode: mode, pointsPerMatch: undefined, minutesPerRound: undefined });
+              }
             }}
           >
             <option value="points">{t('organizer.scoringPoints')}</option>
             <option value="games">{t('organizer.scoringGames')}</option>
+            <option value="sets">{t('organizer.scoringSets')}</option>
+            <option value="timed">{t('organizer.scoringTimed')}</option>
           </select>
         </div>
 
@@ -872,32 +885,57 @@ export function OrganizerScreen() {
           />
         </div>
         <span className={styles.hint}>
-          {clubFixedRounds
+          {clubFixedRounds && !isTimedMode
             ? t('organizer.clubFixedRounds', { rounds: clubFixedRounds, clubs: clubCount! })
-            : t('organizer.recommendedRounds', { rounds: suggestedRounds, players: confirmedCount || capacity, courts: tournament.courts.length })}
+            : isTimedMode
+              ? t('organizer.recommendedTimedPair', { rounds: suggestedRounds, minutes: suggestedMinutes })
+              : t('organizer.recommendedRounds', { rounds: suggestedRounds, players: confirmedCount || capacity, courts: tournament.courts.length })}
         </span>
 
-        <div className={styles.configGrid}>
-          <label className={styles.configLabel}>
-            {isGamesMode ? t('organizer.gamesPerMatch') : t('organizer.pointsPerMatch')}
-          </label>
-          <input
-            className={styles.configInput}
-            type="number"
-            min={1}
-            value={tournament.pointsPerMatch || ''}
-            placeholder={String(suggestedPoints)}
-            onChange={e => {
-              const v = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
-              updateTournament({ pointsPerMatch: isNaN(v) ? 0 : Math.max(0, v) });
-            }}
-          />
-        </div>
-        <span className={styles.hint}>
-          {isGamesMode
-            ? t('organizer.recommendedGames', { games: suggestedPoints })
-            : t('organizer.recommendedPoints', { points: suggestedPoints })}
-        </span>
+        {isTimedMode ? (
+          <>
+            <div className={styles.configGrid}>
+              <label className={styles.configLabel}>{t('organizer.minutesPerRound')}</label>
+              <input
+                className={styles.configInput}
+                type="number"
+                min={1}
+                value={tournament.minutesPerRound || ''}
+                placeholder={String(resolved.minutesPerRound ?? 20)}
+                onChange={e => {
+                  const v = e.target.value === '' ? undefined : parseInt(e.target.value, 10);
+                  updateTournament({ minutesPerRound: v && v > 0 ? v : undefined });
+                }}
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <div className={styles.configGrid}>
+              <label className={styles.configLabel}>
+                {isSetsMode ? t('organizer.setsPerMatch') : isGamesMode ? t('organizer.gamesPerMatch') : t('organizer.pointsPerMatch')}
+              </label>
+              <input
+                className={styles.configInput}
+                type="number"
+                min={1}
+                value={tournament.pointsPerMatch || ''}
+                placeholder={String(suggestedPoints)}
+                onChange={e => {
+                  const v = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
+                  updateTournament({ pointsPerMatch: isNaN(v) ? 0 : Math.max(0, v) });
+                }}
+              />
+            </div>
+            <span className={styles.hint}>
+              {isSetsMode
+                ? t('organizer.recommendedSets', { sets: suggestedPoints })
+                : isGamesMode
+                  ? t('organizer.recommendedGames', { games: suggestedPoints })
+                  : t('organizer.recommendedPoints', { points: suggestedPoints })}
+            </span>
+          </>
+        )}
 
         <div className={styles.estimate}>
           {t('organizer.estimatedDuration')}<strong>{estimatedStr}</strong>
@@ -920,10 +958,20 @@ export function OrganizerScreen() {
             <div className={styles.matchWarningTitle}>{t('organizer.mayExceed', { duration: formatDuration(durationLimit) })}</div>
             <div className={styles.matchWarningBody}>
               {t('organizer.fitWithin', { duration: formatDuration(durationLimit) })}{' '}
-              {suggestedPoints !== effectivePoints && (
-                <><strong>{t('organizer.pointsSuggestion', { points: suggestedPoints })}</strong></>
-              )}
-              <strong>{t('organizer.roundsSuggestion', { rounds: suggestedRounds })}</strong>.
+              {isTimedMode ? (
+                <strong>{t('organizer.timedSuggestion', { rounds: suggestedRounds, minutes: suggestedMinutes })}</strong>
+              ) : (
+                <>
+                  {suggestedPoints !== effectivePoints && (
+                    <><strong>{isSetsMode
+                      ? t('organizer.setsSuggestion', { sets: suggestedPoints })
+                      : isGamesMode
+                        ? t('organizer.gamesSuggestion', { games: suggestedPoints })
+                        : t('organizer.pointsSuggestion', { points: suggestedPoints })}</strong></>
+                  )}
+                  <strong>{t('organizer.roundsSuggestion', { rounds: suggestedRounds })}</strong>
+                </>
+              )}.
             </div>
           </div>
         )}

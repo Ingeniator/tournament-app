@@ -22,7 +22,8 @@ export interface PlannerTournament {
   groupLabels?: [string, string];
   rankLabels?: string[];
   rankColors?: number[];
-  scoringMode?: 'points' | 'games';
+  scoringMode?: 'points' | 'games' | 'sets' | 'timed';
+  minutesPerRound?: number;
   maldiciones?: { enabled: boolean; chaosLevel: ChaosLevel };
   startDelegateId?: string;
   startDelegateTelegram?: string;

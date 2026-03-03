@@ -55,6 +55,7 @@ export function buildRunnerTournament(
       maxRounds: plannerTournament.maxRounds ?? null,
       targetDuration: plannerTournament.duration,
       ...(plannerTournament.scoringMode ? { scoringMode: plannerTournament.scoringMode } : {}),
+      ...(plannerTournament.minutesPerRound ? { minutesPerRound: plannerTournament.minutesPerRound } : {}),
       ...(plannerTournament.maldiciones ? { maldiciones: plannerTournament.maldiciones } : {}),
       ...(plannerTournament.groupLabels ? { groupLabels: plannerTournament.groupLabels } : {}),
       ...(plannerTournament.rankLabels ? { rankLabels: plannerTournament.rankLabels } : {}),

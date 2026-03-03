@@ -108,7 +108,7 @@
         },
         "registrations": {
           "$tournamentId": {
-            ".write": "auth != null && root.child('users').child(auth.uid).child('telegramUsername').val() === $username",
+            ".write": "auth != null && (root.child('users').child(auth.uid).child('telegramUsername').val() === $username || !newData.exists() && root.child('tournaments').child($tournamentId).child('organizerId').val() === auth.uid)",
             ".validate": "newData.isBoolean() || !newData.exists()"
           }
         },

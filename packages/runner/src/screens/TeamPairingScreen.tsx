@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useTournament } from '../hooks/useTournament';
 import { AppShell } from '../components/layout/AppShell';
-import { Button, useTranslation, NO_COLOR, CLUB_COLORS, getClubColor, formatHasGroups, formatHasClubs } from '@padel/common';
+import { Button, useTranslation, NO_COLOR, CLUB_COLORS, getClubColor, formatHasGroups, formatHasClubs, shortLabel } from '@padel/common';
 import styles from './TeamPairingScreen.module.css';
 
 export function TeamPairingScreen() {
@@ -119,7 +119,45 @@ export function TeamPairingScreen() {
 
   const isSlotMode = tournament.config.format === 'club-ranked';
 
-  const renderTeamCard = (team: typeof tournament.teams[0], slotIndex?: number) => (
+  // Compute slot label per team from players' actual rankSlot (with [N] suffix for duplicates)
+  const teamSlotLabel = useMemo(() => {
+    if (!isSlotMode || !tournament.config.rankLabels?.length || !teamsByClub || !clubs.length) {
+      return new Map<string, string>();
+    }
+    const rankLabels = tournament.config.rankLabels;
+    const labels = new Map<string, string>();
+    const playerRankOf = (id: string) => tournament.players.find(p => p.id === id)?.rankSlot;
+
+    // Count occurrences of each rank per club
+    const clubRankCount = new Map<string, Map<number, number>>();
+    for (const club of clubs) {
+      const rankCounts = new Map<number, number>();
+      clubRankCount.set(club.id, rankCounts);
+      for (const team of teamsByClub.get(club.id) ?? []) {
+        const rank = playerRankOf(team.player1Id) ?? playerRankOf(team.player2Id);
+        if (rank != null) {
+          rankCounts.set(rank, (rankCounts.get(rank) ?? 0) + 1);
+        }
+      }
+    }
+    // Assign labels with suffix when rank appears more than once in a club
+    for (const club of clubs) {
+      const seen = new Map<number, number>();
+      for (const team of teamsByClub.get(club.id) ?? []) {
+        const rank = playerRankOf(team.player1Id) ?? playerRankOf(team.player2Id);
+        if (rank != null && rankLabels[rank]) {
+          const base = shortLabel(rankLabels[rank]);
+          const totalForRank = clubRankCount.get(club.id)?.get(rank) ?? 1;
+          const idx = (seen.get(rank) ?? 0) + 1;
+          seen.set(rank, idx);
+          labels.set(team.id, totalForRank > 1 ? `${base} [${idx}]` : base);
+        }
+      }
+    }
+    return labels;
+  }, [isSlotMode, tournament.config.rankLabels, tournament.players, teamsByClub, clubs]);
+
+  const renderTeamCard = (team: typeof tournament.teams[0]) => (
     <div key={team.id} className={styles.teamCard}>
       <div className={styles.teamCardHeader}>
         <input
@@ -128,9 +166,9 @@ export function TeamPairingScreen() {
           placeholder={`${nameOf(team.player1Id)} & ${nameOf(team.player2Id)}`}
           onChange={e => dispatch({ type: 'RENAME_TEAM', payload: { teamId: team.id, name: e.target.value } })}
         />
-        {isSlotMode && slotIndex != null && tournament.config.rankLabels?.[slotIndex] && (
+        {isSlotMode && teamSlotLabel.has(team.id) && (
           <span className={styles.slotBadge}>
-            {tournament.config.rankLabels[slotIndex]}
+            {teamSlotLabel.get(team.id)}
           </span>
         )}
       </div>
@@ -212,7 +250,7 @@ export function TeamPairingScreen() {
                 >
                   {club.name}
                 </div>
-                {clubTeams.map((team, idx) => renderTeamCard(team, idx))}
+                {clubTeams.map(team => renderTeamCard(team))}
               </div>
             );
           })}

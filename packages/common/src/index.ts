@@ -22,7 +22,7 @@ export { NO_COLOR, CLUB_COLORS, getClubColor, RANK_COLORS, getRankColor, cycleCo
 export { generateId } from './utils/id';
 export { parsePlayerList } from './utils/parsePlayerList';
 export { groupSupporters } from './utils/groupSupporters';
-export { resolveConfigDefaults, computeSitOutInfo, MINUTES_PER_POINT, MINUTES_PER_GAME, CHANGEOVER_MINUTES } from './utils/resolveConfigDefaults';
+export { resolveConfigDefaults, computeSitOutInfo, MINUTES_PER_POINT, MINUTES_PER_GAME, MINUTES_PER_SET, CHANGEOVER_MINUTES, DEFAULT_MINUTES_PER_ROUND } from './utils/resolveConfigDefaults';
 export { shuffleArray, createTeams, createCrossGroupTeams, createClubTeams } from './utils/teamCreation';
 export { deduplicateNames } from './utils/deduplicateNames';
 export type { SitOutInfo } from './utils/resolveConfigDefaults';

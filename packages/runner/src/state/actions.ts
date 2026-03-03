@@ -23,7 +23,7 @@ export type TournamentAction =
   | { type: 'ADD_ROUNDS'; payload: { count: number } }
   | { type: 'SET_MATCH_SCORE'; payload: { roundId: string; matchId: string; score: MatchScore } }
   | { type: 'CLEAR_MATCH_SCORE'; payload: { roundId: string; matchId: string } }
-  | { type: 'UPDATE_POINTS'; payload: { pointsPerMatch: number } }
+  | { type: 'UPDATE_POINTS'; payload: { pointsPerMatch: number; minutesPerRound?: number } }
   | { type: 'SET_ROUND_COUNT'; payload: { count: number } }
   | { type: 'SET_TEAMS' }
   | { type: 'SHUFFLE_TEAMS' }

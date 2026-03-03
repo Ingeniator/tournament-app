@@ -469,7 +469,11 @@ export function tournamentReducer(
       if (!state) return state;
       return {
         ...state,
-        config: { ...state.config, pointsPerMatch: action.payload.pointsPerMatch },
+        config: {
+          ...state.config,
+          pointsPerMatch: action.payload.pointsPerMatch,
+          ...(action.payload.minutesPerRound != null ? { minutesPerRound: action.payload.minutesPerRound } : {}),
+        },
         updatedAt: Date.now(),
       };
     }

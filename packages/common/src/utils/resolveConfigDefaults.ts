@@ -2,12 +2,16 @@ import type { TournamentConfig } from '../types/tournament';
 
 export const MINUTES_PER_POINT = 0.5;
 export const MINUTES_PER_GAME = 4;
+export const MINUTES_PER_SET = 45;
 export const CHANGEOVER_MINUTES = 3;
 const DEFAULT_DURATION_MINUTES = 120;
+export const DEFAULT_MINUTES_PER_ROUND = 20;
 const PREFERRED_POINTS = 32;
 const PREFERRED_GAMES = 16;
+const PREFERRED_SETS = 5;
 const MIN_POINTS_PER_MATCH = 16;
 const MIN_GAMES = 6;
+const MIN_SETS = 1;
 const UNFAIR_PENALTY = 10;
 
 function gcd(a: number, b: number): number {
@@ -52,21 +56,50 @@ export function computeSitOutInfo(playerCount: number, courtCount: number, round
   return { isEqual, sitOutsPerRound, nearestFairBelow, nearestFairAbove };
 }
 
-function getTimeConstant(mode: 'points' | 'games'): number {
+function getTimeConstant(mode: 'points' | 'games' | 'sets'): number {
+  if (mode === 'sets') return MINUTES_PER_SET;
   return mode === 'games' ? MINUTES_PER_GAME : MINUTES_PER_POINT;
 }
 
-function getPreferred(mode: 'points' | 'games'): number {
+function getPreferred(mode: 'points' | 'games' | 'sets'): number {
+  if (mode === 'sets') return PREFERRED_SETS;
   return mode === 'games' ? PREFERRED_GAMES : PREFERRED_POINTS;
 }
 
-function getMin(mode: 'points' | 'games', format: string): number {
+function getMin(mode: 'points' | 'games' | 'sets', format: string): number {
+  if (mode === 'sets') return MIN_SETS;
   if (mode === 'games') return MIN_GAMES;
   return format === 'king-of-the-court' ? 12 : MIN_POINTS_PER_MATCH;
 }
 
 export function resolveConfigDefaults(config: TournamentConfig, playerCount: number, clubCount?: number): TournamentConfig {
   const durationMinutes = config.targetDuration ?? DEFAULT_DURATION_MINUTES;
+
+  // Timed mode: duration = rounds × minutesPerRound (no points-based calculation)
+  if (config.scoringMode === 'timed') {
+    const hasExplicitRounds = config.maxRounds != null;
+    const hasExplicitMinutes = config.minutesPerRound != null;
+    const clubFixedRounds = clubCount && clubCount >= 2
+      ? (clubCount % 2 === 0 ? clubCount - 1 : clubCount)
+      : null;
+
+    if (hasExplicitRounds && hasExplicitMinutes) {
+      return { ...config, maxRounds: config.maxRounds!, minutesPerRound: config.minutesPerRound!, scoringMode: 'timed' };
+    } else if (hasExplicitMinutes) {
+      const effectiveRounds = clubFixedRounds && !hasExplicitRounds
+        ? clubFixedRounds
+        : Math.max(1, Math.floor(durationMinutes / config.minutesPerRound!));
+      return { ...config, maxRounds: effectiveRounds, minutesPerRound: config.minutesPerRound!, scoringMode: 'timed' };
+    } else if (hasExplicitRounds) {
+      const mpr = Math.max(1, Math.floor(durationMinutes / config.maxRounds!));
+      return { ...config, maxRounds: config.maxRounds!, minutesPerRound: mpr, scoringMode: 'timed' };
+    } else {
+      // Neither set — use clubFixedRounds if applicable, then derive minutesPerRound from duration
+      const effectiveRounds = clubFixedRounds ?? Math.max(1, Math.floor(durationMinutes / DEFAULT_MINUTES_PER_ROUND));
+      const mpr = Math.max(1, Math.floor(durationMinutes / effectiveRounds));
+      return { ...config, maxRounds: effectiveRounds, minutesPerRound: mpr, scoringMode: 'timed' };
+    }
+  }
   const courtCount = config.courts.length;
   const playersPerRound = Math.min(courtCount * 4, playerCount);
 
