@@ -200,6 +200,14 @@ const sr: Translations = {
   'organizer.startDelegateOnlyMe': 'Samo ja',
   'organizer.startDelegateTelegram': 'Telegram korisnik',
   'organizer.startDelegateTelegramPlaceholder': '@korisnik',
+  'organizer.captainMode': 'Režim kapitena',
+  'organizer.clubCaptain': 'Kapiten kluba',
+  'organizer.noCaptain': 'Bez kapitena',
+  'organizer.sectionPlaying': 'Igraju ({count})',
+  'organizer.sectionReserve': 'Rezerva ({count})',
+  'organizer.sectionRegistered': 'Registrovani ({count})',
+  'organizer.sectionNeedsPartner': 'Traži partnera ({count})',
+  'organizer.sectionCancelled': 'Otkazani ({count})',
 
   // JoinScreen
   'join.back': 'Nazad',
@@ -263,6 +271,13 @@ const sr: Translations = {
   'join.partnerSameGroup': '{name} je u istoj grupi — partner mora biti iz druge grupe',
   'join.changeBreaksLink': 'Ova promena će prekinuti vezu sa partnerom {name}. Nastaviti?',
   'join.edit': 'Uredi',
+  'join.needsPartner': 'Traži partnera',
+  'join.needsPartnerHint': 'Dodajte partnera da biste osigurali mesto',
+  'join.awaitingCaptain': 'Čeka odobrenje kapitena',
+  'join.awaitingCaptainHint': 'Kapiten vašeg kluba će pregledati vaš par',
+  'join.approve': 'Odobri',
+  'join.reject': 'Odbij',
+  'join.pairSlots': '{pairs} mesta za parove',
 
   // SupportOverlay
   'support.title': 'Podržite Nas',

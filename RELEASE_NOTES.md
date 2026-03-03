@@ -1,5 +1,97 @@
 # Release Notes
 
+## v0.5.0
+
+### New Features
+
+#### Pair-Based Status for Team Formats
+  - In pair tournament formats, capacity is now counted in pair slots instead of individual slots
+  - Solo players (no partner) get "Needs partner" status — they don't consume capacity slots
+  - Pairs are prioritized by when they were formed (`pairedAt` timestamp)
+
+#### Sectioned Player List
+  - Player list in pair formats is now split into sections: Playing, Reserve, Registered, Needs Partner, Cancelled
+  - Pairs are visually grouped together within sections
+  - Cancelled section is collapsed by default
+
+#### Captain Mode
+  - Club organizers can enable captain mode for pair+club formats
+  - Per-club captain assignment (pick from registered players or enter Telegram username)
+  - Captains can approve or reject pairs from their club on the join screen
+  - Unapproved pairs show "Awaiting captain approval" status
+
+### Bug Fixes
+
+  - Tournament deletion now properly cleans up associated chatrooms
+
+## v0.4.0
+
+### New Features
+
+#### Timed Rounds and Sets
+  - New scoring mode with configurable round duration and set count
+  - Supports timed play alongside existing points-based scoring
+
+#### Partner Linking for Team Formats
+  - Players can link partners before tournament start in team formats
+  - Guards and UI improvements to prevent invalid partner assignments
+
+#### Registration Enhancements
+  - Club, rank, and group selection available before registration
+  - Color indicators for ranks and clubs (with "no color" option)
+  - Reserve player status constraints for same rank within a club
+
+#### Americano Baseline Distributions
+  - New baseline score distribution options for Americano format
+
+#### Tournament Start Delegation
+  - "Start Tournament" restricted on JoinScreen — only designated organizer can start
+  - Delegated start rights for tournament organizers
+
+### Improvements
+
+#### Unified Setup Flow
+  - Planner and runner entry merged into a single unified form
+  - Runner setup and planner organizer screen consolidated
+  - Team setup moved from runner to planner
+  - Scoring section moved to a more prominent position
+
+#### OrganizerScreen Redesign
+  - Refactored into collapsible sections (format, courts, players)
+  - ClubPanel component added to planner's OrganizerScreen
+  - Court cap with warnings and toast notifications
+  - Max court limit removed — court count set first
+
+#### Format Picker Improvements
+  - Wizard now derives initial state from selected format's preset tags
+  - Cross-group formats list fixed
+
+#### Player Management
+  - Improved name deduplication after manual renaming in team pairing mode
+  - Fixed user name duplication in planner during team setup
+  - Updated layout for player dropdown menus
+  - Remove button now uses a trash bin icon instead of ×
+
+#### Group Tournaments
+  - Group tournaments now sync on name/date changes
+
+#### Landing Page
+  - Updated landing page content
+
+### Technical
+
+  - Improved CI/CD pipeline
+  - All build chunks now under 500 kB (code-splitting optimizations)
+
+### Bug Fixes
+
+  - Fixed club americano selection
+  - Fixed cross-group assignments
+  - Fixed team pairing and team pairing modal
+  - Fixed club badge text color
+  - Fixed "Rendered more hooks than during the previous render" error
+  - Various build fixes
+
 ## v0.3.0
 
 ### New Features    

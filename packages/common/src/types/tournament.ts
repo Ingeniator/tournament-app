@@ -29,6 +29,8 @@ export interface Club {
   id: string;
   name: string;
   color?: string;
+  captainId?: string;
+  captainTelegram?: string;
 }
 
 export interface TournamentConfig {

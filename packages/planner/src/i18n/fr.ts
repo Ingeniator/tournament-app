@@ -200,6 +200,14 @@ const fr: Translations = {
   'organizer.startDelegateOnlyMe': 'Moi seul',
   'organizer.startDelegateTelegram': 'Utilisateur Telegram',
   'organizer.startDelegateTelegramPlaceholder': '@utilisateur',
+  'organizer.captainMode': 'Mode capitaine',
+  'organizer.clubCaptain': 'Capitaine du club',
+  'organizer.noCaptain': 'Pas de capitaine',
+  'organizer.sectionPlaying': 'En jeu ({count})',
+  'organizer.sectionReserve': 'Réserve ({count})',
+  'organizer.sectionRegistered': 'Inscrits ({count})',
+  'organizer.sectionNeedsPartner': 'Cherche partenaire ({count})',
+  'organizer.sectionCancelled': 'Annulés ({count})',
 
   // JoinScreen
   'join.back': 'Retour',
@@ -263,6 +271,13 @@ const fr: Translations = {
   'join.partnerSameGroup': '{name} est dans le même groupe — le partenaire doit être de l\'autre groupe',
   'join.changeBreaksLink': 'Ce changement déconnectera votre lien partenaire avec {name}. Continuer ?',
   'join.edit': 'Modifier',
+  'join.needsPartner': 'Cherche un partenaire',
+  'join.needsPartnerHint': 'Ajoutez un partenaire pour garantir votre place',
+  'join.awaitingCaptain': 'En attente de validation du capitaine',
+  'join.awaitingCaptainHint': 'Le capitaine de votre club examinera votre paire',
+  'join.approve': 'Approuver',
+  'join.reject': 'Refuser',
+  'join.pairSlots': '{pairs} places de paire',
 
   // SupportOverlay
   'support.title': 'Soutenez-nous',

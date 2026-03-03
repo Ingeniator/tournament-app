@@ -27,6 +27,7 @@ export interface PlannerTournament {
   maldiciones?: { enabled: boolean; chaosLevel: ChaosLevel };
   startDelegateId?: string;
   startDelegateTelegram?: string;
+  captainMode?: boolean;
 }
 
 export interface TournamentSummary {
@@ -53,6 +54,8 @@ export interface PlannerRegistration {
   partnerName?: string;
   partnerTelegram?: string;
   addedByPartner?: string | boolean;
+  pairedAt?: number;
+  captainApproved?: boolean;
 }
 
 export interface TournamentStartInfo {

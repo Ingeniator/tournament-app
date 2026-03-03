@@ -109,7 +109,7 @@ export function resolvePartnerUpdate(
     // Clear partner on the source player
     writes.push({
       playerId,
-      fields: { partnerName: null, partnerTelegram: null },
+      fields: { partnerName: null, partnerTelegram: null, pairedAt: null },
     });
 
     // Find and clear the old partner's back-link
@@ -121,7 +121,7 @@ export function resolvePartnerUpdate(
         playerId,
       );
       if (oldPartner) {
-        const fields: Record<string, unknown> = { partnerName: null, partnerTelegram: null };
+        const fields: Record<string, unknown> = { partnerName: null, partnerTelegram: null, pairedAt: null };
         // Auto-cancel unclaimed partner-added players (never opened the tournament)
         if (oldPartner.addedByPartner) {
           fields.confirmed = false;
@@ -179,7 +179,7 @@ export function resolvePartnerUpdate(
       playerId,
     );
     if (oldPartner && oldPartner.id !== existingPartner?.id) {
-      const fields: Record<string, unknown> = { partnerName: null, partnerTelegram: null };
+      const fields: Record<string, unknown> = { partnerName: null, partnerTelegram: null, pairedAt: null };
       // Auto-cancel unclaimed partner-added players (never opened the tournament)
       if (oldPartner.addedByPartner) {
         fields.confirmed = false;
@@ -189,9 +189,10 @@ export function resolvePartnerUpdate(
   }
 
   // Set partner on the source player
+  const now = Date.now();
   writes.push({
     playerId,
-    fields: { partnerName, partnerTelegram: partnerTelegram || null },
+    fields: { partnerName, partnerTelegram: partnerTelegram || null, pairedAt: now },
   });
 
   if (existingPartner) {
@@ -201,6 +202,7 @@ export function resolvePartnerUpdate(
       fields: {
         partnerName: srcPlayer?.name ?? null,
         partnerTelegram: srcPlayer?.telegramUsername ?? null,
+        pairedAt: now,
       },
     });
 
@@ -216,6 +218,7 @@ export function resolvePartnerUpdate(
     confirmed: true,
     addedByPartner: srcPlayer?.name ?? true,
     partnerName: srcPlayer?.name ?? null,
+    pairedAt: now,
     ...(partnerTelegram ? { telegramUsername: partnerTelegram } : {}),
     ...(srcPlayer?.telegramUsername ? { partnerTelegram: srcPlayer.telegramUsername } : {}),
   };

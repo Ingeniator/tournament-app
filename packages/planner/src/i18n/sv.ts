@@ -198,6 +198,14 @@ const sv: Translations = {
   'organizer.startDelegateOnlyMe': 'Bara jag',
   'organizer.startDelegateTelegram': 'Telegram-användare',
   'organizer.startDelegateTelegramPlaceholder': '@användare',
+  'organizer.captainMode': 'Kaptenläge',
+  'organizer.clubCaptain': 'Klubbkapten',
+  'organizer.noCaptain': 'Ingen kapten',
+  'organizer.sectionPlaying': 'Spelar ({count})',
+  'organizer.sectionReserve': 'Reserv ({count})',
+  'organizer.sectionRegistered': 'Registrerade ({count})',
+  'organizer.sectionNeedsPartner': 'Behöver partner ({count})',
+  'organizer.sectionCancelled': 'Avbokade ({count})',
 
   // JoinScreen
   'join.back': 'Tillbaka',
@@ -261,6 +269,13 @@ const sv: Translations = {
   'join.partnerSameGroup': '{name} är i samma grupp — partnern måste vara från den andra gruppen',
   'join.changeBreaksLink': 'Denna ändring kommer att koppla bort din partnerlänk med {name}. Fortsätta?',
   'join.edit': 'Redigera',
+  'join.needsPartner': 'Behöver en partner',
+  'join.needsPartnerHint': 'Lägg till en partner för att säkra din plats',
+  'join.awaitingCaptain': 'Väntar på kaptenens godkännande',
+  'join.awaitingCaptainHint': 'Din klubbkapten kommer att granska ditt par',
+  'join.approve': 'Godkänn',
+  'join.reject': 'Avslå',
+  'join.pairSlots': '{pairs} parplatser',
 
   // SupportOverlay
   'support.title': 'Stöd Oss',

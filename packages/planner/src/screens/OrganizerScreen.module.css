@@ -539,6 +539,64 @@
   vertical-align: middle;
 }
 
+/* Status sections for pair formats */
+.statusSection {
+  margin-top: var(--space-md);
+}
+
+.statusSection:first-child {
+  margin-top: 0;
+}
+
+.statusSectionHeader {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: var(--space-xs) 0;
+  margin-bottom: var(--space-xs);
+}
+
+.pairGroup {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: 2px 0;
+  margin-bottom: var(--space-xs);
+}
+
+.pairGroup .playerItem:first-child {
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.pairGroup .playerItem:last-child {
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+.needsPartnerBadge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  background-color: var(--color-info-tint, #e3f2fd);
+  color: var(--color-info, #1976d2);
+  border-radius: var(--radius-full);
+  padding: 1px 8px;
+  margin-left: var(--space-sm);
+  vertical-align: middle;
+}
+
+.registeredBadge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  background-color: var(--color-surface-raised);
+  color: var(--color-text-muted);
+  border-radius: var(--radius-full);
+  padding: 1px 8px;
+  margin-left: var(--space-sm);
+  vertical-align: middle;
+}
+
 .deleteBtn {
   width: 100%;
   padding: var(--space-sm) var(--space-md);

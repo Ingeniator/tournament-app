@@ -1,12 +1,14 @@
 import type { PlannerRegistration, TournamentFormat, Club } from '@padel/common';
-import { formatHasClubs } from '@padel/common';
+import { formatHasClubs, formatHasFixedPartners } from '@padel/common';
+import { findPartner } from './partnerLogic';
 
-export type PlayerStatus = 'playing' | 'reserve' | 'cancelled';
+export type PlayerStatus = 'playing' | 'reserve' | 'cancelled' | 'needs-partner' | 'registered';
 
 export interface StatusOptions {
   format?: TournamentFormat;
   clubs?: Club[];
   rankLabels?: string[];
+  captainMode?: boolean;
 }
 
 export function getPlayerStatuses(
@@ -153,6 +155,96 @@ export function getPlayerStatuses(
         remaining2--;
       } else {
         statuses.set(p.id, 'reserve');
+      }
+    }
+
+    return statuses;
+  }
+
+  // Pair-format: capacity is counted in pair slots for formatHasFixedPartners
+  // (club-ranked has its own specialized logic above and falls through to club-americano)
+  if (format && format !== 'club-ranked' && formatHasFixedPartners(format)) {
+    const captainMode = options?.captainMode;
+    const processed = new Set<string>();
+
+    // Build pairs: each confirmed player matched with their partner
+    type Pair = { players: [PlannerRegistration, PlannerRegistration]; pairedAt: number };
+    const pairs: Pair[] = [];
+    const soloPlayers: PlannerRegistration[] = [];
+
+    for (const p of confirmed) {
+      if (processed.has(p.id)) continue;
+      processed.add(p.id);
+
+      const partner = findPartner(p, confirmed);
+      if (partner && !processed.has(partner.id)) {
+        processed.add(partner.id);
+        const pairedAt = Math.min(p.pairedAt ?? p.timestamp, partner.pairedAt ?? partner.timestamp);
+        pairs.push({ players: [p, partner], pairedAt });
+      } else if (!partner) {
+        soloPlayers.push(p);
+      }
+      // If partner already processed (in another pair), treat this as solo
+      else {
+        soloPlayers.push(p);
+      }
+    }
+
+    // Solo players → needs-partner
+    for (const p of soloPlayers) {
+      statuses.set(p.id, 'needs-partner');
+    }
+
+    // Captain mode: unapproved pairs → 'registered'
+    const approvedPairs: Pair[] = [];
+    if (captainMode) {
+      for (const pair of pairs) {
+        const [a, b] = pair.players;
+        if (a.captainApproved !== true || b.captainApproved !== true) {
+          statuses.set(a.id, 'registered');
+          statuses.set(b.id, 'registered');
+        } else {
+          approvedPairs.push(pair);
+        }
+      }
+    } else {
+      approvedPairs.push(...pairs);
+    }
+
+    // Sort eligible pairs by pairedAt (earlier pairs get priority)
+    approvedPairs.sort((a, b) => a.pairedAt - b.pairedAt);
+
+    const pairCapacity = Math.floor(capacity / 2);
+
+    // Club formats: distribute pair capacity per club
+    if (clubs && clubs.length > 0 && confirmed.some(p => p.clubId)) {
+      const perClubPairCap = Math.floor(pairCapacity / clubs.length);
+      const clubPairCounts = new Map<string, number>();
+
+      for (const pair of approvedPairs) {
+        const clubId = pair.players[0].clubId ?? pair.players[1].clubId ?? '';
+        const count = clubPairCounts.get(clubId) ?? 0;
+        if (count < perClubPairCap) {
+          statuses.set(pair.players[0].id, 'playing');
+          statuses.set(pair.players[1].id, 'playing');
+          clubPairCounts.set(clubId, count + 1);
+        } else {
+          statuses.set(pair.players[0].id, 'reserve');
+          statuses.set(pair.players[1].id, 'reserve');
+        }
+      }
+    } else {
+      // Non-club: simple pair capacity
+      let pairsPlaying = 0;
+      for (const pair of approvedPairs) {
+        if (pairsPlaying < pairCapacity) {
+          statuses.set(pair.players[0].id, 'playing');
+          statuses.set(pair.players[1].id, 'playing');
+          pairsPlaying++;
+        } else {
+          statuses.set(pair.players[0].id, 'reserve');
+          statuses.set(pair.players[1].id, 'reserve');
+        }
       }
     }
 

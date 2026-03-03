@@ -17,7 +17,7 @@ describe('resolvePartnerUpdate', () => {
 
       expect(result.rejected).toBeNull();
       expect(result.writes).toEqual([
-        { playerId: 'a', fields: { partnerName: 'Bob', partnerTelegram: null } },
+        { playerId: 'a', fields: expect.objectContaining({ partnerName: 'Bob', partnerTelegram: null }) },
       ]);
       expect(result.newPlayer).not.toBeNull();
       expect(result.newPlayer!.data.name).toBe('Bob');
@@ -98,11 +98,11 @@ describe('resolvePartnerUpdate', () => {
       expect(result.newPlayer).toBeNull();
       expect(result.writes).toContainEqual({
         playerId: 'a',
-        fields: { partnerName: 'Bob', partnerTelegram: null },
+        fields: expect.objectContaining({ partnerName: 'Bob', partnerTelegram: null }),
       });
       expect(result.writes).toContainEqual({
         playerId: 'b',
-        fields: { partnerName: 'Alice', partnerTelegram: null },
+        fields: expect.objectContaining({ partnerName: 'Alice', partnerTelegram: null }),
       });
     });
 
@@ -132,7 +132,7 @@ describe('resolvePartnerUpdate', () => {
       expect(result.writes).toContainEqual(
         expect.objectContaining({
           playerId: 'b',
-          fields: { partnerName: 'Alice', partnerTelegram: 'alice_tg' },
+          fields: expect.objectContaining({ partnerName: 'Alice', partnerTelegram: 'alice_tg' }),
         }),
       );
     });
@@ -170,7 +170,7 @@ describe('resolvePartnerUpdate', () => {
       expect(result.rejected).toBeNull();
       expect(result.writes).toContainEqual({
         playerId: 'a',
-        fields: { partnerName: null, partnerTelegram: null },
+        fields: expect.objectContaining({ partnerName: null, partnerTelegram: null }),
       });
     });
 
@@ -183,7 +183,7 @@ describe('resolvePartnerUpdate', () => {
 
       expect(result.writes).toContainEqual({
         playerId: 'b',
-        fields: { partnerName: null, partnerTelegram: null },
+        fields: expect.objectContaining({ partnerName: null, partnerTelegram: null }),
       });
     });
 
@@ -196,7 +196,7 @@ describe('resolvePartnerUpdate', () => {
 
       expect(result.writes).toContainEqual({
         playerId: 'b',
-        fields: { partnerName: null, partnerTelegram: null },
+        fields: expect.objectContaining({ partnerName: null, partnerTelegram: null }),
       });
     });
 
@@ -244,12 +244,12 @@ describe('resolvePartnerUpdate', () => {
       // Old partner Bob should be cleared
       expect(result.writes).toContainEqual({
         playerId: 'b',
-        fields: { partnerName: null, partnerTelegram: null },
+        fields: expect.objectContaining({ partnerName: null, partnerTelegram: null }),
       });
       // Alice set to Charlie
       expect(result.writes).toContainEqual({
         playerId: 'a',
-        fields: { partnerName: 'Charlie', partnerTelegram: null },
+        fields: expect.objectContaining({ partnerName: 'Charlie', partnerTelegram: null }),
       });
       // Charlie back-linked to Alice
       expect(result.writes).toContainEqual(
@@ -480,11 +480,11 @@ describe('resolvePartnerUpdate', () => {
       expect(result.rejected).toBeNull();
       expect(result.writes).toContainEqual({
         playerId: 'unknown',
-        fields: { partnerName: 'Bob', partnerTelegram: null },
+        fields: expect.objectContaining({ partnerName: 'Bob', partnerTelegram: null }),
       });
       expect(result.writes).toContainEqual({
         playerId: 'b',
-        fields: { partnerName: null, partnerTelegram: null },
+        fields: expect.objectContaining({ partnerName: null, partnerTelegram: null }),
       });
     });
 
@@ -535,8 +535,8 @@ describe('resolvePartnerUpdate', () => {
 
       // Alice removes
       const r1 = resolvePartnerUpdate('a', null, null, players);
-      expect(r1.writes).toContainEqual({ playerId: 'a', fields: { partnerName: null, partnerTelegram: null } });
-      expect(r1.writes).toContainEqual({ playerId: 'b', fields: { partnerName: null, partnerTelegram: null } });
+      expect(r1.writes).toContainEqual({ playerId: 'a', fields: expect.objectContaining({ partnerName: null, partnerTelegram: null }) });
+      expect(r1.writes).toContainEqual({ playerId: 'b', fields: expect.objectContaining({ partnerName: null, partnerTelegram: null }) });
 
       // Simulate state after Alice's removal applied
       const playersAfter = [
