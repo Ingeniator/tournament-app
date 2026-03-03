@@ -453,6 +453,9 @@ const pt: Translations = {
   'format.wizardResult': 'Formato recomendado',
   'format.wizardNotYet': 'Esta combinação ainda não está disponível',
 
+  // iOS Install Banner
+  'ios.installHint': 'Para instalar, toque em Partilhar e depois "Ecrã de início"',
+
   // Common
   'common.cancel': 'Cancelar',
   'common.save': 'Guardar',

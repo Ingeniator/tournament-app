@@ -451,6 +451,9 @@ const sv: Translations = {
   'format.wizardResult': 'Rekommenderat format',
   'format.wizardNotYet': 'Denna kombination är inte tillgänglig ännu',
 
+  // iOS Install Banner
+  'ios.installHint': 'För att installera, tryck på Dela och sedan "Lägg till på hemskärmen"',
+
   // Common
   'common.cancel': 'Avbryt',
   'common.save': 'Spara',

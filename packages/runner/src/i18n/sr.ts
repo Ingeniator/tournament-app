@@ -451,6 +451,9 @@ const sr: Translations = {
   'format.wizardResult': 'Preporučeni format',
   'format.wizardNotYet': 'Ova kombinacija još nije dostupna',
 
+  // iOS Install Banner
+  'ios.installHint': 'Za instalaciju, tapni Podeli pa "Dodaj na početni ekran"',
+
   // Common
   'common.cancel': 'Otkaži',
   'common.save': 'Sačuvaj',

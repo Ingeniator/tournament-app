@@ -453,6 +453,9 @@ const it: Translations = {
   'format.wizardResult': 'Formato consigliato',
   'format.wizardNotYet': 'Questa combinazione non è ancora disponibile',
 
+  // iOS Install Banner
+  'ios.installHint': 'Per installare, tocca Condividi e poi "Aggiungi alla schermata Home"',
+
   // Common
   'common.cancel': 'Annulla',
   'common.save': 'Salva',

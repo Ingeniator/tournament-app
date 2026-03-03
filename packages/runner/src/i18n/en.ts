@@ -451,6 +451,9 @@ const en: Translations = {
   'format.wizardResult': 'Recommended format',
   'format.wizardNotYet': 'This combination is not available yet',
 
+  // iOS Install Banner
+  'ios.installHint': 'To install, tap Share then "Add to Home Screen"',
+
   // Common
   'common.cancel': 'Cancel',
   'common.save': 'Save',

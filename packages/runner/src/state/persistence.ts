@@ -74,6 +74,27 @@ export function saveSkin(skin: SkinId): void {
   }
 }
 
+const IOS_INSTALL_DISMISSED_KEY = 'padel-ios-install-dismissed';
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
+export function isIOSInstallDismissed(): boolean {
+  try {
+    const ts = localStorage.getItem(IOS_INSTALL_DISMISSED_KEY);
+    if (!ts) return false;
+    return Date.now() - Number(ts) < THIRTY_DAYS_MS;
+  } catch {
+    return false;
+  }
+}
+
+export function dismissIOSInstall(): void {
+  try {
+    localStorage.setItem(IOS_INSTALL_DISMISSED_KEY, String(Date.now()));
+  } catch {
+    // silently fail
+  }
+}
+
 export function loadSkin(): SkinId {
   try {
     const data = localStorage.getItem(SKIN_KEY);

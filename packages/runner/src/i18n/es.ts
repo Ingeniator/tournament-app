@@ -451,6 +451,9 @@ const es: Translations = {
   'format.wizardResult': 'Formato recomendado',
   'format.wizardNotYet': 'Esta combinación aún no está disponible',
 
+  // iOS Install Banner
+  'ios.installHint': 'Para instalar, toca Compartir y luego "Agregar a pantalla de inicio"',
+
   // Common
   'common.cancel': 'Cancelar',
   'common.save': 'Guardar',
