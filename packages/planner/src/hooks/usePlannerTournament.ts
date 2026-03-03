@@ -147,6 +147,13 @@ export function usePlannerTournament(tournamentId: string | null) {
         deletes[`users/${playerId}/registrations/${tournamentId}`] = null;
       }
     }
+    // Clean up chatRoom entries (reverse mapping stored on tournament)
+    const chatRooms = data.chatRooms as Record<string, unknown> | undefined;
+    if (chatRooms) {
+      for (const chatInstance of Object.keys(chatRooms)) {
+        deletes[`chatRooms/${chatInstance}/tournaments/${tournamentId}`] = null;
+      }
+    }
     await firebaseUpdate(ref(db), deletes);
   }, [tournamentId]);
 
@@ -170,6 +177,13 @@ export function usePlannerTournament(tournamentId: string | null) {
     if (players) {
       for (const playerId of Object.keys(players)) {
         deletes[`users/${playerId}/registrations/${id}`] = null;
+      }
+    }
+    // Clean up chatRoom entries (reverse mapping stored on tournament)
+    const chatRooms = data.chatRooms as Record<string, unknown> | undefined;
+    if (chatRooms) {
+      for (const chatInstance of Object.keys(chatRooms)) {
+        deletes[`chatRooms/${chatInstance}/tournaments/${id}`] = null;
       }
     }
     await firebaseUpdate(ref(db), deletes);

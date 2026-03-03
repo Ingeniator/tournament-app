@@ -17,6 +17,12 @@
         "completedAt": {
           ".write": "auth != null",
           ".validate": "newData.isNumber()"
+        },
+        "chatRooms": {
+          "$chatInstance": {
+            ".write": "auth != null && !data.exists()",
+            ".validate": "newData.isBoolean()"
+          }
         }
       }
     },
@@ -81,8 +87,8 @@
         "tournaments": {
           ".read": true,
           "$tournamentId": {
-            ".write": "auth != null && !data.exists()",
-            ".validate": "newData.hasChildren(['name', 'code', 'linkedAt', 'linkedBy'])"
+            ".write": "auth != null && (!data.exists() || data.child('organizerId').val() === auth.uid)",
+            ".validate": "!newData.exists() || newData.hasChildren(['name', 'code', 'linkedAt', 'linkedBy', 'organizerId'])"
           }
         }
       }
