@@ -7,9 +7,14 @@ beforeEach(() => {
   localStorage.clear();
   // Mock fetch so tests don't make real network requests when
   // VITE_FIREBASE_DATABASE_URL is set (e.g. in CI build secrets)
-  vi.spyOn(globalThis, 'fetch').mockImplementation(() =>
-    Promise.resolve(new Response(JSON.stringify(null), { status: 200 })),
-  );
+  vi.spyOn(globalThis, 'fetch').mockImplementation((_url) => {
+    const url = String(_url);
+    // Auth endpoints need a token-shaped response; everything else gets null
+    const body = url.includes('identitytoolkit') || url.includes('securetoken')
+      ? { idToken: 'mock-token', refreshToken: 'mock-refresh', id_token: 'mock-token' }
+      : null;
+    return Promise.resolve(new Response(JSON.stringify(body), { status: 200 }));
+  });
 });
 
 afterEach(() => {
