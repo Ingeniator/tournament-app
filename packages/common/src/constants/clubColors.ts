@@ -9,12 +9,12 @@ export const CLUB_COLORS = [
   '#ef4444', // red
   '#f97316', // orange
   '#ec4899', // pink
-  '#14b8a6', // teal
-  '#a16207', // brown
+  '#21A48F', // teal
+  '#2D5763', // dark slate teal
   '#dc2626', // crimson
-  '#0891b2', // cyan
+  '#1396BE', // cerulean
   '#d946ef', // magenta
-  '#84cc16', // lime
+  '#F2D553', //  warm golden yellow 
   '#f43f5e', // rose
   NO_COLOR,
 ];
