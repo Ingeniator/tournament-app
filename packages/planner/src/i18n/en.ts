@@ -396,6 +396,7 @@ const en: Translations = {
   'event.tournamentLinked': 'Tournament linked!',
   'event.linkFailed': 'Failed to link tournament',
   'event.players': 'players',
+  'event.registered': '{count} registered',
   'event.spotsOpen': '{count} spots open',
   'event.weight': 'Weight',
   'event.liveStandings': 'Live Standings',

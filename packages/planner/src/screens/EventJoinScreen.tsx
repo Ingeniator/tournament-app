@@ -92,18 +92,21 @@ export function EventJoinScreen({ eventId, uid, onJoinTournament, onBack, onEdit
                   <div key={ti.id} className={styles.tournamentItem}>
                     <div className={styles.tournamentName}>{ti.name}</div>
                     <div className={styles.tournamentRow}>
-                      <div className={styles.tournamentMeta}>
-                        {formatLabel && <span>{formatLabel}</span>}
-                        {ti.date && <span>{ti.date}</span>}
-                        {ti.place && <span>{ti.place}</span>}
-                        <span>{ti.playerCount}/{ti.capacity} {t('event.players')}</span>
-                        {ti.isCompleted ? (
-                          <span className={styles.tournamentCompleted}>{t('event.status.completed')}</span>
-                        ) : ti.hasStarted ? (
-                          <span className={styles.tournamentActive}>{t('event.status.active')}</span>
-                        ) : (
-                          <span>{t('event.spotsOpen', { count: Math.max(0, ti.capacity - ti.playerCount) })}</span>
-                        )}
+                      <div className={styles.tournamentDetails}>
+                        <div className={styles.tournamentMeta}>
+                          {formatLabel && <span>{formatLabel}</span>}
+                          {ti.registeredCount > 0 && <span>{t('event.registered', { count: ti.registeredCount })}</span>}
+                        </div>
+                        <div className={styles.tournamentMeta}>
+                          <span>{ti.playerCount}/{ti.capacity} {t('event.players')}</span>
+                          {ti.isCompleted ? (
+                            <span className={styles.tournamentCompleted}>{t('event.status.completed')}</span>
+                          ) : ti.hasStarted ? (
+                            <span className={styles.tournamentActive}>{t('event.status.active')}</span>
+                          ) : (
+                            <span>{t('event.spotsOpen', { count: Math.max(0, ti.capacity - ti.playerCount) })}</span>
+                          )}
+                        </div>
                       </div>
                       {!ti.isCompleted && !ti.hasStarted && (
                         <Button size="small" onClick={() => onJoinTournament(ti.id)}>

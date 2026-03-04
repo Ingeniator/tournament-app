@@ -239,6 +239,9 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
       <h3 className={styles.sectionTitle}>
         {t('join.players', { confirmed: confirmedCount, capacity })}
       </h3>
+      {isCaptainOf && (
+        <p className={styles.capacityHint}>ℹ️ {t('organizer.captainInstructions')}</p>
+      )}
       <p className={styles.capacityHint}>
         {isPairFormat
           ? t('join.pairSlots', { pairs: pairCapacity })

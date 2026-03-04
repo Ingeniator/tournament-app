@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { ref, onValue } from 'firebase/database';
-import type { Tournament, PadelEventStatus, EventTournamentLink, PlannerRegistration } from '@padel/common';
+import type { Tournament, PadelEventStatus, EventTournamentLink, PlannerRegistration, TournamentFormat, Club } from '@padel/common';
 import { db } from '../firebase';
+import { getPlayerStatuses } from '../utils/playerStatus';
 
 export interface EventTournamentInfo {
   id: string;
@@ -14,8 +15,10 @@ export interface EventTournamentInfo {
   hasStarted: boolean;
   /** Whether the runner is completed */
   isCompleted: boolean;
-  /** Number of registered players */
+  /** Number of playing players */
   playerCount: number;
+  /** Total registered (non-cancelled) players */
+  registeredCount: number;
   /** Tournament capacity (courts * 4) */
   capacity: number;
   weight: number;
@@ -70,7 +73,16 @@ export function useEventTournaments(links: EventTournamentLink[]) {
 
           const courtCount = Array.isArray(courts) ? courts.length :
             typeof courts === 'object' && courts !== null ? Object.keys(courts).length : 1;
-          const playerCount = players ? Object.keys(players).length : 0;
+          const playerList = players ? Object.values(players) : [];
+          const capacity = courtCount * 4;
+          const statuses = getPlayerStatuses(playerList, capacity, {
+            format: data.format as TournamentFormat | undefined,
+            clubs: data.clubs as Club[] | undefined,
+            rankLabels: data.rankLabels as string[] | undefined,
+            captainMode: data.captainMode as boolean | undefined,
+          });
+          const playerCount = [...statuses.values()].filter(s => s === 'playing').length;
+          const registeredCount = playerList.filter(p => p.confirmed !== false).length;
 
           // Determine if started: has runnerData with at least one scored match
           let hasStarted = false;
@@ -94,7 +106,8 @@ export function useEventTournaments(links: EventTournamentLink[]) {
             hasStarted,
             isCompleted: !!completedAt,
             playerCount,
-            capacity: courtCount * 4,
+            registeredCount,
+            capacity,
             weight: weightMap.get(tid) ?? 1,
           });
         } else {
