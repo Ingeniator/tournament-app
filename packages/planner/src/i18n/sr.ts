@@ -207,6 +207,7 @@ const sr: Translations = {
   'organizer.noCaptain': 'Bez kapitena',
   'organizer.setCaptain': 'Postavi kapitena',
   'organizer.captainInstructions': 'Kao kapiten, uparite igrače iz vašeg kluba i odobrite ili odbijte njihove parove.',
+  'organizer.captainUnapproved': '{count} igrač(a) čeka odobrenje kapitena. Postavite sebe kao kapitena ili podelite link kapitena da odobrite postave.',
   'organizer.sectionPlaying': 'Igraju ({count})',
   'organizer.sectionReserve': 'Rezerva ({count})',
   'organizer.sectionRegistered': 'Registrovani ({count})',

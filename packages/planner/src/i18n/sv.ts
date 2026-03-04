@@ -205,6 +205,7 @@ const sv: Translations = {
   'organizer.noCaptain': 'Ingen kapten',
   'organizer.setCaptain': 'Sätt kapten',
   'organizer.captainInstructions': 'Som kapten, para ihop spelare från din klubb och godkänn eller avvisa deras par.',
+  'organizer.captainUnapproved': '{count} spelare väntar på kaptenens godkännande. Sätt dig själv som kapten eller dela kaptenlänken för att godkänna uppställningar.',
   'organizer.sectionPlaying': 'Spelar ({count})',
   'organizer.sectionReserve': 'Reserv ({count})',
   'organizer.sectionRegistered': 'Registrerade ({count})',

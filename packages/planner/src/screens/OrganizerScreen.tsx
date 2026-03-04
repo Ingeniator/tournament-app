@@ -1109,6 +1109,14 @@ export function OrganizerScreen() {
           </div>
         ) : null;
       })()}
+      {tournament.captainMode && (() => {
+        const unapproved = players.filter(p => p.confirmed !== false && statuses.get(p.id) === 'registered').length;
+        return unapproved > 0 ? (
+          <div className={styles.warning}>
+            {t('organizer.captainUnapproved', { count: unapproved })}
+          </div>
+        ) : null;
+      })()}
       <Button fullWidth onClick={handleLaunch} disabled={players.length === 0}>
         {t('organizer.letsPlay')}
       </Button>

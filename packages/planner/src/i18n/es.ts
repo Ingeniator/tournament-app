@@ -207,6 +207,7 @@ const es: Translations = {
   'organizer.noCaptain': 'Sin capitán',
   'organizer.setCaptain': 'Asignar capitán',
   'organizer.captainInstructions': 'Como capitán, empareja a los jugadores de tu club y aprueba o rechaza sus parejas.',
+  'organizer.captainUnapproved': '{count} jugador(es) esperando aprobación del capitán. Asígnate como capitán o comparte el enlace de capitán para aprobar alineaciones.',
   'organizer.sectionPlaying': 'Jugando ({count})',
   'organizer.sectionReserve': 'Reserva ({count})',
   'organizer.sectionRegistered': 'Registrados ({count})',
