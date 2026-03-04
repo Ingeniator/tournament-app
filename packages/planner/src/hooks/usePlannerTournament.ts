@@ -5,13 +5,6 @@ import { generateId } from '@padel/common';
 import { db } from '../firebase';
 import { generateUniqueCode } from '../utils/shortCode';
 
-function migrateClubFormat(format: TournamentFormat, matchMode?: string): TournamentFormat {
-  if (format !== ('club-americano' as string)) return format;
-  if (matchMode === 'random') return 'club-team-americano';
-  if (matchMode === 'standings') return 'club-team-mexicano';
-  return 'club-ranked';
-}
-
 function toTournament(id: string, data: Record<string, unknown>): PlannerTournament {
   // Firebase returns the entire node including nested children like `players`.
   // Extract only the known PlannerTournament fields to avoid passing opaque
@@ -22,7 +15,7 @@ function toTournament(id: string, data: Record<string, unknown>): PlannerTournam
   return {
     id,
     name: data.name as string,
-    format: migrateClubFormat(data.format as TournamentFormat, data.matchMode as string | undefined),
+    format: data.format as TournamentFormat,
     courts: Array.isArray(courts)
       ? courts
       : typeof courts === 'object' && courts !== null
@@ -31,6 +24,8 @@ function toTournament(id: string, data: Record<string, unknown>): PlannerTournam
     organizerId: data.organizerId as string,
     code: data.code as string,
     createdAt: data.createdAt as number,
+    pointsPerMatch: data.pointsPerMatch as number | undefined,
+    maxRounds: data.maxRounds as number | null | undefined,
     duration: data.duration as number | undefined,
     date: data.date as string | undefined,
     place: data.place as string | undefined,
@@ -49,6 +44,17 @@ function toTournament(id: string, data: Record<string, unknown>): PlannerTournam
       : typeof data.rankLabels === 'object' && data.rankLabels !== null
         ? Object.values(data.rankLabels) as string[]
         : undefined,
+    rankColors: Array.isArray(data.rankColors)
+      ? data.rankColors as number[]
+      : typeof data.rankColors === 'object' && data.rankColors !== null
+        ? Object.values(data.rankColors) as number[]
+        : undefined,
+    scoringMode: data.scoringMode as 'points' | 'games' | 'sets' | 'timed' | undefined,
+    minutesPerRound: data.minutesPerRound as number | undefined,
+    maldiciones: data.maldiciones as PlannerTournament['maldiciones'],
+    startDelegateId: data.startDelegateId as string | undefined,
+    startDelegateTelegram: data.startDelegateTelegram as string | undefined,
+    captainMode: data.captainMode as boolean | undefined,
   };
 }
 
@@ -104,7 +110,7 @@ export function usePlannerTournament(tournamentId: string | null) {
     return id;
   }, []);
 
-  const updateTournament = useCallback(async (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'courts' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description' | 'clubs' | 'groupLabels' | 'rankLabels'>>) => {
+  const updateTournament = useCallback(async (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'courts' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description' | 'clubs' | 'groupLabels' | 'rankLabels' | 'rankColors' | 'scoringMode' | 'maldiciones' | 'pointsPerMatch' | 'maxRounds' | 'startDelegateId' | 'startDelegateTelegram' | 'minutesPerRound' | 'captainMode'>>) => {
     if (!tournamentId || !db) return;
     // Convert undefined to null so Firebase deletes the field
     const pathUpdates: Record<string, unknown> = {};
@@ -142,6 +148,13 @@ export function usePlannerTournament(tournamentId: string | null) {
         deletes[`users/${playerId}/registrations/${tournamentId}`] = null;
       }
     }
+    // Clean up chatRoom entries (reverse mapping stored on tournament)
+    const chatRooms = data.chatRooms as Record<string, unknown> | undefined;
+    if (chatRooms) {
+      for (const chatInstance of Object.keys(chatRooms)) {
+        deletes[`chatRooms/${chatInstance}/tournaments/${tournamentId}`] = null;
+      }
+    }
     await firebaseUpdate(ref(db), deletes);
   }, [tournamentId]);
 
@@ -165,6 +178,13 @@ export function usePlannerTournament(tournamentId: string | null) {
     if (players) {
       for (const playerId of Object.keys(players)) {
         deletes[`users/${playerId}/registrations/${id}`] = null;
+      }
+    }
+    // Clean up chatRoom entries (reverse mapping stored on tournament)
+    const chatRooms = data.chatRooms as Record<string, unknown> | undefined;
+    if (chatRooms) {
+      for (const chatInstance of Object.keys(chatRooms)) {
+        deletes[`chatRooms/${chatInstance}/tournaments/${id}`] = null;
       }
     }
     await firebaseUpdate(ref(db), deletes);

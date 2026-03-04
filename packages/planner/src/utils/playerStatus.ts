@@ -1,11 +1,14 @@
 import type { PlannerRegistration, TournamentFormat, Club } from '@padel/common';
-import { formatHasClubs } from '@padel/common';
+import { formatHasClubs, formatHasFixedPartners } from '@padel/common';
+import { findPartner } from './partnerLogic';
 
-export type PlayerStatus = 'playing' | 'reserve' | 'cancelled';
+export type PlayerStatus = 'playing' | 'reserve' | 'cancelled' | 'needs-partner' | 'registered';
 
 export interface StatusOptions {
   format?: TournamentFormat;
   clubs?: Club[];
+  rankLabels?: string[];
+  captainMode?: boolean;
 }
 
 export function getPlayerStatuses(
@@ -68,12 +71,252 @@ export function getPlayerStatuses(
     return statuses;
   }
 
-  // Club Americano: per-club capacity
+  // Club-ranked: per-(club, rank) bucket capacity, always even (pairs).
+  // When slotsPerClub / rankCount is odd, round down to even base and
+  // distribute extra pairs to ranks by earliest overflow player.
+  const rankLabels = options?.rankLabels;
+  if (format === 'club-ranked' && clubs && clubs.length > 0 && rankLabels && rankLabels.length > 0) {
+    const captainMode = options?.captainMode;
+
+    // Captain mode: unapproved players → 'registered', run bucket logic on approved only
+    let eligible = confirmed;
+    if (captainMode) {
+      const approved: PlannerRegistration[] = [];
+      for (const p of confirmed) {
+        if (p.captainApproved !== true) {
+          statuses.set(p.id, 'registered');
+        } else {
+          approved.push(p);
+        }
+      }
+      eligible = approved;
+    }
+
+    const slotsPerClub = Math.floor(capacity / clubs.length);
+    const rankCount = rankLabels.length;
+    const rawPerBucket = Math.floor(slotsPerClub / rankCount);
+    const basePerBucket = Math.floor(rawPerBucket / 2) * 2; // round down to even
+    const remainingPerClub = slotsPerClub - basePerBucket * rankCount;
+
+    // Process players with club+rank by timestamp
+    const ranked = eligible
+      .filter(p => p.clubId && p.rankSlot != null)
+      .sort((a, b) => a.timestamp - b.timestamp);
+
+    // Track paired players to avoid processing them twice across buckets
+    const pairProcessed = new Set<string>();
+
+    // Per-club bucket logic: each club gets its own bonus pairs and bucket caps
+    for (const club of clubs) {
+      let bonusPairsLeft = Math.floor(remainingPerClub / 2);
+      const bucketCap = new Array<number>(rankCount).fill(basePerBucket);
+      const counts = new Map<number, number>(); // rankSlot → count
+
+      const clubRanked = ranked.filter(p => p.clubId === club.id);
+      for (const p of clubRanked) {
+        if (pairProcessed.has(p.id)) continue;
+
+        const slot = p.rankSlot!;
+
+        // Pair-aware: find partner in same bucket so they get the same status
+        const partner = findPartner(p, eligible);
+        const pairedPartner = partner && !pairProcessed.has(partner.id)
+          && partner.clubId === club.id && partner.rankSlot === slot
+          ? partner : null;
+
+        const slotsNeeded = pairedPartner ? 2 : 1;
+        const count = (counts.get(slot) ?? 0) + slotsNeeded;
+        counts.set(slot, count);
+
+        if (count <= bucketCap[slot]) {
+          statuses.set(p.id, 'playing');
+          if (pairedPartner) {
+            statuses.set(pairedPartner.id, 'playing');
+            pairProcessed.add(pairedPartner.id);
+          }
+        } else if (bonusPairsLeft > 0) {
+          bucketCap[slot] += 2;
+          bonusPairsLeft--;
+          statuses.set(p.id, 'playing');
+          if (pairedPartner) {
+            statuses.set(pairedPartner.id, 'playing');
+            pairProcessed.add(pairedPartner.id);
+          }
+        } else {
+          statuses.set(p.id, 'reserve');
+          if (pairedPartner) {
+            statuses.set(pairedPartner.id, 'reserve');
+            pairProcessed.add(pairedPartner.id);
+          }
+        }
+      }
+    }
+
+    // Players in club with no rank fill remaining club slots
+    for (const club of clubs) {
+      const clubPlaying = eligible.filter(p => p.clubId === club.id && statuses.get(p.id) === 'playing').length;
+      let clubRemaining = slotsPerClub - clubPlaying;
+      const noRank = eligible
+        .filter(p => p.clubId === club.id && p.rankSlot == null)
+        .sort((a, b) => a.timestamp - b.timestamp);
+
+      for (const p of noRank) {
+        if (clubRemaining > 0) {
+          statuses.set(p.id, 'playing');
+          clubRemaining--;
+        } else {
+          statuses.set(p.id, 'reserve');
+        }
+      }
+    }
+
+    // Fully unassigned (no club, no rank) fill remaining global slots
+    const totalPlaying = [...statuses.values()].filter(s => s === 'playing').length;
+    let remaining = capacity - totalPlaying;
+    const unassigned = eligible
+      .filter(p => !p.clubId && p.rankSlot == null)
+      .sort((a, b) => a.timestamp - b.timestamp);
+
+    for (const p of unassigned) {
+      if (remaining > 0) {
+        statuses.set(p.id, 'playing');
+        remaining--;
+      } else {
+        statuses.set(p.id, 'reserve');
+      }
+    }
+
+    // Players with rank but no club — also fill remaining
+    const totalPlaying2 = [...statuses.values()].filter(s => s === 'playing').length;
+    let remaining2 = capacity - totalPlaying2;
+    const rankNoClub = eligible
+      .filter(p => !p.clubId && p.rankSlot != null && !statuses.has(p.id))
+      .sort((a, b) => a.timestamp - b.timestamp);
+
+    for (const p of rankNoClub) {
+      if (remaining2 > 0) {
+        statuses.set(p.id, 'playing');
+        remaining2--;
+      } else {
+        statuses.set(p.id, 'reserve');
+      }
+    }
+
+    return statuses;
+  }
+
+  // Pair-format: capacity is counted in pair slots for formatHasFixedPartners
+  // (club-ranked has its own specialized logic above and falls through to club-americano)
+  if (format && format !== 'club-ranked' && formatHasFixedPartners(format)) {
+    const captainMode = options?.captainMode;
+    const processed = new Set<string>();
+
+    // Build pairs: each confirmed player matched with their partner
+    type Pair = { players: [PlannerRegistration, PlannerRegistration]; pairedAt: number };
+    const pairs: Pair[] = [];
+    const soloPlayers: PlannerRegistration[] = [];
+
+    for (const p of confirmed) {
+      if (processed.has(p.id)) continue;
+      processed.add(p.id);
+
+      const partner = findPartner(p, confirmed);
+      if (partner && !processed.has(partner.id)) {
+        processed.add(partner.id);
+        const pairedAt = Math.min(p.pairedAt ?? p.timestamp, partner.pairedAt ?? partner.timestamp);
+        pairs.push({ players: [p, partner], pairedAt });
+      } else if (!partner) {
+        soloPlayers.push(p);
+      }
+      // If partner already processed (in another pair), treat this as solo
+      else {
+        soloPlayers.push(p);
+      }
+    }
+
+    // Solo players → needs-partner
+    for (const p of soloPlayers) {
+      statuses.set(p.id, 'needs-partner');
+    }
+
+    // Captain mode: unapproved pairs → 'registered'
+    const approvedPairs: Pair[] = [];
+    if (captainMode) {
+      for (const pair of pairs) {
+        const [a, b] = pair.players;
+        if (a.captainApproved !== true || b.captainApproved !== true) {
+          statuses.set(a.id, 'registered');
+          statuses.set(b.id, 'registered');
+        } else {
+          approvedPairs.push(pair);
+        }
+      }
+    } else {
+      approvedPairs.push(...pairs);
+    }
+
+    // Sort eligible pairs by pairedAt (earlier pairs get priority)
+    approvedPairs.sort((a, b) => a.pairedAt - b.pairedAt);
+
+    const pairCapacity = Math.floor(capacity / 2);
+
+    // Club formats: distribute pair capacity per club
+    if (clubs && clubs.length > 0 && confirmed.some(p => p.clubId)) {
+      const perClubPairCap = Math.floor(pairCapacity / clubs.length);
+      const clubPairCounts = new Map<string, number>();
+
+      for (const pair of approvedPairs) {
+        const clubId = pair.players[0].clubId ?? pair.players[1].clubId ?? '';
+        const count = clubPairCounts.get(clubId) ?? 0;
+        if (count < perClubPairCap) {
+          statuses.set(pair.players[0].id, 'playing');
+          statuses.set(pair.players[1].id, 'playing');
+          clubPairCounts.set(clubId, count + 1);
+        } else {
+          statuses.set(pair.players[0].id, 'reserve');
+          statuses.set(pair.players[1].id, 'reserve');
+        }
+      }
+    } else {
+      // Non-club: simple pair capacity
+      let pairsPlaying = 0;
+      for (const pair of approvedPairs) {
+        if (pairsPlaying < pairCapacity) {
+          statuses.set(pair.players[0].id, 'playing');
+          statuses.set(pair.players[1].id, 'playing');
+          pairsPlaying++;
+        } else {
+          statuses.set(pair.players[0].id, 'reserve');
+          statuses.set(pair.players[1].id, 'reserve');
+        }
+      }
+    }
+
+    return statuses;
+  }
+
+  // Club Americano / club-ranked without ranks: per-club capacity
   if (format && formatHasClubs(format) && clubs && clubs.length > 0 && confirmed.some(p => p.clubId)) {
+    const captainMode = options?.captainMode;
+
+    // Captain mode: unapproved players → 'registered', run capacity logic on approved only
+    let eligible = confirmed;
+    if (captainMode) {
+      const approved: PlannerRegistration[] = [];
+      for (const p of confirmed) {
+        if (p.captainApproved !== true) {
+          statuses.set(p.id, 'registered');
+        } else {
+          approved.push(p);
+        }
+      }
+      eligible = approved;
+    }
+
     const perClubCap = Math.floor(capacity / clubs.length);
 
     for (const club of clubs) {
-      const clubPlayers = confirmed
+      const clubPlayers = eligible
         .filter(p => p.clubId === club.id)
         .sort((a, b) => a.timestamp - b.timestamp);
 
@@ -91,7 +334,7 @@ export function getPlayerStatuses(
     // Unassigned (no club) fill remaining slots
     const totalPlaying = [...statuses.values()].filter(s => s === 'playing').length;
     let remaining = capacity - totalPlaying;
-    const unassigned = confirmed
+    const unassigned = eligible
       .filter(p => !p.clubId)
       .sort((a, b) => a.timestamp - b.timestamp);
 

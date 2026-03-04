@@ -110,7 +110,7 @@ test.describe('Telegram Integration', () => {
     // Clean up
     await goBack(setupPage);
     await setupPage.getByText(tournamentName).click();
-    await expect(setupPage.getByText('Share with Players')).toBeVisible({ timeout: 10000 });
+    await expect(setupPage.getByText(/Players \(/)).toBeVisible({ timeout: 10000 });
     await deleteTournament(setupPage);
     await setupPage.close();
   });
@@ -148,7 +148,7 @@ test.describe('Telegram Integration', () => {
     // Clean up
     await goBack(page);
     await page.getByText(tournamentName).click();
-    await expect(page.getByText('Share with Players')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/Players \(/)).toBeVisible({ timeout: 10000 });
     await deleteTournament(page);
   });
 });

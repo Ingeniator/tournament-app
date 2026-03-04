@@ -8,6 +8,7 @@ interface RoundCardProps {
   players: Player[];
   courts: Court[];
   pointsPerMatch: number;
+  scoringMode?: 'points' | 'games' | 'sets' | 'timed';
   readOnly?: boolean;
   editingMatchId?: string;
   format?: TournamentFormat;
@@ -23,7 +24,7 @@ interface RoundCardProps {
   onVeto?: (matchId: string) => void;
 }
 
-export function RoundCard({ round, players, courts, pointsPerMatch, readOnly, editingMatchId, format, maldicionesEnabled, maldicionesHands, teams, onStartEdit, onTapUnscored, onScore, onClear, onCast, onEscudo, onVeto }: RoundCardProps) {
+export function RoundCard({ round, players, courts, pointsPerMatch, scoringMode, readOnly, editingMatchId, format, maldicionesEnabled, maldicionesHands, teams, onStartEdit, onTapUnscored, onScore, onClear, onCast, onEscudo, onVeto }: RoundCardProps) {
   const { t } = useTranslation();
   const name = (id: string) => players.find(p => p.id === id)?.name ?? '?';
   const scoredCount = round.matches.filter(m => m.score).length;
@@ -47,6 +48,7 @@ export function RoundCard({ round, players, courts, pointsPerMatch, readOnly, ed
               players={players}
               courts={courts}
               pointsPerMatch={pointsPerMatch}
+              scoringMode={scoringMode}
               readOnly={readOnly && !isEditing}
               format={format}
               maldicionesEnabled={maldicionesEnabled}

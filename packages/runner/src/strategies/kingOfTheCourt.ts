@@ -483,7 +483,7 @@ function calculateKOTCStandingsInternal(
         else if (score.team2Points < score.team1Points) s.matchesLost += 1;
         else s.matchesDraw += 1;
       }
-      roundTotalPoints += score.team1Points + score.team2Points;
+      roundTotalPoints += score.team1Points + score.team2Points + courtBonus * 4;
       roundPlayersScored += 4;
     }
 

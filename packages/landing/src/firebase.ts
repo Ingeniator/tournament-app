@@ -1,6 +1,6 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app';
-import { getAuth, signInAnonymously, type Auth } from 'firebase/auth';
-import { getDatabase, type Database } from 'firebase/database';
+import { getAuth, signInAnonymously, onAuthStateChanged, type Auth } from 'firebase/auth';
+import { getDatabase, ref, onValue, set, push, type Database } from 'firebase/database';
 
 const config = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -21,6 +21,7 @@ if (firebaseConfigured) {
 }
 
 export { auth, db };
+export { onAuthStateChanged, ref, onValue, set, push };
 export const signIn = () => {
   if (!auth) return Promise.reject(new Error('Firebase not configured'));
   return signInAnonymously(auth);

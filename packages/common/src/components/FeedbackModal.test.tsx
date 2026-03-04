@@ -21,8 +21,8 @@ function Wrapper({ children }: { children: ReactNode }) {
 }
 
 describe('FeedbackModal', () => {
-  let onClose: ReturnType<typeof vi.fn>;
-  let onSubmit: ReturnType<typeof vi.fn>;
+  let onClose: () => void;
+  let onSubmit: (message: string) => Promise<void>;
 
   afterEach(cleanup);
 

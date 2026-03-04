@@ -1,4 +1,5 @@
 import type { TournamentFormat, Court, Club } from './tournament';
+import type { ChaosLevel } from './maldiciones';
 
 export interface PlannerTournament {
   id: string;
@@ -20,6 +21,13 @@ export interface PlannerTournament {
   clubs?: Club[];
   groupLabels?: [string, string];
   rankLabels?: string[];
+  rankColors?: number[];
+  scoringMode?: 'points' | 'games' | 'sets' | 'timed';
+  minutesPerRound?: number;
+  maldiciones?: { enabled: boolean; chaosLevel: ChaosLevel };
+  startDelegateId?: string;
+  startDelegateTelegram?: string;
+  captainMode?: boolean;
 }
 
 export interface TournamentSummary {
@@ -43,6 +51,11 @@ export interface PlannerRegistration {
   group?: 'A' | 'B';
   clubId?: string;
   rankSlot?: number;
+  partnerName?: string;
+  partnerTelegram?: string;
+  addedByPartner?: string | boolean;
+  pairedAt?: number;
+  captainApproved?: boolean;
 }
 
 export interface TournamentStartInfo {

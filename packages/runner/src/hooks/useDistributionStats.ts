@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { Tournament } from '@padel/common';
-import { formatHasClubs } from '@padel/common';
+import { formatHasClubs, formatHasFixedPartners } from '@padel/common';
 import { getStrategy } from '../strategies';
 
 export interface DistributionData {
@@ -30,10 +30,80 @@ function pairKey(a: string, b: string): string {
 }
 
 /**
+ * Build player → teamId and player → rankSlot maps for club formats
+ * with fixed partners or slot-based matching.
+ */
+function buildClubPlayerMaps(tournament: Tournament) {
+  const format = tournament.config.format;
+  const isFixed = formatHasFixedPartners(format);
+  const isSlotBased = format === 'club-ranked';
+
+  const playerTeam = new Map<string, string>();
+  const playerSlot = new Map<string, number>();
+
+  if ((isFixed || isSlotBased) && tournament.teams?.length) {
+    const clubSlotIdx = new Map<string, number>();
+    const unavailableIds = new Set(
+      tournament.players.filter(p => p.unavailable).map(p => p.id),
+    );
+    for (const team of tournament.teams) {
+      if (unavailableIds.has(team.player1Id) || unavailableIds.has(team.player2Id)) continue;
+      const clubId = tournament.players.find(p => p.id === team.player1Id)?.clubId;
+      if (!clubId) continue;
+
+      playerTeam.set(team.player1Id, team.id);
+      playerTeam.set(team.player2Id, team.id);
+
+      if (isSlotBased) {
+        const slot = clubSlotIdx.get(clubId) ?? 0;
+        clubSlotIdx.set(clubId, slot + 1);
+        playerSlot.set(team.player1Id, slot);
+        playerSlot.set(team.player2Id, slot);
+      }
+    }
+  }
+
+  return { isFixed, isSlotBased, playerTeam, playerSlot };
+}
+
+/**
+ * Build the set of club fixture pairs for the given number of rounds.
+ */
+function buildFixtureClubPairs(clubIds: string[], numRounds: number): Set<string> {
+  const isOdd = clubIds.length % 2 !== 0;
+  const ids = [...clubIds];
+  if (isOdd) ids.push('__BYE__');
+  const n = ids.length;
+  const fixtureClubPairs = new Set<string>();
+
+  const fixtureRounds = Math.min(numRounds, n - 1);
+  for (let r = 0; r < fixtureRounds; r++) {
+    for (let i = 0; i < n / 2; i++) {
+      const home = ids[i];
+      const away = ids[n - 1 - i];
+      if (home !== '__BYE__' && away !== '__BYE__') {
+        fixtureClubPairs.add(pairKey(home, away));
+      }
+    }
+    const last = ids.pop()!;
+    ids.splice(1, 0, last);
+  }
+  // Handle wrap-around for rounds beyond one cycle
+  if (numRounds > n - 1) {
+    for (let i = 0; i < clubIds.length; i++) {
+      for (let j = i + 1; j < clubIds.length; j++) {
+        fixtureClubPairs.add(pairKey(clubIds[i], clubIds[j]));
+      }
+    }
+  }
+  return fixtureClubPairs;
+}
+
+/**
  * Compute how many unique player pairs can theoretically share a court.
  * In unconstrained formats, this is C(n,2) = all pairs.
- * In club formats, only pairs within the same club (partners) or from clubs
- * that face each other in a fixture (opponents) are reachable.
+ * In club formats, reachability depends on fixtures, fixed partners, and
+ * slot-based matching (club-ranked: rank 1 only meets rank 1, etc.).
  * In cross-group formats, all pairs are reachable (same-group as opponents,
  * cross-group as partners).
  */
@@ -45,55 +115,45 @@ function computeReachablePairs(
   const totalPairs = (activePlayerIds.length * (activePlayerIds.length - 1)) / 2;
   const format = tournament.config.format;
 
-  // Club formats: only same-club + fixture-connected cross-club pairs are reachable
+  // Club formats: reachability constrained by fixtures, teams, and rank slots
   if (formatHasClubs(format) && tournament.clubs?.length) {
-    const clubs = tournament.clubs;
     const playerClub = new Map<string, string>();
     for (const p of tournament.players) {
       if (p.clubId && !p.unavailable) playerClub.set(p.id, p.clubId);
     }
 
-    // Build set of club pairs that have a fixture in the played rounds
-    const clubIds = clubs.map(c => c.id);
-    const isOdd = clubIds.length % 2 !== 0;
-    const ids = [...clubIds];
-    if (isOdd) ids.push('__BYE__');
-    const n = ids.length;
-    const fixtureClubPairs = new Set<string>();
+    const clubIds = tournament.clubs.map(c => c.id);
+    const fixtureClubPairs = buildFixtureClubPairs(clubIds, numRounds);
+    const { isFixed, isSlotBased, playerTeam, playerSlot } = buildClubPlayerMaps(tournament);
 
-    const fixtureRounds = Math.min(numRounds, n - 1);
-    for (let r = 0; r < fixtureRounds; r++) {
-      for (let i = 0; i < n / 2; i++) {
-        const home = ids[i];
-        const away = ids[n - 1 - i];
-        if (home !== '__BYE__' && away !== '__BYE__') {
-          fixtureClubPairs.add(pairKey(home, away));
-        }
-      }
-      const last = ids.pop()!;
-      ids.splice(1, 0, last);
-    }
-    // Handle wrap-around for rounds beyond one cycle
-    if (numRounds > n - 1) {
-      // All club pairs are covered in a full cycle
-      for (let i = 0; i < clubIds.length; i++) {
-        for (let j = i + 1; j < clubIds.length; j++) {
-          fixtureClubPairs.add(pairKey(clubIds[i], clubIds[j]));
-        }
-      }
-    }
-
-    // Count reachable pairs: same-club + cross-club with fixture
     let reachable = 0;
     for (let i = 0; i < activePlayerIds.length; i++) {
       for (let j = i + 1; j < activePlayerIds.length; j++) {
         const c1 = playerClub.get(activePlayerIds[i]);
         const c2 = playerClub.get(activePlayerIds[j]);
         if (!c1 || !c2) continue;
+
         if (c1 === c2) {
-          reachable++; // same-club partners
+          // Same club: in fixed-partner formats, only same-team pairs share a court
+          // (clubs never play against themselves). In rotating formats, all same-club
+          // pairs can be partners in different rounds.
+          if (isFixed) {
+            if (playerTeam.get(activePlayerIds[i]) === playerTeam.get(activePlayerIds[j])) {
+              reachable++;
+            }
+          } else {
+            reachable++;
+          }
         } else if (fixtureClubPairs.has(pairKey(c1, c2))) {
-          reachable++; // cross-club opponents in a fixture
+          // Cross-club with fixture: in slot-based formats (club-ranked), only
+          // same-rank-slot teams play each other (rank 1 vs rank 1, etc.).
+          if (isSlotBased) {
+            if (playerSlot.get(activePlayerIds[i]) === playerSlot.get(activePlayerIds[j])) {
+              reachable++;
+            }
+          } else {
+            reachable++;
+          }
         }
       }
     }
@@ -118,47 +178,34 @@ function buildUnreachableSet(
 
   if (!formatHasClubs(format) || !tournament.clubs?.length) return unreachable;
 
-  const clubs = tournament.clubs;
   const playerClub = new Map<string, string>();
   for (const p of tournament.players) {
     if (p.clubId && !p.unavailable) playerClub.set(p.id, p.clubId);
   }
 
-  // Build fixture club pairs (same logic as computeReachablePairs)
-  const clubIds = clubs.map(c => c.id);
-  const isOdd = clubIds.length % 2 !== 0;
-  const ids = [...clubIds];
-  if (isOdd) ids.push('__BYE__');
-  const n = ids.length;
-  const fixtureClubPairs = new Set<string>();
-
-  const fixtureRounds = Math.min(numRounds, n - 1);
-  for (let r = 0; r < fixtureRounds; r++) {
-    for (let i = 0; i < n / 2; i++) {
-      const home = ids[i];
-      const away = ids[n - 1 - i];
-      if (home !== '__BYE__' && away !== '__BYE__') {
-        fixtureClubPairs.add(pairKey(home, away));
-      }
-    }
-    const last = ids.pop()!;
-    ids.splice(1, 0, last);
-  }
-  if (numRounds > n - 1) {
-    for (let i = 0; i < clubIds.length; i++) {
-      for (let j = i + 1; j < clubIds.length; j++) {
-        fixtureClubPairs.add(pairKey(clubIds[i], clubIds[j]));
-      }
-    }
-  }
+  const clubIds = tournament.clubs.map(c => c.id);
+  const fixtureClubPairs = buildFixtureClubPairs(clubIds, numRounds);
+  const { isFixed, isSlotBased, playerTeam, playerSlot } = buildClubPlayerMaps(tournament);
 
   for (let i = 0; i < activePlayerIds.length; i++) {
     for (let j = i + 1; j < activePlayerIds.length; j++) {
       const c1 = playerClub.get(activePlayerIds[i]);
       const c2 = playerClub.get(activePlayerIds[j]);
       if (!c1 || !c2) continue;
-      if (c1 !== c2 && !fixtureClubPairs.has(pairKey(c1, c2))) {
-        unreachable.add(pairKey(activePlayerIds[i], activePlayerIds[j]));
+
+      if (c1 === c2) {
+        // Same club: in fixed-partner formats, cross-team pairs never share a court
+        if (isFixed && playerTeam.get(activePlayerIds[i]) !== playerTeam.get(activePlayerIds[j])) {
+          unreachable.add(pairKey(activePlayerIds[i], activePlayerIds[j]));
+        }
+      } else {
+        // Different clubs: no fixture → unreachable
+        if (!fixtureClubPairs.has(pairKey(c1, c2))) {
+          unreachable.add(pairKey(activePlayerIds[i], activePlayerIds[j]));
+        } else if (isSlotBased && playerSlot.get(activePlayerIds[i]) !== playerSlot.get(activePlayerIds[j])) {
+          // Slot-based matching: different rank slots → unreachable
+          unreachable.add(pairKey(activePlayerIds[i], activePlayerIds[j]));
+        }
       }
     }
   }
@@ -356,9 +403,14 @@ export function useDistributionStats(tournament: Tournament | null): Distributio
       : Math.max(0, Math.min(totalPairs, totalPartnerSlots - totalPairs));
 
     // Ideal never-played: each match creates C(4,2)=6 unique court-mate pair slots.
+    // For fixed-partner formats, 2 of those 6 are within-team pairs that repeat
+    // every match, so each match effectively covers only 4 new cross-team pairs
+    // plus a fixed number of always-covered within-team pairs.
     // For club/group formats, not all pairs can theoretically share a court,
     // so we count only reachable pairs for the ideal calculation.
-    const maxCoveredPairs = totalRounds * numCourts * 6;
+    const maxCoveredPairs = strategy.hasFixedPartners
+      ? fixedPairKeys.size + totalMatches * 4
+      : totalRounds * numCourts * 6;
     const reachablePairs = computeReachablePairs(tournament, activeList, rounds.length);
     const idealNeverPlayed = Math.max(0, reachablePairs - maxCoveredPairs);
 

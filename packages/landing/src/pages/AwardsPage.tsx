@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { AppFooter, FeedbackModal } from '@padel/common';
 import styles from './Article.module.css';
 
@@ -77,7 +77,6 @@ function TierSection({ label, tierClass, awards }: { label: string; tierClass: s
 
 export function AwardsPage({ onFeedback }: Props) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  useEffect(() => { document.title = '41 Tournament Awards — The Ceremony Everyone Talks About | PadelDay'; }, []);
 
   return (
     <>

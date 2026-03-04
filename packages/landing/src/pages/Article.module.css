@@ -153,13 +153,16 @@
 }
 
 /* Comparison table */
+.tableWrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: var(--space-xl);
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: var(--space-xl);
   font-size: var(--text-sm);
-  overflow-x: auto;
-  display: block;
 }
 
 .table th,
@@ -234,12 +237,38 @@
   margin-top: var(--space-xs);
 }
 
+/* ── Small phones ── */
+@media (max-width: 374px) {
+  .article {
+    padding: var(--space-xl) var(--space-md);
+  }
+
+  .article h1 {
+    font-size: var(--text-2xl);
+  }
+
+  .article h2 {
+    font-size: var(--text-xl);
+  }
+
+  .lead {
+    font-size: var(--text-base);
+  }
+}
+
 @media (min-width: 768px) {
   .cardGrid {
     grid-template-columns: repeat(2, 1fr);
   }
+}
 
-  .table {
-    display: table;
+/* ── Large desktops ── */
+@media (min-width: 1200px) {
+  .article {
+    max-width: 800px;
+  }
+
+  .cardGrid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }

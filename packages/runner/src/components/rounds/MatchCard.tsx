@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import type { Match, MatchScore, Player, Court, TournamentFormat, MaldicionesHands, Team } from '@padel/common';
 import { useTranslation } from '@padel/common';
 import { ScoreInput } from './ScoreInput';
@@ -13,6 +13,7 @@ interface MatchCardProps {
   players: Player[];
   courts: Court[];
   pointsPerMatch: number;
+  scoringMode?: 'points' | 'games' | 'sets' | 'timed';
   readOnly?: boolean;
   format?: TournamentFormat;
   maldicionesEnabled?: boolean;
@@ -26,7 +27,7 @@ interface MatchCardProps {
   onVeto?: () => void;
 }
 
-export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, format, maldicionesEnabled, maldicionesHands, teams, onScore, onClear, onTapScore, onCast, onEscudo, onVeto }: MatchCardProps) {
+export const MatchCard = memo(function MatchCard({ match, players, courts, pointsPerMatch, scoringMode, readOnly, format, maldicionesEnabled, maldicionesHands, teams, onScore, onClear, onTapScore, onCast, onEscudo, onVeto }: MatchCardProps) {
   const { t } = useTranslation();
   const [pickingSide, setPickingSide] = useState<'team1' | 'team2' | null>(null);
 
@@ -117,6 +118,7 @@ export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, fo
               <ScoreInput
                 score={match.score}
                 pointsPerMatch={pointsPerMatch}
+                scoringMode={scoringMode}
                 onSave={onScore}
                 onClear={onClear}
               />
@@ -174,6 +176,7 @@ export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, fo
           <ScoreInput
             score={match.score}
             pointsPerMatch={pointsPerMatch}
+            scoringMode={scoringMode}
             onSave={onScore}
             onClear={onClear}
           />
@@ -198,4 +201,4 @@ export function MatchCard({ match, players, courts, pointsPerMatch, readOnly, fo
       )}
     </div>
   );
-}
+});

@@ -1,4 +1,4 @@
-import { ref, get, set } from 'firebase/database';
+import { ref, get, update as firebaseUpdate } from 'firebase/database';
 import { db } from '../firebase';
 
 export async function linkTournamentToChat(
@@ -23,12 +23,17 @@ export async function linkTournamentToChat(
   const nameSnap = await get(ref(db, `users/${t.organizerId}/name`));
   const organizerName = nameSnap.exists() ? (nameSnap.val() as string) : undefined;
 
-  await set(entryRef, {
+  const updates: Record<string, unknown> = {};
+  updates[`chatRooms/${chatInstance}/tournaments/${tournamentId}`] = {
     name: t.name,
     ...(t.date && { date: t.date }),
     code: t.code,
+    organizerId: t.organizerId,
     ...(organizerName && { organizerName }),
     linkedAt: Date.now(),
     linkedBy,
-  });
+  };
+  // Reverse mapping so deletion can find all linked chat rooms
+  updates[`tournaments/${tournamentId}/chatRooms/${chatInstance}`] = true;
+  await firebaseUpdate(ref(db), updates);
 }

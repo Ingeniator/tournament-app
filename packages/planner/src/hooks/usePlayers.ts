@@ -3,6 +3,7 @@ import { ref, get, set, update, onValue } from 'firebase/database';
 import type { PlannerRegistration } from '@padel/common';
 import { generateId } from '@padel/common';
 import { db } from '../firebase';
+import { resolvePartnerUpdate, type PartnerConstraints, type PartnerRejection } from '../utils/partnerLogic';
 
 export function usePlayers(tournamentId: string | null) {
   const [players, setPlayers] = useState<PlannerRegistration[]>([]);
@@ -28,7 +29,7 @@ export function usePlayers(tournamentId: string | null) {
     return unsubscribe;
   }, [tournamentId]);
 
-  const registerPlayer = useCallback(async (name: string, uid: string, telegramUsername?: string) => {
+  const registerPlayer = useCallback(async (name: string, uid: string, telegramUsername?: string, extras?: { group?: 'A' | 'B'; clubId?: string; rankSlot?: number }) => {
     if (!tournamentId || !db) return;
 
     // Prevent duplicate: skip if this UID is already registered
@@ -43,6 +44,9 @@ export function usePlayers(tournamentId: string | null) {
       name,
       timestamp: Date.now(),
       ...(telegramUsername ? { telegramUsername } : {}),
+      ...(extras?.group ? { group: extras.group } : {}),
+      ...(extras?.clubId ? { clubId: extras.clubId } : {}),
+      ...(extras?.rankSlot != null ? { rankSlot: extras.rankSlot } : {}),
     };
 
     // Atomic write: player record + per-device index + per-person index (if Telegram)
@@ -81,21 +85,33 @@ export function usePlayers(tournamentId: string | null) {
     const playerSnap = await get(ref(db, `tournaments/${tournamentId}/players/${uid}`));
     const tgUsername = playerSnap.exists() ? playerSnap.val()?.telegramUsername : undefined;
 
-    // Update confirmed flag on player record
-    await update(ref(db, `tournaments/${tournamentId}/players/${uid}`), {
-      confirmed,
-      ...(confirmed ? { timestamp: Date.now() } : {}),
-    });
+    // Build a single atomic update for partner unlink + confirmed flag + indexes
+    const atomicUpdates: Record<string, unknown> = {};
 
-    // Update registration indexes so the tournament appears/disappears from the list
-    const indexUpdates: Record<string, boolean | null> = {
-      [`users/${uid}/registrations/${tournamentId}`]: confirmed ? true : null,
-    };
-    if (tgUsername) {
-      indexUpdates[`telegramUsers/${tgUsername}/registrations/${tournamentId}`] = confirmed ? true : null;
+    // When cancelling, disconnect the partner link (bidirectional clear)
+    if (!confirmed) {
+      const { writes } = resolvePartnerUpdate(uid, null, null, players);
+      for (const w of writes) {
+        for (const [field, value] of Object.entries(w.fields)) {
+          atomicUpdates[`tournaments/${tournamentId}/players/${w.playerId}/${field}`] = value;
+        }
+      }
     }
-    await update(ref(db), indexUpdates);
-  }, [tournamentId]);
+
+    // Confirmed flag on player record
+    atomicUpdates[`tournaments/${tournamentId}/players/${uid}/confirmed`] = confirmed;
+    if (confirmed) {
+      atomicUpdates[`tournaments/${tournamentId}/players/${uid}/timestamp`] = Date.now();
+    }
+
+    // Registration indexes
+    atomicUpdates[`users/${uid}/registrations/${tournamentId}`] = confirmed ? true : null;
+    if (tgUsername) {
+      atomicUpdates[`telegramUsers/${tgUsername}/registrations/${tournamentId}`] = confirmed ? true : null;
+    }
+
+    await update(ref(db), atomicUpdates);
+  }, [tournamentId, players]);
 
   const addPlayer = useCallback(async (name: string, telegramUsername?: string) => {
     if (!tournamentId || !db) return;
@@ -126,11 +142,27 @@ export function usePlayers(tournamentId: string | null) {
   const toggleConfirmed = useCallback(async (playerId: string, currentConfirmed: boolean) => {
     if (!tournamentId || !db) return;
     const confirmed = !currentConfirmed;
-    await update(ref(db, `tournaments/${tournamentId}/players/${playerId}`), {
-      confirmed,
-      ...(confirmed ? { timestamp: Date.now() } : {}),
-    });
-  }, [tournamentId]);
+
+    // Atomic update: partner unlink + confirmed flag
+    const atomicUpdates: Record<string, unknown> = {};
+
+    // When cancelling, disconnect the partner link (bidirectional clear)
+    if (!confirmed) {
+      const { writes } = resolvePartnerUpdate(playerId, null, null, players);
+      for (const w of writes) {
+        for (const [field, value] of Object.entries(w.fields)) {
+          atomicUpdates[`tournaments/${tournamentId}/players/${w.playerId}/${field}`] = value;
+        }
+      }
+    }
+
+    atomicUpdates[`tournaments/${tournamentId}/players/${playerId}/confirmed`] = confirmed;
+    if (confirmed) {
+      atomicUpdates[`tournaments/${tournamentId}/players/${playerId}/timestamp`] = Date.now();
+    }
+
+    await update(ref(db), atomicUpdates);
+  }, [tournamentId, players]);
 
   const updatePlayerName = useCallback(async (playerId: string, name: string) => {
     if (!tournamentId || !db) return;
@@ -165,6 +197,29 @@ export function usePlayers(tournamentId: string | null) {
     });
   }, [tournamentId]);
 
+  const updatePlayerPartner = useCallback(async (playerId: string, partnerName: string | null, partnerTelegram: string | null, constraints?: PartnerConstraints): Promise<PartnerRejection | null> => {
+    if (!tournamentId || !db) return null;
+    const { writes, newPlayer, rejected } = resolvePartnerUpdate(playerId, partnerName, partnerTelegram, players, constraints);
+
+    if (rejected) return rejected;
+
+    // Flatten all partner writes into a single atomic update
+    const atomicUpdates: Record<string, unknown> = {};
+    for (const w of writes) {
+      for (const [field, value] of Object.entries(w.fields)) {
+        atomicUpdates[`tournaments/${tournamentId}/players/${w.playerId}/${field}`] = value;
+      }
+    }
+    if (newPlayer) {
+      const partnerId = generateId();
+      atomicUpdates[`tournaments/${tournamentId}/players/${partnerId}`] = newPlayer.data;
+    }
+    if (Object.keys(atomicUpdates).length > 0) {
+      await update(ref(db), atomicUpdates);
+    }
+    return null;
+  }, [tournamentId, players]);
+
   /**
    * Claim a registration that was manually added by the organizer with a
    * telegramUsername. Moves the player record from the random orphan ID to
@@ -185,9 +240,11 @@ export function usePlayers(tournamentId: string | null) {
     if (existing.exists()) return;
 
     // Move player record atomically (delete orphan + create under real UID)
+    // Clear addedByPartner — the player has claimed their spot
+    const { addedByPartner: _, ...cleanData } = playerData;
     await update(ref(db), {
       [`tournaments/${tournamentId}/players/${orphanId}`]: null,
-      [`tournaments/${tournamentId}/players/${newUid}`]: { ...playerData, telegramUsername },
+      [`tournaments/${tournamentId}/players/${newUid}`]: { ...cleanData, telegramUsername },
     });
 
     // Set up indexes separately to avoid cross-node permission issues
@@ -195,9 +252,16 @@ export function usePlayers(tournamentId: string | null) {
     await set(ref(db, `telegramUsers/${telegramUsername}/registrations/${tournamentId}`), true);
   }, [tournamentId]);
 
+  const updateCaptainApproval = useCallback(async (playerId: string, approved: boolean) => {
+    if (!tournamentId || !db) return;
+    await update(ref(db, `tournaments/${tournamentId}/players/${playerId}`), {
+      captainApproved: approved,
+    });
+  }, [tournamentId]);
+
   const isRegistered = useCallback((uid: string): boolean => {
     return players.some(p => p.id === uid);
   }, [players]);
 
-  return { players, loading, registerPlayer, removePlayer, updateConfirmed, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, updatePlayerRank, isRegistered, claimOrphanRegistration };
+  return { players, loading, registerPlayer, removePlayer, updateConfirmed, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, updatePlayerRank, updatePlayerPartner, updateCaptainApproval, isRegistered, claimOrphanRegistration };
 }

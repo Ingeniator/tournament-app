@@ -1,17 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
-import { ref, push, set, onValue } from 'firebase/database';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { ErrorBoundary, I18nProvider, useTheme, isValidSkin, DEFAULT_SKIN } from '@padel/common';
 import type { SkinId } from '@padel/common';
 import { translations } from './i18n';
-import { auth, db, signIn, firebaseConfigured } from './firebase';
+import { useFirebase } from './useFirebase';
 import { LandingPage } from './pages/LandingPage';
-import { FormatsPage } from './pages/FormatsPage';
-import { AmericanoPage } from './pages/AmericanoPage';
-import { MexicanoPage } from './pages/MexicanoPage';
-import { AwardsPage } from './pages/AwardsPage';
-import { MaldicionesPage } from './pages/MaldicionesPage';
-import { ClubPage } from './pages/ClubPage';
+
+const FormatsPage = lazy(() => import('./pages/FormatsPage').then(m => ({ default: m.FormatsPage })));
+const AmericanoPage = lazy(() => import('./pages/AmericanoPage').then(m => ({ default: m.AmericanoPage })));
+const MexicanoPage = lazy(() => import('./pages/MexicanoPage').then(m => ({ default: m.MexicanoPage })));
+const AwardsPage = lazy(() => import('./pages/AwardsPage').then(m => ({ default: m.AwardsPage })));
+const MaldicionesPage = lazy(() => import('./pages/MaldicionesPage').then(m => ({ default: m.MaldicionesPage })));
+const ClubPage = lazy(() => import('./pages/ClubPage').then(m => ({ default: m.ClubPage })));
 
 declare global {
   interface Window {
@@ -52,24 +51,34 @@ function AppContent() {
   const { skin, setSkin: rawSetSkin } = useTheme(initialSkin);
   const [uid, setUid] = useState<string | null>(null);
   const [page] = useState(getPage);
+  const { firebase, initFirebase } = useFirebase();
 
-  // Auth
+  const isLandingPage = page === '/';
+
+  // Landing page: load Firebase eagerly for skin sync
   useEffect(() => {
-    if (!firebaseConfigured || !auth) return;
-    const unsub = onAuthStateChanged(auth, (user) => {
+    if (isLandingPage) {
+      initFirebase();
+    }
+  }, [isLandingPage, initFirebase]);
+
+  // Auth — only after Firebase is loaded
+  useEffect(() => {
+    if (!firebase) return;
+    const unsub = firebase.onAuthStateChanged(firebase.auth, (user) => {
       if (user) {
         setUid(user.uid);
       } else {
-        signIn().catch(() => {});
+        firebase.signIn().catch(() => {});
       }
     });
     return unsub;
-  }, []);
+  }, [firebase]);
 
   // Read skin from Firebase (source of truth)
   useEffect(() => {
-    if (!uid || !db) return;
-    const unsub = onValue(ref(db, `users/${uid}/skin`), (snapshot) => {
+    if (!uid || !firebase) return;
+    const unsub = firebase.onValue(firebase.ref(firebase.db, `users/${uid}/skin`), (snapshot) => {
       const val = snapshot.val() as string | null;
       if (val && isValidSkin(val)) {
         rawSetSkin(val);
@@ -77,15 +86,15 @@ function AppContent() {
       }
     });
     return unsub;
-  }, [uid, rawSetSkin]);
+  }, [uid, rawSetSkin, firebase]);
 
   const setSkin = useCallback((s: SkinId) => {
     rawSetSkin(s);
     try { localStorage.setItem(SKIN_KEY, s); } catch {}
-    if (uid && db) {
-      set(ref(db, `users/${uid}/skin`), s).catch(() => {});
+    if (uid && firebase) {
+      firebase.set(firebase.ref(firebase.db, `users/${uid}/skin`), s).catch(() => {});
     }
-  }, [rawSetSkin, uid]);
+  }, [rawSetSkin, uid, firebase]);
 
   const [telegramName, setTelegramName] = useState<string | null>(null);
 
@@ -94,7 +103,6 @@ function AppContent() {
     if (!tg) return;
     tg.ready();
 
-    // Redirect to /plan when opened via Telegram with a start_param (tournament or event link)
     const startParam = tg.initDataUnsafe?.start_param;
     if (startParam) {
       window.location.href = '/plan';
@@ -107,26 +115,26 @@ function AppContent() {
     }
   }, []);
 
-  const handleFeedback = async (message: string) => {
-    if (!db) return;
-    const feedbackRef = push(ref(db, 'feedback'));
-    await set(feedbackRef, { message, source: 'landing', createdAt: Date.now() });
-  };
+  const handleFeedback = useCallback(async (message: string) => {
+    const fb = await initFirebase();
+    if (!fb) return;
+    const feedbackRef = fb.push(fb.ref(fb.db, 'feedback'));
+    await fb.set(feedbackRef, { message, source: 'landing', createdAt: Date.now() });
+  }, [initFirebase]);
 
-  // Route to SEO pages
   switch (page) {
     case '/formats':
-      return <FormatsPage onFeedback={handleFeedback} />;
+      return <Suspense fallback={null}><FormatsPage onFeedback={handleFeedback} /></Suspense>;
     case '/americano':
-      return <AmericanoPage onFeedback={handleFeedback} />;
+      return <Suspense fallback={null}><AmericanoPage onFeedback={handleFeedback} /></Suspense>;
     case '/mexicano':
-      return <MexicanoPage onFeedback={handleFeedback} />;
+      return <Suspense fallback={null}><MexicanoPage onFeedback={handleFeedback} /></Suspense>;
     case '/awards':
-      return <AwardsPage onFeedback={handleFeedback} />;
+      return <Suspense fallback={null}><AwardsPage onFeedback={handleFeedback} /></Suspense>;
     case '/maldiciones':
-      return <MaldicionesPage onFeedback={handleFeedback} />;
+      return <Suspense fallback={null}><MaldicionesPage onFeedback={handleFeedback} /></Suspense>;
     case '/club':
-      return <ClubPage onFeedback={handleFeedback} />;
+      return <Suspense fallback={null}><ClubPage onFeedback={handleFeedback} /></Suspense>;
     default:
       return (
         <LandingPage

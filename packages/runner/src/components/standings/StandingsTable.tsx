@@ -1,5 +1,6 @@
+import { memo } from 'react';
 import type { StandingsEntry } from '@padel/common';
-import { useTranslation } from '@padel/common';
+import { useTranslation, shortLabel } from '@padel/common';
 import styles from './StandingsTable.module.css';
 
 export interface GroupInfo {
@@ -25,7 +26,7 @@ interface StandingsTableProps {
   rankLabelInfo?: RankLabelInfo;
 }
 
-export function StandingsTable({ standings, plannedGames, groupInfo, clubInfo, rankLabelInfo }: StandingsTableProps) {
+export const StandingsTable = memo(function StandingsTable({ standings, plannedGames, groupInfo, clubInfo, rankLabelInfo }: StandingsTableProps) {
   const { t } = useTranslation();
 
   if (standings.length === 0) {
@@ -86,7 +87,7 @@ export function StandingsTable({ standings, plannedGames, groupInfo, clubInfo, r
                           <span className={styles.pairSecondary}>{nameParts[1]}</span>
                         </span>
                         {rankLabel && (
-                          <span className={styles.rankBadge}>{rankLabel}</span>
+                          <span className={styles.rankBadge}>{shortLabel(rankLabel)}</span>
                         )}
                       </div>
                     </td>
@@ -123,4 +124,4 @@ export function StandingsTable({ standings, plannedGames, groupInfo, clubInfo, r
     </table>
     </div>
   );
-}
+});

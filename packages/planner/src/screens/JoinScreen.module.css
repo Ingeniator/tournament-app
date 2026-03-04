@@ -238,6 +238,16 @@
 
 .playerName {
   flex: 1;
+  min-width: 0;
+}
+
+.playerBadges {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+  width: 90px;
 }
 
 .playerLink {
@@ -253,6 +263,18 @@
   font-size: var(--text-3xl);
   color: var(--color-warning);
   margin-bottom: var(--space-sm);
+}
+
+.captainInfo {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-sm);
+}
+
+.captainInfo a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 600;
 }
 
 .calendarBtn {
@@ -310,26 +332,30 @@
 }
 
 .groupBadge {
-  display: inline-block;
+  display: block;
   font-size: 11px;
   font-weight: 600;
   background-color: var(--color-primary);
   color: white;
   border-radius: var(--radius-full);
   padding: 1px 8px;
-  margin-left: var(--space-sm);
-  vertical-align: middle;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .clubBadge {
-  display: inline-block;
+  display: block;
   font-size: 11px;
   font-weight: 600;
-  color: white;
+  color: var(--color-text);
   border-radius: var(--radius-full);
   padding: 1px 8px;
-  margin-left: var(--space-sm);
-  vertical-align: middle;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Group picker (Mixicano) */
@@ -382,117 +408,152 @@
 }
 
 /* Club picker (Club Americano) */
-.clubPicker {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-sm);
-  width: 100%;
-}
-
-.clubPickerLabel {
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-}
-
-.clubOptions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-  justify-content: center;
-}
-
-.clubOption {
-  padding: var(--space-sm) var(--space-md);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  border: 2px solid var(--club-color, var(--color-border));
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--club-color, var(--color-text));
-  cursor: pointer;
-}
-
-.clubOption:active {
-  opacity: 0.7;
-}
-
-.clubOptionActive {
-  padding: var(--space-sm) var(--space-md);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  border: 2px solid var(--club-color, var(--color-primary));
-  border-radius: var(--radius-md);
-  background-color: var(--club-color, var(--color-primary));
-  color: white;
-  cursor: pointer;
-}
-
-.clubOptionActive:active {
-  opacity: 0.8;
-}
-
-/* Rank picker (Club Ranked) */
+.clubPicker,
 .rankPicker {
+  width: 100%;
+}
+
+.partnerPicker {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: var(--space-sm);
   width: 100%;
 }
 
-.rankPickerLabel {
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-}
-
-.rankOptions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-  justify-content: center;
-}
-
-.rankOption {
+.joinSelect {
+  width: 100%;
   padding: var(--space-sm) var(--space-md);
   font-size: var(--text-sm);
   font-weight: 600;
-  border: 2px solid var(--color-primary);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--color-primary);
+  background-color: var(--color-surface-raised);
+  color: var(--color-text);
   cursor: pointer;
+  appearance: auto;
 }
 
-.rankOption:active {
-  opacity: 0.7;
+.joinSelect option {
+  color: black;
+  background-color: white;
 }
 
-.rankOptionActive {
-  padding: var(--space-sm) var(--space-md);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  border: 2px solid var(--color-primary);
-  border-radius: var(--radius-md);
-  background-color: var(--color-primary);
-  color: white;
-  cursor: pointer;
-}
-
-.rankOptionActive:active {
-  opacity: 0.8;
+.joinSelect:focus {
+  outline: none;
+  border-color: var(--color-primary);
 }
 
 .rankBadge {
-  display: inline-block;
+  display: block;
   font-size: 11px;
   font-weight: 600;
-  background-color: var(--color-primary);
-  color: white;
   border-radius: var(--radius-full);
   padding: 1px 8px;
-  margin-left: var(--space-sm);
-  vertical-align: middle;
+  border: 1px solid transparent;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Status sections for pair formats */
+.statusSection {
+  margin-top: var(--space-md);
+}
+
+.statusSection:first-child {
+  margin-top: 0;
+}
+
+.statusSectionHeader {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: var(--space-xs) 0;
+  margin-bottom: var(--space-xs);
+}
+
+.pairGroup {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: 2px 0;
+  margin-bottom: var(--space-xs);
+}
+
+.pairGroup .playerItem:first-child {
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.pairGroup .playerItem:last-child {
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+/* Captain approve/reject buttons */
+.captainActions {
+  display: flex;
+  gap: var(--space-xs);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Captain link button */
+.linkBtn {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  padding: var(--space-xs);
+  cursor: pointer;
+  opacity: 0.5;
+  background: none;
+  border: none;
+}
+
+.linkBtn:active { opacity: 1; }
+
+.linkBtnActive {
+  font-size: var(--text-sm);
+  color: var(--color-primary);
+  padding: var(--space-xs);
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.linkForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.linkLabel {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.linkInput {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background-color: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+.linkInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.linkInput::placeholder {
+  color: var(--color-text-muted);
+}
+
+.linkActions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: flex-end;
 }
 
 .toast {

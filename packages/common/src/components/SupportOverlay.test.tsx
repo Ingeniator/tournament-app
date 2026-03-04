@@ -42,7 +42,7 @@ function Wrapper({ children }: { children: ReactNode }) {
 }
 
 describe('SupportOverlay', () => {
-  let onClose: ReturnType<typeof vi.fn>;
+  let onClose: () => void;
 
   afterEach(cleanup);
 

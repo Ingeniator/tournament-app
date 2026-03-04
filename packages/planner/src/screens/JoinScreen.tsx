@@ -1,21 +1,403 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { Button, Card, getClubColor, Toast, useToast, useTranslation, getPresetByFormat, formatHasGroups, formatHasClubs } from '@padel/common';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { Button, Card, Modal, NO_COLOR, getClubColor, getRankColor, shortLabel, Toast, useToast, useTranslation, getPresetByFormat, formatHasGroups, formatHasClubs, formatHasFixedPartners } from '@padel/common';
+import type { PlannerRegistration, TournamentFormat, Club } from '@padel/common';
+import type { PartnerRejection, PartnerConstraints } from '../utils/partnerLogic';
+import { findPartner, wouldBreakPartnerLink } from '../utils/partnerLogic';
+import { rejectionMessage } from '../utils/partnerRejectionMessage';
 import { usePlanner } from '../state/PlannerContext';
-import { getPlayerStatuses } from '../utils/playerStatus';
+import { getPlayerStatuses, type PlayerStatus } from '../utils/playerStatus';
 import { downloadICS } from '../utils/icsExport';
 import { exportRunnerTournamentJSON } from '../utils/exportToRunner';
 import { restoreFromBackup } from '../utils/restoreFromBackup';
 import { useStartGuard } from '../hooks/useStartGuard';
 import { StartWarningModal } from '../components/StartWarningModal';
+import { validateLaunch } from '../utils/validateLaunch';
+import { asyncConfirm } from '../utils/confirm';
 import styles from './JoinScreen.module.css';
 
+function PartnerEditor({ partnerName, partnerTelegram, onSave }: {
+  partnerName: string;
+  partnerTelegram: string;
+  onSave: (name: string | null, telegram: string | null) => Promise<PartnerRejection | null>;
+}) {
+  const { t } = useTranslation();
+  const [nameVal, setNameVal] = useState(partnerName);
+  const [tgVal, setTgVal] = useState(partnerTelegram ? `@${partnerTelegram}` : '');
+  const [dirty, setDirty] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setNameVal(partnerName);
+    setTgVal(partnerTelegram ? `@${partnerTelegram}` : '');
+    setDirty(false);
+    setError(null);
+  }, [partnerName, partnerTelegram]);
+
+  const handleSave = useCallback(async () => {
+    const pName = nameVal.trim() || null;
+    const pTg = tgVal.trim().replace(/^@/, '') || null;
+    const rejection = await onSave(pName, pTg);
+    if (rejection) {
+      setError(rejectionMessage(rejection, t));
+    } else {
+      setDirty(false);
+      setError(null);
+    }
+  }, [nameVal, tgVal, onSave, t]);
+
+  return (
+    <div className={styles.partnerPicker}>
+      <span className={styles.groupPickerLabel}>{t('join.partnerLabel')}</span>
+      <input
+        className={styles.nameInput}
+        type="text"
+        value={nameVal}
+        onChange={e => { setNameVal(e.target.value); setDirty(true); }}
+        placeholder={t('join.partnerName')}
+      />
+      <input
+        className={styles.nameInput}
+        type="text"
+        value={tgVal}
+        onChange={e => { setTgVal(e.target.value); setDirty(true); }}
+        placeholder={t('join.partnerTelegram')}
+      />
+      {error && (
+        <span style={{ color: 'var(--color-error, #e53935)', fontSize: 'var(--text-sm)' }}>{error}</span>
+      )}
+      {dirty && (
+        <Button size="small" onClick={handleSave}>
+          {t('join.save')}
+        </Button>
+      )}
+    </div>
+  );
+}
+
+function JoinPlayerRow({ player, idx, tournament, hidePairBadge, onLinkPlayer }: {
+  player: PlannerRegistration;
+  idx: number;
+  tournament: { format: string; groupLabels?: [string, string]; clubs?: { id: string; name: string; color?: string }[]; rankLabels?: string[]; rankColors?: number[] };
+  hidePairBadge?: boolean;
+  onLinkPlayer?: (player: PlannerRegistration) => void;
+}) {
+  const isMixicano = formatHasGroups(tournament.format as TournamentFormat);
+  const isClubFormat = formatHasClubs(tournament.format as TournamentFormat);
+  const clubs = tournament.clubs ?? [];
+  const clubIdx = isClubFormat && player.clubId
+    ? clubs.findIndex(c => c.id === player.clubId)
+    : -1;
+
+  return (
+    <div className={styles.playerItem}>
+      <span className={styles.playerNum}>{idx + 1}</span>
+      <span className={styles.playerName}>
+        {player.telegramUsername ? (
+          <a href={`https://t.me/${player.telegramUsername}`} target="_blank" rel="noopener noreferrer" className={styles.playerLink}>
+            {player.name}
+          </a>
+        ) : player.name}
+      </span>
+      {(
+        (isMixicano && player.group) ||
+        (isClubFormat && clubIdx >= 0) ||
+        (tournament.format === 'club-ranked' && player.rankSlot != null && tournament.rankLabels?.[player.rankSlot]) ||
+        (formatHasFixedPartners(tournament.format as TournamentFormat) && player.partnerName)
+      ) && (
+        <div className={styles.playerBadges}>
+          {isMixicano && player.group && (
+            <span className={styles.groupBadge}>
+              {player.group === 'A' ? (tournament.groupLabels?.[0] || 'A') : (tournament.groupLabels?.[1] || 'B')}
+            </span>
+          )}
+          {isClubFormat && clubIdx >= 0 && (
+            <span className={styles.clubBadge} style={getClubColor(clubs[clubIdx] as Club, clubIdx) !== NO_COLOR ? { backgroundColor: getClubColor(clubs[clubIdx] as Club, clubIdx), color: 'white' } : undefined}>
+              {shortLabel(clubs[clubIdx].name)}
+            </span>
+          )}
+          {tournament.format === 'club-ranked' && player.rankSlot != null && tournament.rankLabels?.[player.rankSlot] && (() => {
+            const rc = getRankColor(player.rankSlot, tournament.rankColors?.[player.rankSlot]);
+            return (
+              <span className={styles.rankBadge} style={rc.bg !== NO_COLOR ? { backgroundColor: rc.bg, color: rc.text, borderColor: rc.border } : undefined}>
+                {shortLabel(tournament.rankLabels![player.rankSlot])}
+              </span>
+            );
+          })()}
+          {!hidePairBadge && formatHasFixedPartners(tournament.format as TournamentFormat) && player.partnerName && (
+            <span className={styles.groupBadge}>{'\uD83E\uDD1D'} {player.partnerName}</span>
+          )}
+        </div>
+      )}
+      {onLinkPlayer && (
+        <button
+          className={player.telegramUsername || player.partnerName ? styles.linkBtnActive : styles.linkBtn}
+          onClick={() => onLinkPlayer(player)}
+        >
+          {'\uD83D\uDD17'}
+        </button>
+      )}
+      <span className={player.confirmed !== false ? styles.statusConfirmed : styles.statusCancelled}>
+        {player.confirmed !== false ? '\u2713' : '\u2717'}
+      </span>
+    </div>
+  );
+}
+
+function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCount, spotsLeft, reserveCount, t, isCaptainOf, onApprove, onReject, onUpdateTelegram, onUpdatePartner, showToast }: {
+  players: PlannerRegistration[];
+  statuses: Map<string, PlayerStatus>;
+  tournament: import('@padel/common').PlannerTournament;
+  capacity: number;
+  confirmedCount: number;
+  spotsLeft: number;
+  reserveCount: number;
+  t: (key: string, params?: Record<string, string | number>) => string;
+  isCaptainOf?: string | null;
+  onApprove?: (playerId: string) => Promise<void> | void;
+  onReject?: (playerId: string) => Promise<void> | void;
+  onUpdateTelegram?: (playerId: string, telegramUsername: string | null) => Promise<void>;
+  onUpdatePartner?: (playerId: string, partnerName: string | null, partnerTelegram: string | null, constraints?: PartnerConstraints) => Promise<PartnerRejection | null>;
+  showToast?: (msg: string) => void;
+}) {
+  const isPairFormat = formatHasFixedPartners(tournament.format);
+  const [linkingPlayer, setLinkingPlayer] = useState<PlannerRegistration | null>(null);
+  const [linkDraft, setLinkDraft] = useState('');
+  const [partnerNameDraft, setPartnerNameDraft] = useState('');
+  const [partnerTelegramDraft, setPartnerTelegramDraft] = useState('');
+
+  const canLinkPlayer = (p: PlannerRegistration) => isCaptainOf && p.clubId === isCaptainOf && (onUpdateTelegram || onUpdatePartner);
+
+  const openLinkModal = (p: PlannerRegistration) => {
+    setLinkingPlayer(p);
+    setLinkDraft(p.telegramUsername ? `@${p.telegramUsername}` : '');
+    setPartnerNameDraft(p.partnerName ?? '');
+    setPartnerTelegramDraft(p.partnerTelegram ? `@${p.partnerTelegram}` : '');
+  };
+
+  const sections = useMemo(() => {
+    if (!isPairFormat) return null;
+    const sectionMap: Record<PlayerStatus, PlannerRegistration[]> = {
+      'playing': [], 'reserve': [], 'registered': [], 'needs-partner': [], 'cancelled': [],
+    };
+    for (const p of players) {
+      const status = statuses.get(p.id) ?? (p.confirmed === false ? 'cancelled' : 'needs-partner');
+      sectionMap[status as PlayerStatus].push(p);
+    }
+    return sectionMap;
+  }, [isPairFormat, players, statuses]);
+
+  const renderPairedSection = (sectionPlayers: PlannerRegistration[], captainActions?: 'approve-reject' | 'reject-only') => {
+    const rendered = new Set<string>();
+    const elements: React.ReactNode[] = [];
+    let globalIdx = 0;
+    for (const p of sectionPlayers) {
+      if (rendered.has(p.id)) continue;
+      rendered.add(p.id);
+      const partner = findPartner(p, players);
+      if (partner && !rendered.has(partner.id) && sectionPlayers.some(sp => sp.id === partner.id)) {
+        rendered.add(partner.id);
+        const i1 = globalIdx++;
+        const i2 = globalIdx++;
+        const canAct = captainActions && isCaptainOf && (p.clubId === isCaptainOf || partner.clubId === isCaptainOf);
+        elements.push(
+          <div key={`pair-${p.id}`} className={styles.pairGroup}>
+            <JoinPlayerRow player={p} idx={i1} tournament={tournament} hidePairBadge onLinkPlayer={canLinkPlayer(p) ? openLinkModal : undefined} />
+            <JoinPlayerRow player={partner} idx={i2} tournament={tournament} hidePairBadge onLinkPlayer={canLinkPlayer(partner) ? openLinkModal : undefined} />
+            {canAct && onReject && (
+              <div className={styles.captainActions} style={{ padding: '4px 8px', justifyContent: 'flex-end' }}>
+                {captainActions === 'approve-reject' && onApprove && (
+                  <Button size="small" onClick={async () => { await onApprove(p.id); await onApprove(partner.id); }}>
+                    {t('join.approve')}
+                  </Button>
+                )}
+                <Button size="small" variant="secondary" onClick={async () => { await onReject(p.id); await onReject(partner.id); }}>
+                  {t('join.reject')}
+                </Button>
+              </div>
+            )}
+          </div>
+        );
+      } else {
+        elements.push(<JoinPlayerRow key={p.id} player={p} idx={globalIdx++} tournament={tournament} onLinkPlayer={canLinkPlayer(p) ? openLinkModal : undefined} />);
+      }
+    }
+    return elements;
+  };
+
+  const sectionDefs: { key: PlayerStatus; labelKey: string; paired: boolean }[] = [
+    { key: 'playing', labelKey: 'organizer.sectionPlaying', paired: true },
+    { key: 'reserve', labelKey: 'organizer.sectionReserve', paired: true },
+    ...(tournament.captainMode ? [{ key: 'registered' as PlayerStatus, labelKey: 'organizer.sectionRegistered', paired: true }] : []),
+    { key: 'needs-partner', labelKey: 'organizer.sectionNeedsPartner', paired: false },
+  ];
+
+  const [cancelledOpen, setCancelledOpen] = useState(false);
+  const pairCapacity = Math.floor(capacity / 2);
+
+  return (
+    <Card>
+      <h3 className={styles.sectionTitle}>
+        {t('join.players', { confirmed: confirmedCount, capacity })}
+      </h3>
+      <p className={styles.capacityHint}>
+        {isPairFormat
+          ? t('join.pairSlots', { pairs: pairCapacity })
+          : spotsLeft > 0
+            ? t('join.spotsLeft', { count: spotsLeft, s: spotsLeft === 1 ? '' : 's' })
+            : reserveCount > 0
+              ? t('join.fullReserve', { count: reserveCount })
+              : t('join.full')}
+        {` \u00b7 ${t('join.courtInfo', {
+          courts: tournament.courts.length,
+          s: tournament.courts.length !== 1 ? 's' : '',
+          extra: (tournament.extraSpots ?? 0) > 0 ? ` + ${tournament.extraSpots}` : '',
+        })}`}
+      </p>
+      {players.length === 0 ? (
+        <p className={styles.empty}>{t('join.noPlayersYet')}</p>
+      ) : isPairFormat && sections ? (
+        <>
+          {sectionDefs.map(({ key, labelKey, paired }) => {
+            const sectionPlayers = sections[key];
+            if (sectionPlayers.length === 0) return null;
+            return (
+              <div key={key} className={styles.statusSection}>
+                <div className={styles.statusSectionHeader}>
+                  {t(labelKey, { count: sectionPlayers.length })}
+                </div>
+                <div className={styles.playerList}>
+                  {paired ? renderPairedSection(sectionPlayers, key === 'registered' ? 'approve-reject' : (key === 'playing' || key === 'reserve') ? 'reject-only' : undefined) : sectionPlayers.map((p, i) => (
+                    <JoinPlayerRow key={p.id} player={p} idx={i} tournament={tournament} onLinkPlayer={canLinkPlayer(p) ? openLinkModal : undefined} />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+          {sections.cancelled.length > 0 && (
+            <div className={styles.statusSection}>
+              <div className={styles.statusSectionHeader} style={{ cursor: 'pointer' }} onClick={() => setCancelledOpen(v => !v)}>
+                {t('organizer.sectionCancelled', { count: sections.cancelled.length })} {cancelledOpen ? '\u25B2' : '\u25BC'}
+              </div>
+              {cancelledOpen && (
+                <div className={styles.playerList}>
+                  {sections.cancelled.map((p, i) => <JoinPlayerRow key={p.id} player={p} idx={i} tournament={tournament} />)}
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      ) : (
+        <div className={styles.playerList}>
+          {players.map((player, i) => <JoinPlayerRow key={player.id} player={player} idx={i} tournament={tournament} onLinkPlayer={canLinkPlayer(player) ? openLinkModal : undefined} />)}
+        </div>
+      )}
+
+      {/* Captain link modal */}
+      <Modal
+        open={!!linkingPlayer}
+        title={t('organizer.linkProfileTitle', { name: linkingPlayer?.name ?? '' })}
+        onClose={() => setLinkingPlayer(null)}
+      >
+        <div className={styles.linkForm}>
+          {onUpdateTelegram && (
+            <>
+              <label className={styles.linkLabel}>{t('organizer.telegramUsername')}</label>
+              <input
+                className={styles.linkInput}
+                type="text"
+                value={linkDraft}
+                onChange={e => setLinkDraft(e.target.value)}
+                placeholder={t('organizer.telegramPlaceholder')}
+                autoFocus
+              />
+            </>
+          )}
+          {isPairFormat && onUpdatePartner && (
+            <>
+              {onUpdateTelegram && <hr style={{ border: 'none', borderTop: '1px solid var(--color-border)', margin: 'var(--space-xs) 0' }} />}
+              <label className={styles.linkLabel}>{t('organizer.partnerSection')}</label>
+              <input
+                className={styles.linkInput}
+                type="text"
+                value={partnerNameDraft}
+                onChange={e => setPartnerNameDraft(e.target.value)}
+                placeholder={t('organizer.partnerName')}
+              />
+              <input
+                className={styles.linkInput}
+                type="text"
+                value={partnerTelegramDraft}
+                onChange={e => setPartnerTelegramDraft(e.target.value)}
+                placeholder={t('organizer.partnerTelegram')}
+              />
+            </>
+          )}
+          <div className={styles.linkActions}>
+            {onUpdateTelegram && linkingPlayer?.telegramUsername && (
+              <Button variant="secondary" size="small" onClick={() => {
+                onUpdateTelegram(linkingPlayer.id, null);
+                setLinkingPlayer(null);
+              }}>
+                {t('organizer.removeLink')}
+              </Button>
+            )}
+            {onUpdatePartner && linkingPlayer?.partnerName && (
+              <Button variant="secondary" size="small" onClick={() => {
+                onUpdatePartner(linkingPlayer.id, null, null);
+                setPartnerNameDraft('');
+                setPartnerTelegramDraft('');
+                setLinkingPlayer(null);
+              }}>
+                {t('organizer.removePartner')}
+              </Button>
+            )}
+            <Button
+              size="small"
+              onClick={async () => {
+                if (!linkingPlayer) return;
+                if (onUpdateTelegram) {
+                  const username = linkDraft.trim().replace(/^@/, '') || null;
+                  onUpdateTelegram(linkingPlayer.id, username);
+                }
+                if (isPairFormat && onUpdatePartner) {
+                  const pName = partnerNameDraft.trim() || null;
+                  const pTg = partnerTelegramDraft.trim().replace(/^@/, '') || null;
+                  const constraints: PartnerConstraints = {
+                    requireSameClub: formatHasClubs(tournament.format),
+                    requireSameRank: tournament.format === 'club-ranked',
+                    requireOppositeGroup: formatHasGroups(tournament.format),
+                  };
+                  const rejection = await onUpdatePartner(linkingPlayer.id, pName, pTg, constraints);
+                  if (rejection) {
+                    showToast?.(rejectionMessage(rejection, t));
+                    return;
+                  }
+                }
+                setLinkingPlayer(null);
+              }}
+              disabled={!linkDraft.trim() && !(isPairFormat && partnerNameDraft.trim())}
+            >
+              {t('organizer.saveLink')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </Card>
+  );
+}
+
 export function JoinScreen() {
-  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, updatePlayerGroup, updatePlayerClub, updatePlayerRank, isRegistered, setScreen, organizerName, userName, telegramUser, completedAt, joinReturnScreen } = usePlanner();
+  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, updatePlayerGroup, updatePlayerClub, updatePlayerRank, updatePlayerPartner, updatePlayerTelegram, updateCaptainApproval, isRegistered, setScreen, organizerName, userName, telegramUser, completedAt, joinReturnScreen } = usePlanner();
   const { startedBy, showWarning, warningReason, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
   const { t } = useTranslation();
   // null = not yet edited by user, derive from external sources
   const [nameInput, setNameInput] = useState<string | null>(null);
   const name = nameInput ?? userName ?? telegramUser?.displayName ?? '';
+  const [regGroup, setRegGroup] = useState<'A' | 'B' | null>(null);
+  const [regClubId, setRegClubId] = useState<string>('');
+  const [regRankSlot, setRegRankSlot] = useState<string>('');
+  const [regPartnerName, setRegPartnerName] = useState('');
+  const [regPartnerTelegram, setRegPartnerTelegram] = useState('');
   const [registering, setRegistering] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [editingName, setEditingName] = useState(false);
@@ -29,18 +411,21 @@ export function JoinScreen() {
   const statuses = useMemo(() => getPlayerStatuses(players, capacity, {
     format: tournament?.format,
     clubs: tournament?.clubs,
-  }), [players, capacity, tournament?.format, tournament?.clubs]);
+    rankLabels: tournament?.rankLabels,
+    captainMode: tournament?.captainMode,
+  }), [players, capacity, tournament?.format, tournament?.clubs, tournament?.rankLabels, tournament?.captainMode]);
   const myRegistration = uid ? players.find(p => p.id === uid) : undefined;
   const myStatus = myRegistration ? statuses.get(myRegistration.id) : undefined;
 
   // Compute reserve position (1-based) for current player
   const myReservePosition = useMemo(() => {
     if (myStatus !== 'reserve' || !myRegistration) return 0;
-    const confirmed = players.filter(p => p.confirmed !== false);
-    const sorted = [...confirmed].sort((a, b) => a.timestamp - b.timestamp);
-    const reservePlayers = sorted.slice(capacity);
+    // Use statuses map to find all reserve players, then sort by timestamp
+    const reservePlayers = players
+      .filter(p => statuses.get(p.id) === 'reserve')
+      .sort((a, b) => a.timestamp - b.timestamp);
     return reservePlayers.findIndex(p => p.id === myRegistration.id) + 1;
-  }, [myStatus, myRegistration, players, capacity]);
+  }, [myStatus, myRegistration, players, statuses]);
 
   // Auto-restore from Firebase backup when tournament is completed
   useEffect(() => {
@@ -106,7 +491,7 @@ export function JoinScreen() {
     // Warn if someone with the same name is already registered
     const duplicate = players.find(p => p.name.trim().toLowerCase() === trimmed.toLowerCase());
     if (duplicate) {
-      if (!window.confirm(t('join.duplicateConfirm', { name: duplicate.name }))) {
+      if (!await asyncConfirm(t('join.duplicateConfirm', { name: duplicate.name }))) {
         return;
       }
     }
@@ -115,7 +500,24 @@ export function JoinScreen() {
     setRegistering(true);
     try {
       const willBeReserve = confirmedCount >= capacity;
-      await registerPlayer(trimmed);
+      const extras: { group?: 'A' | 'B'; clubId?: string; rankSlot?: number } = {};
+      if (regGroup) extras.group = regGroup;
+      if (regClubId) extras.clubId = regClubId;
+      if (regRankSlot) extras.rankSlot = Number(regRankSlot);
+      await registerPlayer(trimmed, Object.keys(extras).length > 0 ? extras : undefined);
+      if (uid && (regPartnerName.trim() || regPartnerTelegram.trim())) {
+        const pName = regPartnerName.trim() || null;
+        const pTg = regPartnerTelegram.trim().replace(/^@/, '') || null;
+        const constraints: PartnerConstraints = {
+          requireSameClub: formatHasClubs(tournament.format),
+          requireSameRank: tournament.format === 'club-ranked',
+          requireOppositeGroup: formatHasGroups(tournament.format),
+        };
+        const rejection = await updatePlayerPartner(uid, pName, pTg, constraints);
+        if (rejection) {
+          showToast(rejectionMessage(rejection, t));
+        }
+      }
       if (willBeReserve) {
         showToast(t('join.reserveToast'));
       } else if (tournament.date) {
@@ -162,6 +564,8 @@ export function JoinScreen() {
   };
 
   const handleLaunch = () => {
+    const result = validateLaunch(tournament!, players, statuses);
+    if (result) { showToast(t(result.key, result.params)); return; }
     handleGuardedLaunch(tournament!, players);
   };
 
@@ -173,6 +577,27 @@ export function JoinScreen() {
     } catch {
       showToast(t('join.failedCopy'));
     }
+  };
+
+  /**
+   * Check if a club/rank/group change would break the partner link.
+   * If it would, ask the user to confirm and disconnect the link.
+   * Returns false if the user cancelled (change should not proceed).
+   */
+  const guardPartnerLink = async (change: { clubId?: string | null; rankSlot?: number | null; group?: 'A' | 'B' | null }): Promise<boolean> => {
+    if (!uid || !myRegistration?.partnerName || !formatHasFixedPartners(tournament.format)) return true;
+    const partner = findPartner(myRegistration, players);
+    if (!partner) return true;
+    const constraints: PartnerConstraints = {
+      requireSameClub: formatHasClubs(tournament.format),
+      requireSameRank: tournament.format === 'club-ranked',
+      requireOppositeGroup: formatHasGroups(tournament.format),
+    };
+    const reason = wouldBreakPartnerLink(change, partner, constraints);
+    if (!reason) return true;
+    if (!await asyncConfirm(t('join.changeBreaksLink', { name: partner.name }))) return false;
+    await updatePlayerPartner(uid, null, null);
+    return true;
   };
 
   const handleBack = () => {
@@ -246,7 +671,34 @@ export function JoinScreen() {
       <Card>
         {isRegistered ? (
           <div className={styles.registered}>
-            {isConfirmed && myStatus === 'reserve' ? (
+            {isConfirmed && myStatus === 'needs-partner' ? (
+              <>
+                <div className={styles.reserveIcon}>&#128101;</div>
+                <h3>{t('join.needsPartner')}</h3>
+                <p className={styles.hint}>{t(tournament.captainMode ? 'join.needsPartnerHintCaptain' : 'join.needsPartnerHint')}</p>
+              </>
+            ) : isConfirmed && myStatus === 'registered' ? (() => {
+              const myClub = tournament.clubs?.find(c => c.id === myRegistration?.clubId);
+              const captainPlayer = myClub?.captainId ? players.find(p => p.id === myClub.captainId) : undefined;
+              const captainName = captainPlayer?.name ?? (myClub?.captainTelegram ? `@${myClub.captainTelegram}` : undefined);
+              const captainTg = captainPlayer?.telegramUsername ?? myClub?.captainTelegram;
+              return (
+                <>
+                  <div className={styles.reserveIcon}>&#9203;</div>
+                  <h3>{t('join.awaitingCaptain')}</h3>
+                  <p className={styles.hint}>{t('join.awaitingCaptainHint')}</p>
+                  <p className={styles.captainInfo}>
+                    {t('join.yourCaptain')}{' '}
+                    {captainName
+                      ? captainTg
+                        ? <a href={`https://t.me/${captainTg}`} target="_blank" rel="noopener noreferrer">{captainName}</a>
+                        : <strong>{captainName}</strong>
+                      : <span className={styles.hint}>{t('join.captainUnassigned')}</span>
+                    }
+                  </p>
+                </>
+              );
+            })() : isConfirmed && myStatus === 'reserve' ? (
               <>
                 <div className={styles.reserveIcon}>&#9888;</div>
                 <h3>{t('join.onReserveList')}</h3>
@@ -331,13 +783,21 @@ export function JoinScreen() {
                 <div className={styles.groupToggle}>
                   <button
                     className={myRegistration?.group === 'A' ? styles.groupBtnActive : styles.groupBtn}
-                    onClick={() => updatePlayerGroup(uid, myRegistration?.group === 'A' ? null : 'A')}
+                    onClick={async () => {
+                      const val = myRegistration?.group === 'A' ? null : 'A';
+                      if (!(await guardPartnerLink({ group: val }))) return;
+                      updatePlayerGroup(uid, val);
+                    }}
                   >
                     {tournament.groupLabels?.[0] || 'A'}
                   </button>
                   <button
                     className={myRegistration?.group === 'B' ? styles.groupBtnActive : styles.groupBtn}
-                    onClick={() => updatePlayerGroup(uid, myRegistration?.group === 'B' ? null : 'B')}
+                    onClick={async () => {
+                      const val = myRegistration?.group === 'B' ? null : 'B';
+                      if (!(await guardPartnerLink({ group: val }))) return;
+                      updatePlayerGroup(uid, val);
+                    }}
                   >
                     {tournament.groupLabels?.[1] || 'B'}
                   </button>
@@ -347,40 +807,72 @@ export function JoinScreen() {
 
             {isConfirmed && uid && formatHasClubs(tournament.format) && (tournament.clubs ?? []).length > 0 && (() => {
               const clubs = tournament.clubs!;
+              const clubIdx = myRegistration?.clubId
+                ? clubs.findIndex(c => c.id === myRegistration.clubId)
+                : -1;
               return (
                 <div className={styles.clubPicker}>
-                  <span className={styles.clubPickerLabel}>{t('join.selectClub')}</span>
-                  <div className={styles.clubOptions}>
-                    {clubs.map((club, idx) => (
-                      <button
-                        key={club.id}
-                        className={myRegistration?.clubId === club.id ? styles.clubOptionActive : styles.clubOption}
-                        style={{ '--club-color': getClubColor(club, idx) } as React.CSSProperties}
-                        onClick={() => updatePlayerClub(uid, myRegistration?.clubId === club.id ? null : club.id)}
-                      >
-                        {club.name}
-                      </button>
+                  <select
+                    className={styles.joinSelect}
+                    value={myRegistration?.clubId ?? ''}
+                    onChange={async e => {
+                      const val = e.target.value || null;
+                      if (!(await guardPartnerLink({ clubId: val }))) {
+                        e.target.value = myRegistration?.clubId ?? '';
+                        return;
+                      }
+                      updatePlayerClub(uid, val);
+                    }}
+                    style={clubIdx >= 0 && getClubColor(clubs[clubIdx], clubIdx) !== NO_COLOR ? { backgroundColor: getClubColor(clubs[clubIdx], clubIdx), color: 'white', borderColor: 'transparent' } : undefined}
+                  >
+                    <option value="">{t('join.selectClub')}</option>
+                    {clubs.map(club => (
+                      <option key={club.id} value={club.id}>{club.name}</option>
                     ))}
-                  </div>
+                  </select>
                 </div>
               );
             })()}
 
             {isConfirmed && uid && tournament.format === 'club-ranked' && (tournament.rankLabels ?? []).length > 0 && (
               <div className={styles.rankPicker}>
-                <span className={styles.rankPickerLabel}>{t('join.selectRank')}</span>
-                <div className={styles.rankOptions}>
+                <select
+                  className={styles.joinSelect}
+                  value={myRegistration?.rankSlot != null ? String(myRegistration.rankSlot) : ''}
+                  onChange={async e => {
+                    const val = e.target.value ? Number(e.target.value) : null;
+                    if (!(await guardPartnerLink({ rankSlot: val }))) {
+                      e.target.value = myRegistration?.rankSlot != null ? String(myRegistration.rankSlot) : '';
+                      return;
+                    }
+                    updatePlayerRank(uid, val);
+                  }}
+                  style={myRegistration?.rankSlot != null ? (() => {
+                    const rc = getRankColor(myRegistration.rankSlot, tournament.rankColors?.[myRegistration.rankSlot]);
+                    return rc.bg !== NO_COLOR ? { backgroundColor: rc.bg, color: rc.text, borderColor: rc.border } : undefined;
+                  })() : undefined}
+                >
+                  <option value="">{t('join.selectRank')}</option>
                   {tournament.rankLabels!.map((label, idx) => (
-                    <button
-                      key={idx}
-                      className={myRegistration?.rankSlot === idx ? styles.rankOptionActive : styles.rankOption}
-                      onClick={() => updatePlayerRank(uid, myRegistration?.rankSlot === idx ? null : idx)}
-                    >
-                      {label}
-                    </button>
+                    <option key={idx} value={String(idx)}>{label}</option>
                   ))}
-                </div>
+                </select>
               </div>
+            )}
+
+            {isConfirmed && uid && formatHasFixedPartners(tournament.format) && (
+              <PartnerEditor
+                partnerName={myRegistration?.partnerName ?? ''}
+                partnerTelegram={myRegistration?.partnerTelegram ?? ''}
+                onSave={(pName, pTg) => {
+                  const constraints: PartnerConstraints = {
+                    requireSameClub: formatHasClubs(tournament.format),
+                    requireSameRank: tournament.format === 'club-ranked',
+                    requireOppositeGroup: formatHasGroups(tournament.format),
+                  };
+                  return updatePlayerPartner(uid, pName, pTg, constraints);
+                }}
+              />
             )}
           </div>
         ) : (
@@ -395,6 +887,92 @@ export function JoinScreen() {
               onKeyDown={e => e.key === 'Enter' && handleRegister()}
               autoFocus
             />
+
+            {formatHasGroups(tournament.format) && (
+              <div className={styles.groupPicker}>
+                <span className={styles.groupPickerLabel}>{t('join.selectGroup')}</span>
+                <div className={styles.groupToggle}>
+                  <button
+                    type="button"
+                    className={regGroup === 'A' ? styles.groupBtnActive : styles.groupBtn}
+                    onClick={() => setRegGroup(regGroup === 'A' ? null : 'A')}
+                  >
+                    {tournament.groupLabels?.[0] || 'A'}
+                  </button>
+                  <button
+                    type="button"
+                    className={regGroup === 'B' ? styles.groupBtnActive : styles.groupBtn}
+                    onClick={() => setRegGroup(regGroup === 'B' ? null : 'B')}
+                  >
+                    {tournament.groupLabels?.[1] || 'B'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {formatHasClubs(tournament.format) && (tournament.clubs ?? []).length > 0 && (
+              <div className={styles.clubPicker}>
+                <select
+                  className={styles.joinSelect}
+                  value={regClubId}
+                  onChange={e => setRegClubId(e.target.value)}
+                  style={(() => {
+                    if (!regClubId) return undefined;
+                    const clubs = tournament.clubs!;
+                    const idx = clubs.findIndex(c => c.id === regClubId);
+                    if (idx < 0) return undefined;
+                    const color = getClubColor(clubs[idx], idx);
+                    return color !== NO_COLOR ? { backgroundColor: color, color: 'white', borderColor: 'transparent' } : undefined;
+                  })()}
+                >
+                  <option value="">{t('join.selectClub')}</option>
+                  {tournament.clubs!.map(club => (
+                    <option key={club.id} value={club.id}>{club.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {tournament.format === 'club-ranked' && (tournament.rankLabels ?? []).length > 0 && (
+              <div className={styles.rankPicker}>
+                <select
+                  className={styles.joinSelect}
+                  value={regRankSlot}
+                  onChange={e => setRegRankSlot(e.target.value)}
+                  style={(() => {
+                    if (!regRankSlot) return undefined;
+                    const rc = getRankColor(Number(regRankSlot), tournament.rankColors?.[Number(regRankSlot)]);
+                    return rc.bg !== NO_COLOR ? { backgroundColor: rc.bg, color: rc.text, borderColor: rc.border } : undefined;
+                  })()}
+                >
+                  <option value="">{t('join.selectRank')}</option>
+                  {tournament.rankLabels!.map((label, idx) => (
+                    <option key={idx} value={String(idx)}>{label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {formatHasFixedPartners(tournament.format) && (
+              <div className={styles.partnerPicker}>
+                <span className={styles.groupPickerLabel}>{t('join.partnerLabel')}</span>
+                <input
+                  className={styles.nameInput}
+                  type="text"
+                  value={regPartnerName}
+                  onChange={e => setRegPartnerName(e.target.value)}
+                  placeholder={t('join.partnerName')}
+                />
+                <input
+                  className={styles.nameInput}
+                  type="text"
+                  value={regPartnerTelegram}
+                  onChange={e => setRegPartnerTelegram(e.target.value)}
+                  placeholder={t('join.partnerTelegram')}
+                />
+              </div>
+            )}
+
             <Button
               fullWidth
               onClick={handleRegister}
@@ -406,89 +984,36 @@ export function JoinScreen() {
         )}
       </Card>
 
-      <Card>
-        <h3 className={styles.sectionTitle}>
-          {t('join.players', { confirmed: confirmedCount, capacity })}
-        </h3>
-        <p className={styles.capacityHint}>
-          {spotsLeft > 0
-            ? t('join.spotsLeft', { count: spotsLeft, s: spotsLeft === 1 ? '' : 's' })
-            : reserveCount > 0
-              ? t('join.fullReserve', { count: reserveCount })
-              : t('join.full')}
-          {` \u00b7 ${t('join.courtInfo', {
-            courts: tournament.courts.length,
-            s: tournament.courts.length !== 1 ? 's' : '',
-            extra: (tournament.extraSpots ?? 0) > 0 ? ` + ${tournament.extraSpots}` : '',
-          })}`}
-        </p>
-        {players.length === 0 ? (
-          <p className={styles.empty}>{t('join.noPlayersYet')}</p>
-        ) : (
-          <div className={styles.playerList}>
-            {players.map((player, i) => {
-              const isMixicano = formatHasGroups(tournament.format);
-              const isClubAmericano = formatHasClubs(tournament.format);
-              const clubs = tournament.clubs ?? [];
-              const clubIdx = isClubAmericano && player.clubId
-                ? clubs.findIndex(c => c.id === player.clubId)
-                : -1;
-              return (
-              <div key={player.id} className={styles.playerItem}>
-                <span className={styles.playerNum}>{i + 1}</span>
-                <span className={styles.playerName}>
-                  {player.telegramUsername ? (
-                    <a
-                      href={`https://t.me/${player.telegramUsername}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={styles.playerLink}
-                    >
-                      {player.name}
-                    </a>
-                  ) : (
-                    player.name
-                  )}
-                  {statuses.get(player.id) === 'reserve' && (
-                    <span className={styles.reserveBadge}>{t('join.reserve')}</span>
-                  )}
-                  {isMixicano && player.group && (
-                    <span className={styles.groupBadge}>
-                      {player.group === 'A'
-                        ? (tournament.groupLabels?.[0] || 'A')
-                        : (tournament.groupLabels?.[1] || 'B')}
-                    </span>
-                  )}
-                  {isClubAmericano && clubIdx >= 0 && (
-                    <span
-                      className={styles.clubBadge}
-                      style={{ backgroundColor: getClubColor(clubs[clubIdx], clubIdx) }}
-                    >
-                      {clubs[clubIdx].name}
-                    </span>
-                  )}
-                  {tournament.format === 'club-ranked' && player.rankSlot != null && tournament.rankLabels?.[player.rankSlot] && (
-                    <span className={styles.rankBadge}>
-                      {tournament.rankLabels[player.rankSlot]}
-                    </span>
-                  )}
-                </span>
-                <span className={player.confirmed !== false ? styles.statusConfirmed : styles.statusCancelled}>
-                  {player.confirmed !== false ? '\u2713' : '\u2717'}
-                </span>
-              </div>
-              );
-            })}
-          </div>
-        )}
-      </Card>
+      <JoinPlayerList
+        players={players}
+        statuses={statuses}
+        tournament={tournament}
+        capacity={capacity}
+        confirmedCount={confirmedCount}
+        spotsLeft={spotsLeft}
+        reserveCount={reserveCount}
+        t={t}
+        isCaptainOf={tournament.captainMode
+          ? tournament.clubs?.find(c => c.captainId === uid || (telegramUser?.username && c.captainTelegram === telegramUser.username))?.id ?? null
+          : null}
+        onApprove={pid => updateCaptainApproval(pid, true)}
+        onReject={pid => updateCaptainApproval(pid, false)}
+        onUpdateTelegram={updatePlayerTelegram}
+        onUpdatePartner={updatePlayerPartner}
+        showToast={showToast}
+      />
 
+      {(uid === tournament.organizerId
+        || uid === tournament.startDelegateId
+        || (telegramUser?.username && telegramUser.username === tournament.startDelegateTelegram)
+      ) && (<>
       <Button fullWidth onClick={handleLaunch} disabled={players.length === 0}>
-        {t('join.letsPlay')}
+        {t('join.startTournament')}
       </Button>
       <Button variant="secondary" fullWidth onClick={handleCopyExport} disabled={players.length === 0}>
         {t('join.copyForDevice')}
       </Button>
+      </>)}
       </main>
 
       <Toast message={toastMessage} className={styles.toast} />

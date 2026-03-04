@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, createContext, useContext, type ReactNode } from 'react';
-import { ref, get } from 'firebase/database';
+import { ref, get, update as firebaseUpdate } from 'firebase/database';
 import type { PlannerTournament, PlannerRegistration, TournamentSummary, SkinId, PadelEventSummary } from '@padel/common';
 import { useTranslation, useTheme, isValidSkin, DEFAULT_SKIN } from '@padel/common';
 import { useAuth } from '../hooks/useAuth';
@@ -29,8 +29,8 @@ export interface PlannerContextValue {
   setScreen: (screen: Screen) => void;
   createTournament: (name: string) => Promise<void>;
   loadByCode: (code: string) => Promise<boolean>;
-  updateTournament: (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'pointsPerMatch' | 'courts' | 'maxRounds' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description' | 'clubs' | 'groupLabels' | 'rankLabels'>>) => Promise<void>;
-  registerPlayer: (name: string) => Promise<void>;
+  updateTournament: (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'pointsPerMatch' | 'courts' | 'maxRounds' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description' | 'clubs' | 'groupLabels' | 'rankLabels' | 'rankColors' | 'scoringMode' | 'maldiciones' | 'startDelegateId' | 'startDelegateTelegram' | 'minutesPerRound' | 'captainMode'>>) => Promise<void>;
+  registerPlayer: (name: string, extras?: { group?: 'A' | 'B'; clubId?: string; rankSlot?: number }) => Promise<void>;
   removePlayer: (playerId: string) => Promise<void>;
   updateConfirmed: (confirmed: boolean) => Promise<void>;
   addPlayer: (name: string, telegramUsername?: string) => Promise<void>;
@@ -41,6 +41,8 @@ export interface PlannerContextValue {
   updatePlayerGroup: (playerId: string, group: 'A' | 'B' | null) => Promise<void>;
   updatePlayerClub: (playerId: string, clubId: string | null) => Promise<void>;
   updatePlayerRank: (playerId: string, rankSlot: number | null) => Promise<void>;
+  updatePlayerPartner: (playerId: string, partnerName: string | null, partnerTelegram: string | null, constraints?: import('../utils/partnerLogic').PartnerConstraints) => Promise<import('../utils/partnerLogic').PartnerRejection | null>;
+  updateCaptainApproval: (playerId: string, approved: boolean) => Promise<void>;
   isRegistered: boolean;
   organizerName: string | null;
   userName: string | null;
@@ -106,7 +108,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     undoComplete,
   } = usePlannerTournament(tournamentId);
 
-  const { players, registerPlayer: registerInDb, removePlayer, updateConfirmed: updateConfirmedInDb, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, updatePlayerRank, isRegistered: checkRegistered, claimOrphanRegistration } = usePlayers(tournamentId);
+  const { players, registerPlayer: registerInDb, removePlayer, updateConfirmed: updateConfirmedInDb, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, updatePlayerRank, updatePlayerPartner, updateCaptainApproval, isRegistered: checkRegistered, claimOrphanRegistration } = usePlayers(tournamentId);
 
   const { name: userName, skin: userSkin, loading: userNameLoading, updateName: updateUserName, updateSkin: updateUserSkin, updateTelegramId, updateTelegramUsername } = useUserProfile(uid);
 
@@ -127,6 +129,18 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
   }, [rawSetSkin, updateUserSkin]);
 
   const { user: telegramUser, chatInstance } = useTelegram();
+
+  // Wrap updateTournament to sync name/date changes to chat room entries
+  const wrappedUpdateTournament = useCallback(async (updates: Parameters<typeof updateTournament>[0]) => {
+    await updateTournament(updates);
+    if (chatInstance && tournamentId && db && (updates.name !== undefined || updates.date !== undefined)) {
+      const chatUpdates: Record<string, unknown> = {};
+      if (updates.name !== undefined) chatUpdates[`chatRooms/${chatInstance}/tournaments/${tournamentId}/name`] = updates.name;
+      if (updates.date !== undefined) chatUpdates[`chatRooms/${chatInstance}/tournaments/${tournamentId}/date`] = updates.date ?? null;
+      firebaseUpdate(ref(db), chatUpdates).catch(() => {});
+    }
+  }, [updateTournament, chatInstance, tournamentId]);
+
   const { tournaments: myTournaments, loading: myLoading } = useMyTournaments(uid);
   const { tournaments: registeredTournaments, loading: regLoading } = useRegisteredTournaments(uid);
   const { tournaments: chatRoomTournaments, loading: chatRoomLoading } = useChatRoomTournaments(chatInstance);
@@ -214,9 +228,9 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     return false;
   }, [loadByCodeFromDb]);
 
-  const registerPlayer = useCallback(async (name: string) => {
+  const registerPlayer = useCallback(async (name: string, extras?: { group?: 'A' | 'B'; clubId?: string; rankSlot?: number }) => {
     if (!uid) return;
-    await registerInDb(name, uid, telegramUser?.username);
+    await registerInDb(name, uid, telegramUser?.username, extras);
     // Also write name to user profile if not set yet
     if (!userName) {
       await updateUserName(name);
@@ -274,7 +288,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       setScreen,
       createTournament,
       loadByCode,
-      updateTournament,
+      updateTournament: wrappedUpdateTournament,
       registerPlayer,
       removePlayer,
       updateConfirmed,
@@ -286,6 +300,8 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       updatePlayerGroup,
       updatePlayerClub,
       updatePlayerRank,
+      updatePlayerPartner,
+      updateCaptainApproval,
       isRegistered,
       organizerName,
       userName,

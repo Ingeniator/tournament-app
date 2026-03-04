@@ -125,6 +125,39 @@
   }
 }
 
+/* Page navigation for timed mode */
+.pageNav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xs);
+}
+
+.pageBtn {
+  min-width: 44px;
+  min-height: 36px;
+  padding: var(--space-xs) var(--space-sm);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pageBtn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.pageLabel {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
 /* Actions row */
 .pickerActions {
   display: flex;

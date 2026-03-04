@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { resolveConfigDefaults, computeSitOutInfo } from './resolveConfigDefaults';
+import { resolveConfigDefaults, computeSitOutInfo } from '@padel/common';
 import type { TournamentConfig } from '@padel/common';
 
 function makeConfig(overrides: Partial<TournamentConfig> = {}): TournamentConfig {
@@ -212,6 +212,114 @@ describe('resolveConfigDefaults', () => {
       const config = makeConfig({ maxRounds: 7 });
       const resolved = resolveConfigDefaults(config, 5);
       expect(resolved.maxRounds).toBe(7);
+    });
+  });
+
+  describe('timed mode', () => {
+    it('returns both values when both rounds and minutesPerRound are set', () => {
+      const config = makeConfig({ scoringMode: 'timed', maxRounds: 5, minutesPerRound: 15 });
+      const resolved = resolveConfigDefaults(config, 8);
+      expect(resolved.maxRounds).toBe(5);
+      expect(resolved.minutesPerRound).toBe(15);
+      expect(resolved.scoringMode).toBe('timed');
+    });
+
+    it('derives rounds from duration when only minutesPerRound is set', () => {
+      const config = makeConfig({ scoringMode: 'timed', minutesPerRound: 20, maxRounds: null, targetDuration: 120 });
+      const resolved = resolveConfigDefaults(config, 8);
+      expect(resolved.minutesPerRound).toBe(20);
+      expect(resolved.maxRounds).toBe(6); // floor(120/20)
+      expect(resolved.scoringMode).toBe('timed');
+    });
+
+    it('derives minutesPerRound from duration when only rounds are set', () => {
+      const config = makeConfig({ scoringMode: 'timed', maxRounds: 4, targetDuration: 120 });
+      const resolved = resolveConfigDefaults(config, 8);
+      expect(resolved.maxRounds).toBe(4);
+      expect(resolved.minutesPerRound).toBe(30); // floor(120/4)
+      expect(resolved.scoringMode).toBe('timed');
+    });
+
+    it('derives both when neither rounds nor minutesPerRound is set', () => {
+      const config = makeConfig({ scoringMode: 'timed', maxRounds: null, targetDuration: 120 });
+      const resolved = resolveConfigDefaults(config, 8);
+      expect(resolved.maxRounds).toBeGreaterThanOrEqual(1);
+      expect(resolved.minutesPerRound).toBeGreaterThanOrEqual(1);
+      expect(resolved.scoringMode).toBe('timed');
+    });
+
+    it('uses clubFixedRounds when club count is provided and rounds not explicit', () => {
+      // 4 clubs (even) → clubFixedRounds = 4-1 = 3
+      const config = makeConfig({ scoringMode: 'timed', minutesPerRound: 20, maxRounds: null, targetDuration: 120 });
+      const resolved = resolveConfigDefaults(config, 16, 4);
+      expect(resolved.maxRounds).toBe(3);
+      expect(resolved.minutesPerRound).toBe(20);
+    });
+
+    it('uses clubFixedRounds for odd club count', () => {
+      // 3 clubs (odd) → clubFixedRounds = 3
+      const config = makeConfig({ scoringMode: 'timed', maxRounds: null, targetDuration: 120 });
+      const resolved = resolveConfigDefaults(config, 12, 3);
+      expect(resolved.maxRounds).toBe(3);
+    });
+  });
+
+  describe('club format with fixed rounds', () => {
+    it('overrides auto rounds with club-based round count', () => {
+      // 4 clubs (even) → clubFixedRounds = 3
+      const config = makeConfig({ maxRounds: null, pointsPerMatch: 0, targetDuration: 120 });
+      const resolved = resolveConfigDefaults(config, 16, 4);
+      expect(resolved.maxRounds).toBe(3);
+    });
+
+    it('does not override explicit maxRounds even with clubs', () => {
+      const config = makeConfig({ maxRounds: 7, pointsPerMatch: 24 });
+      const resolved = resolveConfigDefaults(config, 16, 4);
+      expect(resolved.maxRounds).toBe(7);
+    });
+  });
+
+  describe('auto-switch from points to games', () => {
+    it('switches to games when points would exceed cap (explicit rounds, no explicit scoringMode)', () => {
+      // Very few rounds with long duration → points per match would be huge
+      const config: TournamentConfig = {
+        format: 'americano',
+        pointsPerMatch: 0,
+        courts: [{ id: 'c1', name: 'C1' }],
+        maxRounds: 2,
+        targetDuration: 240,
+        // scoringMode NOT set → undefined → auto-detect
+      };
+      const resolved = resolveConfigDefaults(config, 4);
+      expect(resolved.scoringMode).toBe('games');
+      expect(resolved.pointsPerMatch).toBeLessThanOrEqual(16);
+    });
+
+    it('does not switch when scoringMode is explicitly set to points', () => {
+      const config: TournamentConfig = {
+        format: 'americano',
+        pointsPerMatch: 0,
+        courts: [{ id: 'c1', name: 'C1' }],
+        maxRounds: 2,
+        targetDuration: 240,
+        scoringMode: 'points', // explicit
+      };
+      const resolved = resolveConfigDefaults(config, 4);
+      expect(resolved.scoringMode).toBe('points');
+    });
+  });
+
+  describe('king-of-the-court min points override', () => {
+    it('enforces 12 as minimum points for king-of-the-court', () => {
+      const config: TournamentConfig = {
+        format: 'king-of-the-court',
+        pointsPerMatch: 0,
+        courts: [{ id: 'c1', name: 'C1' }, { id: 'c2', name: 'C2' }],
+        maxRounds: 20,
+        targetDuration: 60, // short duration → would push points down
+      };
+      const resolved = resolveConfigDefaults(config, 8);
+      expect(resolved.pointsPerMatch).toBeGreaterThanOrEqual(12);
     });
   });
 });

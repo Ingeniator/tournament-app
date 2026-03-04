@@ -1,4 +1,5 @@
 import type { StandingsEntry, ClubStandingsEntry } from '@padel/common';
+import { NO_COLOR } from '@padel/common';
 import type { GroupInfo, ClubInfo } from '../components/standings/StandingsTable';
 import type { Nomination } from '../hooks/useNominations';
 
@@ -172,9 +173,10 @@ export function renderStandingsImage(
       // Club dot for pair entries
       const clubId = clubInfo?.teamClubMap.get(entry.playerId);
       const clubDotColor = clubId ? clubInfo!.clubColorMap.get(clubId) : null;
+      const showClubDot = clubDotColor != null && clubDotColor !== NO_COLOR;
 
       let nameStartX = tableX + colName;
-      if (clubDotColor) {
+      if (showClubDot) {
         const dotRadius = s(4);
         const dotX = nameStartX + dotRadius;
         const dotY = rowY + rowHeight / 2;
@@ -185,7 +187,7 @@ export function renderStandingsImage(
         nameStartX += dotRadius * 2 + s(6);
       }
 
-      const dotSpace = clubDotColor ? s(14) : 0;
+      const dotSpace = showClubDot ? s(14) : 0;
       const pairNameMax = nameMaxWidth - dotSpace;
 
       // First player name
@@ -375,10 +377,12 @@ export function renderClubStandingsImage(
     const dotX = tableX + colName + dotRadius;
     const dotY = textY - s(4);
     const color = clubColorMap.get(entry.clubId) ?? t.textMuted;
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(dotX, dotY, dotRadius, 0, Math.PI * 2);
-    ctx.fill();
+    if (color !== NO_COLOR) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(dotX, dotY, dotRadius, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     ctx.font = `600 ${s(12)}px ${FONT}`;
     ctx.fillStyle = t.text;

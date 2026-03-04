@@ -240,6 +240,7 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
           players={tournament.players}
           courts={tournament.config.courts}
           pointsPerMatch={tournament.config.pointsPerMatch}
+          scoringMode={tournament.config.scoringMode}
           format={tournament.config.format}
           readOnly={editingMatch?.roundId !== round.id}
           editingMatchId={editingMatch?.roundId === round.id ? editingMatch.matchId : undefined}

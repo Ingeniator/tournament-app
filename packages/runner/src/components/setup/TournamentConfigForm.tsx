@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import type { TournamentConfig } from '@padel/common';
 import { Button, generateId, useTranslation, FormatPicker, formatHasGroups, formatHasClubs, Toast, useToast } from '@padel/common';
 import { getStrategy } from '../../strategies';
-import { resolveConfigDefaults, computeSitOutInfo, MINUTES_PER_POINT, MINUTES_PER_GAME, CHANGEOVER_MINUTES } from '../../utils/resolveConfigDefaults';
+import { resolveConfigDefaults, computeSitOutInfo, MINUTES_PER_POINT, MINUTES_PER_GAME, MINUTES_PER_SET, CHANGEOVER_MINUTES, DEFAULT_MINUTES_PER_ROUND } from '@padel/common';
 import styles from './TournamentConfigForm.module.css';
 
 function InfoButton({ hint }: { hint: string }) {
@@ -58,7 +58,9 @@ export function TournamentConfigForm({ config, playerCount, clubCount, onUpdate 
   // Resolve: what values will actually be used (fills in defaults for empty fields)
   const resolved = resolveConfigDefaults(config, playerCount, clubCount);
   const isGamesMode = resolved.scoringMode === 'games';
-  const minutesPer = isGamesMode ? MINUTES_PER_GAME : MINUTES_PER_POINT;
+  const isSetsMode = resolved.scoringMode === 'sets';
+  const isTimedMode = resolved.scoringMode === 'timed';
+  const minutesPer = isSetsMode ? MINUTES_PER_SET : isGamesMode ? MINUTES_PER_GAME : MINUTES_PER_POINT;
   const effectivePoints = resolved.pointsPerMatch;
   const effectiveRounds = resolved.maxRounds ?? 1;
 
@@ -75,11 +77,13 @@ export function TournamentConfigForm({ config, playerCount, clubCount, onUpdate 
   const suggestedRoundsConfig = resolveConfigDefaults({ ...config, maxRounds: null }, playerCount, clubCount);
   const suggestedPointsConfig = resolveConfigDefaults({ ...config, pointsPerMatch: 0 }, playerCount, clubCount);
   const suggestedRounds = suggestedRoundsConfig.maxRounds ?? 1;
+  const suggestedMinutes = suggestedRoundsConfig.minutesPerRound ?? DEFAULT_MINUTES_PER_ROUND;
   const suggestedPoints = suggestedPointsConfig.pointsPerMatch;
 
   // Duration estimate
   const durationLimit = config.targetDuration ?? DEFAULT_DURATION_MINUTES;
-  const roundDuration = Math.round(effectivePoints * minutesPer + CHANGEOVER_MINUTES);
+  const timedRoundDuration = resolved.minutesPerRound ?? DEFAULT_MINUTES_PER_ROUND;
+  const roundDuration = isTimedMode ? timedRoundDuration : Math.round(effectivePoints * minutesPer + CHANGEOVER_MINUTES);
   const estimatedMinutes = effectiveRounds * roundDuration;
   const exceedsLimit = estimatedMinutes > durationLimit;
 
@@ -111,12 +115,16 @@ export function TournamentConfigForm({ config, playerCount, clubCount, onUpdate 
     });
   };
 
-  const handleScoringModeChange = (mode: 'points' | 'games') => {
+  const handleScoringModeChange = (mode: 'points' | 'games' | 'sets' | 'timed') => {
     if (mode === 'points' && lastAutoSwitchRef.current) {
       showToast(t('config.gamesModeSuggestion', { rounds: effectiveRounds }));
     }
-    // Clear explicit pointsPerMatch so it gets recalculated for the new mode
-    onUpdate({ scoringMode: mode, pointsPerMatch: 0 });
+    if (mode === 'timed') {
+      onUpdate({ scoringMode: 'timed', pointsPerMatch: 0 });
+    } else {
+      // Clear explicit pointsPerMatch so it gets recalculated for the new mode
+      onUpdate({ scoringMode: mode, pointsPerMatch: 0, minutesPerRound: undefined });
+    }
   };
 
   return (
@@ -287,51 +295,81 @@ export function TournamentConfigForm({ config, playerCount, clubCount, onUpdate 
           }}
         />
         <span className={styles.hint}>
-          {clubFixedRounds
+          {clubFixedRounds && !isTimedMode
             ? t('config.clubFixedRounds', { rounds: clubFixedRounds, clubs: clubCount! })
-            : t('config.recommendedRounds', { rounds: suggestedRounds, players: playerCount, courts: config.courts.length })}
+            : isTimedMode
+              ? t('config.recommendedTimedPair', { rounds: suggestedRounds, minutes: suggestedMinutes })
+              : t('config.recommendedRounds', { rounds: suggestedRounds, players: playerCount, courts: config.courts.length })}
         </span>
       </div>
 
-      <div className={styles.field}>
-        <div className={styles.labelRow}>
-          <label className={styles.label} htmlFor="config-points">
-            {isGamesMode ? t('config.gamesPerMatch') : t('config.pointsPerMatch')}
-          </label>
+      {isTimedMode ? (
+        <div className={styles.field}>
+          <div className={styles.labelRow}>
+            <label className={styles.label} htmlFor="config-minutes-per-round">
+              {t('config.minutesPerRound')}
+            </label>
+          </div>
+          <input
+            id="config-minutes-per-round"
+            className={styles.input}
+            type="number"
+            min={1}
+            value={config.minutesPerRound || ''}
+            placeholder={String(resolved.minutesPerRound ?? DEFAULT_MINUTES_PER_ROUND)}
+            onChange={e => {
+              const v = e.target.value === '' ? undefined : parseInt(e.target.value);
+              onUpdate({ minutesPerRound: v && !isNaN(v) && v > 0 ? v : undefined });
+            }}
+          />
         </div>
-        <input
-          id="config-points"
-          className={styles.input}
-          type="number"
-          min={isKOTC ? 12 : 1}
-          value={config.pointsPerMatch || ''}
-          placeholder={String(suggestedPoints)}
-          onChange={e => {
-            const v = e.target.value === '' ? 0 : parseInt(e.target.value);
-            onUpdate({ pointsPerMatch: isNaN(v) ? 0 : Math.max(0, v) });
-          }}
-        />
-        <span className={styles.hint}>
-          {isGamesMode
-            ? (clubFixedRounds
-              ? t('config.recommendedGamesClub', { games: suggestedPoints })
-              : t('config.recommendedGames', { games: suggestedPoints, duration: formatDuration(durationLimit) }))
-            : (clubFixedRounds
-              ? t('config.recommendedPointsClub', { points: suggestedPoints })
-              : t('config.recommendedPoints', { points: suggestedPoints, duration: formatDuration(durationLimit) }))}
-        </span>
-      </div>
+      ) : (
+        <div className={styles.field}>
+          <div className={styles.labelRow}>
+            <label className={styles.label} htmlFor="config-points">
+              {isSetsMode ? t('config.setsPerMatch') : isGamesMode ? t('config.gamesPerMatch') : t('config.pointsPerMatch')}
+            </label>
+          </div>
+          <input
+            id="config-points"
+            className={styles.input}
+            type="number"
+            min={isKOTC ? 12 : 1}
+            value={config.pointsPerMatch || ''}
+            placeholder={String(suggestedPoints)}
+            onChange={e => {
+              const v = e.target.value === '' ? 0 : parseInt(e.target.value);
+              onUpdate({ pointsPerMatch: isNaN(v) ? 0 : Math.max(0, v) });
+            }}
+          />
+          <span className={styles.hint}>
+            {isSetsMode
+              ? (clubFixedRounds
+                ? t('config.recommendedSetsClub', { sets: suggestedPoints })
+                : t('config.recommendedSets', { sets: suggestedPoints, duration: formatDuration(durationLimit) }))
+              : isGamesMode
+                ? (clubFixedRounds
+                  ? t('config.recommendedGamesClub', { games: suggestedPoints })
+                  : t('config.recommendedGames', { games: suggestedPoints, duration: formatDuration(durationLimit) }))
+                : (clubFixedRounds
+                  ? t('config.recommendedPointsClub', { points: suggestedPoints })
+                  : t('config.recommendedPoints', { points: suggestedPoints, duration: formatDuration(durationLimit) }))}
+          </span>
+        </div>
+      )}
 
       <div className={styles.field}>
         <label className={styles.label} htmlFor="config-scoring-mode">{t('config.scoringMode')}</label>
         <select
           id="config-scoring-mode"
           className={styles.input}
-          value={isGamesMode ? 'games' : 'points'}
-          onChange={e => handleScoringModeChange(e.target.value as 'points' | 'games')}
+          value={isTimedMode ? 'timed' : isSetsMode ? 'sets' : isGamesMode ? 'games' : 'points'}
+          onChange={e => handleScoringModeChange(e.target.value as 'points' | 'games' | 'sets' | 'timed')}
         >
           <option value="points">{t('config.scoringModePoints')}</option>
           <option value="games">{t('config.scoringModeGames')}</option>
+          <option value="sets">{t('config.scoringModeSets')}</option>
+          <option value="timed">{t('config.scoringModeTimed')}</option>
         </select>
       </div>
 
@@ -356,10 +394,20 @@ export function TournamentConfigForm({ config, playerCount, clubCount, onUpdate 
           <div className={styles.warningTitle}>{t('config.mayExceed', { duration: formatDuration(durationLimit) })}</div>
           <div className={styles.warningBody}>
             {t('config.fitWithin', { duration: formatDuration(durationLimit) })}{' '}
-            {suggestedPoints !== effectivePoints && (
-              <><strong>{t('config.pointsSuggestion', { points: suggestedPoints })}</strong></>
-            )}
-            <strong>{t('config.roundsSuggestion', { rounds: suggestedRounds })}</strong>.
+            {isTimedMode ? (
+              <strong>{t('config.timedSuggestion', { rounds: suggestedRounds, minutes: suggestedMinutes })}</strong>
+            ) : (
+              <>
+                {suggestedPoints !== effectivePoints && (
+                  <><strong>{isSetsMode
+                    ? t('config.setsSuggestion', { sets: suggestedPoints })
+                    : isGamesMode
+                      ? t('config.gamesSuggestion', { games: suggestedPoints })
+                      : t('config.pointsSuggestion', { points: suggestedPoints })}</strong></>
+                )}
+                <strong>{t('config.roundsSuggestion', { rounds: suggestedRounds })}</strong>
+              </>
+            )}.
           </div>
         </div>
       )}

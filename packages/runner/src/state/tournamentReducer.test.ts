@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { tournamentReducer } from './tournamentReducer';
-import type { Tournament, TournamentConfig, Player } from '@padel/common';
+import type { Tournament, TournamentConfig, Player, Team, MaldicionesHands } from '@padel/common';
 
 function makeConfig(numCourts = 1): TournamentConfig {
   return {
@@ -841,6 +841,296 @@ describe('tournamentReducer', () => {
       });
       // Court c3 should be unavailable
       expect(result!.config.courts.find(c => c.id === 'c3')!.unavailable).toBe(true);
+    });
+  });
+
+  describe('COMPLETE_CEREMONY', () => {
+    it('sets ceremonyCompleted and nominations on completed tournament', () => {
+      let state = makeInProgressTournament();
+      // Score all matches then complete
+      for (const round of state.rounds) {
+        for (const match of round.matches) {
+          state = tournamentReducer(state, {
+            type: 'SET_MATCH_SCORE',
+            payload: { roundId: round.id, matchId: match.id, score: { team1Points: 14, team2Points: 10 } },
+          })!;
+        }
+      }
+      state = tournamentReducer(state, { type: 'COMPLETE_TOURNAMENT' })!;
+      expect(state.phase).toBe('completed');
+
+      const nominations = [{ id: 'mvp', title: 'MVP', emoji: '🏆', description: 'Best player', playerNames: ['Player 1'], stat: '10 pts' }];
+      const result = tournamentReducer(state, {
+        type: 'COMPLETE_CEREMONY',
+        payload: { nominations },
+      });
+      expect(result!.ceremonyCompleted).toBe(true);
+      expect(result!.nominations).toEqual(nominations);
+    });
+
+    it('ignores in non-completed phase', () => {
+      const state = makeInProgressTournament();
+      const result = tournamentReducer(state, {
+        type: 'COMPLETE_CEREMONY',
+        payload: { nominations: [] },
+      });
+      expect(result).toBe(state);
+    });
+  });
+
+  describe('CAST_MALDICION', () => {
+    function makeMaldicionState(): Tournament {
+      const players: Player[] = Array.from({ length: 8 }, (_, i) => ({ id: `p${i + 1}`, name: `P${i + 1}` }));
+      const teams: Team[] = [
+        { id: 'team1', player1Id: 'p1', player2Id: 'p2' },
+        { id: 'team2', player1Id: 'p3', player2Id: 'p4' },
+        { id: 'team3', player1Id: 'p5', player2Id: 'p6' },
+        { id: 'team4', player1Id: 'p7', player2Id: 'p8' },
+      ];
+      const maldicionesHands: MaldicionesHands = {
+        team1: { cardIds: ['curse-a', 'curse-b'], hasShield: true },
+        team2: { cardIds: ['curse-c'], hasShield: true },
+        team3: { cardIds: [], hasShield: false },
+        team4: { cardIds: [], hasShield: false },
+      };
+      return {
+        id: 't1', name: 'Mald', phase: 'in-progress',
+        config: {
+          format: 'team-americano', pointsPerMatch: 21,
+          courts: [{ id: 'c1', name: 'C1' }, { id: 'c2', name: 'C2' }],
+          maxRounds: 3,
+          maldiciones: { enabled: true, chaosLevel: 'medium' },
+        },
+        players, teams, maldicionesHands,
+        rounds: [{
+          id: 'r1', roundNumber: 1, sitOuts: [],
+          matches: [
+            { id: 'm1', courtId: 'c1', team1: ['p1', 'p2'] as [string, string], team2: ['p3', 'p4'] as [string, string], score: null },
+            { id: 'm2', courtId: 'c2', team1: ['p5', 'p6'] as [string, string], team2: ['p7', 'p8'] as [string, string], score: null },
+          ],
+        }],
+        createdAt: 0, updatedAt: 0,
+      };
+    }
+
+    it('casts a curse on an unscored match', () => {
+      const state = makeMaldicionState();
+      const result = tournamentReducer(state, {
+        type: 'CAST_MALDICION',
+        payload: { roundId: 'r1', matchId: 'm1', castBy: 'team1', cardId: 'curse-a', targetPlayerId: 'p3' },
+      });
+      const match = result!.rounds[0].matches[0];
+      expect(match.curse).toEqual({ cardId: 'curse-a', castBy: 'team1', targetPlayerId: 'p3', shielded: false });
+      // Card removed from hand
+      expect(result!.maldicionesHands!.team1.cardIds).not.toContain('curse-a');
+      expect(result!.maldicionesHands!.team1.cardIds).toContain('curse-b');
+    });
+
+    it('does not cast if match already scored', () => {
+      const state = makeMaldicionState();
+      // Score the match first
+      const scored = tournamentReducer(state, {
+        type: 'SET_MATCH_SCORE',
+        payload: { roundId: 'r1', matchId: 'm1', score: { team1Points: 11, team2Points: 10 } },
+      })!;
+      const result = tournamentReducer(scored, {
+        type: 'CAST_MALDICION',
+        payload: { roundId: 'r1', matchId: 'm1', castBy: 'team1', cardId: 'curse-a', targetPlayerId: 'p3' },
+      });
+      expect(result).toBe(scored);
+    });
+
+    it('does not cast if card not in hand', () => {
+      const state = makeMaldicionState();
+      const result = tournamentReducer(state, {
+        type: 'CAST_MALDICION',
+        payload: { roundId: 'r1', matchId: 'm1', castBy: 'team1', cardId: 'nonexistent', targetPlayerId: 'p3' },
+      });
+      expect(result).toBe(state);
+    });
+
+    it('does not cast if match already has a curse', () => {
+      const state = makeMaldicionState();
+      // Cast first curse
+      const withCurse = tournamentReducer(state, {
+        type: 'CAST_MALDICION',
+        payload: { roundId: 'r1', matchId: 'm1', castBy: 'team1', cardId: 'curse-a', targetPlayerId: 'p3' },
+      })!;
+      // Try to cast again
+      const result = tournamentReducer(withCurse, {
+        type: 'CAST_MALDICION',
+        payload: { roundId: 'r1', matchId: 'm1', castBy: 'team1', cardId: 'curse-b', targetPlayerId: 'p3' },
+      });
+      expect(result).toBe(withCurse);
+    });
+
+    it('returns state when no maldicionesHands', () => {
+      const state = { ...makeMaldicionState(), maldicionesHands: undefined };
+      const result = tournamentReducer(state, {
+        type: 'CAST_MALDICION',
+        payload: { roundId: 'r1', matchId: 'm1', castBy: 'team1', cardId: 'curse-a', targetPlayerId: 'p3' },
+      });
+      expect(result).toBe(state);
+    });
+  });
+
+  describe('USE_ESCUDO', () => {
+    function makeCursedState(): Tournament {
+      const players: Player[] = Array.from({ length: 8 }, (_, i) => ({ id: `p${i + 1}`, name: `P${i + 1}` }));
+      const teams: Team[] = [
+        { id: 'team1', player1Id: 'p1', player2Id: 'p2' },
+        { id: 'team2', player1Id: 'p3', player2Id: 'p4' },
+        { id: 'team3', player1Id: 'p5', player2Id: 'p6' },
+        { id: 'team4', player1Id: 'p7', player2Id: 'p8' },
+      ];
+      const maldicionesHands: MaldicionesHands = {
+        team1: { cardIds: [], hasShield: false },
+        team2: { cardIds: [], hasShield: true },
+        team3: { cardIds: [], hasShield: false },
+        team4: { cardIds: [], hasShield: false },
+      };
+      return {
+        id: 't1', name: 'Mald', phase: 'in-progress',
+        config: {
+          format: 'team-americano', pointsPerMatch: 21,
+          courts: [{ id: 'c1', name: 'C1' }, { id: 'c2', name: 'C2' }],
+          maxRounds: 3,
+          maldiciones: { enabled: true, chaosLevel: 'medium' },
+        },
+        players, teams, maldicionesHands,
+        rounds: [{
+          id: 'r1', roundNumber: 1, sitOuts: [],
+          matches: [
+            {
+              id: 'm1', courtId: 'c1',
+              team1: ['p1', 'p2'] as [string, string], team2: ['p3', 'p4'] as [string, string],
+              score: null,
+              curse: { cardId: 'curse-a', castBy: 'team1', targetPlayerId: 'p3', shielded: false },
+            },
+            { id: 'm2', courtId: 'c2', team1: ['p5', 'p6'] as [string, string], team2: ['p7', 'p8'] as [string, string], score: null },
+          ],
+        }],
+        createdAt: 0, updatedAt: 0,
+      };
+    }
+
+    it('uses shield to block a curse', () => {
+      const state = makeCursedState();
+      const result = tournamentReducer(state, {
+        type: 'USE_ESCUDO',
+        payload: { roundId: 'r1', matchId: 'm1' },
+      });
+      const match = result!.rounds[0].matches[0];
+      expect(match.curse!.shielded).toBe(true);
+      expect(result!.maldicionesHands!.team2.hasShield).toBe(false);
+    });
+
+    it('does nothing when victim has no shield', () => {
+      const state = makeCursedState();
+      // Remove team2's shield
+      state.maldicionesHands!.team2.hasShield = false;
+      const result = tournamentReducer(state, {
+        type: 'USE_ESCUDO',
+        payload: { roundId: 'r1', matchId: 'm1' },
+      });
+      expect(result).toBe(state);
+    });
+
+    it('does nothing when no active curse on match', () => {
+      const state = makeCursedState();
+      // Try to shield on match without a curse
+      const result = tournamentReducer(state, {
+        type: 'USE_ESCUDO',
+        payload: { roundId: 'r1', matchId: 'm2' },
+      });
+      expect(result).toBe(state);
+    });
+
+    it('does nothing when curse is already shielded', () => {
+      const state = makeCursedState();
+      // Shield the curse first
+      const shielded = tournamentReducer(state, {
+        type: 'USE_ESCUDO',
+        payload: { roundId: 'r1', matchId: 'm1' },
+      })!;
+      // Try to shield again (even though hasShield is now false)
+      const result = tournamentReducer(shielded, {
+        type: 'USE_ESCUDO',
+        payload: { roundId: 'r1', matchId: 'm1' },
+      });
+      expect(result).toBe(shielded);
+    });
+  });
+
+  describe('VETO_MALDICION', () => {
+    function makeCursedState(): Tournament {
+      const players: Player[] = Array.from({ length: 8 }, (_, i) => ({ id: `p${i + 1}`, name: `P${i + 1}` }));
+      const teams: Team[] = [
+        { id: 'team1', player1Id: 'p1', player2Id: 'p2' },
+        { id: 'team2', player1Id: 'p3', player2Id: 'p4' },
+        { id: 'team3', player1Id: 'p5', player2Id: 'p6' },
+        { id: 'team4', player1Id: 'p7', player2Id: 'p8' },
+      ];
+      const maldicionesHands: MaldicionesHands = {
+        team1: { cardIds: ['curse-b'], hasShield: false },
+        team2: { cardIds: [], hasShield: false },
+        team3: { cardIds: [], hasShield: false },
+        team4: { cardIds: [], hasShield: false },
+      };
+      return {
+        id: 't1', name: 'Mald', phase: 'in-progress',
+        config: {
+          format: 'team-americano', pointsPerMatch: 21,
+          courts: [{ id: 'c1', name: 'C1' }, { id: 'c2', name: 'C2' }],
+          maxRounds: 3,
+          maldiciones: { enabled: true, chaosLevel: 'medium' },
+        },
+        players, teams, maldicionesHands,
+        rounds: [{
+          id: 'r1', roundNumber: 1, sitOuts: [],
+          matches: [
+            {
+              id: 'm1', courtId: 'c1',
+              team1: ['p1', 'p2'] as [string, string], team2: ['p3', 'p4'] as [string, string],
+              score: null,
+              curse: { cardId: 'curse-a', castBy: 'team1', targetPlayerId: 'p3', shielded: false },
+            },
+            { id: 'm2', courtId: 'c2', team1: ['p5', 'p6'] as [string, string], team2: ['p7', 'p8'] as [string, string], score: null },
+          ],
+        }],
+        createdAt: 0, updatedAt: 0,
+      };
+    }
+
+    it('vetoes a curse and returns card to caster hand', () => {
+      const state = makeCursedState();
+      const result = tournamentReducer(state, {
+        type: 'VETO_MALDICION',
+        payload: { roundId: 'r1', matchId: 'm1' },
+      });
+      const match = result!.rounds[0].matches[0];
+      expect(match.curse).toBeUndefined();
+      // Card returned to caster (team1)
+      expect(result!.maldicionesHands!.team1.cardIds).toContain('curse-a');
+      expect(result!.maldicionesHands!.team1.cardIds).toContain('curse-b');
+    });
+
+    it('does nothing when match has no curse', () => {
+      const state = makeCursedState();
+      const result = tournamentReducer(state, {
+        type: 'VETO_MALDICION',
+        payload: { roundId: 'r1', matchId: 'm2' },
+      });
+      expect(result).toBe(state);
+    });
+
+    it('returns state when no maldicionesHands', () => {
+      const state = { ...makeCursedState(), maldicionesHands: undefined };
+      const result = tournamentReducer(state, {
+        type: 'VETO_MALDICION',
+        payload: { roundId: 'r1', matchId: 'm1' },
+      });
+      expect(result).toBe(state);
     });
   });
 

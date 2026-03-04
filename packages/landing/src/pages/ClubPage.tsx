@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { AppFooter, FeedbackModal } from '@padel/common';
 import styles from './Article.module.css';
 
@@ -8,7 +8,6 @@ interface Props {
 
 export function ClubPage({ onFeedback }: Props) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  useEffect(() => { document.title = 'Club Tournament Formats — Inter-Club Padel Competition | PadelDay'; }, []);
 
   return (
     <>
@@ -92,23 +91,25 @@ export function ClubPage({ onFeedback }: Props) {
         </ul>
 
         <h2>Comparison</h2>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Format</th>
-              <th>Partners</th>
-              <th>Opponents</th>
-              <th>Schedule</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>Club Americano</td><td>Rotating</td><td>Random</td><td>Static</td></tr>
-            <tr><td>Club Mexicano</td><td>Rotating</td><td>Standings</td><td>Dynamic</td></tr>
-            <tr><td>Club Ranked</td><td>Fixed</td><td>Positional</td><td>Static</td></tr>
-            <tr><td>Club Team Americano</td><td>Fixed</td><td>Random</td><td>Static</td></tr>
-            <tr><td>Club Team Mexicano</td><td>Fixed</td><td>Standings</td><td>Dynamic</td></tr>
-          </tbody>
-        </table>
+        <div className={styles.tableWrapper}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Format</th>
+                <th>Partners</th>
+                <th>Opponents</th>
+                <th>Schedule</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Club Americano</td><td>Rotating</td><td>Random</td><td>Static</td></tr>
+              <tr><td>Club Mexicano</td><td>Rotating</td><td>Standings</td><td>Dynamic</td></tr>
+              <tr><td>Club Ranked</td><td>Fixed</td><td>Positional</td><td>Static</td></tr>
+              <tr><td>Club Team Americano</td><td>Fixed</td><td>Random</td><td>Static</td></tr>
+              <tr><td>Club Team Mexicano</td><td>Fixed</td><td>Standings</td><td>Dynamic</td></tr>
+            </tbody>
+          </table>
+        </div>
 
         <h2>How Rounds Work</h2>
         <p>
@@ -139,6 +140,29 @@ export function ClubPage({ onFeedback }: Props) {
           <li><strong>Club Rivalry</strong> — two clubs with the closest final scores</li>
           <li><strong>Club MVP</strong> — the pair that contributed the highest percentage of their club's points</li>
           <li><strong>Club Solidarity</strong> — the club with the most balanced performance across all its pairs</li>
+        </ul>
+
+        <h2>Captain Mode</h2>
+        <p>
+          For larger club events, enable <strong>Captain Mode</strong> to give each club a designated captain who manages their team's roster. Captains review incoming player pairs and approve or reject them before they become eligible to play.
+        </p>
+        <p>
+          This is especially useful when clubs have more players than available slots — the captain decides who plays and who sits in reserve, keeping full control over lineup decisions.
+        </p>
+
+        <h3>How It Works</h3>
+        <ul>
+          <li><strong>Assign a captain per club</strong> — pick any registered player from the club, or invite someone via Telegram.</li>
+          <li><strong>Players register as usual</strong> — they sign up and form pairs, but start in a "registered" state.</li>
+          <li><strong>Captain reviews pairs</strong> — the captain sees all registered pairs and can approve or reject each one.</li>
+          <li><strong>Approved pairs enter the tournament</strong> — only approved pairs are placed into playing or reserve slots.</li>
+        </ul>
+
+        <h3>When to Use Captain Mode</h3>
+        <ul>
+          <li>Large inter-club events where not every pair can play every round</li>
+          <li>League play where clubs need to submit official rosters</li>
+          <li>Events where captains want to strategically manage their lineup</li>
         </ul>
 
         <h2>Tips for Organizers</h2>

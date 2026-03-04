@@ -56,8 +56,9 @@ export async function createTournament(page: Page, name?: string) {
   const createBtn = page.getByRole('button', { name: 'Create Tournament' });
   await expect(createBtn).toBeEnabled({ timeout: 10000 });
   await createBtn.click();
-  // Wait for the organizer screen to load (share code appears)
-  await expect(page.getByText('Share with Players')).toBeVisible({ timeout: 15000 });
+  // Wait for the organizer screen to load (heading + players section)
+  await expect(page.getByRole('heading', { name: tournamentName })).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText(/Players \(/)).toBeVisible({ timeout: 10000 });
   return tournamentName;
 }
 
@@ -65,6 +66,11 @@ export async function createTournament(page: Page, name?: string) {
  * Get the 6-character share code from the organizer screen.
  */
 export async function getShareCode(page: Page): Promise<string> {
+  // The share code is inside the "Share & Invite" expandable section
+  const shareBtn = page.getByRole('button', { name: 'Share & Invite' });
+  if (await shareBtn.isVisible().catch(() => false)) {
+    await shareBtn.click();
+  }
   const codeEl = page.locator('span[class*="code"]').filter({ hasText: /^[A-Z2-9]{6}$/ });
   const code = await codeEl.textContent({ timeout: 5000 });
   if (!code || code.length !== 6) throw new Error(`Invalid share code: ${code}`);

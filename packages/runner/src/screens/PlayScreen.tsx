@@ -14,7 +14,7 @@ import { copyToClipboard } from '../utils/clipboard';
 import { shareStandingsImage } from '../utils/standingsImage';
 import { ref, push, set } from 'firebase/database';
 import { auth, db, firebaseConfigured } from '../firebase';
-import { Button, getClubColor, FeedbackModal, Modal, SupportOverlay, Toast, useToast, useTranslation, formatHasGroups, formatHasClubs } from '@padel/common';
+import { Button, getClubColor, FeedbackModal, Modal, SupportOverlay, Toast, useToast, useTranslation, formatHasGroups, formatHasClubs, shortLabel } from '@padel/common';
 import { getStrategy } from '../strategies';
 import { MaldicionesRulesModal } from '../components/maldiciones/MaldicionesRulesModal';
 import { CURSE_CARDS } from '../data/curseCards';
@@ -86,24 +86,42 @@ export function PlayScreen() {
     if (!tournament || tournament.config.format !== 'club-ranked') return undefined;
     const rankLabels = tournament.config.rankLabels;
     if (!rankLabels?.length || !tournament.teams?.length || !tournament.clubs?.length) return undefined;
-    const playerClubMap = new Map<string, string>();
-    for (const p of tournament.players) {
-      if (p.clubId) playerClubMap.set(p.id, p.clubId);
-    }
-    // Group teams by club to find slot index
-    const clubTeamIndex = new Map<string, number>();
-    const clubCounters = new Map<string, number>();
+    const playerRankOf = (id: string) => tournament.players.find(p => p.id === id)?.rankSlot;
+    const playerClubOf = (id: string) => tournament.players.find(p => p.id === id)?.clubId;
+
+    // Group teams by club
+    const teamsByClub = new Map<string, typeof tournament.teams>();
+    for (const club of tournament.clubs) teamsByClub.set(club.id, []);
     for (const team of tournament.teams) {
-      const cid = playerClubMap.get(team.player1Id) ?? playerClubMap.get(team.player2Id);
-      if (!cid) continue;
-      const idx = clubCounters.get(cid) ?? 0;
-      clubTeamIndex.set(team.id, idx);
-      clubCounters.set(cid, idx + 1);
+      const cid = playerClubOf(team.player1Id) ?? playerClubOf(team.player2Id);
+      if (cid && teamsByClub.has(cid)) teamsByClub.get(cid)!.push(team);
     }
+
+    // Count occurrences of each rank per club
+    const clubRankCount = new Map<string, Map<number, number>>();
+    for (const club of tournament.clubs) {
+      const rankCounts = new Map<number, number>();
+      clubRankCount.set(club.id, rankCounts);
+      for (const team of teamsByClub.get(club.id) ?? []) {
+        const rank = playerRankOf(team.player1Id) ?? playerRankOf(team.player2Id);
+        if (rank != null) rankCounts.set(rank, (rankCounts.get(rank) ?? 0) + 1);
+      }
+    }
+
+    // Assign labels with suffix when rank appears more than once in a club
     const labelMap = new Map<string, string>();
-    for (const [teamId, slotIdx] of clubTeamIndex) {
-      const label = rankLabels[slotIdx];
-      if (label) labelMap.set(teamId, label);
+    for (const club of tournament.clubs) {
+      const seen = new Map<number, number>();
+      for (const team of teamsByClub.get(club.id) ?? []) {
+        const rank = playerRankOf(team.player1Id) ?? playerRankOf(team.player2Id);
+        if (rank != null && rankLabels[rank]) {
+          const base = shortLabel(rankLabels[rank]);
+          const totalForRank = clubRankCount.get(club.id)?.get(rank) ?? 1;
+          const idx = (seen.get(rank) ?? 0) + 1;
+          seen.set(rank, idx);
+          labelMap.set(team.id, totalForRank > 1 ? `${base} [${idx}]` : base);
+        }
+      }
     }
     return labelMap.size > 0 ? { labelMap } : undefined;
   }, [tournament]);
@@ -358,6 +376,7 @@ export function PlayScreen() {
           players={tournament.players}
           courts={tournament.config.courts}
           pointsPerMatch={tournament.config.pointsPerMatch}
+          scoringMode={tournament.config.scoringMode}
           format={tournament.config.format}
           maldicionesEnabled={maldicionesEnabled}
           maldicionesHands={tournament.maldicionesHands}

@@ -22,7 +22,7 @@ export function commonValidateSetup(players: Player[], config: TournamentConfig)
   if (availableCourts.length === 0) {
     errors.push('At least 1 court is required');
   }
-  if (config.pointsPerMatch < 1) {
+  if (config.scoringMode !== 'timed' && config.pointsPerMatch < 1) {
     errors.push('Points per match must be at least 1');
   }
   const maxCourts = Math.floor(players.length / 4);
@@ -33,11 +33,14 @@ export function commonValidateSetup(players: Player[], config: TournamentConfig)
 }
 
 export function commonValidateScore(score: MatchScore, config: TournamentConfig): string | null {
-  if (score.team1Points + score.team2Points !== config.pointsPerMatch) {
-    return `Total points must equal ${config.pointsPerMatch}`;
-  }
   if (score.team1Points < 0 || score.team2Points < 0) {
     return 'Points cannot be negative';
+  }
+  if (config.scoringMode === 'timed') {
+    return null;
+  }
+  if (score.team1Points + score.team2Points !== config.pointsPerMatch) {
+    return `Total points must equal ${config.pointsPerMatch}`;
   }
   return null;
 }

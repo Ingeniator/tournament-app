@@ -29,6 +29,8 @@ export interface Club {
   id: string;
   name: string;
   color?: string;
+  captainId?: string;
+  captainTelegram?: string;
 }
 
 export interface TournamentConfig {
@@ -37,7 +39,8 @@ export interface TournamentConfig {
   courts: Court[];
   maxRounds: number | null;
   targetDuration?: number;
-  scoringMode?: 'points' | 'games';
+  scoringMode?: 'points' | 'games' | 'sets' | 'timed';
+  minutesPerRound?: number;
   groupLabels?: [string, string];
   rankLabels?: string[];
   pairMode?: 'fixed' | 'rotating';

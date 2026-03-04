@@ -26,9 +26,13 @@ test.describe('Home Screen', () => {
     await expect(page.getByRole('heading', { name: /^Round \d+$/ }).first()).toBeVisible({ timeout: 5000 });
   });
 
-  test('new play creates tournament', async ({ page }) => {
-    await expect(page.getByRole('button', { name: 'Quick Play' })).toBeVisible();
+  test('empty home shows plan ahead and import', async ({ page }) => {
+    await expect(page.getByRole('button', { name: 'Plan Ahead' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Import/ })).toBeVisible();
     await expect(page).toHaveScreenshot('home-empty-state.png');
+  });
+
+  test('creating tournament shows setup screen', async ({ page }) => {
     await createTournament(page);
 
     // Should be in setup screen

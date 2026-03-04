@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { kingOfTheCourtStrategy } from './kingOfTheCourt';
+import { kingOfTheCourtStrategy, mixedKingOfTheCourtStrategy } from './kingOfTheCourt';
 import type { Player, TournamentConfig, Round, Tournament } from '@padel/common';
 
 function makePlayers(n: number): Player[] {
@@ -382,10 +382,47 @@ describe('kingOfTheCourt calculateStandings', () => {
     const standings = kingOfTheCourtStrategy.calculateStandings(tournament);
     const byId = new Map(standings.map(s => [s.playerId, s]));
 
-    // Total scored points = (14+10) + (14+10) = 48, 8 players scored → avg = 6
+    // Total scored points including court bonus:
+    // c1 (bonus=1): (14+10) + 1*4 = 28, c2 (bonus=0): (14+10) + 0*4 = 24
+    // Total = 52, 8 players scored → avg = 6.5 → round = 7
     const p9 = byId.get('p9')!;
-    expect(p9.totalPoints).toBe(6);
+    expect(p9.totalPoints).toBe(7);
     expect(p9.matchesPlayed).toBe(0);
+  });
+
+  it('sit-out compensation includes court bonus (3 courts)', () => {
+    const players14 = makePlayers(14);
+    const config3 = makeConfig(3);
+    const round: Round = {
+      id: 'r1',
+      roundNumber: 1,
+      matches: [
+        {
+          id: 'm1', courtId: 'c1', // bonus = 2
+          team1: ['p1', 'p2'], team2: ['p3', 'p4'],
+          score: { team1Points: 12, team2Points: 12 },
+        },
+        {
+          id: 'm2', courtId: 'c2', // bonus = 1
+          team1: ['p5', 'p6'], team2: ['p7', 'p8'],
+          score: { team1Points: 12, team2Points: 12 },
+        },
+        {
+          id: 'm3', courtId: 'c3', // bonus = 0
+          team1: ['p9', 'p10'], team2: ['p11', 'p12'],
+          score: { team1Points: 12, team2Points: 12 },
+        },
+      ],
+      sitOuts: ['p13', 'p14'],
+    };
+    const tournament = makeTournament(players14, config3, [round]);
+    const standings = kingOfTheCourtStrategy.calculateStandings(tournament);
+    const byId = new Map(standings.map(s => [s.playerId, s]));
+
+    // Without bonus: avg = (24+24+24)/12 = 6
+    // With bonus: avg = (24 + 2*4 + 24 + 1*4 + 24 + 0*4) / 12 = 84/12 = 7
+    expect(byId.get('p13')!.totalPoints).toBe(7);
+    expect(byId.get('p14')!.totalPoints).toBe(7);
   });
 
   it('ranks players by totalPoints desc, then pointDiff, then matchesWon', () => {
@@ -740,6 +777,83 @@ describe('kingOfTheCourt 3-court promotion/relegation', () => {
 
     // Lowest court: c2 losers (p7,p8) relegate + c3 losers (p11,p12) stay
     expect(lowestPlayers).toEqual(new Set(['p7', 'p8', 'p11', 'p12']));
+  });
+});
+
+// ── validateMixedKOTCSetup ────────────────────────────────────────
+
+describe('mixedKingOfTheCourt validateSetup', () => {
+  function makeGroupPlayers(aCount: number, bCount: number): Player[] {
+    const players: Player[] = [];
+    for (let i = 0; i < aCount; i++) {
+      players.push({ id: `a${i + 1}`, name: `A${i + 1}`, group: 'A' });
+    }
+    for (let i = 0; i < bCount; i++) {
+      players.push({ id: `b${i + 1}`, name: `B${i + 1}`, group: 'B' });
+    }
+    return players;
+  }
+
+  it('returns no errors for valid setup (4A + 4B, 2 courts)', () => {
+    const errors = mixedKingOfTheCourtStrategy.validateSetup(makeGroupPlayers(4, 4), makeConfig(2));
+    expect(errors).toEqual([]);
+  });
+
+  it('errors when players have no group assigned', () => {
+    const players = [...makeGroupPlayers(4, 4), { id: 'u1', name: 'Unassigned' }];
+    const errors = mixedKingOfTheCourtStrategy.validateSetup(players, makeConfig(2));
+    expect(errors).toContain('1 player(s) have no group assigned');
+  });
+
+  it('errors when group A has fewer than 4 players', () => {
+    const errors = mixedKingOfTheCourtStrategy.validateSetup(makeGroupPlayers(3, 4), makeConfig(2));
+    expect(errors).toContain('Group A needs at least 4 players');
+  });
+
+  it('errors when group B has fewer than 4 players', () => {
+    const errors = mixedKingOfTheCourtStrategy.validateSetup(makeGroupPlayers(4, 3), makeConfig(2));
+    expect(errors).toContain('Group B needs at least 4 players');
+  });
+
+  it('errors when fewer than 2 courts', () => {
+    const errors = mixedKingOfTheCourtStrategy.validateSetup(makeGroupPlayers(4, 4), makeConfig(1));
+    expect(errors).toContain('King of the Court requires at least 2 courts');
+  });
+
+  it('errors when points per match less than 12', () => {
+    const errors = mixedKingOfTheCourtStrategy.validateSetup(makeGroupPlayers(4, 4), makeConfig(2, 10));
+    expect(errors).toContain('King of the Court requires at least 12 points per match');
+  });
+
+  it('errors when too many courts for group sizes', () => {
+    // 4A + 4B → maxCourts = min(4,4)/2 = 2, but providing 3
+    const errors = mixedKingOfTheCourtStrategy.validateSetup(makeGroupPlayers(4, 4), makeConfig(3));
+    expect(errors).toContain('Too many courts: need at most 2 court(s) for 4+4 players');
+  });
+});
+
+// ── validateMixedKOTCWarnings ────────────────────────────────────
+
+describe('mixedKingOfTheCourt validateWarnings', () => {
+  function makeGroupPlayers(aCount: number, bCount: number): Player[] {
+    const players: Player[] = [];
+    for (let i = 0; i < aCount; i++) {
+      players.push({ id: `a${i + 1}`, name: `A${i + 1}`, group: 'A' });
+    }
+    for (let i = 0; i < bCount; i++) {
+      players.push({ id: `b${i + 1}`, name: `B${i + 1}`, group: 'B' });
+    }
+    return players;
+  }
+
+  it('warns about unequal group sizes', () => {
+    const warnings = mixedKingOfTheCourtStrategy.validateWarnings!(makeGroupPlayers(5, 4), makeConfig(2));
+    expect(warnings.some(w => w.includes('Groups are unequal'))).toBe(true);
+  });
+
+  it('no unequal warning when groups are same size', () => {
+    const warnings = mixedKingOfTheCourtStrategy.validateWarnings!(makeGroupPlayers(4, 4), makeConfig(2));
+    expect(warnings.some(w => w.includes('Groups are unequal'))).toBe(false);
   });
 });
 

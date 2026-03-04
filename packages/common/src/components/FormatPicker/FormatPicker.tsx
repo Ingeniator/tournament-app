@@ -51,6 +51,7 @@ export function FormatPicker({ format, onChange, t }: FormatPickerProps) {
         />
       ) : (
         <FormatWizard
+          format={format}
           onChange={handlePresetChange}
           t={t}
         />

@@ -7,7 +7,7 @@ import { PlayerList } from '../components/settings/PlayerList';
 import { copyToClipboard } from '../utils/clipboard';
 import { exportTournament, exportTournamentToFile, validateImport } from '../utils/importExport';
 import { auth, db } from '../firebase';
-import { computeSitOutInfo } from '../utils/resolveConfigDefaults';
+import { computeSitOutInfo } from '@padel/common';
 import { Button, Card, FeedbackModal, AppFooter, Toast, useToast, useTranslation } from '@padel/common';
 import styles from './SettingsScreen.module.css';
 
@@ -122,18 +122,33 @@ export function SettingsScreen() {
 
         {tournament.phase === 'in-progress' ? (
           <>
-            <EditableField
-              label={t('settings.pointsPerMatch')}
-              value={String(tournament.config.pointsPerMatch)}
-              type="number"
-              min={1}
-              onSave={val => {
-                const num = parseInt(val, 10);
-                if (!isNaN(num) && num > 0 && num !== tournament.config.pointsPerMatch) {
-                  dispatch({ type: 'UPDATE_POINTS', payload: { pointsPerMatch: num } });
-                }
-              }}
-            />
+            {tournament.config.scoringMode === 'timed' ? (
+              <EditableField
+                label={t('settings.minutesPerRound')}
+                value={String(tournament.config.minutesPerRound ?? 20)}
+                type="number"
+                min={1}
+                onSave={val => {
+                  const num = parseInt(val, 10);
+                  if (!isNaN(num) && num > 0 && num !== tournament.config.minutesPerRound) {
+                    dispatch({ type: 'UPDATE_POINTS', payload: { pointsPerMatch: tournament.config.pointsPerMatch, minutesPerRound: num } });
+                  }
+                }}
+              />
+            ) : (
+              <EditableField
+                label={tournament.config.scoringMode === 'sets' ? t('settings.setsPerMatch') : t('settings.pointsPerMatch')}
+                value={String(tournament.config.pointsPerMatch)}
+                type="number"
+                min={1}
+                onSave={val => {
+                  const num = parseInt(val, 10);
+                  if (!isNaN(num) && num > 0 && num !== tournament.config.pointsPerMatch) {
+                    dispatch({ type: 'UPDATE_POINTS', payload: { pointsPerMatch: num } });
+                  }
+                }}
+              />
+            )}
 
             <EditableField
               label={t('settings.rounds')}
@@ -171,7 +186,7 @@ export function SettingsScreen() {
           </>
         ) : (
           <div className={styles.chipList}>
-            <span className={styles.chip}>{tournament.config.scoringMode === 'games' ? t('settings.games', { count: tournament.config.pointsPerMatch }) : t('settings.pts', { count: tournament.config.pointsPerMatch })}</span>
+            <span className={styles.chip}>{tournament.config.scoringMode === 'timed' ? t('settings.timedMinutes', { count: tournament.config.minutesPerRound ?? 20 }) : tournament.config.scoringMode === 'sets' ? t('settings.sets', { count: tournament.config.pointsPerMatch }) : tournament.config.scoringMode === 'games' ? t('settings.games', { count: tournament.config.pointsPerMatch }) : t('settings.pts', { count: tournament.config.pointsPerMatch })}</span>
             {tournament.rounds.length > 0 && (
               <span className={styles.chip}>{t('settings.roundCount', { count: tournament.rounds.length })}</span>
             )}

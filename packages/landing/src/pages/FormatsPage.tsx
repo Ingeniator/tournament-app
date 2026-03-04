@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { AppFooter, FeedbackModal } from '@padel/common';
 import styles from './Article.module.css';
 
@@ -33,7 +33,6 @@ const categoryStyle = (cat: string) => {
 
 export function FormatsPage({ onFeedback }: Props) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  useEffect(() => { document.title = 'Tournament Formats — Complete Guide | PadelDay'; }, []);
 
   return (
     <>
@@ -64,33 +63,35 @@ export function FormatsPage({ onFeedback }: Props) {
         </div>
 
         <h2>Comparison</h2>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Format</th>
-              <th>Partners</th>
-              <th>Opponents</th>
-              <th>Level</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>Americano</td><td>Rotating</td><td>Random</td><td>Social</td></tr>
-            <tr><td>Mixed Americano</td><td>Rotating (cross-group)</td><td>Random</td><td>Social</td></tr>
-            <tr><td>Mexicano</td><td>Rotating</td><td>Standings</td><td>Competitive</td></tr>
-            <tr><td>Mixicano</td><td>Rotating (cross-group)</td><td>Standings</td><td>Competitive</td></tr>
-            <tr><td>King of the Court</td><td>Rotating</td><td>Court promotion</td><td>Competitive</td></tr>
-            <tr><td>Mixed King of the Court</td><td>Rotating (cross-group)</td><td>Court promotion</td><td>Competitive</td></tr>
-            <tr><td>Team Americano</td><td>Fixed</td><td>Random</td><td>Team</td></tr>
-            <tr><td>Team Mexicano</td><td>Fixed</td><td>Standings</td><td>Team</td></tr>
-            <tr><td>Mixed Team Americano</td><td>Fixed (cross-group)</td><td>Random</td><td>Team</td></tr>
-            <tr><td>Mixed Team Mexicano</td><td>Fixed (cross-group)</td><td>Standings</td><td>Team</td></tr>
-            <tr><td>Club Americano</td><td>Rotating</td><td>Random</td><td>Club</td></tr>
-            <tr><td>Club Mexicano</td><td>Rotating</td><td>Standings</td><td>Club</td></tr>
-            <tr><td>Club Ranked</td><td>Fixed</td><td>Positional</td><td>Club</td></tr>
-            <tr><td>Club Team Americano</td><td>Fixed</td><td>Random</td><td>Club</td></tr>
-            <tr><td>Club Team Mexicano</td><td>Fixed</td><td>Standings</td><td>Club</td></tr>
-          </tbody>
-        </table>
+        <div className={styles.tableWrapper}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Format</th>
+                <th>Partners</th>
+                <th>Opponents</th>
+                <th>Level</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Americano</td><td>Rotating</td><td>Random</td><td>Social</td></tr>
+              <tr><td>Mixed Americano</td><td>Rotating (cross-group)</td><td>Random</td><td>Social</td></tr>
+              <tr><td>Mexicano</td><td>Rotating</td><td>Standings</td><td>Competitive</td></tr>
+              <tr><td>Mixicano</td><td>Rotating (cross-group)</td><td>Standings</td><td>Competitive</td></tr>
+              <tr><td>King of the Court</td><td>Rotating</td><td>Court promotion</td><td>Competitive</td></tr>
+              <tr><td>Mixed King of the Court</td><td>Rotating (cross-group)</td><td>Court promotion</td><td>Competitive</td></tr>
+              <tr><td>Team Americano</td><td>Fixed</td><td>Random</td><td>Team</td></tr>
+              <tr><td>Team Mexicano</td><td>Fixed</td><td>Standings</td><td>Team</td></tr>
+              <tr><td>Mixed Team Americano</td><td>Fixed (cross-group)</td><td>Random</td><td>Team</td></tr>
+              <tr><td>Mixed Team Mexicano</td><td>Fixed (cross-group)</td><td>Standings</td><td>Team</td></tr>
+              <tr><td>Club Americano</td><td>Rotating</td><td>Random</td><td>Club</td></tr>
+              <tr><td>Club Mexicano</td><td>Rotating</td><td>Standings</td><td>Club</td></tr>
+              <tr><td>Club Ranked</td><td>Fixed</td><td>Positional</td><td>Club</td></tr>
+              <tr><td>Club Team Americano</td><td>Fixed</td><td>Random</td><td>Club</td></tr>
+              <tr><td>Club Team Mexicano</td><td>Fixed</td><td>Standings</td><td>Club</td></tr>
+            </tbody>
+          </table>
+        </div>
 
         <h2>Cross-Group Pairing</h2>
         <p>

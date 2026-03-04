@@ -10,6 +10,15 @@ export default defineConfig({
   },
   base: '/plan',
   server: { port: 5191, strictPort: true },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/firebase')) return 'firebase';
+        },
+      },
+    },
+  },
   plugins: [react()],
   test: {
     environment: 'jsdom',

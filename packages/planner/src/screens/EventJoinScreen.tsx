@@ -90,8 +90,8 @@ export function EventJoinScreen({ eventId, uid, onJoinTournament, onBack, onEdit
                 const formatLabel = preset ? t(preset.nameKey) : null;
                 return (
                   <div key={ti.id} className={styles.tournamentItem}>
-                    <div className={styles.tournamentDetails}>
-                      <div className={styles.tournamentName}>{ti.name}</div>
+                    <div className={styles.tournamentName}>{ti.name}</div>
+                    <div className={styles.tournamentRow}>
                       <div className={styles.tournamentMeta}>
                         {formatLabel && <span>{formatLabel}</span>}
                         {ti.date && <span>{ti.date}</span>}
@@ -105,12 +105,12 @@ export function EventJoinScreen({ eventId, uid, onJoinTournament, onBack, onEdit
                           <span>{t('event.spotsOpen', { count: Math.max(0, ti.capacity - ti.playerCount) })}</span>
                         )}
                       </div>
+                      {!ti.isCompleted && !ti.hasStarted && (
+                        <Button size="small" onClick={() => onJoinTournament(ti.id)}>
+                          {t('eventJoin.join')}
+                        </Button>
+                      )}
                     </div>
-                    {!ti.isCompleted && !ti.hasStarted && (
-                      <Button size="small" onClick={() => onJoinTournament(ti.id)}>
-                        {t('eventJoin.join')}
-                      </Button>
-                    )}
                   </div>
                 );
               })}

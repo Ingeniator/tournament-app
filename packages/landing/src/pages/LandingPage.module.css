@@ -283,6 +283,39 @@
   color: var(--color-primary);
 }
 
+/* ── Small phones ── */
+@media (max-width: 374px) {
+  .title {
+    font-size: var(--text-2xl);
+  }
+
+  .tagline {
+    font-size: var(--text-base);
+  }
+
+  .features {
+    grid-template-columns: 1fr;
+  }
+
+  .phones {
+    gap: var(--space-xs);
+  }
+
+  .phone {
+    max-width: 160px;
+    border-radius: 10px;
+  }
+
+  .sectionTitle {
+    font-size: var(--text-xl);
+  }
+
+  .diffImage {
+    width: 110px;
+    max-height: 190px;
+  }
+}
+
 @media (min-width: 768px) {
   .diffCards {
     grid-template-columns: repeat(3, 1fr);
@@ -349,5 +382,39 @@
 
   .bottomCtaTitle {
     font-size: var(--text-2xl);
+  }
+}
+
+/* ── Large desktops ── */
+@media (min-width: 1200px) {
+  .hero {
+    padding-top: 100px;
+    padding-bottom: var(--space-2xl);
+  }
+
+  .title {
+    font-size: 2.75rem;
+  }
+
+  .section {
+    max-width: 1100px;
+    padding: var(--space-2xl) var(--space-xl);
+  }
+
+  .phones {
+    max-width: 900px;
+    gap: var(--space-lg);
+  }
+
+  .phone {
+    max-width: 260px;
+  }
+
+  .bottomCta {
+    max-width: 1100px;
+  }
+
+  .seoLinks {
+    max-width: 1100px;
   }
 }

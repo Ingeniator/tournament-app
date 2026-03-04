@@ -25,11 +25,7 @@ test.describe('Create Tournament', () => {
 
     // Verify we're on the organizer screen
     await expect(page.getByRole('heading', { name: tournamentName })).toBeVisible();
-    await expect(page.getByText('Share with Players')).toBeVisible();
-
-    // Verify a share code is displayed
-    const code = await getShareCode(page);
-    expect(code).toMatch(/^[A-Z2-9]{6}$/);
+    await expect(page.getByText(/Players \(/)).toBeVisible();
 
     // Verify tournament appears in "My Tournaments" after going back
     await goBack(page);
@@ -37,7 +33,7 @@ test.describe('Create Tournament', () => {
 
     // Clean up: re-open and delete
     await page.getByText(tournamentName).click();
-    await expect(page.getByText('Share with Players')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/Players \(/)).toBeVisible({ timeout: 10000 });
     await deleteTournament(page);
   });
 
@@ -72,13 +68,13 @@ test.describe('Create Tournament', () => {
 
     await createTournament(page);
 
-    // The "Format & Courts" section is open by default for a new tournament.
-    // Wait for the select element to be visible.
-    const formatSelect = page.locator('select');
-    await expect(formatSelect).toBeVisible({ timeout: 10000 });
+    // Open the Format section (collapsible)
+    await page.getByText('Format').first().click();
+    // Wait for the format picker radio buttons to appear
+    await expect(page.locator('input[name="format-preset"]').first()).toBeVisible({ timeout: 10000 });
 
     // Change format to Mexicano
-    await formatSelect.selectOption('mexicano');
+    await page.getByText('Mexicano', { exact: true }).first().click();
 
     // Add a second court (the courts "+ Add" button is inside the "Format & Courts" section)
     const courtsHeader = page.getByText(/Courts \(\d+\)/).locator('..');

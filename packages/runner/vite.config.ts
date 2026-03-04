@@ -11,6 +11,16 @@ export default defineConfig({
   },
   base: '/play',
   server: { port: 5190, strictPort: true },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/firebase')) return 'firebase';
+          if (id.includes('node_modules/react')) return 'react-vendor';
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({

@@ -169,3 +169,7 @@ export function formatHasGroups(format: TournamentFormat): boolean {
 export function formatHasClubs(format: TournamentFormat): boolean {
   return ['club-americano', 'club-mexicano', 'club-ranked', 'club-team-americano', 'club-team-mexicano'].includes(format);
 }
+
+export function formatHasFixedPartners(format: TournamentFormat): boolean {
+  return ['team-americano', 'team-mexicano', 'mixed-team-americano', 'mixed-team-mexicano', 'club-ranked', 'club-team-americano', 'club-team-mexicano'].includes(format);
+}

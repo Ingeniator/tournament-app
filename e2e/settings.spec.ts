@@ -113,6 +113,6 @@ test.describe('Settings', () => {
 
     // Should be back on home screen
     await expect(page.getByRole('heading', { name: 'Tournament Manager' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Quick Play' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Plan Ahead' })).toBeVisible();
   });
 });

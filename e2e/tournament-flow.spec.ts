@@ -17,7 +17,7 @@ test.describe('Tournament Flow', () => {
 
   test('home screen renders', async ({ page }) => {
     await expect(page.getByRole('heading', { name: 'Tournament Manager' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Quick Play' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Plan Ahead' })).toBeVisible();
     await expect(page).toHaveScreenshot('flow-home-screen.png');
   });
 
