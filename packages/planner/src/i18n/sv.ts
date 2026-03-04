@@ -30,6 +30,9 @@ const sv: Translations = {
   'home.expired': 'Utgången',
   'home.completed': 'Avslutad',
   'home.groupTournaments': 'Gruppturneringar',
+  'home.playerMode': 'Spelare',
+  'home.organizerMode': 'Arrangör',
+  'home.joinNotFound': 'Ingen turnering eller evenemang hittades med denna kod',
 
   // Footer & Options
   'footer.freeOpenSource': 'Gratis och öppen källkod',

@@ -30,6 +30,9 @@ const it: Translations = {
   'home.expired': 'Scaduto',
   'home.completed': 'Completato',
   'home.groupTournaments': 'Tornei del Gruppo',
+  'home.playerMode': 'Giocatore',
+  'home.organizerMode': 'Organizzatore',
+  'home.joinNotFound': 'Nessun torneo o evento trovato con questo codice',
 
   // Footer & Options
   'footer.freeOpenSource': 'Gratuito e open source',

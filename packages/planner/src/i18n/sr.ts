@@ -30,6 +30,9 @@ const sr: Translations = {
   'home.expired': 'Istekao',
   'home.completed': 'Završen',
   'home.groupTournaments': 'Turniri Grupe',
+  'home.playerMode': 'Igrač',
+  'home.organizerMode': 'Organizator',
+  'home.joinNotFound': 'Nije pronađen turnir niti događaj sa ovim kodom',
 
   // Footer & Options
   'footer.freeOpenSource': 'Besplatno i otvorenog koda',
