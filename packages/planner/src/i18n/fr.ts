@@ -201,6 +201,7 @@ const fr: Translations = {
   'organizer.startDelegateTelegram': 'Utilisateur Telegram',
   'organizer.startDelegateTelegramPlaceholder': '@utilisateur',
   'organizer.captainMode': 'Mode capitaine',
+  'organizer.captainModeHint': 'Les capitaines composent les paires et gèrent les compositions à chaque tour',
   'organizer.clubCaptain': 'Capitaine du club',
   'organizer.noCaptain': 'Pas de capitaine',
   'organizer.setCaptain': 'Définir capitaine',

@@ -199,6 +199,7 @@ const sv: Translations = {
   'organizer.startDelegateTelegram': 'Telegram-användare',
   'organizer.startDelegateTelegramPlaceholder': '@användare',
   'organizer.captainMode': 'Kaptenläge',
+  'organizer.captainModeHint': 'Klubbkaptener parar ihop spelare och hanterar uppställningar varje runda',
   'organizer.clubCaptain': 'Klubbkapten',
   'organizer.noCaptain': 'Ingen kapten',
   'organizer.setCaptain': 'Sätt kapten',

@@ -881,6 +881,7 @@ export function OrganizerScreen() {
               />
               <span>{t('organizer.captainMode')}</span>
             </label>
+            <span className={styles.hint}>{t('organizer.captainModeHint')}</span>
           </>
         )}
         {tournament.format === 'club-ranked' && (() => {

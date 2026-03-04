@@ -201,6 +201,7 @@ const sr: Translations = {
   'organizer.startDelegateTelegram': 'Telegram korisnik',
   'organizer.startDelegateTelegramPlaceholder': '@korisnik',
   'organizer.captainMode': 'Režim kapitena',
+  'organizer.captainModeHint': 'Kapiteni uparuju igrače i upravljaju postavama svake runde',
   'organizer.clubCaptain': 'Kapiten kluba',
   'organizer.noCaptain': 'Bez kapitena',
   'organizer.setCaptain': 'Postavi kapitena',
