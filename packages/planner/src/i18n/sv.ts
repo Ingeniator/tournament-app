@@ -272,6 +272,7 @@ const sv: Translations = {
   'join.edit': 'Redigera',
   'join.needsPartner': 'Behöver en partner',
   'join.needsPartnerHint': 'Lägg till en partner för att säkra din plats',
+  'join.needsPartnerHintCaptain': 'Hjälp din kapten att hitta en partner åt dig',
   'join.awaitingCaptain': 'Väntar på kaptenens godkännande',
   'join.awaitingCaptainHint': 'Din klubbkapten kommer att granska ditt par',
   'join.yourCaptain': 'Din kapten:',

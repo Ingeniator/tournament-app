@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Button, Card, NO_COLOR, getClubColor, getRankColor, shortLabel, Toast, useToast, useTranslation, getPresetByFormat, formatHasGroups, formatHasClubs, formatHasFixedPartners } from '@padel/common';
+import { Button, Card, Modal, NO_COLOR, getClubColor, getRankColor, shortLabel, Toast, useToast, useTranslation, getPresetByFormat, formatHasGroups, formatHasClubs, formatHasFixedPartners } from '@padel/common';
 import type { PlannerRegistration } from '@padel/common';
 import type { PartnerRejection, PartnerConstraints } from '../utils/partnerLogic';
 import { findPartner, wouldBreakPartnerLink } from '../utils/partnerLogic';
@@ -72,11 +72,12 @@ function PartnerEditor({ partnerName, partnerTelegram, onSave }: {
   );
 }
 
-function JoinPlayerRow({ player, idx, tournament, hidePairBadge }: {
+function JoinPlayerRow({ player, idx, tournament, hidePairBadge, onLinkPlayer }: {
   player: PlannerRegistration;
   idx: number;
   tournament: { format: string; groupLabels?: [string, string]; clubs?: { id: string; name: string; color?: string }[]; rankLabels?: string[]; rankColors?: number[] };
   hidePairBadge?: boolean;
+  onLinkPlayer?: (player: PlannerRegistration) => void;
 }) {
   const isMixicano = formatHasGroups(tournament.format as import('@padel/common').TournamentFormat);
   const isClubFormat = formatHasClubs(tournament.format as import('@padel/common').TournamentFormat);
@@ -125,6 +126,14 @@ function JoinPlayerRow({ player, idx, tournament, hidePairBadge }: {
           )}
         </div>
       )}
+      {onLinkPlayer && (
+        <button
+          className={player.telegramUsername || player.partnerName ? styles.linkBtnActive : styles.linkBtn}
+          onClick={() => onLinkPlayer(player)}
+        >
+          {'\uD83D\uDD17'}
+        </button>
+      )}
       <span className={player.confirmed !== false ? styles.statusConfirmed : styles.statusCancelled}>
         {player.confirmed !== false ? '\u2713' : '\u2717'}
       </span>
@@ -132,7 +141,7 @@ function JoinPlayerRow({ player, idx, tournament, hidePairBadge }: {
   );
 }
 
-function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCount, spotsLeft, reserveCount, t, isCaptainOf, onApprove, onReject }: {
+function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCount, spotsLeft, reserveCount, t, isCaptainOf, onApprove, onReject, onUpdateTelegram, onUpdatePartner }: {
   players: PlannerRegistration[];
   statuses: Map<string, PlayerStatus>;
   tournament: import('@padel/common').PlannerTournament;
@@ -144,8 +153,23 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
   isCaptainOf?: string | null;
   onApprove?: (playerId: string) => Promise<void> | void;
   onReject?: (playerId: string) => Promise<void> | void;
+  onUpdateTelegram?: (playerId: string, telegramUsername: string | null) => Promise<void>;
+  onUpdatePartner?: (playerId: string, partnerName: string | null, partnerTelegram: string | null, constraints?: PartnerConstraints) => Promise<PartnerRejection | null>;
 }) {
   const isPairFormat = formatHasFixedPartners(tournament.format);
+  const [linkingPlayer, setLinkingPlayer] = useState<PlannerRegistration | null>(null);
+  const [linkDraft, setLinkDraft] = useState('');
+  const [partnerNameDraft, setPartnerNameDraft] = useState('');
+  const [partnerTelegramDraft, setPartnerTelegramDraft] = useState('');
+
+  const canLinkPlayer = (p: PlannerRegistration) => isCaptainOf && p.clubId === isCaptainOf && (onUpdateTelegram || onUpdatePartner);
+
+  const openLinkModal = (p: PlannerRegistration) => {
+    setLinkingPlayer(p);
+    setLinkDraft(p.telegramUsername ? `@${p.telegramUsername}` : '');
+    setPartnerNameDraft(p.partnerName ?? '');
+    setPartnerTelegramDraft(p.partnerTelegram ? `@${p.partnerTelegram}` : '');
+  };
 
   const sections = useMemo(() => {
     if (!isPairFormat) return null;
@@ -174,8 +198,8 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
         const canAct = captainActions && isCaptainOf && (p.clubId === isCaptainOf || partner.clubId === isCaptainOf);
         elements.push(
           <div key={`pair-${p.id}`} className={styles.pairGroup}>
-            <JoinPlayerRow player={p} idx={i1} tournament={tournament} hidePairBadge />
-            <JoinPlayerRow player={partner} idx={i2} tournament={tournament} hidePairBadge />
+            <JoinPlayerRow player={p} idx={i1} tournament={tournament} hidePairBadge onLinkPlayer={canLinkPlayer(p) ? openLinkModal : undefined} />
+            <JoinPlayerRow player={partner} idx={i2} tournament={tournament} hidePairBadge onLinkPlayer={canLinkPlayer(partner) ? openLinkModal : undefined} />
             {canAct && onReject && (
               <div className={styles.captainActions} style={{ padding: '4px 8px', justifyContent: 'flex-end' }}>
                 {captainActions === 'approve-reject' && onApprove && (
@@ -191,7 +215,7 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
           </div>
         );
       } else {
-        elements.push(<JoinPlayerRow key={p.id} player={p} idx={globalIdx++} tournament={tournament} />);
+        elements.push(<JoinPlayerRow key={p.id} player={p} idx={globalIdx++} tournament={tournament} onLinkPlayer={canLinkPlayer(p) ? openLinkModal : undefined} />);
       }
     }
     return elements;
@@ -240,7 +264,7 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
                 </div>
                 <div className={styles.playerList}>
                   {paired ? renderPairedSection(sectionPlayers, key === 'registered' ? 'approve-reject' : (key === 'playing' || key === 'reserve') ? 'reject-only' : undefined) : sectionPlayers.map((p, i) => (
-                    <JoinPlayerRow key={p.id} player={p} idx={i} tournament={tournament} />
+                    <JoinPlayerRow key={p.id} player={p} idx={i} tournament={tournament} onLinkPlayer={canLinkPlayer(p) ? openLinkModal : undefined} />
                   ))}
                 </div>
               </div>
@@ -261,15 +285,106 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
         </>
       ) : (
         <div className={styles.playerList}>
-          {players.map((player, i) => <JoinPlayerRow key={player.id} player={player} idx={i} tournament={tournament} />)}
+          {players.map((player, i) => <JoinPlayerRow key={player.id} player={player} idx={i} tournament={tournament} onLinkPlayer={canLinkPlayer(player) ? openLinkModal : undefined} />)}
         </div>
       )}
+
+      {/* Captain link modal */}
+      <Modal
+        open={!!linkingPlayer}
+        title={t('organizer.linkProfileTitle', { name: linkingPlayer?.name ?? '' })}
+        onClose={() => setLinkingPlayer(null)}
+      >
+        <div className={styles.linkForm}>
+          {onUpdateTelegram && (
+            <>
+              <label className={styles.linkLabel}>{t('organizer.telegramUsername')}</label>
+              <input
+                className={styles.linkInput}
+                type="text"
+                value={linkDraft}
+                onChange={e => setLinkDraft(e.target.value)}
+                placeholder={t('organizer.telegramPlaceholder')}
+                autoFocus
+              />
+            </>
+          )}
+          {isPairFormat && onUpdatePartner && (
+            <>
+              {onUpdateTelegram && <hr style={{ border: 'none', borderTop: '1px solid var(--color-border)', margin: 'var(--space-xs) 0' }} />}
+              <label className={styles.linkLabel}>{t('organizer.partnerSection')}</label>
+              <input
+                className={styles.linkInput}
+                type="text"
+                value={partnerNameDraft}
+                onChange={e => setPartnerNameDraft(e.target.value)}
+                placeholder={t('organizer.partnerName')}
+              />
+              <input
+                className={styles.linkInput}
+                type="text"
+                value={partnerTelegramDraft}
+                onChange={e => setPartnerTelegramDraft(e.target.value)}
+                placeholder={t('organizer.partnerTelegram')}
+              />
+            </>
+          )}
+          <div className={styles.linkActions}>
+            {onUpdateTelegram && linkingPlayer?.telegramUsername && (
+              <Button variant="secondary" size="small" onClick={() => {
+                onUpdateTelegram(linkingPlayer.id, null);
+                setLinkingPlayer(null);
+              }}>
+                {t('organizer.removeLink')}
+              </Button>
+            )}
+            {onUpdatePartner && linkingPlayer?.partnerName && (
+              <Button variant="secondary" size="small" onClick={() => {
+                onUpdatePartner(linkingPlayer.id, null, null);
+                setPartnerNameDraft('');
+                setPartnerTelegramDraft('');
+                setLinkingPlayer(null);
+              }}>
+                {t('organizer.removePartner')}
+              </Button>
+            )}
+            <Button
+              size="small"
+              onClick={async () => {
+                if (!linkingPlayer) return;
+                if (onUpdateTelegram) {
+                  const username = linkDraft.trim().replace(/^@/, '') || null;
+                  onUpdateTelegram(linkingPlayer.id, username);
+                }
+                if (isPairFormat && onUpdatePartner) {
+                  const pName = partnerNameDraft.trim() || null;
+                  const pTg = partnerTelegramDraft.trim().replace(/^@/, '') || null;
+                  const constraints: PartnerConstraints = {
+                    requireSameClub: formatHasClubs(tournament.format),
+                    requireSameRank: tournament.format === 'club-ranked',
+                    requireOppositeGroup: formatHasGroups(tournament.format),
+                  };
+                  const rejection = await onUpdatePartner(linkingPlayer.id, pName, pTg, constraints);
+                  if (rejection) {
+                    alert(rejectionMessage(rejection, t));
+                    return;
+                  }
+                }
+                setLinkingPlayer(null);
+              }}
+              disabled={!linkDraft.trim() && !(isPairFormat && partnerNameDraft.trim())}
+            >
+              {t('organizer.saveLink')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </Card>
   );
 }
 
 export function JoinScreen() {
-  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, updatePlayerGroup, updatePlayerClub, updatePlayerRank, updatePlayerPartner, updateCaptainApproval, isRegistered, setScreen, organizerName, userName, telegramUser, completedAt, joinReturnScreen } = usePlanner();
+  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, updatePlayerGroup, updatePlayerClub, updatePlayerRank, updatePlayerPartner, updatePlayerTelegram, updateCaptainApproval, isRegistered, setScreen, organizerName, userName, telegramUser, completedAt, joinReturnScreen } = usePlanner();
   const { startedBy, showWarning, warningReason, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
   const { t } = useTranslation();
   // null = not yet edited by user, derive from external sources
@@ -555,7 +670,7 @@ export function JoinScreen() {
               <>
                 <div className={styles.reserveIcon}>&#128101;</div>
                 <h3>{t('join.needsPartner')}</h3>
-                <p className={styles.hint}>{t('join.needsPartnerHint')}</p>
+                <p className={styles.hint}>{t(tournament.captainMode ? 'join.needsPartnerHintCaptain' : 'join.needsPartnerHint')}</p>
               </>
             ) : isConfirmed && myStatus === 'registered' ? (() => {
               const myClub = tournament.clubs?.find(c => c.id === myRegistration?.clubId);
@@ -878,6 +993,8 @@ export function JoinScreen() {
           : null}
         onApprove={pid => updateCaptainApproval(pid, true)}
         onReject={pid => updateCaptainApproval(pid, false)}
+        onUpdateTelegram={updatePlayerTelegram}
+        onUpdatePartner={updatePlayerPartner}
       />
 
       {(uid === tournament.organizerId

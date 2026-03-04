@@ -274,6 +274,7 @@ const pt: Translations = {
   'join.edit': 'Editar',
   'join.needsPartner': 'Precisa de parceiro',
   'join.needsPartnerHint': 'Adiciona um parceiro para garantir o teu lugar',
+  'join.needsPartnerHintCaptain': 'Ajuda o teu capitão a encontrar-te um parceiro',
   'join.awaitingCaptain': 'A aguardar aprovação do capitão',
   'join.awaitingCaptainHint': 'O capitão do teu clube irá rever o teu par',
   'join.yourCaptain': 'Teu capitão:',

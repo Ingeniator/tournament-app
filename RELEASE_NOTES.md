@@ -19,6 +19,7 @@
   - Per-club captain assignment (pick from registered players or enter Telegram username)
   - Captains can approve or reject pairs from their club on the join screen
   - Unapproved pairs show "Awaiting captain approval" status
+  - Captain link modal: captains can link Telegram profiles and assign partners for players in their club directly from the join screen
 
 ### Bug Fixes
 

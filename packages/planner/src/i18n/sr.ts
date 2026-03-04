@@ -274,6 +274,7 @@ const sr: Translations = {
   'join.edit': 'Uredi',
   'join.needsPartner': 'Traži partnera',
   'join.needsPartnerHint': 'Dodajte partnera da biste osigurali mesto',
+  'join.needsPartnerHintCaptain': 'Pomozite kapitenu da vam pronađe partnera',
   'join.awaitingCaptain': 'Čeka odobrenje kapitena',
   'join.awaitingCaptainHint': 'Kapiten vašeg kluba će pregledati vaš par',
   'join.yourCaptain': 'Vaš kapiten:',

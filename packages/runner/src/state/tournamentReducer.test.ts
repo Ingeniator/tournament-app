@@ -859,7 +859,7 @@ describe('tournamentReducer', () => {
       state = tournamentReducer(state, { type: 'COMPLETE_TOURNAMENT' })!;
       expect(state.phase).toBe('completed');
 
-      const nominations = [{ id: 'mvp', title: 'MVP', emoji: '🏆', description: 'Best player', playerNames: ['Player 1'] }];
+      const nominations = [{ id: 'mvp', title: 'MVP', emoji: '🏆', description: 'Best player', playerNames: ['Player 1'], stat: '10 pts' }];
       const result = tournamentReducer(state, {
         type: 'COMPLETE_CEREMONY',
         payload: { nominations },
