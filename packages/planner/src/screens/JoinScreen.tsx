@@ -255,16 +255,18 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
           <div key={`pair-${p.id}`} className={styles.pairGroup}>
             <JoinPlayerRow player={p} idx={i1} tournament={tournament} onLinkPlayer={canLinkPlayer(p) ? openLinkModal : undefined} />
             <JoinPlayerRow player={partner} idx={i2} tournament={tournament} onLinkPlayer={canLinkPlayer(partner) ? openLinkModal : undefined} />
-            {canAct && onReject && (
+            {canAct && (
               <div className={styles.captainActions} style={{ padding: '4px 8px', justifyContent: 'flex-end' }}>
                 {captainActions === 'approve-reject' && onApprove && (
                   <Button size="small" onClick={async () => { await onApprove(p.id); await onApprove(partner.id); }}>
                     {t('join.approve')}
                   </Button>
                 )}
-                <Button size="small" variant="secondary" onClick={async () => { await onReject(p.id); await onReject(partner.id); }}>
-                  {t('join.reject')}
-                </Button>
+                {captainActions === 'reject-only' && onReject && (
+                  <Button size="small" variant="secondary" onClick={async () => { await onReject(p.id); await onReject(partner.id); }}>
+                    {t('join.reject')}
+                  </Button>
+                )}
               </div>
             )}
           </div>
