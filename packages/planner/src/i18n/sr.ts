@@ -382,6 +382,20 @@ const sr: Translations = {
   'teams.start': 'Pokreni Turnir',
   'teams.groupsAutoAssigned': '{count} igrač(a) bez grupe — automatski dodeljeno',
 
+  // Breakdown
+  'breakdown.spotsOpen': '{count} mesta slobodno',
+  'breakdown.hurrySpots': 'Požurite! Još samo {count} mesta',
+  'breakdown.lastSpot': 'Poslednje mesto!',
+  'breakdown.full': 'Popunjeno',
+  'breakdown.clubNeedsMore': '{club} treba još {count}',
+  'breakdown.clubNeedsMoreCaptain': '{club} treba više igrača',
+  'breakdown.noRankPlayers': '{club} {rank} treba još {count}',
+  'breakdown.noRankPlayersCaptain': '{club} treba više {rank} igrača',
+  'breakdown.groupNeedsMore': '{group} treba još {count}',
+  'breakdown.paired': 'Parovi',
+  'breakdown.captainMode': 'Režim Kapitena',
+  'breakdown.maldiciones': 'Maldiciones',
+
   // Planner App
   'app.connectionError': 'Greška u Povezivanju',
   'app.retry': 'Pokušaj ponovo',

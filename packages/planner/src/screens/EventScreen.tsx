@@ -4,6 +4,8 @@ import { useEvent } from '../hooks/useEvent';
 import { useEventTournaments } from '../hooks/useEventTournaments';
 import type { EventTournamentInfo } from '../hooks/useEventTournaments';
 import { computeEventStandings, computeEventClubStandings } from '../utils/eventStandings';
+import { computeBreakdown } from '../utils/tournamentBreakdown';
+import { TournamentBreakdownView } from '../components/TournamentBreakdown';
 import { StandingsCard, ClubStandingsCard } from '../components/EventStandingsCards';
 import styles from './EventScreen.module.css';
 
@@ -277,54 +279,65 @@ function TournamentListCard({
         <p className={styles.empty}>{t('event.noTournaments')}</p>
       ) : (
         <div className={styles.tournamentList}>
-          {infos.map(ti => (
-            <div key={ti.id} className={styles.tournamentItem}>
-              <div className={styles.tournamentDetails}>
-                <div className={styles.tournamentName}>
-                  {onOpen ? (
-                    <button className={styles.tournamentLink} onClick={() => onOpen(ti.id)}>{ti.name}</button>
-                  ) : ti.name}
-                </div>
-                <div className={styles.tournamentMeta}>
-                  {ti.date && <span>{ti.date}</span>}
-                  {ti.place && <span>{ti.place}</span>}
-                  {ti.registeredCount > 0 && <span>{t('event.registered', { count: ti.registeredCount })}</span>}
-                </div>
-                <div className={styles.tournamentMeta}>
-                  <span>{ti.playerCount}/{ti.capacity} {t('event.players')}</span>
-                  {ti.isCompleted ? (
-                    <span className={styles.tournamentCompleted}>{t('event.status.completed')}</span>
-                  ) : ti.hasStarted ? (
-                    <span className={styles.tournamentActive}>{t('event.status.active')}</span>
-                  ) : (
-                    <span>{t('event.spotsOpen', { count: Math.max(0, ti.capacity - ti.playerCount) })}</span>
+          {infos.map(ti => {
+            const isDraft = !ti.isCompleted && !ti.hasStarted;
+            return (
+              <div key={ti.id} className={styles.tournamentItem}>
+                <div className={styles.tournamentTopRow}>
+                  <div className={styles.tournamentDetails}>
+                    <div className={styles.tournamentName}>
+                      {onOpen ? (
+                        <button className={styles.tournamentLink} onClick={() => onOpen(ti.id)}>{ti.name}</button>
+                      ) : ti.name}
+                    </div>
+                    <div className={styles.tournamentMeta}>
+                      {ti.date && <span>{ti.date}</span>}
+                      {ti.place && <span>{ti.place}</span>}
+                      {ti.raw.captainMode && <span>{t('breakdown.captainMode')}</span>}
+                      {ti.raw.maldiciones && <span>{t('breakdown.maldiciones')}</span>}
+                      {ti.registeredCount > 0 && <span>{t('event.registered', { count: ti.registeredCount })}</span>}
+                    </div>
+                    {ti.isCompleted ? (
+                      <div className={styles.tournamentMeta}>
+                        <span>{ti.playerCount}/{ti.capacity} {t('event.players')}</span>
+                        <span className={styles.tournamentCompleted}>{t('event.status.completed')}</span>
+                      </div>
+                    ) : ti.hasStarted ? (
+                      <div className={styles.tournamentMeta}>
+                        <span>{ti.playerCount}/{ti.capacity} {t('event.players')}</span>
+                        <span className={styles.tournamentActive}>{t('event.status.active')}</span>
+                      </div>
+                    ) : null}
+                    {isOwner && (
+                      <div className={styles.weightRow}>
+                        <span className={styles.weightLabel}>{t('event.weight')}:</span>
+                        <input
+                          className={styles.weightInput}
+                          type="number"
+                          value={ti.weight}
+                          onChange={e => onWeightChange(ti.id, parseFloat(e.target.value) || 1)}
+                          min={0.1}
+                          step={0.1}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  {isOwner && (
+                    <button
+                      className={styles.unlinkBtn}
+                      onClick={() => onUnlink(ti.id)}
+                      aria-label={t('event.unlink')}
+                    >
+                      &times;
+                    </button>
                   )}
                 </div>
-                {isOwner && (
-                  <div className={styles.weightRow}>
-                    <span className={styles.weightLabel}>{t('event.weight')}:</span>
-                    <input
-                      className={styles.weightInput}
-                      type="number"
-                      value={ti.weight}
-                      onChange={e => onWeightChange(ti.id, parseFloat(e.target.value) || 1)}
-                      min={0.1}
-                      step={0.1}
-                    />
-                  </div>
+                {isDraft && (
+                  <TournamentBreakdownView breakdown={computeBreakdown(ti.raw, ti.capacity)} approvedCount={ti.approvedCount} />
                 )}
               </div>
-              {isOwner && (
-                <button
-                  className={styles.unlinkBtn}
-                  onClick={() => onUnlink(ti.id)}
-                  aria-label={t('event.unlink')}
-                >
-                  &times;
-                </button>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </Card>

@@ -1,0 +1,177 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── Progress bar ── */
+.progressTrack {
+  height: 6px;
+  background: var(--color-surface-raised);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* ── Footer: urgency + collapse control + action ── */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.footerLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+.footerClickable {
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.urgencyText {
+  font-size: var(--text-xs);
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.urgencyNeutral { color: var(--color-text-muted); }
+.urgencyWarning { color: var(--color-warning); }
+.urgencyDanger { color: var(--color-danger); }
+.urgencySuccess { color: var(--color-success); }
+
+.fillNeutral { background: var(--color-text-muted); }
+.fillWarning { background: var(--color-warning); }
+.fillDanger { background: var(--color-danger); }
+.fillSuccess { background: var(--color-success); }
+
+.chevron {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+/* ── Expanded content ── */
+.expandedContent {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+/* ── Club / group bars ── */
+.barRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.barDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.barLabel {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  min-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.barTrack {
+  flex: 1;
+  height: 6px;
+  background: var(--color-surface-raised);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.barCount {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  min-width: 28px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ── Club-ranked matrix ── */
+.matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-xs);
+  table-layout: fixed;
+}
+
+.matrix th {
+  font-weight: 600;
+  color: var(--color-text-muted);
+  padding: 3px 6px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.matrix td {
+  padding: 3px 6px;
+  text-align: center;
+  border-top: 1px solid var(--color-separator);
+}
+
+.matrix th:first-child,
+.matrix td:first-child {
+  width: 90px;
+}
+
+.matrixClubCell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.cellEmpty {
+  background: var(--color-danger-tint);
+}
+
+.cellPartial {
+  background: var(--color-warning-tint);
+}
+
+.cellFull {
+  background: var(--color-success-tint);
+}
+
+.pairedCol {
+  font-weight: 600;
+}
+
+.totalsRow td {
+  border-top: 2px solid var(--color-border);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}

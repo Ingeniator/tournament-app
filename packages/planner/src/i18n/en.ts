@@ -429,6 +429,20 @@ const en: Translations = {
   'eventJoin.join': 'Join',
   'eventJoin.edit': 'Edit',
 
+  // Breakdown
+  'breakdown.spotsOpen': '{count} spots open',
+  'breakdown.hurrySpots': 'Hurry! Only {count} spots left',
+  'breakdown.lastSpot': 'Last spot!',
+  'breakdown.full': 'Full',
+  'breakdown.clubNeedsMore': '{club} needs {count} more',
+  'breakdown.clubNeedsMoreCaptain': '{club} needs more players',
+  'breakdown.noRankPlayers': '{club} {rank} needs {count} more',
+  'breakdown.noRankPlayersCaptain': '{club} needs more {rank} players',
+  'breakdown.groupNeedsMore': '{group} needs {count} more',
+  'breakdown.paired': 'Paired',
+  'breakdown.captainMode': 'Captain Mode',
+  'breakdown.maldiciones': 'Maldiciones',
+
   // Team Pairing (shared with runner)
   'teams.title': 'Teams',
   'teams.subtitle': '{playerCount} players \u2192 {teamCount} teams',

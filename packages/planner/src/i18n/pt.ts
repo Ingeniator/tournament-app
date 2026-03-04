@@ -382,6 +382,20 @@ const pt: Translations = {
   'teams.start': 'Iniciar Torneio',
   'teams.groupsAutoAssigned': '{count} jogador(es) sem grupo — atribuído(s) automaticamente',
 
+  // Breakdown
+  'breakdown.spotsOpen': '{count} vagas disponíveis',
+  'breakdown.hurrySpots': 'Corra! Só restam {count} vagas',
+  'breakdown.lastSpot': 'Última vaga!',
+  'breakdown.full': 'Completo',
+  'breakdown.clubNeedsMore': '{club} precisa de mais {count}',
+  'breakdown.clubNeedsMoreCaptain': '{club} precisa de mais jogadores',
+  'breakdown.noRankPlayers': '{club} {rank} precisa de mais {count}',
+  'breakdown.noRankPlayersCaptain': '{club} precisa de mais jogadores {rank}',
+  'breakdown.groupNeedsMore': '{group} precisa de mais {count}',
+  'breakdown.paired': 'Pares',
+  'breakdown.captainMode': 'Modo Capitão',
+  'breakdown.maldiciones': 'Maldiciones',
+
   // Planner App
   'app.connectionError': 'Erro de Ligação',
   'app.retry': 'Tentar novamente',

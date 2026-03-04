@@ -380,6 +380,20 @@ const sv: Translations = {
   'teams.start': 'Starta Turnering',
   'teams.groupsAutoAssigned': '{count} spelare utan grupp — tilldelad(e) automatiskt',
 
+  // Breakdown
+  'breakdown.spotsOpen': '{count} platser lediga',
+  'breakdown.hurrySpots': 'Skynda! Bara {count} platser kvar',
+  'breakdown.lastSpot': 'Sista platsen!',
+  'breakdown.full': 'Fullt',
+  'breakdown.clubNeedsMore': '{club} behöver {count} till',
+  'breakdown.clubNeedsMoreCaptain': '{club} behöver fler spelare',
+  'breakdown.noRankPlayers': '{club} {rank} behöver {count} till',
+  'breakdown.noRankPlayersCaptain': '{club} behöver fler {rank}-spelare',
+  'breakdown.groupNeedsMore': '{group} behöver {count} till',
+  'breakdown.paired': 'Par',
+  'breakdown.captainMode': 'Kaptenläge',
+  'breakdown.maldiciones': 'Maldiciones',
+
   // Planner App
   'app.connectionError': 'Anslutningsfel',
   'app.retry': 'Försök igen',

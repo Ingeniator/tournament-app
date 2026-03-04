@@ -4,6 +4,17 @@ import type { Tournament, PadelEventStatus, EventTournamentLink, PlannerRegistra
 import { db } from '../firebase';
 import { getPlayerStatuses } from '../utils/playerStatus';
 
+export interface EventTournamentRawData {
+  players: PlannerRegistration[];
+  clubs: Club[];
+  rankLabels: string[];
+  rankColors: number[];
+  groupLabels: [string, string] | undefined;
+  captainMode: boolean;
+  maldiciones: boolean;
+  format: TournamentFormat | undefined;
+}
+
 export interface EventTournamentInfo {
   id: string;
   name: string;
@@ -17,11 +28,15 @@ export interface EventTournamentInfo {
   isCompleted: boolean;
   /** Number of playing players */
   playerCount: number;
+  /** For captain mode: number of captain-approved players (independent of pairing) */
+  approvedCount: number;
   /** Total registered (non-cancelled) players */
   registeredCount: number;
   /** Tournament capacity (courts * 4) */
   capacity: number;
   weight: number;
+  /** Raw data for breakdown views */
+  raw: EventTournamentRawData;
 }
 
 /**
@@ -75,13 +90,24 @@ export function useEventTournaments(links: EventTournamentLink[]) {
             typeof courts === 'object' && courts !== null ? Object.keys(courts).length : 1;
           const playerList = players ? Object.values(players) : [];
           const capacity = courtCount * 4;
+          const clubs = (data.clubs as Club[] | undefined) ?? [];
+          const rankLabels = (data.rankLabels as string[] | undefined) ?? [];
+          const rankColors = (data.rankColors as number[] | undefined) ?? [];
+          const groupLabels = data.groupLabels as [string, string] | undefined;
+          const captainMode = !!(data.captainMode as boolean | undefined);
+          const maldicionesData = data.maldiciones as { enabled?: boolean } | undefined;
+          const maldiciones = !!(maldicionesData?.enabled);
+          const format = data.format as TournamentFormat | undefined;
           const statuses = getPlayerStatuses(playerList, capacity, {
-            format: data.format as TournamentFormat | undefined,
-            clubs: data.clubs as Club[] | undefined,
-            rankLabels: data.rankLabels as string[] | undefined,
-            captainMode: data.captainMode as boolean | undefined,
+            format,
+            clubs: clubs.length > 0 ? clubs : undefined,
+            rankLabels: rankLabels.length > 0 ? rankLabels : undefined,
+            captainMode: captainMode || undefined,
           });
           const playerCount = [...statuses.values()].filter(s => s === 'playing').length;
+          const approvedCount = captainMode
+            ? playerList.filter(p => p.confirmed !== false && p.captainApproved === true).length
+            : playerCount;
           const registeredCount = playerList.filter(p => p.confirmed !== false).length;
 
           // Determine if started: has runnerData with at least one scored match
@@ -99,16 +125,18 @@ export function useEventTournaments(links: EventTournamentLink[]) {
           infoMap.set(tid, {
             id: tid,
             name,
-            format: data.format as string | undefined,
+            format: format as string | undefined,
             date: data.date as string | undefined,
             place: data.place as string | undefined,
             hasRunnerData: !!runnerData,
             hasStarted,
             isCompleted: !!completedAt,
             playerCount,
+            approvedCount,
             registeredCount,
             capacity,
             weight: weightMap.get(tid) ?? 1,
+            raw: { players: playerList, clubs, rankLabels, rankColors, groupLabels, captainMode, maldiciones, format },
           });
         } else {
           dataMap.delete(tid);

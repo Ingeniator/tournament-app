@@ -3,6 +3,8 @@ import { Button, Card, getPresetByFormat, useTranslation, type TournamentFormat 
 import { useEvent } from '../hooks/useEvent';
 import { useEventTournaments } from '../hooks/useEventTournaments';
 import { computeEventStandings, computeEventClubStandings } from '../utils/eventStandings';
+import { computeBreakdown } from '../utils/tournamentBreakdown';
+import { TournamentBreakdownView } from '../components/TournamentBreakdown';
 import { StandingsCard, ClubStandingsCard } from '../components/EventStandingsCards';
 import styles from './EventJoinScreen.module.css';
 
@@ -88,32 +90,41 @@ export function EventJoinScreen({ eventId, uid, onJoinTournament, onBack, onEdit
               {tournamentInfos.map(ti => {
                 const preset = ti.format ? getPresetByFormat(ti.format as TournamentFormat) : null;
                 const formatLabel = preset ? t(preset.nameKey) : null;
+                const isDraft = !ti.isCompleted && !ti.hasStarted;
+                const breakdown = isDraft ? computeBreakdown(ti.raw, ti.capacity) : null;
                 return (
                   <div key={ti.id} className={styles.tournamentItem}>
-                    <div className={styles.tournamentName}>{ti.name}</div>
-                    <div className={styles.tournamentRow}>
-                      <div className={styles.tournamentDetails}>
-                        <div className={styles.tournamentMeta}>
-                          {formatLabel && <span>{formatLabel}</span>}
-                          {ti.registeredCount > 0 && <span>{t('event.registered', { count: ti.registeredCount })}</span>}
-                        </div>
-                        <div className={styles.tournamentMeta}>
-                          <span>{ti.playerCount}/{ti.capacity} {t('event.players')}</span>
-                          {ti.isCompleted ? (
-                            <span className={styles.tournamentCompleted}>{t('event.status.completed')}</span>
-                          ) : ti.hasStarted ? (
-                            <span className={styles.tournamentActive}>{t('event.status.active')}</span>
-                          ) : (
-                            <span>{t('event.spotsOpen', { count: Math.max(0, ti.capacity - ti.playerCount) })}</span>
-                          )}
-                        </div>
-                      </div>
-                      {!ti.isCompleted && !ti.hasStarted && (
-                        <Button size="small" onClick={() => onJoinTournament(ti.id)}>
-                          {t('eventJoin.join')}
-                        </Button>
-                      )}
+                    <div className={styles.tournamentName}>
+                      <button className={styles.tournamentLink} onClick={() => onJoinTournament(ti.id)}>{ti.name}</button>
                     </div>
+                    <div className={styles.tournamentMeta}>
+                      {formatLabel && <span>{formatLabel}</span>}
+                      {ti.raw.captainMode && <span>{t('breakdown.captainMode')}</span>}
+                      {ti.raw.maldiciones && <span>{t('breakdown.maldiciones')}</span>}
+                      {ti.registeredCount > 0 && <span>{t('event.registered', { count: ti.registeredCount })}</span>}
+                    </div>
+                    {ti.isCompleted ? (
+                      <div className={styles.tournamentMeta}>
+                        <span>{ti.playerCount}/{ti.capacity} {t('event.players')}</span>
+                        <span className={styles.tournamentCompleted}>{t('event.status.completed')}</span>
+                      </div>
+                    ) : ti.hasStarted ? (
+                      <div className={styles.tournamentMeta}>
+                        <span>{ti.playerCount}/{ti.capacity} {t('event.players')}</span>
+                        <span className={styles.tournamentActive}>{t('event.status.active')}</span>
+                      </div>
+                    ) : null}
+                    {breakdown && (
+                      <TournamentBreakdownView
+                        breakdown={breakdown}
+                        approvedCount={ti.approvedCount}
+                        action={
+                          <Button size="small" onClick={() => onJoinTournament(ti.id)}>
+                            {t('eventJoin.join')}
+                          </Button>
+                        }
+                      />
+                    )}
                   </div>
                 );
               })}
