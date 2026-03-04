@@ -66,7 +66,7 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
     return true;
   };
 
-  const confirmedCount = players.filter(p => p.confirmed !== false).length;
+  const confirmedCount = players.filter(p => statuses.get(p.id) === 'playing').length;
   const reserveCount = [...statuses.values()].filter(s => s === 'reserve').length;
 
   const handleAdd = async () => {
@@ -343,9 +343,6 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
               })
           }
         </h2>
-        {captainMode && (
-          <p className={styles.captainHint}>{t('organizer.captainInstructions')}</p>
-        )}
         {players.length === 0 ? (
           <p className={styles.empty}>{t('organizer.noPlayersYet')}</p>
         ) : isPairFormat ? (

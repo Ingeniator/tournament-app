@@ -479,7 +479,7 @@ export function JoinScreen() {
     );
   }
 
-  const confirmedCount = players.filter(p => p.confirmed !== false).length;
+  const confirmedCount = players.filter(p => statuses.get(p.id) === 'playing').length;
   const spotsLeft = capacity - confirmedCount;
   const reserveCount = [...statuses.values()].filter(s => s === 'reserve').length;
   const isConfirmed = myRegistration?.confirmed !== false;
