@@ -202,6 +202,7 @@ const sv: Translations = {
   'organizer.clubCaptain': 'Klubbkapten',
   'organizer.noCaptain': 'Ingen kapten',
   'organizer.setCaptain': 'Sätt kapten',
+  'organizer.captainInstructions': 'Som kapten, para ihop spelare från din klubb och godkänn eller avvisa deras par.',
   'organizer.sectionPlaying': 'Spelar ({count})',
   'organizer.sectionReserve': 'Reserv ({count})',
   'organizer.sectionRegistered': 'Registrerade ({count})',

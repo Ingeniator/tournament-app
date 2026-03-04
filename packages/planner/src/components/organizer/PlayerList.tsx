@@ -341,6 +341,9 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
               })
           }
         </h2>
+        {captainMode && (
+          <p className={styles.captainHint}>{t('organizer.captainInstructions')}</p>
+        )}
         {players.length === 0 ? (
           <p className={styles.empty}>{t('organizer.noPlayersYet')}</p>
         ) : isPairFormat ? (
