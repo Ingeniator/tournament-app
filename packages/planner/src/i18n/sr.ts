@@ -286,6 +286,8 @@ const sr: Translations = {
   'join.approve': 'Odobri',
   'join.reject': 'Odbij',
   'join.pairSlots': '{pairs} mesta za parove',
+  'join.myClub': '{name}',
+  'join.allPlayers': 'Svi igrači',
 
   // SupportOverlay
   'support.title': 'Podržite Nas',

@@ -160,10 +160,15 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
   showToast?: (msg: string) => void;
 }) {
   const isPairFormat = formatHasFixedPartners(tournament.format);
+  const [clubFilter, setClubFilter] = useState<'my-club' | 'all'>('my-club');
   const [linkingPlayer, setLinkingPlayer] = useState<PlannerRegistration | null>(null);
   const [linkDraft, setLinkDraft] = useState('');
   const [partnerNameDraft, setPartnerNameDraft] = useState('');
   const [partnerTelegramDraft, setPartnerTelegramDraft] = useState('');
+
+  const filteredPlayers = isCaptainOf && clubFilter === 'my-club'
+    ? players.filter(p => p.clubId === isCaptainOf)
+    : players;
 
   const canLinkPlayer = (p: PlannerRegistration) => isCaptainOf && p.clubId === isCaptainOf && (onUpdateTelegram || onUpdatePartner);
 
@@ -179,12 +184,12 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
     const sectionMap: Record<PlayerStatus, PlannerRegistration[]> = {
       'playing': [], 'reserve': [], 'registered': [], 'needs-partner': [], 'cancelled': [],
     };
-    for (const p of players) {
+    for (const p of filteredPlayers) {
       const status = statuses.get(p.id) ?? (p.confirmed === false ? 'cancelled' : 'needs-partner');
       sectionMap[status as PlayerStatus].push(p);
     }
     return sectionMap;
-  }, [isPairFormat, players, statuses]);
+  }, [isPairFormat, filteredPlayers, statuses]);
 
   const renderPairedSection = (sectionPlayers: PlannerRegistration[], captainActions?: 'approve-reject' | 'reject-only') => {
     const rendered = new Set<string>();
@@ -242,6 +247,24 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
       {isCaptainOf && (
         <p className={styles.capacityHint}>ℹ️ {t('organizer.captainInstructions')}</p>
       )}
+      {isCaptainOf && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <div className={styles.groupToggle}>
+            <button
+              className={clubFilter === 'my-club' ? styles.groupBtnActive : styles.groupBtn}
+              onClick={() => setClubFilter('my-club')}
+            >
+              {t('join.myClub', { name: tournament.clubs?.find(c => c.id === isCaptainOf)?.name ?? '' })}
+            </button>
+            <button
+              className={clubFilter === 'all' ? styles.groupBtnActive : styles.groupBtn}
+              onClick={() => setClubFilter('all')}
+            >
+              {t('join.allPlayers')}
+            </button>
+          </div>
+        </div>
+      )}
       <p className={styles.capacityHint}>
         {isPairFormat
           ? t('join.pairSlots', { pairs: pairCapacity })
@@ -256,7 +279,7 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
           extra: (tournament.extraSpots ?? 0) > 0 ? ` + ${tournament.extraSpots}` : '',
         })}`}
       </p>
-      {players.length === 0 ? (
+      {filteredPlayers.length === 0 ? (
         <p className={styles.empty}>{t('join.noPlayersYet')}</p>
       ) : isPairFormat && sections ? (
         <>
@@ -291,7 +314,7 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
         </>
       ) : (
         <div className={styles.playerList}>
-          {players.map((player, i) => <JoinPlayerRow key={player.id} player={player} idx={i} tournament={tournament} onLinkPlayer={canLinkPlayer(player) ? openLinkModal : undefined} />)}
+          {filteredPlayers.map((player, i) => <JoinPlayerRow key={player.id} player={player} idx={i} tournament={tournament} onLinkPlayer={canLinkPlayer(player) ? openLinkModal : undefined} />)}
         </div>
       )}
 

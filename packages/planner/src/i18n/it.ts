@@ -286,6 +286,8 @@ const it: Translations = {
   'join.approve': 'Approva',
   'join.reject': 'Rifiuta',
   'join.pairSlots': '{pairs} posti coppia',
+  'join.myClub': '{name}',
+  'join.allPlayers': 'Tutti i giocatori',
 
   // SupportOverlay
   'support.title': 'Supportaci',

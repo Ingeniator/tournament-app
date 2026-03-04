@@ -286,6 +286,8 @@ const es: Translations = {
   'join.approve': 'Aprobar',
   'join.reject': 'Rechazar',
   'join.pairSlots': '{pairs} plazas de pareja',
+  'join.myClub': '{name}',
+  'join.allPlayers': 'Todos',
 
   // SupportOverlay
   'support.title': 'Apóyanos',
