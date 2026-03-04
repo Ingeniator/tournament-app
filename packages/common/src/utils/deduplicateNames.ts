@@ -32,10 +32,6 @@ export function deduplicateNames<T extends { id: string; name: string }>(items: 
   }
 
   const available = DEDUP_SUFFIXES.filter(s => !usedSuffixes.has(s));
-  for (let i = available.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [available[i], available[j]] = [available[j], available[i]];
-  }
   let idx = 0;
   let numFallback = 1;
 

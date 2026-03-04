@@ -124,6 +124,7 @@ const sr: Translations = {
   'organizer.notEnoughPlayers': 'Nema dovoljno igrača: {count} potvrđeno, potrebno najmanje {needed}.',
   'organizer.duplicateNames': 'Duplikati imena: {names}. Ista osoba registrovana dva puta?',
   'organizer.unassignedGroups': '{count} igrač(a) bez grupe — biće automatski raspoređeni',
+  'organizer.validationNeedsPartner': '{count} igrač(a) još uvek treba partnera',
   'organizer.validationMinPlayers': 'Potrebno je najmanje 4 igrača za početak',
   'organizer.validationEvenPlayers': 'Timski formati zahtevaju paran broj igrača',
   'organizer.validationUnassignedClubs': '{count} igrač(a) nije dodeljen(o) klubu',

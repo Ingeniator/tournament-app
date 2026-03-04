@@ -122,6 +122,7 @@ const sv: Translations = {
   'organizer.notFullGames': ' Vissa banor kommer inte ha fulla matcher.',
   'organizer.duplicateNames': 'Dubblettnamn: {names}. Samma person registrerad två gånger?',
   'organizer.unassignedGroups': '{count} spelare utan grupp — tilldelas automatiskt',
+  'organizer.validationNeedsPartner': '{count} spelare behöver fortfarande en partner',
   'organizer.validationMinPlayers': 'Minst 4 spelare krävs för att starta',
   'organizer.validationEvenPlayers': 'Lagformat kräver ett jämnt antal spelare',
   'organizer.validationUnassignedClubs': '{count} spelare inte tilldelad(e) en klubb',

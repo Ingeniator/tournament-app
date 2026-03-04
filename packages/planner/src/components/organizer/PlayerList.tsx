@@ -5,6 +5,7 @@ import { parsePlayerList } from '@padel/common';
 import type { PartnerRejection, PartnerConstraints } from '../../utils/partnerLogic';
 import { findPartner, wouldBreakPartnerLink } from '../../utils/partnerLogic';
 import { rejectionMessage } from '../../utils/partnerRejectionMessage';
+import { asyncConfirm } from '../../utils/confirm';
 import type { PlayerStatus } from '../../utils/playerStatus';
 import styles from '../../screens/OrganizerScreen.module.css';
 
@@ -28,9 +29,10 @@ interface PlayerListProps {
   onSetRank?: (playerId: string, rankSlot: number | null) => Promise<void>;
   simplified?: boolean;
   captainMode?: boolean;
+  showToast?: (msg: string) => void;
 }
 
-export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, removePlayer, toggleConfirmed, updatePlayerTelegram, updatePlayerPartner, statuses, format, clubs, groupLabels, rankLabels, rankColors, onSetGroup, onSetClub, onSetRank, simplified, captainMode }: PlayerListProps) {
+export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, removePlayer, toggleConfirmed, updatePlayerTelegram, updatePlayerPartner, statuses, format, clubs, groupLabels, rankLabels, rankColors, onSetGroup, onSetClub, onSetRank, simplified, captainMode, showToast }: PlayerListProps) {
   const { t } = useTranslation();
   const [newPlayerName, setNewPlayerName] = useState('');
   const addingPlayer = useRef(false);
@@ -59,7 +61,7 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
     if (!partner) return true;
     const reason = wouldBreakPartnerLink(change, partner, constraints);
     if (!reason) return true;
-    if (!window.confirm(t('join.changeBreaksLink', { name: partner.name }))) return false;
+    if (!await asyncConfirm(t('join.changeBreaksLink', { name: partner.name }))) return false;
     await updatePlayerPartner(p.id, null, null);
     return true;
   };
@@ -478,7 +480,7 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                   };
                   const rejection = await updatePlayerPartner(linkingPlayer.id, pName, pTg, constraints);
                   if (rejection) {
-                    alert(rejectionMessage(rejection, t));
+                    showToast?.(rejectionMessage(rejection, t));
                     return;
                   }
                 }

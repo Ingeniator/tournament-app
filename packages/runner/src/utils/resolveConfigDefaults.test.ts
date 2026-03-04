@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { resolveConfigDefaults, computeSitOutInfo } from './resolveConfigDefaults';
+import { resolveConfigDefaults, computeSitOutInfo } from '@padel/common';
 import type { TournamentConfig } from '@padel/common';
 
 function makeConfig(overrides: Partial<TournamentConfig> = {}): TournamentConfig {

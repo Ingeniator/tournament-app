@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Button, Card, Modal, NO_COLOR, getClubColor, getRankColor, shortLabel, Toast, useToast, useTranslation, getPresetByFormat, formatHasGroups, formatHasClubs, formatHasFixedPartners } from '@padel/common';
-import type { PlannerRegistration } from '@padel/common';
+import type { PlannerRegistration, TournamentFormat, Club } from '@padel/common';
 import type { PartnerRejection, PartnerConstraints } from '../utils/partnerLogic';
 import { findPartner, wouldBreakPartnerLink } from '../utils/partnerLogic';
 import { rejectionMessage } from '../utils/partnerRejectionMessage';
@@ -11,6 +11,8 @@ import { exportRunnerTournamentJSON } from '../utils/exportToRunner';
 import { restoreFromBackup } from '../utils/restoreFromBackup';
 import { useStartGuard } from '../hooks/useStartGuard';
 import { StartWarningModal } from '../components/StartWarningModal';
+import { validateLaunch } from '../utils/validateLaunch';
+import { asyncConfirm } from '../utils/confirm';
 import styles from './JoinScreen.module.css';
 
 function PartnerEditor({ partnerName, partnerTelegram, onSave }: {
@@ -79,8 +81,8 @@ function JoinPlayerRow({ player, idx, tournament, hidePairBadge, onLinkPlayer }:
   hidePairBadge?: boolean;
   onLinkPlayer?: (player: PlannerRegistration) => void;
 }) {
-  const isMixicano = formatHasGroups(tournament.format as import('@padel/common').TournamentFormat);
-  const isClubFormat = formatHasClubs(tournament.format as import('@padel/common').TournamentFormat);
+  const isMixicano = formatHasGroups(tournament.format as TournamentFormat);
+  const isClubFormat = formatHasClubs(tournament.format as TournamentFormat);
   const clubs = tournament.clubs ?? [];
   const clubIdx = isClubFormat && player.clubId
     ? clubs.findIndex(c => c.id === player.clubId)
@@ -100,7 +102,7 @@ function JoinPlayerRow({ player, idx, tournament, hidePairBadge, onLinkPlayer }:
         (isMixicano && player.group) ||
         (isClubFormat && clubIdx >= 0) ||
         (tournament.format === 'club-ranked' && player.rankSlot != null && tournament.rankLabels?.[player.rankSlot]) ||
-        (formatHasFixedPartners(tournament.format as import('@padel/common').TournamentFormat) && player.partnerName)
+        (formatHasFixedPartners(tournament.format as TournamentFormat) && player.partnerName)
       ) && (
         <div className={styles.playerBadges}>
           {isMixicano && player.group && (
@@ -109,7 +111,7 @@ function JoinPlayerRow({ player, idx, tournament, hidePairBadge, onLinkPlayer }:
             </span>
           )}
           {isClubFormat && clubIdx >= 0 && (
-            <span className={styles.clubBadge} style={getClubColor(clubs[clubIdx] as import('@padel/common').Club, clubIdx) !== NO_COLOR ? { backgroundColor: getClubColor(clubs[clubIdx] as import('@padel/common').Club, clubIdx), color: 'white' } : undefined}>
+            <span className={styles.clubBadge} style={getClubColor(clubs[clubIdx] as Club, clubIdx) !== NO_COLOR ? { backgroundColor: getClubColor(clubs[clubIdx] as Club, clubIdx), color: 'white' } : undefined}>
               {shortLabel(clubs[clubIdx].name)}
             </span>
           )}
@@ -121,7 +123,7 @@ function JoinPlayerRow({ player, idx, tournament, hidePairBadge, onLinkPlayer }:
               </span>
             );
           })()}
-          {!hidePairBadge && formatHasFixedPartners(tournament.format as import('@padel/common').TournamentFormat) && player.partnerName && (
+          {!hidePairBadge && formatHasFixedPartners(tournament.format as TournamentFormat) && player.partnerName && (
             <span className={styles.groupBadge}>{'\uD83E\uDD1D'} {player.partnerName}</span>
           )}
         </div>
@@ -141,7 +143,7 @@ function JoinPlayerRow({ player, idx, tournament, hidePairBadge, onLinkPlayer }:
   );
 }
 
-function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCount, spotsLeft, reserveCount, t, isCaptainOf, onApprove, onReject, onUpdateTelegram, onUpdatePartner }: {
+function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCount, spotsLeft, reserveCount, t, isCaptainOf, onApprove, onReject, onUpdateTelegram, onUpdatePartner, showToast }: {
   players: PlannerRegistration[];
   statuses: Map<string, PlayerStatus>;
   tournament: import('@padel/common').PlannerTournament;
@@ -155,6 +157,7 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
   onReject?: (playerId: string) => Promise<void> | void;
   onUpdateTelegram?: (playerId: string, telegramUsername: string | null) => Promise<void>;
   onUpdatePartner?: (playerId: string, partnerName: string | null, partnerTelegram: string | null, constraints?: PartnerConstraints) => Promise<PartnerRejection | null>;
+  showToast?: (msg: string) => void;
 }) {
   const isPairFormat = formatHasFixedPartners(tournament.format);
   const [linkingPlayer, setLinkingPlayer] = useState<PlannerRegistration | null>(null);
@@ -366,7 +369,7 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
                   };
                   const rejection = await onUpdatePartner(linkingPlayer.id, pName, pTg, constraints);
                   if (rejection) {
-                    alert(rejectionMessage(rejection, t));
+                    showToast?.(rejectionMessage(rejection, t));
                     return;
                   }
                 }
@@ -488,7 +491,7 @@ export function JoinScreen() {
     // Warn if someone with the same name is already registered
     const duplicate = players.find(p => p.name.trim().toLowerCase() === trimmed.toLowerCase());
     if (duplicate) {
-      if (!window.confirm(t('join.duplicateConfirm', { name: duplicate.name }))) {
+      if (!await asyncConfirm(t('join.duplicateConfirm', { name: duplicate.name }))) {
         return;
       }
     }
@@ -561,6 +564,8 @@ export function JoinScreen() {
   };
 
   const handleLaunch = () => {
+    const result = validateLaunch(tournament!, players, statuses);
+    if (result) { showToast(t(result.key, result.params)); return; }
     handleGuardedLaunch(tournament!, players);
   };
 
@@ -590,7 +595,7 @@ export function JoinScreen() {
     };
     const reason = wouldBreakPartnerLink(change, partner, constraints);
     if (!reason) return true;
-    if (!window.confirm(t('join.changeBreaksLink', { name: partner.name }))) return false;
+    if (!await asyncConfirm(t('join.changeBreaksLink', { name: partner.name }))) return false;
     await updatePlayerPartner(uid, null, null);
     return true;
   };
@@ -995,6 +1000,7 @@ export function JoinScreen() {
         onReject={pid => updateCaptainApproval(pid, false)}
         onUpdateTelegram={updatePlayerTelegram}
         onUpdatePartner={updatePlayerPartner}
+        showToast={showToast}
       />
 
       {(uid === tournament.organizerId

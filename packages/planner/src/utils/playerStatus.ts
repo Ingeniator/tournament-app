@@ -97,30 +97,58 @@ export function getPlayerStatuses(
     const rawPerBucket = Math.floor(slotsPerClub / rankCount);
     const basePerBucket = Math.floor(rawPerBucket / 2) * 2; // round down to even
     const remainingPerClub = slotsPerClub - basePerBucket * rankCount;
-    let bonusPairsLeft = Math.floor(remainingPerClub / 2);
-
-    // Bucket caps start at base; first overflow rank gets +2 (one extra pair)
-    const bucketCap = new Array<number>(rankCount).fill(basePerBucket);
-    const counts = new Map<string, number>(); // "clubId:rankSlot" → count
 
     // Process players with club+rank by timestamp
     const ranked = eligible
       .filter(p => p.clubId && p.rankSlot != null)
       .sort((a, b) => a.timestamp - b.timestamp);
 
-    for (const p of ranked) {
-      const key = `${p.clubId}:${p.rankSlot}`;
-      const count = (counts.get(key) ?? 0) + 1;
-      counts.set(key, count);
+    // Track paired players to avoid processing them twice across buckets
+    const pairProcessed = new Set<string>();
 
-      if (count <= bucketCap[p.rankSlot!]) {
-        statuses.set(p.id, 'playing');
-      } else if (bonusPairsLeft > 0) {
-        bucketCap[p.rankSlot!] += 2;
-        bonusPairsLeft--;
-        statuses.set(p.id, 'playing');
-      } else {
-        statuses.set(p.id, 'reserve');
+    // Per-club bucket logic: each club gets its own bonus pairs and bucket caps
+    for (const club of clubs) {
+      let bonusPairsLeft = Math.floor(remainingPerClub / 2);
+      const bucketCap = new Array<number>(rankCount).fill(basePerBucket);
+      const counts = new Map<number, number>(); // rankSlot → count
+
+      const clubRanked = ranked.filter(p => p.clubId === club.id);
+      for (const p of clubRanked) {
+        if (pairProcessed.has(p.id)) continue;
+
+        const slot = p.rankSlot!;
+
+        // Pair-aware: find partner in same bucket so they get the same status
+        const partner = findPartner(p, eligible);
+        const pairedPartner = partner && !pairProcessed.has(partner.id)
+          && partner.clubId === club.id && partner.rankSlot === slot
+          ? partner : null;
+
+        const slotsNeeded = pairedPartner ? 2 : 1;
+        const count = (counts.get(slot) ?? 0) + slotsNeeded;
+        counts.set(slot, count);
+
+        if (count <= bucketCap[slot]) {
+          statuses.set(p.id, 'playing');
+          if (pairedPartner) {
+            statuses.set(pairedPartner.id, 'playing');
+            pairProcessed.add(pairedPartner.id);
+          }
+        } else if (bonusPairsLeft > 0) {
+          bucketCap[slot] += 2;
+          bonusPairsLeft--;
+          statuses.set(p.id, 'playing');
+          if (pairedPartner) {
+            statuses.set(pairedPartner.id, 'playing');
+            pairProcessed.add(pairedPartner.id);
+          }
+        } else {
+          statuses.set(p.id, 'reserve');
+          if (pairedPartner) {
+            statuses.set(pairedPartner.id, 'reserve');
+            pairProcessed.add(pairedPartner.id);
+          }
+        }
       }
     }
 

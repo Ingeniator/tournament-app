@@ -7,7 +7,7 @@ import { PlayerList } from '../components/settings/PlayerList';
 import { copyToClipboard } from '../utils/clipboard';
 import { exportTournament, exportTournamentToFile, validateImport } from '../utils/importExport';
 import { auth, db } from '../firebase';
-import { computeSitOutInfo } from '../utils/resolveConfigDefaults';
+import { computeSitOutInfo } from '@padel/common';
 import { Button, Card, FeedbackModal, AppFooter, Toast, useToast, useTranslation } from '@padel/common';
 import styles from './SettingsScreen.module.css';
 

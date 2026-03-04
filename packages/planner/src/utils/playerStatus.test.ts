@@ -299,6 +299,85 @@ describe('getPlayerStatuses', () => {
       const statuses = getPlayerStatuses(players, 12, { format: 'club-ranked', clubs, rankLabels });
       expect(statuses.get('7')).toBe('playing');  // rank 1 got bonus
     });
+
+    it('paired players get same status when bucket overflows', () => {
+      // bucket cap = 2 per (club, rank). 1 solo + 1 pair in same bucket.
+      // Solo takes 1 slot, pair needs 2 but only 1 remains → both reserve.
+      const players = [
+        makePlayer('1', { rankSlot: 0, clubId: 'c1', timestamp: 1 }), // solo
+        makePlayer('2', { rankSlot: 0, clubId: 'c1', timestamp: 2, partnerName: 'Player 3', pairedAt: 100 }),
+        makePlayer('3', { rankSlot: 0, clubId: 'c1', timestamp: 3, partnerName: 'Player 2', pairedAt: 100 }),
+      ];
+      const statuses = getPlayerStatuses(players, 8, { format: 'club-ranked', clubs, rankLabels });
+      expect(statuses.get('1')).toBe('playing');
+      // Pair can't split — both reserve (only 1 slot left in bucket of 2)
+      expect(statuses.get('2')).toBe('reserve');
+      expect(statuses.get('3')).toBe('reserve');
+    });
+
+    it('paired players both play when bucket has room', () => {
+      const players = [
+        makePlayer('1', { rankSlot: 0, clubId: 'c1', timestamp: 1, partnerName: 'Player 2', pairedAt: 100 }),
+        makePlayer('2', { rankSlot: 0, clubId: 'c1', timestamp: 2, partnerName: 'Player 1', pairedAt: 100 }),
+      ];
+      const statuses = getPlayerStatuses(players, 8, { format: 'club-ranked', clubs, rankLabels });
+      expect(statuses.get('1')).toBe('playing');
+      expect(statuses.get('2')).toBe('playing');
+    });
+
+    it('paired players use bonus together', () => {
+      // capacity=12, 2 clubs, 2 ranks → slotsPerClub=6, base=2, 1 bonus pair per club
+      // Fill base bucket (2), then pair overflows → uses bonus (+2 slots)
+      const players = [
+        makePlayer('1', { rankSlot: 0, clubId: 'c1', timestamp: 1 }),
+        makePlayer('2', { rankSlot: 0, clubId: 'c1', timestamp: 2 }),
+        // Pair that overflows base bucket → should use bonus together
+        makePlayer('3', { rankSlot: 0, clubId: 'c1', timestamp: 3, partnerName: 'Player 4', pairedAt: 100 }),
+        makePlayer('4', { rankSlot: 0, clubId: 'c1', timestamp: 4, partnerName: 'Player 3', pairedAt: 100 }),
+      ];
+      const statuses = getPlayerStatuses(players, 12, { format: 'club-ranked', clubs, rankLabels });
+      expect(statuses.get('3')).toBe('playing');
+      expect(statuses.get('4')).toBe('playing');
+    });
+
+    it('paired players both reserve when no bonus available', () => {
+      // capacity=8, 2 clubs, 2 ranks → slotsPerClub=4, base=2, 0 bonus pairs
+      // Fill bucket, then pair overflows with no bonus
+      const players = [
+        makePlayer('1', { rankSlot: 0, clubId: 'c1', timestamp: 1 }),
+        makePlayer('2', { rankSlot: 0, clubId: 'c1', timestamp: 2 }),
+        makePlayer('3', { rankSlot: 0, clubId: 'c1', timestamp: 3, partnerName: 'Player 4', pairedAt: 100 }),
+        makePlayer('4', { rankSlot: 0, clubId: 'c1', timestamp: 4, partnerName: 'Player 3', pairedAt: 100 }),
+      ];
+      const statuses = getPlayerStatuses(players, 8, { format: 'club-ranked', clubs, rankLabels });
+      expect(statuses.get('1')).toBe('playing');
+      expect(statuses.get('2')).toBe('playing');
+      expect(statuses.get('3')).toBe('reserve');
+      expect(statuses.get('4')).toBe('reserve');
+    });
+
+    it('bonus pairs are independent per club (regression)', () => {
+      // 12 capacity, 2 clubs, 2 ranks → slotsPerClub=6, base=2, 1 bonus pair per club
+      // c1 overflows rank 0 first, c2 overflows rank 1 first
+      // Each club should independently decide which rank gets the bonus
+      const players = [
+        makePlayer('1',  { rankSlot: 0, clubId: 'c1', timestamp: 1 }),
+        makePlayer('2',  { rankSlot: 0, clubId: 'c1', timestamp: 2 }),
+        makePlayer('3',  { rankSlot: 1, clubId: 'c1', timestamp: 3 }),
+        makePlayer('4',  { rankSlot: 1, clubId: 'c1', timestamp: 4 }),
+        makePlayer('5',  { rankSlot: 0, clubId: 'c2', timestamp: 5 }),
+        makePlayer('6',  { rankSlot: 0, clubId: 'c2', timestamp: 6 }),
+        makePlayer('7',  { rankSlot: 1, clubId: 'c2', timestamp: 7 }),
+        makePlayer('8',  { rankSlot: 1, clubId: 'c2', timestamp: 8 }),
+        // c1 overflows rank 0 → uses c1's bonus
+        makePlayer('9',  { rankSlot: 0, clubId: 'c1', timestamp: 9 }),
+        // c2 overflows rank 1 → should use c2's own bonus (not consumed by c1)
+        makePlayer('10', { rankSlot: 1, clubId: 'c2', timestamp: 10 }),
+      ];
+      const statuses = getPlayerStatuses(players, 12, { format: 'club-ranked', clubs, rankLabels });
+      expect(statuses.get('9')).toBe('playing');   // c1 bonus → rank 0
+      expect(statuses.get('10')).toBe('playing');  // c2 bonus → rank 1 (independent)
+    });
   });
 
   describe('mixicano format', () => {

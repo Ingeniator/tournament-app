@@ -100,6 +100,9 @@ export function resolvePartnerUpdate(
   constraints?: PartnerConstraints,
 ): PartnerUpdateResult {
   const srcPlayer = players.find(p => p.id === playerId);
+  // Guard against race: if the source player isn't in local state yet, skip the update
+  if (!srcPlayer) return { writes: [], newPlayer: null, rejected: null };
+
   const writes: PartnerWrite[] = [];
   const reject = (reason: RejectionReason, name: string): PartnerUpdateResult =>
     ({ writes: [], newPlayer: null, rejected: { reason, name } });
@@ -113,7 +116,7 @@ export function resolvePartnerUpdate(
     });
 
     // Find and clear the old partner's back-link
-    if (srcPlayer?.partnerName) {
+    if (srcPlayer.partnerName) {
       const oldPartner = findPlayerByNameOrTelegram(
         players,
         srcPlayer.partnerName,
@@ -155,7 +158,7 @@ export function resolvePartnerUpdate(
     }
 
     // Validate constraints between source and existing partner
-    if (srcPlayer && constraints) {
+    if (constraints) {
       if (constraints.requireSameClub && srcPlayer.clubId !== existingPartner.clubId) {
         return reject('different_club', existingPartner.name);
       }
@@ -171,7 +174,7 @@ export function resolvePartnerUpdate(
   }
 
   // Clear old partner's back-link if switching to a different partner
-  if (srcPlayer?.partnerName) {
+  if (srcPlayer.partnerName) {
     const oldPartner = findPlayerByNameOrTelegram(
       players,
       srcPlayer.partnerName,
@@ -200,8 +203,8 @@ export function resolvePartnerUpdate(
     writes.push({
       playerId: existingPartner.id,
       fields: {
-        partnerName: srcPlayer?.name ?? null,
-        partnerTelegram: srcPlayer?.telegramUsername ?? null,
+        partnerName: srcPlayer.name ?? null,
+        partnerTelegram: srcPlayer.telegramUsername ?? null,
         pairedAt: now,
       },
     });
@@ -216,15 +219,15 @@ export function resolvePartnerUpdate(
     name: partnerName.trim(),
     timestamp: Date.now(),
     confirmed: true,
-    addedByPartner: srcPlayer?.name ?? true,
-    partnerName: srcPlayer?.name ?? null,
+    addedByPartner: srcPlayer.name ?? true,
+    partnerName: srcPlayer.name ?? null,
     pairedAt: now,
     ...(partnerTelegram ? { telegramUsername: partnerTelegram } : {}),
-    ...(srcPlayer?.telegramUsername ? { partnerTelegram: srcPlayer.telegramUsername } : {}),
+    ...(srcPlayer.telegramUsername ? { partnerTelegram: srcPlayer.telegramUsername } : {}),
   };
-  if (srcPlayer?.clubId) partnerData.clubId = srcPlayer.clubId;
-  if (srcPlayer?.rankSlot != null) partnerData.rankSlot = srcPlayer.rankSlot;
-  if (srcPlayer?.group) partnerData.group = srcPlayer.group === 'A' ? 'B' : 'A';
+  if (srcPlayer.clubId) partnerData.clubId = srcPlayer.clubId;
+  if (srcPlayer.rankSlot != null) partnerData.rankSlot = srcPlayer.rankSlot;
+  if (srcPlayer.group) partnerData.group = srcPlayer.group === 'A' ? 'B' : 'A';
 
   return { writes, newPlayer: { data: partnerData }, rejected: null };
 }

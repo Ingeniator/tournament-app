@@ -85,28 +85,32 @@ export function usePlayers(tournamentId: string | null) {
     const playerSnap = await get(ref(db, `tournaments/${tournamentId}/players/${uid}`));
     const tgUsername = playerSnap.exists() ? playerSnap.val()?.telegramUsername : undefined;
 
+    // Build a single atomic update for partner unlink + confirmed flag + indexes
+    const atomicUpdates: Record<string, unknown> = {};
+
     // When cancelling, disconnect the partner link (bidirectional clear)
     if (!confirmed) {
       const { writes } = resolvePartnerUpdate(uid, null, null, players);
       for (const w of writes) {
-        await update(ref(db, `tournaments/${tournamentId}/players/${w.playerId}`), w.fields);
+        for (const [field, value] of Object.entries(w.fields)) {
+          atomicUpdates[`tournaments/${tournamentId}/players/${w.playerId}/${field}`] = value;
+        }
       }
     }
 
-    // Update confirmed flag on player record
-    await update(ref(db, `tournaments/${tournamentId}/players/${uid}`), {
-      confirmed,
-      ...(confirmed ? { timestamp: Date.now() } : {}),
-    });
-
-    // Update registration indexes so the tournament appears/disappears from the list
-    const indexUpdates: Record<string, boolean | null> = {
-      [`users/${uid}/registrations/${tournamentId}`]: confirmed ? true : null,
-    };
-    if (tgUsername) {
-      indexUpdates[`telegramUsers/${tgUsername}/registrations/${tournamentId}`] = confirmed ? true : null;
+    // Confirmed flag on player record
+    atomicUpdates[`tournaments/${tournamentId}/players/${uid}/confirmed`] = confirmed;
+    if (confirmed) {
+      atomicUpdates[`tournaments/${tournamentId}/players/${uid}/timestamp`] = Date.now();
     }
-    await update(ref(db), indexUpdates);
+
+    // Registration indexes
+    atomicUpdates[`users/${uid}/registrations/${tournamentId}`] = confirmed ? true : null;
+    if (tgUsername) {
+      atomicUpdates[`telegramUsers/${tgUsername}/registrations/${tournamentId}`] = confirmed ? true : null;
+    }
+
+    await update(ref(db), atomicUpdates);
   }, [tournamentId, players]);
 
   const addPlayer = useCallback(async (name: string, telegramUsername?: string) => {
@@ -139,18 +143,25 @@ export function usePlayers(tournamentId: string | null) {
     if (!tournamentId || !db) return;
     const confirmed = !currentConfirmed;
 
+    // Atomic update: partner unlink + confirmed flag
+    const atomicUpdates: Record<string, unknown> = {};
+
     // When cancelling, disconnect the partner link (bidirectional clear)
     if (!confirmed) {
       const { writes } = resolvePartnerUpdate(playerId, null, null, players);
       for (const w of writes) {
-        await update(ref(db, `tournaments/${tournamentId}/players/${w.playerId}`), w.fields);
+        for (const [field, value] of Object.entries(w.fields)) {
+          atomicUpdates[`tournaments/${tournamentId}/players/${w.playerId}/${field}`] = value;
+        }
       }
     }
 
-    await update(ref(db, `tournaments/${tournamentId}/players/${playerId}`), {
-      confirmed,
-      ...(confirmed ? { timestamp: Date.now() } : {}),
-    });
+    atomicUpdates[`tournaments/${tournamentId}/players/${playerId}/confirmed`] = confirmed;
+    if (confirmed) {
+      atomicUpdates[`tournaments/${tournamentId}/players/${playerId}/timestamp`] = Date.now();
+    }
+
+    await update(ref(db), atomicUpdates);
   }, [tournamentId, players]);
 
   const updatePlayerName = useCallback(async (playerId: string, name: string) => {
@@ -192,12 +203,19 @@ export function usePlayers(tournamentId: string | null) {
 
     if (rejected) return rejected;
 
+    // Flatten all partner writes into a single atomic update
+    const atomicUpdates: Record<string, unknown> = {};
     for (const w of writes) {
-      await update(ref(db, `tournaments/${tournamentId}/players/${w.playerId}`), w.fields);
+      for (const [field, value] of Object.entries(w.fields)) {
+        atomicUpdates[`tournaments/${tournamentId}/players/${w.playerId}/${field}`] = value;
+      }
     }
     if (newPlayer) {
       const partnerId = generateId();
-      await set(ref(db, `tournaments/${tournamentId}/players/${partnerId}`), newPlayer.data);
+      atomicUpdates[`tournaments/${tournamentId}/players/${partnerId}`] = newPlayer.data;
+    }
+    if (Object.keys(atomicUpdates).length > 0) {
+      await update(ref(db), atomicUpdates);
     }
     return null;
   }, [tournamentId, players]);

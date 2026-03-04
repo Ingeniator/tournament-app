@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useTournament } from '../hooks/useTournament';
 import { getStrategy } from '../strategies';
-import { resolveConfigDefaults } from '../utils/resolveConfigDefaults';
+import { resolveConfigDefaults } from '@padel/common';
 import { AppShell } from '../components/layout/AppShell';
 import { PlayerInput } from '../components/setup/PlayerInput';
 import { PlayerList } from '../components/setup/PlayerList';

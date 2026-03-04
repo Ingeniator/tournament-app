@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import type { TournamentConfig } from '@padel/common';
 import { Button, generateId, useTranslation, FormatPicker, formatHasGroups, formatHasClubs, Toast, useToast } from '@padel/common';
 import { getStrategy } from '../../strategies';
-import { resolveConfigDefaults, computeSitOutInfo, MINUTES_PER_POINT, MINUTES_PER_GAME, MINUTES_PER_SET, CHANGEOVER_MINUTES, DEFAULT_MINUTES_PER_ROUND } from '../../utils/resolveConfigDefaults';
+import { resolveConfigDefaults, computeSitOutInfo, MINUTES_PER_POINT, MINUTES_PER_GAME, MINUTES_PER_SET, CHANGEOVER_MINUTES, DEFAULT_MINUTES_PER_ROUND } from '@padel/common';
 import styles from './TournamentConfigForm.module.css';
 
 function InfoButton({ hint }: { hint: string }) {

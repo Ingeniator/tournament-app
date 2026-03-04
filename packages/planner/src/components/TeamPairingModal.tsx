@@ -233,12 +233,12 @@ export function TeamPairingModal({ open, players, format, clubs, rankLabels, onS
     }
     // Swap
     setTeams(prev => prev.map(t => {
-      const copy = { ...t };
-      if (copy.player1Id === selectedPlayerId) copy.player1Id = playerId;
-      else if (copy.player2Id === selectedPlayerId) copy.player2Id = playerId;
-      if (copy.player1Id === playerId && t.player1Id !== selectedPlayerId && t.player2Id !== selectedPlayerId) copy.player1Id = selectedPlayerId;
-      else if (copy.player2Id === playerId && t.player1Id !== selectedPlayerId && t.player2Id !== selectedPlayerId) copy.player2Id = selectedPlayerId;
-      return copy;
+      let { player1Id, player2Id } = t;
+      if (t.player1Id === selectedPlayerId) player1Id = playerId;
+      else if (t.player2Id === selectedPlayerId) player2Id = playerId;
+      if (t.player1Id === playerId && t.player1Id !== selectedPlayerId && t.player2Id !== selectedPlayerId) player1Id = selectedPlayerId;
+      else if (t.player2Id === playerId && t.player1Id !== selectedPlayerId && t.player2Id !== selectedPlayerId) player2Id = selectedPlayerId;
+      return player1Id === t.player1Id && player2Id === t.player2Id ? t : { ...t, player1Id, player2Id };
     }));
     setSelectedPlayerId(null);
   };

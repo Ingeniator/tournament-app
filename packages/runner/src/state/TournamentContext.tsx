@@ -16,7 +16,10 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     setSaveError(!ok);
   }, [tournament]);
 
-  // Auto-start when launched from planner: skip setup/team-pairing screens
+  // TODO: Remove auto-start — planner tournaments should go through setup so
+  // users can review/modify settings before generating the schedule.
+  // Remove SettingsScreen page for planner tournaments (settings are managed in
+  // the planner) and let the normal setup flow handle schedule generation.
   useEffect(() => {
     if (
       !autoStartedRef.current &&

@@ -472,29 +472,22 @@ describe('resolvePartnerUpdate', () => {
   // ─── EDGE CASES ───
 
   describe('edge cases', () => {
-    it('source player not found in list (defensive)', () => {
+    it('source player not found in list — no-op', () => {
       const players = [player({ id: 'b', name: 'Bob' })];
       const result = resolvePartnerUpdate('unknown', 'Bob', null, players);
 
-      // Should still produce writes
+      // Guard: bail when source player is missing from local state
       expect(result.rejected).toBeNull();
-      expect(result.writes).toContainEqual({
-        playerId: 'unknown',
-        fields: expect.objectContaining({ partnerName: 'Bob', partnerTelegram: null }),
-      });
-      expect(result.writes).toContainEqual({
-        playerId: 'b',
-        fields: expect.objectContaining({ partnerName: null, partnerTelegram: null }),
-      });
+      expect(result.writes).toHaveLength(0);
+      expect(result.newPlayer).toBeNull();
     });
 
-    it('empty players list — creates new partner', () => {
+    it('empty players list — no-op', () => {
       const result = resolvePartnerUpdate('a', 'Bob', null, []);
 
       expect(result.rejected).toBeNull();
-      expect(result.newPlayer).not.toBeNull();
-      expect(result.newPlayer!.data.name).toBe('Bob');
-      expect(result.newPlayer!.data.partnerName).toBeNull();
+      expect(result.writes).toHaveLength(0);
+      expect(result.newPlayer).toBeNull();
     });
 
     it('telegram match takes priority over name match', () => {

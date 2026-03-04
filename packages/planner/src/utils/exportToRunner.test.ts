@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { PlannerTournament, PlannerRegistration } from '@padel/common';
+import type { PlannerTournament, PlannerRegistration, Team } from '@padel/common';
 import { buildRunnerTournament, exportRunnerTournamentJSON } from './exportToRunner';
 
 function makePlannerTournament(overrides?: Partial<PlannerTournament>): PlannerTournament {
@@ -95,6 +95,187 @@ describe('buildRunnerTournament', () => {
     const result = buildRunnerTournament(pt, regs);
 
     expect(result.config.format).toBe('mexicano');
+  });
+
+  // ─── Teams & ID remapping ───
+
+  it('remaps team player IDs from registration IDs to runner IDs', () => {
+    const pt = makePlannerTournament({ format: 'team-americano' });
+    const regs: PlannerRegistration[] = [
+      { id: 'r1', name: 'Alice', timestamp: 1000, confirmed: true, partnerName: 'Bob', pairedAt: 100 },
+      { id: 'r2', name: 'Bob', timestamp: 1001, confirmed: true, partnerName: 'Alice', pairedAt: 100 },
+      { id: 'r3', name: 'Charlie', timestamp: 1002, confirmed: true, partnerName: 'Dana', pairedAt: 200 },
+      { id: 'r4', name: 'Dana', timestamp: 1003, confirmed: true, partnerName: 'Charlie', pairedAt: 200 },
+    ];
+    const teams: Team[] = [
+      { id: 't1', player1Id: 'r1', player2Id: 'r2' },
+      { id: 't2', player1Id: 'r3', player2Id: 'r4' },
+    ];
+    const result = buildRunnerTournament(pt, regs, teams);
+
+    // Team IDs should be remapped to new runner IDs (not r1/r2)
+    const playerIdSet = new Set(result.players.map(p => p.id));
+    expect(result.teams).toBeDefined();
+    expect(result.teams).toHaveLength(2);
+    for (const team of result.teams!) {
+      expect(playerIdSet.has(team.player1Id)).toBe(true);
+      expect(playerIdSet.has(team.player2Id)).toBe(true);
+    }
+    // Original reg IDs should NOT appear in teams
+    expect(result.teams!.some(t => t.player1Id === 'r1')).toBe(false);
+  });
+
+  it('sets phase to team-pairing when teams are provided', () => {
+    const pt = makePlannerTournament({ format: 'team-americano' });
+    const regs: PlannerRegistration[] = [
+      { id: 'r1', name: 'A', timestamp: 1000, confirmed: true, partnerName: 'B', pairedAt: 100 },
+      { id: 'r2', name: 'B', timestamp: 1001, confirmed: true, partnerName: 'A', pairedAt: 100 },
+      { id: 'r3', name: 'C', timestamp: 1002, confirmed: true, partnerName: 'D', pairedAt: 200 },
+      { id: 'r4', name: 'D', timestamp: 1003, confirmed: true, partnerName: 'C', pairedAt: 200 },
+    ];
+    const teams: Team[] = [{ id: 't1', player1Id: 'r1', player2Id: 'r2' }];
+    const result = buildRunnerTournament(pt, regs, teams);
+
+    expect(result.phase).toBe('team-pairing');
+  });
+
+  it('sets phase to setup when no teams provided', () => {
+    const pt = makePlannerTournament();
+    const regs = makeRegistrations(4);
+    const result = buildRunnerTournament(pt, regs);
+
+    expect(result.phase).toBe('setup');
+  });
+
+  // ─── Aliases ───
+
+  it('uses aliases for player names when provided', () => {
+    const pt = makePlannerTournament();
+    const regs = makeRegistrations(4);
+    const aliases = new Map([['r1', 'The Boss'], ['r3', 'MVP']]);
+    const result = buildRunnerTournament(pt, regs, undefined, aliases);
+
+    expect(result.players.find(p => p.name === 'The Boss')).toBeDefined();
+    expect(result.players.find(p => p.name === 'MVP')).toBeDefined();
+    expect(result.players.find(p => p.name === 'Player 2')).toBeDefined();
+    expect(result.players.find(p => p.name === 'Player 4')).toBeDefined();
+  });
+
+  // ─── Optional config fields ───
+
+  it('passes scoringMode when set', () => {
+    const pt = makePlannerTournament({ scoringMode: 'golden-point' } as Partial<PlannerTournament> & Record<string, unknown>);
+    const result = buildRunnerTournament(pt, makeRegistrations(4));
+    expect(result.config.scoringMode).toBe('golden-point');
+  });
+
+  it('omits scoringMode when not set', () => {
+    const result = buildRunnerTournament(makePlannerTournament(), makeRegistrations(4));
+    expect(result.config).not.toHaveProperty('scoringMode');
+  });
+
+  it('passes minutesPerRound when set', () => {
+    const pt = makePlannerTournament({ minutesPerRound: 15 } as Partial<PlannerTournament> & Record<string, unknown>);
+    const result = buildRunnerTournament(pt, makeRegistrations(4));
+    expect(result.config.minutesPerRound).toBe(15);
+  });
+
+  it('omits minutesPerRound when not set', () => {
+    const result = buildRunnerTournament(makePlannerTournament(), makeRegistrations(4));
+    expect(result.config).not.toHaveProperty('minutesPerRound');
+  });
+
+  it('passes maldiciones when set', () => {
+    const pt = makePlannerTournament({ maldiciones: true } as Partial<PlannerTournament> & Record<string, unknown>);
+    const result = buildRunnerTournament(pt, makeRegistrations(4));
+    expect(result.config.maldiciones).toBe(true);
+  });
+
+  it('passes groupLabels when set', () => {
+    const labels = ['Men', 'Women'];
+    const pt = makePlannerTournament({ groupLabels: labels } as Partial<PlannerTournament> & Record<string, unknown>);
+    const result = buildRunnerTournament(pt, makeRegistrations(4));
+    expect(result.config.groupLabels).toEqual(labels);
+  });
+
+  it('passes rankLabels when set', () => {
+    const labels = ['Beginners', 'Advanced'];
+    const pt = makePlannerTournament({ rankLabels: labels } as Partial<PlannerTournament> & Record<string, unknown>);
+    const result = buildRunnerTournament(pt, makeRegistrations(4));
+    expect(result.config.rankLabels).toEqual(labels);
+  });
+
+  // ─── Clubs ───
+
+  it('passes clubs when set', () => {
+    const clubs = [{ id: 'c1', name: 'Club Alpha' }, { id: 'c2', name: 'Club Beta' }];
+    const pt = makePlannerTournament({ clubs, format: 'club-americano' });
+    const regs = makeRegistrations(4);
+    const result = buildRunnerTournament(pt, regs);
+
+    expect(result.clubs).toEqual(clubs);
+  });
+
+  it('omits clubs when not set', () => {
+    const result = buildRunnerTournament(makePlannerTournament(), makeRegistrations(4));
+    expect(result).not.toHaveProperty('clubs');
+  });
+
+  // ─── Player fields ───
+
+  it('maps group from registration to runner player', () => {
+    const pt = makePlannerTournament({ format: 'mixicano' });
+    const regs: PlannerRegistration[] = [
+      { id: 'r1', name: 'P1', timestamp: 1, confirmed: true, group: 'A' },
+      { id: 'r2', name: 'P2', timestamp: 2, confirmed: true, group: 'B' },
+      { id: 'r3', name: 'P3', timestamp: 3, confirmed: true, group: 'A' },
+      { id: 'r4', name: 'P4', timestamp: 4, confirmed: true, group: 'B' },
+    ];
+    const result = buildRunnerTournament(pt, regs);
+    expect(result.players.find(p => p.name === 'P1')?.group).toBe('A');
+    expect(result.players.find(p => p.name === 'P2')?.group).toBe('B');
+  });
+
+  it('maps clubId from registration to runner player', () => {
+    const pt = makePlannerTournament({ format: 'club-americano', clubs: [{ id: 'c1', name: 'Club' }] });
+    const regs: PlannerRegistration[] = [
+      { id: 'r1', name: 'P1', timestamp: 1, confirmed: true, clubId: 'c1' },
+      { id: 'r2', name: 'P2', timestamp: 2, confirmed: true, clubId: 'c1' },
+      { id: 'r3', name: 'P3', timestamp: 3, confirmed: true, clubId: 'c1' },
+      { id: 'r4', name: 'P4', timestamp: 4, confirmed: true, clubId: 'c1' },
+    ];
+    const result = buildRunnerTournament(pt, regs);
+    expect(result.players.every(p => p.clubId === 'c1')).toBe(true);
+  });
+
+  it('maps rankSlot from registration to runner player', () => {
+    const pt = makePlannerTournament({
+      format: 'club-ranked',
+      clubs: [{ id: 'c1', name: 'Club' }],
+      rankLabels: ['A', 'B'],
+    });
+    const regs: PlannerRegistration[] = [
+      { id: 'r1', name: 'P1', timestamp: 1, confirmed: true, clubId: 'c1', rankSlot: 0 },
+      { id: 'r2', name: 'P2', timestamp: 2, confirmed: true, clubId: 'c1', rankSlot: 1 },
+      { id: 'r3', name: 'P3', timestamp: 3, confirmed: true, clubId: 'c1', rankSlot: 0 },
+      { id: 'r4', name: 'P4', timestamp: 4, confirmed: true, clubId: 'c1', rankSlot: 1 },
+    ];
+    const result = buildRunnerTournament(pt, regs);
+    expect(result.players.find(p => p.name === 'P1')?.rankSlot).toBe(0);
+    expect(result.players.find(p => p.name === 'P2')?.rankSlot).toBe(1);
+  });
+
+  // ─── Timestamps ───
+
+  it('sets createdAt and updatedAt timestamps', () => {
+    const before = Date.now();
+    const result = buildRunnerTournament(makePlannerTournament(), makeRegistrations(4));
+    const after = Date.now();
+
+    expect(result.createdAt).toBeGreaterThanOrEqual(before);
+    expect(result.createdAt).toBeLessThanOrEqual(after);
+    expect(result.updatedAt).toBeGreaterThanOrEqual(before);
+    expect(result.updatedAt).toBeLessThanOrEqual(after);
   });
 });
 

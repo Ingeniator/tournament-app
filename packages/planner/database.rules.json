@@ -15,7 +15,7 @@
           }
         },
         "startedBy": {
-          ".write": "auth != null",
+          ".write": "auth != null && (data.parent().child('organizerId').val() === auth.uid || data.parent().child('startDelegateId').val() === auth.uid || root.child('users').child(auth.uid).child('telegramUsername').exists() && data.parent().child('startDelegateTelegram').val() === root.child('users').child(auth.uid).child('telegramUsername').val())",
           ".validate": "newData.hasChildren(['uid', 'name', 'timestamp']) && newData.child('uid').isString() && newData.child('name').isString() && newData.child('timestamp').isNumber()"
         },
         "completedAt": {
@@ -24,8 +24,8 @@
         },
         "chatRooms": {
           "$chatInstance": {
-            ".write": "auth != null && !data.exists()",
-            ".validate": "newData.isBoolean()"
+            ".write": "auth != null && (!data.exists() || root.child('tournaments').child($tournamentId).child('organizerId').val() === auth.uid)",
+            ".validate": "newData.isBoolean() || !newData.exists()"
           }
         }
       }

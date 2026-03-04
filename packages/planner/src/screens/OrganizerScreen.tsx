@@ -14,6 +14,7 @@ import { PlayerList } from '../components/organizer/PlayerList';
 import { ClubPanel } from '../components/organizer/ClubPanel';
 import { EditableItem } from '../components/organizer/EditableItem';
 import { getPlayerStatuses } from '../utils/playerStatus';
+import { validateLaunch as validateLaunchUtil } from '../utils/validateLaunch';
 import styles from './OrganizerScreen.module.css';
 
 function CollapsibleSection({ title, summary, defaultOpen, children }: {
@@ -58,11 +59,18 @@ export function OrganizerScreen() {
   const [nameDraft, setNameDraft] = useState('');
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const lastAutoSwitchRef = useRef(false);
+  const tournamentRef = useRef(tournament);
+  tournamentRef.current = tournament;
+  const playersRef = useRef(players);
+  playersRef.current = players;
 
-  // Auto-detect mode: if any player self-registered (id matches a real uid,
-  // i.e. not added by organizer), default to 'share'.
   const hasSelfRegistered = players.some(p => p.id !== uid && p.confirmed === undefined);
-  const [playerMode, setPlayerMode] = useState<PlayerMode>(hasSelfRegistered ? 'share' : 'quick');
+  const [playerMode, setPlayerMode] = useState<PlayerMode>('quick');
+
+  // Auto-switch to 'share' once Firebase data loads and self-registered players exist
+  useEffect(() => {
+    if (hasSelfRegistered) setPlayerMode('share');
+  }, [hasSelfRegistered]);
 
   const capacity = tournament ? tournament.courts.length * 4 + (tournament.extraSpots ?? 0) : 0;
   const statuses = useMemo(() => getPlayerStatuses(players, capacity, {
@@ -74,28 +82,29 @@ export function OrganizerScreen() {
 
   // Auto-trim rankLabels/rankColors and clear player rankSlots when maxRanks decreases
   useEffect(() => {
-    if (!tournament || tournament.format !== 'club-ranked') return;
-    const clubs = tournament.clubs ?? [];
+    const t = tournamentRef.current;
+    if (!t || t.format !== 'club-ranked') return;
+    const clubs = t.clubs ?? [];
     if (clubs.length < 2) return;
     const slotsPerClub = Math.floor(capacity / clubs.length);
     const maxRanks = Math.max(2, Math.floor(slotsPerClub / 2));
     const tournamentUpdates: Record<string, unknown> = {};
-    if (tournament.rankLabels && tournament.rankLabels.length > maxRanks) {
-      tournamentUpdates.rankLabels = tournament.rankLabels.slice(0, maxRanks);
+    if (t.rankLabels && t.rankLabels.length > maxRanks) {
+      tournamentUpdates.rankLabels = t.rankLabels.slice(0, maxRanks);
     }
-    if (tournament.rankColors && tournament.rankColors.length > maxRanks) {
-      tournamentUpdates.rankColors = tournament.rankColors.slice(0, maxRanks);
+    if (t.rankColors && t.rankColors.length > maxRanks) {
+      tournamentUpdates.rankColors = t.rankColors.slice(0, maxRanks);
     }
     if (Object.keys(tournamentUpdates).length > 0) {
       updateTournament(tournamentUpdates);
       // Clear rankSlot from players whose rank was removed
-      for (const p of players) {
+      for (const p of playersRef.current) {
         if (p.rankSlot != null && p.rankSlot >= maxRanks) {
           updatePlayerRank(p.id, null);
         }
       }
     }
-  }, [capacity, tournament?.clubs?.length, tournament?.format]);
+  }, [capacity, tournament?.clubs?.length, tournament?.format, updateTournament, updatePlayerRank]);
 
   const [showReopenModal, setShowReopenModal] = useState(false);
   const [showTeamPairing, setShowTeamPairing] = useState(false);
@@ -216,28 +225,9 @@ export function OrganizerScreen() {
     }
   };
 
-  const validateLaunch = (): string | null => {
-    const count = playingPlayers.length;
-    if (count < 4) return t('organizer.validationMinPlayers');
-    const isTeamFormat = formatHasFixedPartners(tournament!.format);
-    if (isTeamFormat && count % 2 !== 0) return t('organizer.validationEvenPlayers');
-    const isClub = formatHasClubs(tournament!.format);
-    if (isClub) {
-      const unassigned = playingPlayers.filter(p => !p.clubId).length;
-      if (unassigned > 0) return t('organizer.validationUnassignedClubs', { count: unassigned });
-    }
-    const maxCourts = isTeamFormat
-      ? Math.floor(Math.floor(count / 2) / 2)
-      : Math.floor(count / 4);
-    if (tournament!.courts.length > maxCourts && maxCourts > 0) {
-      return t('organizer.validationTooManyCourts', { courts: tournament!.courts.length, max: maxCourts });
-    }
-    return null;
-  };
-
   const handleLaunch = () => {
-    const error = validateLaunch();
-    if (error) { showToast(error); return; }
+    const result = validateLaunchUtil(tournament!, players, statuses);
+    if (result) { showToast(t(result.key, result.params)); return; }
     if (formatHasFixedPartners(tournament!.format)) {
       setShowTeamPairing(true);
       return;
@@ -1076,6 +1066,7 @@ export function OrganizerScreen() {
         onSetRank={updatePlayerRank}
         simplified={playerMode === 'quick'}
         captainMode={tournament.captainMode}
+        showToast={showToast}
       />
 
       {/* Club panel — visual overview of club assignments */}

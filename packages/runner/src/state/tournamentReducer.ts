@@ -5,7 +5,7 @@ import { formatHasGroups, formatHasClubs } from '@padel/common';
 import { createTeams, createCrossGroupTeams, createClubTeams } from '@padel/common';
 import { getStrategy } from '../strategies';
 import { deduplicateNames } from '../utils/deduplicateNames';
-import { resolveConfigDefaults } from '../utils/resolveConfigDefaults';
+import { resolveConfigDefaults } from '@padel/common';
 import { dealMaldicionesHands } from '../utils/maldiciones';
 import { findTeamByPair } from '../strategies/shared';
 

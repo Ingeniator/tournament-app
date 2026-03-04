@@ -124,6 +124,7 @@ const es: Translations = {
   'organizer.notEnoughPlayers': 'No hay suficientes jugadores: {count} confirmados, se necesitan al menos {needed}.',
   'organizer.duplicateNames': 'Nombres duplicados: {names}. ¿La misma persona registrada dos veces?',
   'organizer.unassignedGroups': '{count} jugador(es) sin grupo asignado — se asignarán automáticamente',
+  'organizer.validationNeedsPartner': '{count} jugador(es) aún necesita(n) pareja',
   'organizer.validationMinPlayers': 'Se necesitan al menos 4 jugadores para empezar',
   'organizer.validationEvenPlayers': 'Los formatos de equipo requieren un número par de jugadores',
   'organizer.validationUnassignedClubs': '{count} jugador(es) sin club asignado',

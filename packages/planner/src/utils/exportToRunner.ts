@@ -19,31 +19,27 @@ export function buildRunnerTournament(
     rankLabels: plannerTournament.rankLabels,
   });
 
+  const regIdToRunnerId = new Map<string, string>();
   const players: Player[] = registrations
     .filter(r => statuses.get(r.id) === 'playing')
-    .map(r => ({
-      id: generateId(),
-      name: aliases?.get(r.id) ?? r.name,
-      ...(r.group ? { group: r.group } : {}),
-      ...(r.clubId ? { clubId: r.clubId } : {}),
-      ...(r.rankSlot != null ? { rankSlot: r.rankSlot } : {}),
-    }));
+    .map(r => {
+      const runnerId = generateId();
+      regIdToRunnerId.set(r.id, runnerId);
+      return {
+        id: runnerId,
+        name: aliases?.get(r.id) ?? r.name,
+        ...(r.group ? { group: r.group } : {}),
+        ...(r.clubId ? { clubId: r.clubId } : {}),
+        ...(r.rankSlot != null ? { rankSlot: r.rankSlot } : {}),
+      };
+    });
 
   // When teams are provided from planner, remap player IDs from registration IDs to new runner IDs
-  let remappedTeams: Team[] | undefined;
-  if (teams) {
-    const regIdToRunnerId = new Map<string, string>();
-    registrations
-      .filter(r => statuses.get(r.id) === 'playing')
-      .forEach((r, i) => {
-        regIdToRunnerId.set(r.id, players[i].id);
-      });
-    remappedTeams = teams.map(t => ({
-      ...t,
-      player1Id: regIdToRunnerId.get(t.player1Id) ?? t.player1Id,
-      player2Id: regIdToRunnerId.get(t.player2Id) ?? t.player2Id,
-    }));
-  }
+  const remappedTeams = teams?.map(t => ({
+    ...t,
+    player1Id: regIdToRunnerId.get(t.player1Id) ?? t.player1Id,
+    player2Id: regIdToRunnerId.get(t.player2Id) ?? t.player2Id,
+  }));
 
   return {
     id: generateId(),
