@@ -709,6 +709,11 @@
   color: var(--color-text-muted);
 }
 
+select.linkInput {
+  appearance: auto;
+  cursor: pointer;
+}
+
 .linkActions {
   display: flex;
   gap: var(--space-sm);
