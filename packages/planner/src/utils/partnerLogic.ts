@@ -98,6 +98,8 @@ export function resolvePartnerUpdate(
   partnerTelegram: string | null,
   players: PlannerRegistration[],
   constraints?: PartnerConstraints,
+  /** When set, marks newly-created players as added by this name (org/captain). */
+  addedBy?: string,
 ): PartnerUpdateResult {
   const srcPlayer = players.find(p => p.id === playerId);
   // Guard against race: if the source player isn't in local state yet, skip the update
@@ -219,7 +221,7 @@ export function resolvePartnerUpdate(
     name: partnerName.trim(),
     timestamp: Date.now(),
     confirmed: true,
-    addedByPartner: srcPlayer.name ?? true,
+    addedByPartner: addedBy ?? srcPlayer.name ?? true,
     partnerName: srcPlayer.name ?? null,
     pairedAt: now,
     ...(partnerTelegram ? { telegramUsername: partnerTelegram } : {}),

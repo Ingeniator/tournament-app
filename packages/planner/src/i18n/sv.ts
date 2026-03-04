@@ -64,9 +64,11 @@ const sv: Translations = {
   'organizer.telegramPlaceholder': '@användarnamn',
   'organizer.saveLink': 'Spara',
   'organizer.removeLink': 'Ta bort',
-  'organizer.partnerSection': 'Föredragen partner',
-  'organizer.partnerName': 'Partners namn',
+  'organizer.partnerSection': 'Partner',
+  'organizer.partnerName': 'Välj partner…',
   'organizer.partnerTelegram': 'Partners telegram (valfritt)',
+  'organizer.newPlayer': '+ Ny spelare',
+  'organizer.newPlayerName': 'Spelarnamn',
   'organizer.removePartner': 'Ta bort partner',
   'organizer.addedBy': 'Tillagd av {name}',
   'organizer.reserve': 'reserv',
@@ -284,6 +286,8 @@ const sv: Translations = {
   'join.approve': 'Godkänn',
   'join.reject': 'Avslå',
   'join.pairSlots': '{pairs} parplatser',
+  'join.myClub': '{name}',
+  'join.allPlayers': 'Alla spelare',
 
   // SupportOverlay
   'support.title': 'Stöd Oss',

@@ -17,7 +17,7 @@ interface PlayerListProps {
   removePlayer: (playerId: string) => Promise<void>;
   toggleConfirmed: (playerId: string, currentConfirmed: boolean) => Promise<void>;
   updatePlayerTelegram: (playerId: string, telegramUsername: string | null) => Promise<void>;
-  updatePlayerPartner?: (playerId: string, partnerName: string | null, partnerTelegram: string | null, constraints?: PartnerConstraints) => Promise<PartnerRejection | null>;
+  updatePlayerPartner?: (playerId: string, partnerName: string | null, partnerTelegram: string | null, constraints?: PartnerConstraints, addedBy?: string) => Promise<PartnerRejection | null>;
   statuses: Map<string, string>;
   format?: TournamentFormat;
   clubs?: Club[];
@@ -30,17 +30,22 @@ interface PlayerListProps {
   simplified?: boolean;
   captainMode?: boolean;
   showToast?: (msg: string) => void;
+  /** Name of the organizer / captain performing the action */
+  operatorName?: string;
 }
 
-export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, removePlayer, toggleConfirmed, updatePlayerTelegram, updatePlayerPartner, statuses, format, clubs, groupLabels, rankLabels, rankColors, onSetGroup, onSetClub, onSetRank, simplified, captainMode, showToast }: PlayerListProps) {
+export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, removePlayer, toggleConfirmed, updatePlayerTelegram, updatePlayerPartner, statuses, format, clubs, groupLabels, rankLabels, rankColors, onSetGroup, onSetClub, onSetRank, simplified, captainMode, showToast, operatorName }: PlayerListProps) {
   const { t } = useTranslation();
   const [newPlayerName, setNewPlayerName] = useState('');
   const addingPlayer = useRef(false);
   const addPlayerInputRef = useRef<HTMLInputElement>(null);
-  const [linkingPlayer, setLinkingPlayer] = useState<{ id: string; name: string; telegramUsername?: string; partnerName?: string; partnerTelegram?: string } | null>(null);
+  const [linkingPlayer, setLinkingPlayer] = useState<{ id: string; name: string; telegramUsername?: string; partnerName?: string; partnerTelegram?: string; clubId?: string; rankSlot?: number; group?: 'A' | 'B' } | null>(null);
+  const NEW_PLAYER_VALUE = '__new__';
   const [linkDraft, setLinkDraft] = useState('');
   const [partnerNameDraft, setPartnerNameDraft] = useState('');
   const [partnerTelegramDraft, setPartnerTelegramDraft] = useState('');
+  const [newPartnerNameDraft, setNewPartnerNameDraft] = useState('');
+  const [newPartnerTelegramDraft, setNewPartnerTelegramDraft] = useState('');
   const showPartner = format ? formatHasFixedPartners(format) : false;
   const isPairFormat = format ? formatHasFixedPartners(format) : false;
   const [cancelledOpen, setCancelledOpen] = useState(false);
@@ -66,7 +71,7 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
     return true;
   };
 
-  const confirmedCount = players.filter(p => p.confirmed !== false).length;
+  const confirmedCount = players.filter(p => statuses.get(p.id) === 'playing').length;
   const reserveCount = [...statuses.values()].filter(s => s === 'reserve').length;
 
   const handleAdd = async () => {
@@ -202,20 +207,18 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
           )}
         </div>
       )}
-      {!simplified && (
-        <button
-          className={player.telegramUsername ? styles.linkBtnActive : styles.linkBtn}
-          onClick={() => {
-            setLinkingPlayer({ id: player.id, name: player.name, telegramUsername: player.telegramUsername, partnerName: player.partnerName, partnerTelegram: player.partnerTelegram });
-            setLinkDraft(player.telegramUsername ? `@${player.telegramUsername}` : '');
-            setPartnerNameDraft(player.partnerName ?? '');
-            setPartnerTelegramDraft(player.partnerTelegram ? `@${player.partnerTelegram}` : '');
-          }}
-          title={t('organizer.linkProfile')}
-        >
-          &#x1F517;
-        </button>
-      )}
+      <button
+        className={player.telegramUsername ? styles.linkBtnActive : styles.linkBtn}
+        onClick={() => {
+          setLinkingPlayer({ id: player.id, name: player.name, telegramUsername: player.telegramUsername, partnerName: player.partnerName, partnerTelegram: player.partnerTelegram, clubId: player.clubId, rankSlot: player.rankSlot, group: player.group });
+          setLinkDraft(player.telegramUsername ? `@${player.telegramUsername}` : '');
+          setPartnerNameDraft(player.partnerName ?? '');
+          setPartnerTelegramDraft(player.partnerTelegram ? `@${player.partnerTelegram}` : '');
+        }}
+        title={t('organizer.linkProfile')}
+      >
+        &#x1F517;
+      </button>
       {!simplified && (
         <button
           className={player.confirmed !== false ? styles.statusConfirmed : styles.statusCancelled}
@@ -343,9 +346,6 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
               })
           }
         </h2>
-        {captainMode && (
-          <p className={styles.captainHint}>{t('organizer.captainInstructions')}</p>
-        )}
         {players.length === 0 ? (
           <p className={styles.empty}>{t('organizer.noPlayersYet')}</p>
         ) : isPairFormat ? (
@@ -420,20 +420,57 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
             <>
               <hr style={{ border: 'none', borderTop: '1px solid var(--color-border)', margin: 'var(--space-xs) 0' }} />
               <label className={styles.linkLabel}>{t('organizer.partnerSection')}</label>
-              <input
+              <select
                 className={styles.linkInput}
-                type="text"
-                value={partnerNameDraft}
-                onChange={e => setPartnerNameDraft(e.target.value)}
-                placeholder={t('organizer.partnerName')}
-              />
-              <input
-                className={styles.linkInput}
-                type="text"
-                value={partnerTelegramDraft}
-                onChange={e => setPartnerTelegramDraft(e.target.value)}
-                placeholder={t('organizer.partnerTelegram')}
-              />
+                value={partnerNameDraft === NEW_PLAYER_VALUE ? NEW_PLAYER_VALUE : partnerNameDraft}
+                onChange={e => {
+                  const val = e.target.value;
+                  if (val === NEW_PLAYER_VALUE) {
+                    setPartnerNameDraft(NEW_PLAYER_VALUE);
+                    setPartnerTelegramDraft('');
+                  } else {
+                    setPartnerNameDraft(val);
+                    const selected = players.find(p => p.name === val);
+                    setPartnerTelegramDraft(selected?.telegramUsername ?? '');
+                  }
+                }}
+              >
+                <option value="">{t('organizer.partnerName')}</option>
+                {players
+                  .filter(p => {
+                    if (!linkingPlayer) return false;
+                    if (p.id === linkingPlayer.id) return false;
+                    if (p.confirmed === false) return false;
+                    if (p.partnerName && p.partnerName !== linkingPlayer.name) return false;
+                    if (constraints.requireSameClub && linkingPlayer.clubId && p.clubId !== linkingPlayer.clubId) return false;
+                    if (constraints.requireSameRank && linkingPlayer.rankSlot != null && p.rankSlot !== linkingPlayer.rankSlot) return false;
+                    if (constraints.requireOppositeGroup && linkingPlayer.group && p.group && p.group === linkingPlayer.group) return false;
+                    return true;
+                  })
+                  .map(p => (
+                    <option key={p.id} value={p.name}>{p.name}</option>
+                  ))}
+                <option value={NEW_PLAYER_VALUE}>{t('organizer.newPlayer')}</option>
+              </select>
+              {partnerNameDraft === NEW_PLAYER_VALUE && (
+                <>
+                  <input
+                    className={styles.linkInput}
+                    type="text"
+                    value={newPartnerNameDraft}
+                    onChange={e => setNewPartnerNameDraft(e.target.value)}
+                    placeholder={t('organizer.newPlayerName')}
+                    autoFocus
+                  />
+                  <input
+                    className={styles.linkInput}
+                    type="text"
+                    value={newPartnerTelegramDraft}
+                    onChange={e => setNewPartnerTelegramDraft(e.target.value)}
+                    placeholder={t('organizer.partnerTelegram')}
+                  />
+                </>
+              )}
             </>
           )}
           <div className={styles.linkActions}>
@@ -458,6 +495,8 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                   updatePlayerPartner(linkingPlayer.id, null, null);
                   setPartnerNameDraft('');
                   setPartnerTelegramDraft('');
+                  setNewPartnerNameDraft('');
+                  setNewPartnerTelegramDraft('');
                   setLinkingPlayer(null);
                 }}
               >
@@ -471,22 +510,25 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                 const username = linkDraft.trim().replace(/^@/, '') || null;
                 updatePlayerTelegram(linkingPlayer.id, username);
                 if (showPartner && updatePlayerPartner) {
-                  const pName = partnerNameDraft.trim() || null;
-                  const pTg = partnerTelegramDraft.trim().replace(/^@/, '') || null;
-                  const constraints: PartnerConstraints = {
+                  const isNew = partnerNameDraft === NEW_PLAYER_VALUE;
+                  const pName = isNew ? (newPartnerNameDraft.trim() || null) : (partnerNameDraft.trim() || null);
+                  const pTg = isNew ? (newPartnerTelegramDraft.trim().replace(/^@/, '') || null) : (partnerTelegramDraft.trim().replace(/^@/, '') || null);
+                  const c: PartnerConstraints = {
                     requireSameClub: format ? formatHasClubs(format) : false,
                     requireSameRank: format === 'club-ranked',
                     requireOppositeGroup: format ? formatHasGroups(format) : false,
                   };
-                  const rejection = await updatePlayerPartner(linkingPlayer.id, pName, pTg, constraints);
+                  const rejection = await updatePlayerPartner(linkingPlayer.id, pName, pTg, c, isNew ? operatorName : undefined);
                   if (rejection) {
                     showToast?.(rejectionMessage(rejection, t));
                     return;
                   }
                 }
+                setNewPartnerNameDraft('');
+                setNewPartnerTelegramDraft('');
                 setLinkingPlayer(null);
               }}
-              disabled={!linkDraft.trim() && !(showPartner && partnerNameDraft.trim())}
+              disabled={!linkDraft.trim() && !(showPartner && (partnerNameDraft === NEW_PLAYER_VALUE ? newPartnerNameDraft.trim() : partnerNameDraft.trim()))}
             >
               {t('organizer.saveLink')}
             </Button>

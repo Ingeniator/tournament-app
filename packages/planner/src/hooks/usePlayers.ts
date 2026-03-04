@@ -197,9 +197,9 @@ export function usePlayers(tournamentId: string | null) {
     });
   }, [tournamentId]);
 
-  const updatePlayerPartner = useCallback(async (playerId: string, partnerName: string | null, partnerTelegram: string | null, constraints?: PartnerConstraints): Promise<PartnerRejection | null> => {
+  const updatePlayerPartner = useCallback(async (playerId: string, partnerName: string | null, partnerTelegram: string | null, constraints?: PartnerConstraints, addedBy?: string): Promise<PartnerRejection | null> => {
     if (!tournamentId || !db) return null;
-    const { writes, newPlayer, rejected } = resolvePartnerUpdate(playerId, partnerName, partnerTelegram, players, constraints);
+    const { writes, newPlayer, rejected } = resolvePartnerUpdate(playerId, partnerName, partnerTelegram, players, constraints, addedBy);
 
     if (rejected) return rejected;
 

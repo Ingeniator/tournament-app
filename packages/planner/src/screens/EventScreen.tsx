@@ -288,6 +288,9 @@ function TournamentListCard({
                 <div className={styles.tournamentMeta}>
                   {ti.date && <span>{ti.date}</span>}
                   {ti.place && <span>{ti.place}</span>}
+                  {ti.registeredCount > 0 && <span>{t('event.registered', { count: ti.registeredCount })}</span>}
+                </div>
+                <div className={styles.tournamentMeta}>
                   <span>{ti.playerCount}/{ti.capacity} {t('event.players')}</span>
                   {ti.isCompleted ? (
                     <span className={styles.tournamentCompleted}>{t('event.status.completed')}</span>

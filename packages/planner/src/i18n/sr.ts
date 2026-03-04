@@ -65,9 +65,11 @@ const sr: Translations = {
   'organizer.telegramPlaceholder': '@korisnickoime',
   'organizer.saveLink': 'Sačuvaj',
   'organizer.removeLink': 'Ukloni',
-  'organizer.partnerSection': 'Željeni partner',
-  'organizer.partnerName': 'Ime partnera',
+  'organizer.partnerSection': 'Partner',
+  'organizer.partnerName': 'Izaberi partnera…',
   'organizer.partnerTelegram': 'Telegram partnera (opciono)',
+  'organizer.newPlayer': '+ Novi igrač',
+  'organizer.newPlayerName': 'Ime igrača',
   'organizer.removePartner': 'Ukloni partnera',
   'organizer.addedBy': 'Dodao/la {name}',
   'organizer.reserve': 'rezerva',
@@ -286,6 +288,8 @@ const sr: Translations = {
   'join.approve': 'Odobri',
   'join.reject': 'Odbij',
   'join.pairSlots': '{pairs} mesta za parove',
+  'join.myClub': '{name}',
+  'join.allPlayers': 'Svi igrači',
 
   // SupportOverlay
   'support.title': 'Podržite Nas',

@@ -65,9 +65,11 @@ const pt: Translations = {
   'organizer.telegramPlaceholder': '@username',
   'organizer.saveLink': 'Salvar',
   'organizer.removeLink': 'Remover',
-  'organizer.partnerSection': 'Parceiro preferido',
-  'organizer.partnerName': 'Nome do parceiro',
+  'organizer.partnerSection': 'Parceiro',
+  'organizer.partnerName': 'Selecionar parceiro…',
   'organizer.partnerTelegram': 'Telegram do parceiro (opcional)',
+  'organizer.newPlayer': '+ Novo jogador',
+  'organizer.newPlayerName': 'Nome do jogador',
   'organizer.removePartner': 'Remover parceiro',
   'organizer.addedBy': 'Adicionado por {name}',
   'organizer.reserve': 'reserva',
@@ -286,6 +288,8 @@ const pt: Translations = {
   'join.approve': 'Aprovar',
   'join.reject': 'Rejeitar',
   'join.pairSlots': '{pairs} lugares de par',
+  'join.myClub': '{name}',
+  'join.allPlayers': 'Todos os jogadores',
 
   // SupportOverlay
   'support.title': 'Apoie-nos',

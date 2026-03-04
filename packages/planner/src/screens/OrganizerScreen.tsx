@@ -1067,6 +1067,7 @@ export function OrganizerScreen() {
         simplified={playerMode === 'quick'}
         captainMode={tournament.captainMode}
         showToast={showToast}
+        operatorName={userName ?? undefined}
       />
 
       {/* Club panel — visual overview of club assignments */}
