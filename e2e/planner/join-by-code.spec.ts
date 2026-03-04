@@ -37,7 +37,7 @@ test.describe('Join via Short Code', () => {
 
     // Clean up: open tournament and delete
     await page.getByText(tournamentName).click();
-    await expect(page.getByText('Share with Players')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/Players \(/)).toBeVisible({ timeout: 10000 });
     await deleteTournament(page);
   });
 
@@ -59,7 +59,7 @@ test.describe('Join via Short Code', () => {
     // Go back and clean up
     await goBack(page);
     await page.getByText(tournamentName).click();
-    await expect(page.getByText('Share with Players')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/Players \(/)).toBeVisible({ timeout: 10000 });
     await deleteTournament(page);
   });
 

@@ -578,66 +578,6 @@ export function OrganizerScreen() {
       </Card>
       )}
 
-      {/* Captain mode — only for pair+club formats in share mode */}
-      {playerMode === 'share' && formatHasFixedPartners(tournament.format) && tournament.format !== 'club-ranked' && formatHasClubs(tournament.format) && (tournament.clubs ?? []).length > 0 && (
-      <Card>
-        <h2 className={styles.sectionTitle}>{t('organizer.captainMode')}</h2>
-        <label className={styles.checkboxLabel}>
-          <input
-            type="checkbox"
-            checked={tournament.captainMode ?? false}
-            onChange={e => updateTournament({ captainMode: e.target.checked || undefined })}
-          />
-          {t('organizer.captainMode')}
-        </label>
-        {tournament.captainMode && tournament.clubs!.map((club, clubIdx) => (
-          <div key={club.id} style={{ marginTop: 'var(--space-sm)' }}>
-            <label className={styles.configLabel} style={getClubColor(club, clubIdx) !== NO_COLOR ? { color: getClubColor(club, clubIdx) } : undefined}>
-              {t('organizer.clubCaptain')} — {club.name}
-            </label>
-            <select
-              className={styles.select}
-              value={club.captainId ? `player:${club.captainId}` : club.captainTelegram ? 'telegram' : 'none'}
-              onChange={e => {
-                const val = e.target.value;
-                const updatedClubs = [...tournament.clubs!];
-                if (val === 'none') {
-                  updatedClubs[clubIdx] = { ...club, captainId: undefined, captainTelegram: undefined };
-                } else if (val === 'telegram') {
-                  updatedClubs[clubIdx] = { ...club, captainId: undefined, captainTelegram: club.captainTelegram ?? '' };
-                } else if (val.startsWith('player:')) {
-                  const playerId = val.slice('player:'.length);
-                  updatedClubs[clubIdx] = { ...club, captainId: playerId, captainTelegram: undefined };
-                }
-                updateTournament({ clubs: updatedClubs });
-              }}
-              style={{ marginTop: 'var(--space-xs)' }}
-            >
-              <option value="none">{t('organizer.noCaptain')}</option>
-              {players.filter(p => p.clubId === club.id && p.confirmed !== false).map(p => (
-                <option key={p.id} value={`player:${p.id}`}>{p.name}</option>
-              ))}
-              <option value="telegram">{t('organizer.startDelegateTelegram')}</option>
-            </select>
-            {(club.captainId ? false : (club.captainTelegram !== undefined)) && (
-              <input
-                className={styles.configInput}
-                type="text"
-                value={club.captainTelegram ? `@${club.captainTelegram}` : ''}
-                onChange={e => {
-                  const raw = e.target.value.replace(/^@/, '');
-                  const updatedClubs = [...tournament.clubs!];
-                  updatedClubs[clubIdx] = { ...club, captainTelegram: raw || undefined };
-                  updateTournament({ clubs: updatedClubs });
-                }}
-                placeholder={t('organizer.startDelegateTelegramPlaceholder')}
-                style={{ marginTop: 'var(--space-xs)' }}
-              />
-            )}
-          </div>
-        ))}
-      </Card>
-      )}
 
       {/* Courts section */}
       <CollapsibleSection
@@ -791,6 +731,52 @@ export function OrganizerScreen() {
                       }}
                     />
                   }
+                  subtitle={tournament.captainMode ? (
+                    <div className={styles.captainRow}>
+                      <span className={styles.captainLabel}>{t('organizer.clubCaptain')}:</span>
+                      <select
+                        className={styles.captainSelect}
+                        value={club.captainId ? `player:${club.captainId}` : club.captainTelegram !== undefined ? 'telegram' : 'none'}
+                        onChange={e => {
+                          const val = e.target.value;
+                          const updatedClubs = [...clubs];
+                          if (val === 'none') {
+                            const { captainId: _, captainTelegram: __, ...rest } = club;
+                            updatedClubs[idx] = rest;
+                          } else if (val === 'telegram') {
+                            const { captainId: _, ...rest } = club;
+                            updatedClubs[idx] = { ...rest, captainTelegram: club.captainTelegram ?? '' };
+                          } else if (val.startsWith('player:')) {
+                            const playerId = val.slice('player:'.length);
+                            const { captainTelegram: _, ...rest } = club;
+                            updatedClubs[idx] = { ...rest, captainId: playerId };
+                          }
+                          updateTournament({ clubs: updatedClubs });
+                        }}
+                      >
+                        <option value="none">{t('organizer.setCaptain')}</option>
+                        {players.filter(p => p.clubId === club.id).map(p => (
+                          <option key={p.id} value={`player:${p.id}`}>{p.name}</option>
+                        ))}
+                        <option value="telegram">{t('organizer.startDelegateTelegram')}</option>
+                      </select>
+                      {(club.captainId ? false : (club.captainTelegram !== undefined)) && (
+                        <input
+                          className={styles.captainTgInput}
+                          type="text"
+                          value={club.captainTelegram ? `@${club.captainTelegram}` : ''}
+                          onChange={e => {
+                            const raw = e.target.value.replace(/^@/, '');
+                            const updatedClubs = [...clubs];
+                            const { captainTelegram: _, ...rest } = club;
+                            updatedClubs[idx] = raw ? { ...rest, captainTelegram: raw } : rest;
+                            updateTournament({ clubs: updatedClubs });
+                          }}
+                          placeholder={t('organizer.startDelegateTelegramPlaceholder')}
+                        />
+                      )}
+                    </div>
+                  ) : undefined}
                 />
                 );
               })}
@@ -882,6 +868,19 @@ export function OrganizerScreen() {
                 </select>
               </div>
             )}
+          </>
+        )}
+        {formatHasClubs(tournament.format) && (
+          <>
+            {!formatHasFixedPartners(tournament.format) && <div className={styles.modesSubtitle}>{t('organizer.modesSubtitle')}</div>}
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={tournament.captainMode ?? false}
+                onChange={e => updateTournament({ captainMode: e.target.checked || undefined })}
+              />
+              <span>{t('organizer.captainMode')}</span>
+            </label>
           </>
         )}
         {tournament.format === 'club-ranked' && (() => {

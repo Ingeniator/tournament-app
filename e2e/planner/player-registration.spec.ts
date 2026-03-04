@@ -39,7 +39,7 @@ test.describe('Player Registration', () => {
     // Clean up: go back, open from My Tournaments (first entry), delete
     await goBack(page);
     await openTournamentByName(page, tournamentName);
-    await expect(page.getByText('Share with Players')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/Players \(/)).toBeVisible({ timeout: 10000 });
     await deleteTournament(page);
   });
 
@@ -68,7 +68,7 @@ test.describe('Player Registration', () => {
     await openTournamentByName(page, tournamentName);
     // May land on organizer or join screen depending on which section was clicked
     await Promise.race([
-      page.getByText('Share with Players').waitFor({ timeout: 10000 }),
+      page.getByText(/Players \(/).waitFor({ timeout: 10000 }),
       page.getByText("You're confirmed!").waitFor({ timeout: 10000 }),
     ]);
     // If on join screen, go back and open via My Tournaments (first section)
@@ -76,7 +76,7 @@ test.describe('Player Registration', () => {
       await goBack(page);
       // My Tournaments is listed before Registered, so the first instance is the organizer entry
       await openTournamentByName(page, tournamentName);
-      await expect(page.getByText('Share with Players')).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText(/Players \(/)).toBeVisible({ timeout: 10000 });
     }
     await deleteTournament(page);
   });
@@ -103,13 +103,13 @@ test.describe('Player Registration', () => {
     // Clean up: open tournament (first instance = My Tournaments = organizer view)
     await openTournamentByName(page, tournamentName);
     await Promise.race([
-      page.getByText('Share with Players').waitFor({ timeout: 10000 }),
+      page.getByText(/Players \(/).waitFor({ timeout: 10000 }),
       page.getByText("You're confirmed!").waitFor({ timeout: 10000 }),
     ]);
     if (await page.getByText("You're confirmed!").isVisible().catch(() => false)) {
       await goBack(page);
       await openTournamentByName(page, tournamentName);
-      await expect(page.getByText('Share with Players')).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText(/Players \(/)).toBeVisible({ timeout: 10000 });
     }
     await deleteTournament(page);
   });

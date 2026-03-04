@@ -72,10 +72,11 @@ function PartnerEditor({ partnerName, partnerTelegram, onSave }: {
   );
 }
 
-function JoinPlayerRow({ player, idx, tournament }: {
+function JoinPlayerRow({ player, idx, tournament, hidePairBadge }: {
   player: PlannerRegistration;
   idx: number;
   tournament: { format: string; groupLabels?: [string, string]; clubs?: { id: string; name: string; color?: string }[]; rankLabels?: string[]; rankColors?: number[] };
+  hidePairBadge?: boolean;
 }) {
   const isMixicano = formatHasGroups(tournament.format as import('@padel/common').TournamentFormat);
   const isClubFormat = formatHasClubs(tournament.format as import('@padel/common').TournamentFormat);
@@ -119,7 +120,7 @@ function JoinPlayerRow({ player, idx, tournament }: {
               </span>
             );
           })()}
-          {formatHasFixedPartners(tournament.format as import('@padel/common').TournamentFormat) && player.partnerName && (
+          {!hidePairBadge && formatHasFixedPartners(tournament.format as import('@padel/common').TournamentFormat) && player.partnerName && (
             <span className={styles.groupBadge}>{'\uD83E\uDD1D'} {player.partnerName}</span>
           )}
         </div>
@@ -141,10 +142,10 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
   reserveCount: number;
   t: (key: string, params?: Record<string, string | number>) => string;
   isCaptainOf?: string | null;
-  onApprove?: (playerId: string) => void;
-  onReject?: (playerId: string) => void;
+  onApprove?: (playerId: string) => Promise<void> | void;
+  onReject?: (playerId: string) => Promise<void> | void;
 }) {
-  const isPairFormat = formatHasFixedPartners(tournament.format) && tournament.format !== 'club-ranked';
+  const isPairFormat = formatHasFixedPartners(tournament.format);
 
   const sections = useMemo(() => {
     if (!isPairFormat) return null;
@@ -158,29 +159,31 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
     return sectionMap;
   }, [isPairFormat, players, statuses]);
 
-  const renderPairedSection = (sectionPlayers: PlannerRegistration[], showCaptainActions?: boolean) => {
+  const renderPairedSection = (sectionPlayers: PlannerRegistration[], captainActions?: 'approve-reject' | 'reject-only') => {
     const rendered = new Set<string>();
     const elements: React.ReactNode[] = [];
     let globalIdx = 0;
     for (const p of sectionPlayers) {
       if (rendered.has(p.id)) continue;
       rendered.add(p.id);
-      const partner = findPartner(p, sectionPlayers);
-      if (partner && !rendered.has(partner.id)) {
+      const partner = findPartner(p, players);
+      if (partner && !rendered.has(partner.id) && sectionPlayers.some(sp => sp.id === partner.id)) {
         rendered.add(partner.id);
         const i1 = globalIdx++;
         const i2 = globalIdx++;
-        const canAct = showCaptainActions && isCaptainOf && (p.clubId === isCaptainOf || partner.clubId === isCaptainOf);
+        const canAct = captainActions && isCaptainOf && (p.clubId === isCaptainOf || partner.clubId === isCaptainOf);
         elements.push(
           <div key={`pair-${p.id}`} className={styles.pairGroup}>
-            <JoinPlayerRow player={p} idx={i1} tournament={tournament} />
-            <JoinPlayerRow player={partner} idx={i2} tournament={tournament} />
-            {canAct && onApprove && onReject && (
+            <JoinPlayerRow player={p} idx={i1} tournament={tournament} hidePairBadge />
+            <JoinPlayerRow player={partner} idx={i2} tournament={tournament} hidePairBadge />
+            {canAct && onReject && (
               <div className={styles.captainActions} style={{ padding: '4px 8px', justifyContent: 'flex-end' }}>
-                <Button size="small" onClick={() => { onApprove(p.id); onApprove(partner.id); }}>
-                  {t('join.approve')}
-                </Button>
-                <Button size="small" variant="secondary" onClick={() => { onReject(p.id); onReject(partner.id); }}>
+                {captainActions === 'approve-reject' && onApprove && (
+                  <Button size="small" onClick={async () => { await onApprove(p.id); await onApprove(partner.id); }}>
+                    {t('join.approve')}
+                  </Button>
+                )}
+                <Button size="small" variant="secondary" onClick={async () => { await onReject(p.id); await onReject(partner.id); }}>
                   {t('join.reject')}
                 </Button>
               </div>
@@ -236,7 +239,7 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
                   {t(labelKey, { count: sectionPlayers.length })}
                 </div>
                 <div className={styles.playerList}>
-                  {paired ? renderPairedSection(sectionPlayers, key === 'registered') : sectionPlayers.map((p, i) => (
+                  {paired ? renderPairedSection(sectionPlayers, key === 'registered' ? 'approve-reject' : (key === 'playing' || key === 'reserve') ? 'reject-only' : undefined) : sectionPlayers.map((p, i) => (
                     <JoinPlayerRow key={p.id} player={p} idx={i} tournament={tournament} />
                   ))}
                 </div>
@@ -299,11 +302,12 @@ export function JoinScreen() {
   // Compute reserve position (1-based) for current player
   const myReservePosition = useMemo(() => {
     if (myStatus !== 'reserve' || !myRegistration) return 0;
-    const confirmed = players.filter(p => p.confirmed !== false);
-    const sorted = [...confirmed].sort((a, b) => a.timestamp - b.timestamp);
-    const reservePlayers = sorted.slice(capacity);
+    // Use statuses map to find all reserve players, then sort by timestamp
+    const reservePlayers = players
+      .filter(p => statuses.get(p.id) === 'reserve')
+      .sort((a, b) => a.timestamp - b.timestamp);
     return reservePlayers.findIndex(p => p.id === myRegistration.id) + 1;
-  }, [myStatus, myRegistration, players, capacity]);
+  }, [myStatus, myRegistration, players, statuses]);
 
   // Auto-restore from Firebase backup when tournament is completed
   useEffect(() => {
@@ -553,13 +557,28 @@ export function JoinScreen() {
                 <h3>{t('join.needsPartner')}</h3>
                 <p className={styles.hint}>{t('join.needsPartnerHint')}</p>
               </>
-            ) : isConfirmed && myStatus === 'registered' ? (
-              <>
-                <div className={styles.reserveIcon}>&#9203;</div>
-                <h3>{t('join.awaitingCaptain')}</h3>
-                <p className={styles.hint}>{t('join.awaitingCaptainHint')}</p>
-              </>
-            ) : isConfirmed && myStatus === 'reserve' ? (
+            ) : isConfirmed && myStatus === 'registered' ? (() => {
+              const myClub = tournament.clubs?.find(c => c.id === myRegistration?.clubId);
+              const captainPlayer = myClub?.captainId ? players.find(p => p.id === myClub.captainId) : undefined;
+              const captainName = captainPlayer?.name ?? (myClub?.captainTelegram ? `@${myClub.captainTelegram}` : undefined);
+              const captainTg = captainPlayer?.telegramUsername ?? myClub?.captainTelegram;
+              return (
+                <>
+                  <div className={styles.reserveIcon}>&#9203;</div>
+                  <h3>{t('join.awaitingCaptain')}</h3>
+                  <p className={styles.hint}>{t('join.awaitingCaptainHint')}</p>
+                  <p className={styles.captainInfo}>
+                    {t('join.yourCaptain')}{' '}
+                    {captainName
+                      ? captainTg
+                        ? <a href={`https://t.me/${captainTg}`} target="_blank" rel="noopener noreferrer">{captainName}</a>
+                        : <strong>{captainName}</strong>
+                      : <span className={styles.hint}>{t('join.captainUnassigned')}</span>
+                    }
+                  </p>
+                </>
+              );
+            })() : isConfirmed && myStatus === 'reserve' ? (
               <>
                 <div className={styles.reserveIcon}>&#9888;</div>
                 <h3>{t('join.onReserveList')}</h3>

@@ -54,6 +54,7 @@ function toTournament(id: string, data: Record<string, unknown>): PlannerTournam
     maldiciones: data.maldiciones as PlannerTournament['maldiciones'],
     startDelegateId: data.startDelegateId as string | undefined,
     startDelegateTelegram: data.startDelegateTelegram as string | undefined,
+    captainMode: data.captainMode as boolean | undefined,
   };
 }
 
@@ -109,7 +110,7 @@ export function usePlannerTournament(tournamentId: string | null) {
     return id;
   }, []);
 
-  const updateTournament = useCallback(async (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'courts' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description' | 'clubs' | 'groupLabels' | 'rankLabels' | 'rankColors' | 'scoringMode' | 'maldiciones' | 'pointsPerMatch' | 'maxRounds' | 'startDelegateId' | 'startDelegateTelegram' | 'minutesPerRound'>>) => {
+  const updateTournament = useCallback(async (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'courts' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description' | 'clubs' | 'groupLabels' | 'rankLabels' | 'rankColors' | 'scoringMode' | 'maldiciones' | 'pointsPerMatch' | 'maxRounds' | 'startDelegateId' | 'startDelegateTelegram' | 'minutesPerRound' | 'captainMode'>>) => {
     if (!tournamentId || !db) return;
     // Convert undefined to null so Firebase deletes the field
     const pathUpdates: Record<string, unknown> = {};

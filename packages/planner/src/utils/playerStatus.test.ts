@@ -240,6 +240,48 @@ describe('getPlayerStatuses', () => {
       expect(statuses.get('12')).toBe('reserve');
     });
 
+    it('captain mode: unapproved player gets registered', () => {
+      const players = [
+        makePlayer('1', { rankSlot: 0, clubId: 'c1', timestamp: 1 }),
+        makePlayer('2', { rankSlot: 0, clubId: 'c2', timestamp: 2, captainApproved: true }),
+      ];
+      const statuses = getPlayerStatuses(players, 8, { format: 'club-ranked', clubs, rankLabels, captainMode: true });
+      expect(statuses.get('1')).toBe('registered');
+      expect(statuses.get('2')).toBe('playing');
+    });
+
+    it('captain mode: approved player within bucket gets playing', () => {
+      const players = [
+        makePlayer('1', { rankSlot: 0, clubId: 'c1', timestamp: 1, captainApproved: true }),
+        makePlayer('2', { rankSlot: 0, clubId: 'c2', timestamp: 2, captainApproved: true }),
+      ];
+      const statuses = getPlayerStatuses(players, 8, { format: 'club-ranked', clubs, rankLabels, captainMode: true });
+      expect(statuses.get('1')).toBe('playing');
+      expect(statuses.get('2')).toBe('playing');
+    });
+
+    it('captain mode: approved player over bucket gets reserve', () => {
+      const players = [
+        makePlayer('1', { rankSlot: 0, clubId: 'c1', timestamp: 1, captainApproved: true }),
+        makePlayer('2', { rankSlot: 0, clubId: 'c1', timestamp: 2, captainApproved: true }),
+        makePlayer('3', { rankSlot: 0, clubId: 'c1', timestamp: 3, captainApproved: true }), // over bucket
+      ];
+      const statuses = getPlayerStatuses(players, 8, { format: 'club-ranked', clubs, rankLabels, captainMode: true });
+      expect(statuses.get('1')).toBe('playing');
+      expect(statuses.get('2')).toBe('playing');
+      expect(statuses.get('3')).toBe('reserve');
+    });
+
+    it('captain mode off: unchanged behavior (regression)', () => {
+      const players = [
+        makePlayer('1', { rankSlot: 0, clubId: 'c1', timestamp: 1 }),
+        makePlayer('2', { rankSlot: 0, clubId: 'c2', timestamp: 2 }),
+      ];
+      const statuses = getPlayerStatuses(players, 8, { format: 'club-ranked', clubs, rankLabels, captainMode: false });
+      expect(statuses.get('1')).toBe('playing');
+      expect(statuses.get('2')).toBe('playing');
+    });
+
     it('gives bonus to rank 1 when it overflows first', () => {
       // Same setup but rank 1 overflows before rank 0
       const players = [
@@ -398,6 +440,100 @@ describe('getPlayerStatuses', () => {
       expect(statuses.get('1')).toBe('cancelled');
       expect(statuses.get('2')).toBe('playing');
       expect(statuses.get('3')).toBe('playing');
+    });
+
+    it('partner referencing a cancelled player — solo player gets needs-partner', () => {
+      const players = [
+        makePlayer('1', { timestamp: 1, partnerName: 'Player 2', pairedAt: 100 }),
+        makePlayer('2', { timestamp: 2, partnerName: 'Player 1', pairedAt: 100, confirmed: false }),
+      ];
+      const statuses = getPlayerStatuses(players, 8, { format: 'team-americano' });
+      expect(statuses.get('2')).toBe('cancelled');
+      expect(statuses.get('1')).toBe('needs-partner'); // partner is cancelled
+    });
+
+    it('pairedAt fallback to timestamp when pairedAt is missing', () => {
+      const players = [
+        makePlayer('1', { timestamp: 100, partnerName: 'Player 2' }), // no pairedAt
+        makePlayer('2', { timestamp: 200, partnerName: 'Player 1' }), // no pairedAt
+        makePlayer('3', { timestamp: 300, partnerName: 'Player 4', pairedAt: 50 }),
+        makePlayer('4', { timestamp: 400, partnerName: 'Player 3', pairedAt: 50 }),
+      ];
+      // capacity=2 → pair cap=1. Pair 3+4 pairedAt=50 < pair 1+2 fallback=min(100,200)=100
+      const statuses = getPlayerStatuses(players, 2, { format: 'team-americano' });
+      expect(statuses.get('3')).toBe('playing');
+      expect(statuses.get('4')).toBe('playing');
+      expect(statuses.get('1')).toBe('reserve');
+      expect(statuses.get('2')).toBe('reserve');
+    });
+
+    it('capacity 0 — all paired players become reserve', () => {
+      const players = [
+        makePlayer('1', { timestamp: 1, partnerName: 'Player 2', pairedAt: 100 }),
+        makePlayer('2', { timestamp: 2, partnerName: 'Player 1', pairedAt: 100 }),
+      ];
+      const statuses = getPlayerStatuses(players, 0, { format: 'team-americano' });
+      expect(statuses.get('1')).toBe('reserve');
+      expect(statuses.get('2')).toBe('reserve');
+    });
+
+    it('odd capacity — pair cap rounds down', () => {
+      const players = [
+        makePlayer('1', { timestamp: 1, partnerName: 'Player 2', pairedAt: 100 }),
+        makePlayer('2', { timestamp: 2, partnerName: 'Player 1', pairedAt: 100 }),
+        makePlayer('3', { timestamp: 3, partnerName: 'Player 4', pairedAt: 200 }),
+        makePlayer('4', { timestamp: 4, partnerName: 'Player 3', pairedAt: 200 }),
+      ];
+      // capacity=5 → pair cap = Math.floor(5/2) = 2
+      const statuses = getPlayerStatuses(players, 5, { format: 'team-americano' });
+      expect(statuses.get('1')).toBe('playing');
+      expect(statuses.get('2')).toBe('playing');
+      expect(statuses.get('3')).toBe('playing');
+      expect(statuses.get('4')).toBe('playing');
+    });
+
+    it('captain mode: one partner approved, other not — still registered', () => {
+      const players = [
+        makePlayer('1', { timestamp: 1, partnerName: 'Player 2', pairedAt: 100, captainApproved: true }),
+        makePlayer('2', { timestamp: 2, partnerName: 'Player 1', pairedAt: 100 }), // not approved
+      ];
+      const statuses = getPlayerStatuses(players, 8, { format: 'team-americano', captainMode: true });
+      // Both should be 'registered' because not both approved
+      expect(statuses.get('1')).toBe('registered');
+      expect(statuses.get('2')).toBe('registered');
+    });
+
+    it('mixed solo and paired players', () => {
+      const players = [
+        makePlayer('1', { timestamp: 1, partnerName: 'Player 2', pairedAt: 100 }),
+        makePlayer('2', { timestamp: 2, partnerName: 'Player 1', pairedAt: 100 }),
+        makePlayer('3', { timestamp: 3 }), // solo
+        makePlayer('4', { timestamp: 4, partnerName: 'Player 5', pairedAt: 200 }),
+        makePlayer('5', { timestamp: 5, partnerName: 'Player 4', pairedAt: 200 }),
+      ];
+      const statuses = getPlayerStatuses(players, 8, { format: 'team-americano' });
+      expect(statuses.get('1')).toBe('playing');
+      expect(statuses.get('2')).toBe('playing');
+      expect(statuses.get('3')).toBe('needs-partner');
+      expect(statuses.get('4')).toBe('playing');
+      expect(statuses.get('5')).toBe('playing');
+    });
+
+    it('all formats in formatHasFixedPartners use pair logic (except club-ranked)', () => {
+      const pairFormats = ['team-americano', 'team-mexicano', 'mixed-team-americano', 'mixed-team-mexicano', 'club-team-americano', 'club-team-mexicano'] as const;
+      for (const format of pairFormats) {
+        const players = [makePlayer('1', { timestamp: 1 })]; // solo
+        const statuses = getPlayerStatuses(players, 8, { format });
+        expect(statuses.get('1'), `format ${format}`).toBe('needs-partner');
+      }
+    });
+
+    it('club-ranked format does NOT use pair logic', () => {
+      const players = [makePlayer('1', { timestamp: 1 })]; // solo, no partner
+      const clubs: Club[] = [{ id: 'c1', name: 'Club A' }];
+      const statuses = getPlayerStatuses(players, 8, { format: 'club-ranked', clubs });
+      // Should NOT be 'needs-partner' — club-ranked has its own logic
+      expect(statuses.get('1')).not.toBe('needs-partner');
     });
   });
 });

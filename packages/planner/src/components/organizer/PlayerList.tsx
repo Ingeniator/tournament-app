@@ -40,7 +40,7 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
   const [partnerNameDraft, setPartnerNameDraft] = useState('');
   const [partnerTelegramDraft, setPartnerTelegramDraft] = useState('');
   const showPartner = format ? formatHasFixedPartners(format) : false;
-  const isPairFormat = format ? (formatHasFixedPartners(format) && format !== 'club-ranked') : false;
+  const isPairFormat = format ? formatHasFixedPartners(format) : false;
   const [cancelledOpen, setCancelledOpen] = useState(false);
 
   const constraints: PartnerConstraints = {
@@ -195,7 +195,7 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
               ))}
             </select>
           )}
-          {showPartner && player.partnerName && (
+          {showPartner && !isPairFormat && player.partnerName && (
             <span className={styles.reserveBadge}>{'\uD83E\uDD1D'} {player.partnerName}</span>
           )}
         </div>
@@ -263,8 +263,8 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
       if (rendered.has(p.id)) continue;
       rendered.add(p.id);
 
-      const partner = findPartner(p, sectionPlayers);
-      if (partner && !rendered.has(partner.id)) {
+      const partner = findPartner(p, players);
+      if (partner && !rendered.has(partner.id) && sectionPlayers.some(sp => sp.id === partner.id)) {
         rendered.add(partner.id);
         const i1 = globalIdx++;
         const i2 = globalIdx++;

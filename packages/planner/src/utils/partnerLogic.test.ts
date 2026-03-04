@@ -643,6 +643,78 @@ describe('findPartner', () => {
   });
 });
 
+describe('resolvePartnerUpdate — pairedAt handling', () => {
+  it('sets pairedAt on both players when linking to an existing player', () => {
+    const players = [
+      player({ id: 'a', name: 'Alice' }),
+      player({ id: 'b', name: 'Bob' }),
+    ];
+    const before = Date.now();
+    const result = resolvePartnerUpdate('a', 'Bob', null, players);
+    const after = Date.now();
+
+    const aliceWrite = result.writes.find(w => w.playerId === 'a');
+    const bobWrite = result.writes.find(w => w.playerId === 'b');
+    expect(aliceWrite!.fields.pairedAt).toBeGreaterThanOrEqual(before);
+    expect(aliceWrite!.fields.pairedAt).toBeLessThanOrEqual(after);
+    expect(bobWrite!.fields.pairedAt).toBe(aliceWrite!.fields.pairedAt);
+  });
+
+  it('sets pairedAt on source and auto-created partner', () => {
+    const players = [player({ id: 'a', name: 'Alice' })];
+    const before = Date.now();
+    const result = resolvePartnerUpdate('a', 'NewGuy', null, players);
+    const after = Date.now();
+
+    const aliceWrite = result.writes.find(w => w.playerId === 'a');
+    expect(aliceWrite!.fields.pairedAt).toBeGreaterThanOrEqual(before);
+    expect(aliceWrite!.fields.pairedAt).toBeLessThanOrEqual(after);
+    expect(result.newPlayer!.data.pairedAt).toBe(aliceWrite!.fields.pairedAt);
+  });
+
+  it('clears pairedAt on both players when removing partner', () => {
+    const players = [
+      player({ id: 'a', name: 'Alice', partnerName: 'Bob', pairedAt: 999 }),
+      player({ id: 'b', name: 'Bob', partnerName: 'Alice', pairedAt: 999 }),
+    ];
+    const result = resolvePartnerUpdate('a', null, null, players);
+
+    const aliceWrite = result.writes.find(w => w.playerId === 'a');
+    const bobWrite = result.writes.find(w => w.playerId === 'b');
+    expect(aliceWrite!.fields.pairedAt).toBeNull();
+    expect(bobWrite!.fields.pairedAt).toBeNull();
+  });
+
+  it('clears pairedAt on old partner and sets pairedAt on new when switching', () => {
+    const players = [
+      player({ id: 'a', name: 'Alice', partnerName: 'Bob', pairedAt: 500 }),
+      player({ id: 'b', name: 'Bob', partnerName: 'Alice', pairedAt: 500 }),
+      player({ id: 'c', name: 'Charlie' }),
+    ];
+    const result = resolvePartnerUpdate('a', 'Charlie', null, players);
+
+    const bobWrite = result.writes.find(w => w.playerId === 'b');
+    expect(bobWrite!.fields.pairedAt).toBeNull();
+
+    const aliceWrite = result.writes.find(w => w.playerId === 'a');
+    const charlieWrite = result.writes.find(w => w.playerId === 'c');
+    expect(aliceWrite!.fields.pairedAt).toBeTypeOf('number');
+    expect(charlieWrite!.fields.pairedAt).toBe(aliceWrite!.fields.pairedAt);
+  });
+
+  it('uses the same pairedAt timestamp for both partners in a single call', () => {
+    const players = [
+      player({ id: 'a', name: 'Alice' }),
+      player({ id: 'b', name: 'Bob' }),
+    ];
+    const result = resolvePartnerUpdate('a', 'Bob', null, players);
+
+    const alicePairedAt = result.writes.find(w => w.playerId === 'a')!.fields.pairedAt;
+    const bobPairedAt = result.writes.find(w => w.playerId === 'b')!.fields.pairedAt;
+    expect(alicePairedAt).toBe(bobPairedAt);
+  });
+});
+
 describe('wouldBreakPartnerLink', () => {
   it('returns null when club change is compatible', () => {
     const partner = player({ id: 'b', name: 'Bob', clubId: 'c1' });

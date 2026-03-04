@@ -382,10 +382,47 @@ describe('kingOfTheCourt calculateStandings', () => {
     const standings = kingOfTheCourtStrategy.calculateStandings(tournament);
     const byId = new Map(standings.map(s => [s.playerId, s]));
 
-    // Total scored points = (14+10) + (14+10) = 48, 8 players scored → avg = 6
+    // Total scored points including court bonus:
+    // c1 (bonus=1): (14+10) + 1*4 = 28, c2 (bonus=0): (14+10) + 0*4 = 24
+    // Total = 52, 8 players scored → avg = 6.5 → round = 7
     const p9 = byId.get('p9')!;
-    expect(p9.totalPoints).toBe(6);
+    expect(p9.totalPoints).toBe(7);
     expect(p9.matchesPlayed).toBe(0);
+  });
+
+  it('sit-out compensation includes court bonus (3 courts)', () => {
+    const players14 = makePlayers(14);
+    const config3 = makeConfig(3);
+    const round: Round = {
+      id: 'r1',
+      roundNumber: 1,
+      matches: [
+        {
+          id: 'm1', courtId: 'c1', // bonus = 2
+          team1: ['p1', 'p2'], team2: ['p3', 'p4'],
+          score: { team1Points: 12, team2Points: 12 },
+        },
+        {
+          id: 'm2', courtId: 'c2', // bonus = 1
+          team1: ['p5', 'p6'], team2: ['p7', 'p8'],
+          score: { team1Points: 12, team2Points: 12 },
+        },
+        {
+          id: 'm3', courtId: 'c3', // bonus = 0
+          team1: ['p9', 'p10'], team2: ['p11', 'p12'],
+          score: { team1Points: 12, team2Points: 12 },
+        },
+      ],
+      sitOuts: ['p13', 'p14'],
+    };
+    const tournament = makeTournament(players14, config3, [round]);
+    const standings = kingOfTheCourtStrategy.calculateStandings(tournament);
+    const byId = new Map(standings.map(s => [s.playerId, s]));
+
+    // Without bonus: avg = (24+24+24)/12 = 6
+    // With bonus: avg = (24 + 2*4 + 24 + 1*4 + 24 + 0*4) / 12 = 84/12 = 7
+    expect(byId.get('p13')!.totalPoints).toBe(7);
+    expect(byId.get('p14')!.totalPoints).toBe(7);
   });
 
   it('ranks players by totalPoints desc, then pointDiff, then matchesWon', () => {

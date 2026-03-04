@@ -38,8 +38,8 @@ async function getAuthToken(auth?: FirebaseAuth | null): Promise<string> {
         const data = await res.json();
         return data.id_token;
       }
-    } catch {
-      // Fall through
+    } catch (e) {
+      console.warn('Token refresh failed, creating new session', e);
     }
   }
 
@@ -79,7 +79,8 @@ export function useSupporters(auth?: FirebaseAuth | null) {
       const list = Object.entries(data).map(([id, s]) => ({ id, ...s }));
       list.sort((a, b) => b.timestamp - a.timestamp);
       setSupporters(list);
-    } catch {
+    } catch (e) {
+      console.warn('Failed to fetch supporters', e);
       setSupporters([]);
     } finally {
       setLoading(false);

@@ -76,6 +76,22 @@ export function getPlayerStatuses(
   // distribute extra pairs to ranks by earliest overflow player.
   const rankLabels = options?.rankLabels;
   if (format === 'club-ranked' && clubs && clubs.length > 0 && rankLabels && rankLabels.length > 0) {
+    const captainMode = options?.captainMode;
+
+    // Captain mode: unapproved players → 'registered', run bucket logic on approved only
+    let eligible = confirmed;
+    if (captainMode) {
+      const approved: PlannerRegistration[] = [];
+      for (const p of confirmed) {
+        if (p.captainApproved !== true) {
+          statuses.set(p.id, 'registered');
+        } else {
+          approved.push(p);
+        }
+      }
+      eligible = approved;
+    }
+
     const slotsPerClub = Math.floor(capacity / clubs.length);
     const rankCount = rankLabels.length;
     const rawPerBucket = Math.floor(slotsPerClub / rankCount);
@@ -88,7 +104,7 @@ export function getPlayerStatuses(
     const counts = new Map<string, number>(); // "clubId:rankSlot" → count
 
     // Process players with club+rank by timestamp
-    const ranked = confirmed
+    const ranked = eligible
       .filter(p => p.clubId && p.rankSlot != null)
       .sort((a, b) => a.timestamp - b.timestamp);
 
@@ -110,9 +126,9 @@ export function getPlayerStatuses(
 
     // Players in club with no rank fill remaining club slots
     for (const club of clubs) {
-      const clubPlaying = confirmed.filter(p => p.clubId === club.id && statuses.get(p.id) === 'playing').length;
+      const clubPlaying = eligible.filter(p => p.clubId === club.id && statuses.get(p.id) === 'playing').length;
       let clubRemaining = slotsPerClub - clubPlaying;
-      const noRank = confirmed
+      const noRank = eligible
         .filter(p => p.clubId === club.id && p.rankSlot == null)
         .sort((a, b) => a.timestamp - b.timestamp);
 
@@ -129,7 +145,7 @@ export function getPlayerStatuses(
     // Fully unassigned (no club, no rank) fill remaining global slots
     const totalPlaying = [...statuses.values()].filter(s => s === 'playing').length;
     let remaining = capacity - totalPlaying;
-    const unassigned = confirmed
+    const unassigned = eligible
       .filter(p => !p.clubId && p.rankSlot == null)
       .sort((a, b) => a.timestamp - b.timestamp);
 
@@ -145,7 +161,7 @@ export function getPlayerStatuses(
     // Players with rank but no club — also fill remaining
     const totalPlaying2 = [...statuses.values()].filter(s => s === 'playing').length;
     let remaining2 = capacity - totalPlaying2;
-    const rankNoClub = confirmed
+    const rankNoClub = eligible
       .filter(p => !p.clubId && p.rankSlot != null && !statuses.has(p.id))
       .sort((a, b) => a.timestamp - b.timestamp);
 
@@ -251,12 +267,28 @@ export function getPlayerStatuses(
     return statuses;
   }
 
-  // Club Americano: per-club capacity
+  // Club Americano / club-ranked without ranks: per-club capacity
   if (format && formatHasClubs(format) && clubs && clubs.length > 0 && confirmed.some(p => p.clubId)) {
+    const captainMode = options?.captainMode;
+
+    // Captain mode: unapproved players → 'registered', run capacity logic on approved only
+    let eligible = confirmed;
+    if (captainMode) {
+      const approved: PlannerRegistration[] = [];
+      for (const p of confirmed) {
+        if (p.captainApproved !== true) {
+          statuses.set(p.id, 'registered');
+        } else {
+          approved.push(p);
+        }
+      }
+      eligible = approved;
+    }
+
     const perClubCap = Math.floor(capacity / clubs.length);
 
     for (const club of clubs) {
-      const clubPlayers = confirmed
+      const clubPlayers = eligible
         .filter(p => p.clubId === club.id)
         .sort((a, b) => a.timestamp - b.timestamp);
 
@@ -274,7 +306,7 @@ export function getPlayerStatuses(
     // Unassigned (no club) fill remaining slots
     const totalPlaying = [...statuses.values()].filter(s => s === 'playing').length;
     let remaining = capacity - totalPlaying;
-    const unassigned = confirmed
+    const unassigned = eligible
       .filter(p => !p.clubId)
       .sort((a, b) => a.timestamp - b.timestamp);
 

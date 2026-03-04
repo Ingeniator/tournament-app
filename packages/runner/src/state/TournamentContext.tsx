@@ -1,5 +1,5 @@
 import { useReducer, useEffect, useRef, useState, type ReactNode } from 'react';
-import { ref, set } from 'firebase/database';
+import { ref, update } from 'firebase/database';
 import { TournamentContext } from './tournamentContextDef';
 import { tournamentReducer } from './tournamentReducer';
 import { saveTournament, loadTournament } from './persistence';
@@ -41,10 +41,10 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     ) {
       signIn().then(async () => {
         const base = `tournaments/${tournament.plannerTournamentId}`;
-        // Write runnerData first so it's available when the planner's
-        // real-time listener fires on completedAt
-        await set(ref(db!, `${base}/runnerData`), tournament);
-        await set(ref(db!, `${base}/completedAt`), Date.now());
+        await update(ref(db!), {
+          [`${base}/runnerData`]: tournament,
+          [`${base}/completedAt`]: Date.now(),
+        });
       }).catch(() => {});
     }
   }, [tournament?.phase, tournament?.plannerTournamentId]);
