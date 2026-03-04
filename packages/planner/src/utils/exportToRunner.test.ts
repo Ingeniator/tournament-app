@@ -255,10 +255,10 @@ describe('buildRunnerTournament', () => {
       rankLabels: ['A', 'B'],
     });
     const regs: PlannerRegistration[] = [
-      { id: 'r1', name: 'P1', timestamp: 1, confirmed: true, clubId: 'c1', rankSlot: 0 },
-      { id: 'r2', name: 'P2', timestamp: 2, confirmed: true, clubId: 'c1', rankSlot: 1 },
-      { id: 'r3', name: 'P3', timestamp: 3, confirmed: true, clubId: 'c1', rankSlot: 0 },
-      { id: 'r4', name: 'P4', timestamp: 4, confirmed: true, clubId: 'c1', rankSlot: 1 },
+      { id: 'r1', name: 'P1', timestamp: 1, confirmed: true, clubId: 'c1', rankSlot: 0, partnerName: 'P3', pairedAt: 1 },
+      { id: 'r2', name: 'P2', timestamp: 2, confirmed: true, clubId: 'c1', rankSlot: 1, partnerName: 'P4', pairedAt: 2 },
+      { id: 'r3', name: 'P3', timestamp: 3, confirmed: true, clubId: 'c1', rankSlot: 0, partnerName: 'P1', pairedAt: 1 },
+      { id: 'r4', name: 'P4', timestamp: 4, confirmed: true, clubId: 'c1', rankSlot: 1, partnerName: 'P2', pairedAt: 2 },
     ];
     const result = buildRunnerTournament(pt, regs);
     expect(result.players.find(p => p.name === 'P1')?.rankSlot).toBe(0);
