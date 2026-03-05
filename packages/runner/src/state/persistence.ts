@@ -7,6 +7,9 @@ function migrateClubFormat(tournament: Tournament): Tournament {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const raw = tournament.config as any;
   const matchMode = raw.matchMode as string | undefined;
+  // Only migrate old tournaments that had a matchMode field.
+  // New club-americano tournaments (from planner) have no matchMode and should stay as-is.
+  if (!matchMode) return tournament;
   let format: TournamentFormat = 'club-ranked';
   if (matchMode === 'random') format = 'club-team-americano';
   else if (matchMode === 'standings') format = 'club-team-mexicano';
