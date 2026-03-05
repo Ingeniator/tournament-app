@@ -113,7 +113,7 @@ function computeSimpleBreakdown(filled: number, total: number): SimpleBreakdown 
 // ── Club ──
 
 function computeClubBreakdown(
-  confirmed: { clubId?: string }[],
+  confirmed: { clubId?: string; captainApproved?: boolean }[],
   clubs: Club[],
   capacity: number,
   captainMode: boolean,
@@ -136,9 +136,12 @@ function computeClubBreakdown(
   const assignedFilled = clubBars.reduce((s, c) => s + Math.min(c.filled, c.capacity), 0);
   const unassigned = confirmed.filter(p => !p.clubId).length;
 
-  // Captain mode: urgency reflects club assignments only (unassigned don't count as "filling" a club)
+  // Captain mode: urgency counts only approved players (unapproved registrations don't "fill" slots)
   // Non-captain: unassigned count toward total since they'll be placed automatically
-  const urgencyFilled = captainMode ? assignedFilled : assignedFilled + unassigned;
+  const approvedAssigned = captainMode
+    ? clubs.reduce((s, club) => s + Math.min(confirmed.filter(p => p.clubId === club.id && p.captainApproved === true).length, perClub), 0)
+    : 0;
+  const urgencyFilled = captainMode ? approvedAssigned : assignedFilled + unassigned;
   const { urgency, urgencyLevel } = clubUrgency(clubBars, urgencyFilled, capacity, captainMode);
 
   return {
@@ -155,7 +158,7 @@ function computeClubBreakdown(
 // ── Club-ranked ──
 
 function computeClubRankedBreakdown(
-  confirmed: { id: string; clubId?: string; rankSlot?: number; partnerName?: string; partnerTelegram?: string }[],
+  confirmed: { id: string; clubId?: string; rankSlot?: number; partnerName?: string; partnerTelegram?: string; captainApproved?: boolean }[],
   clubs: Club[],
   rankLabels: string[],
   capacity: number,
@@ -209,9 +212,12 @@ function computeClubRankedBreakdown(
   const matrixFilled = rows.reduce((s, r) => s + r.cells.reduce((s2, c) => s2 + c.filled, 0), 0);
   const unplacedCount = confirmed.length - matrixFilled;
 
-  // For urgency: captain mode only counts matrix-placed players (unplaced don't "fill" slots)
+  // For urgency: captain mode only counts approved players in the matrix (unapproved don't "fill" slots)
   // Non-captain: unplaced count toward total since they'll be placed automatically
-  const urgencyFilled = captainMode ? matrixFilled : matrixFilled + unplacedCount;
+  const approvedMatrixFilled = captainMode
+    ? confirmed.filter(p => p.clubId && p.rankSlot != null && p.captainApproved === true).length
+    : 0;
+  const urgencyFilled = captainMode ? approvedMatrixFilled : matrixFilled + unplacedCount;
 
   // Find the cell with the most gaps for urgency
   let maxGap = 0;
