@@ -235,16 +235,32 @@ function computeClubRankedBreakdown(
   if (urgencyFilled >= capacity) {
     urgency = { key: 'breakdown.full' };
     urgencyLevel = 'success';
-  } else if (maxGap > 0 && gapRank) {
-    // Captain mode: no specific count — captain decides who gets in
-    urgency = captainMode
-      ? { key: 'breakdown.noRankPlayersCaptain', params: { club: shortLabel(gapClub), rank: shortLabel(gapRank) } }
-      : { key: 'breakdown.noRankPlayers', params: { club: shortLabel(gapClub), rank: shortLabel(gapRank), count: maxGap } };
-    urgencyLevel = captainMode ? 'neutral' : (maxGap <= 2 ? 'warning' : 'danger');
   } else {
-    const spotsLeft = Math.max(0, capacity - urgencyFilled);
-    urgency = { key: 'breakdown.spotsOpen', params: { count: spotsLeft } };
-    urgencyLevel = spotsLeft <= 2 ? 'warning' : 'neutral';
+    // If no per-cell gap (rounding edge case), find the weakest cell
+    if (maxGap === 0) {
+      maxGap = Math.max(0, capacity - urgencyFilled);
+      // Pick the cell with fewest players
+      let minFilled = Infinity;
+      for (const row of rows) {
+        for (let ri = 0; ri < row.cells.length; ri++) {
+          if (row.cells[ri].filled < minFilled) {
+            minFilled = row.cells[ri].filled;
+            gapClub = row.name;
+            gapRank = rankLabels[ri];
+          }
+        }
+      }
+    }
+
+    if (captainMode) {
+      // Captain mode: "very empty" = danger (concerning — captain needs to recruit)
+      urgency = { key: 'breakdown.noRankPlayersCaptain', params: { club: shortLabel(gapClub), rank: shortLabel(gapRank) } };
+      urgencyLevel = maxGap > 4 ? 'danger' : maxGap > 2 ? 'warning' : 'neutral';
+    } else {
+      // Non-captain: "almost full" = danger (exciting — hurry up!)
+      urgency = { key: 'breakdown.noRankPlayers', params: { club: shortLabel(gapClub), rank: shortLabel(gapRank), count: maxGap } };
+      urgencyLevel = maxGap <= 2 ? 'danger' : maxGap <= 4 ? 'warning' : 'neutral';
+    }
   }
 
   return {
@@ -293,10 +309,10 @@ function computeGroupBreakdown(
     urgencyLevel = 'success';
   } else if (gapA > gapB && gapA > 0) {
     urgency = { key: 'breakdown.groupNeedsMore', params: { group: labelA, count: gapA } };
-    urgencyLevel = gapA <= 2 ? 'warning' : 'neutral';
+    urgencyLevel = gapA <= 2 ? 'danger' : gapA <= 4 ? 'warning' : 'neutral';
   } else if (gapB > 0) {
     urgency = { key: 'breakdown.groupNeedsMore', params: { group: labelB, count: gapB } };
-    urgencyLevel = gapB <= 2 ? 'warning' : 'neutral';
+    urgencyLevel = gapB <= 2 ? 'danger' : gapB <= 4 ? 'warning' : 'neutral';
   } else {
     urgency = { key: 'breakdown.full' };
     urgencyLevel = 'success';
@@ -321,7 +337,10 @@ function urgencyFromSpots(spotsLeft: number): { urgency: UrgencyMessage; urgency
   if (spotsLeft === 1) {
     return { urgency: { key: 'breakdown.lastSpot' }, urgencyLevel: 'danger' };
   }
-  if (spotsLeft <= 3) {
+  if (spotsLeft <= 2) {
+    return { urgency: { key: 'breakdown.hurrySpots', params: { count: spotsLeft } }, urgencyLevel: 'danger' };
+  }
+  if (spotsLeft <= 4) {
     return { urgency: { key: 'breakdown.hurrySpots', params: { count: spotsLeft } }, urgencyLevel: 'warning' };
   }
   return { urgency: { key: 'breakdown.spotsOpen', params: { count: spotsLeft } }, urgencyLevel: 'neutral' };
@@ -332,25 +351,7 @@ function clubUrgency(bars: ClubBarData[], totalFilled: number, capacity: number,
     return { urgency: { key: 'breakdown.full' }, urgencyLevel: 'success' };
   }
 
-  // Find club with fewest registrations (biggest imbalance)
-  let minFilled = Infinity;
-  let minClubName = '';
-  for (const bar of bars) {
-    if (bar.filled < minFilled) {
-      minFilled = bar.filled;
-      minClubName = bar.name;
-    }
-  }
-
-  // Captain mode: no specific count — captain decides
-  if (captainMode && minFilled < Math.max(...bars.map(b => b.filled))) {
-    return {
-      urgency: { key: 'breakdown.clubNeedsMoreCaptain', params: { club: shortLabel(minClubName) } },
-      urgencyLevel: 'neutral',
-    };
-  }
-
-  // Non-captain: show specific gap
+  // Find club with biggest gap to capacity
   let maxGap = 0;
   let gapClubName = '';
   for (const bar of bars) {
@@ -361,13 +362,29 @@ function clubUrgency(bars: ClubBarData[], totalFilled: number, capacity: number,
     }
   }
 
-  if (maxGap > 0) {
+  // If no per-club gap (rounding edge case), pick the club with fewest players
+  if (maxGap === 0) {
+    let minFilled = Infinity;
+    for (const bar of bars) {
+      if (bar.filled < minFilled) {
+        minFilled = bar.filled;
+        gapClubName = bar.name;
+      }
+    }
+    maxGap = Math.max(0, capacity - totalFilled);
+  }
+
+  if (captainMode) {
+    // Captain mode: "very empty" = danger (concerning — captain needs to recruit)
     return {
-      urgency: { key: 'breakdown.clubNeedsMore', params: { club: shortLabel(gapClubName), count: maxGap } },
-      urgencyLevel: maxGap <= 2 ? 'warning' : 'neutral',
+      urgency: { key: 'breakdown.clubNeedsMoreCaptain', params: { club: shortLabel(gapClubName) } },
+      urgencyLevel: maxGap > 4 ? 'danger' : maxGap > 2 ? 'warning' : 'neutral',
     };
   }
 
-  const spotsLeft = Math.max(0, capacity - totalFilled);
-  return urgencyFromSpots(spotsLeft);
+  // Non-captain: "almost full" = danger (exciting — hurry up!)
+  return {
+    urgency: { key: 'breakdown.clubNeedsMore', params: { club: shortLabel(gapClubName), count: maxGap } },
+    urgencyLevel: maxGap <= 2 ? 'danger' : maxGap <= 4 ? 'warning' : 'neutral',
+  };
 }

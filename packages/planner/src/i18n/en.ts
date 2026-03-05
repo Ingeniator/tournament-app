@@ -433,6 +433,7 @@ const en: Translations = {
 
   // EventJoinScreen
   'eventJoin.join': 'Join',
+  'eventJoin.open': 'Open',
   'eventJoin.edit': 'Edit',
 
   // Breakdown

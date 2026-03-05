@@ -213,7 +213,7 @@ function TournamentListJoinCard({
                     approvedCount={ti.approvedCount}
                     action={
                       <Button size="small" onClick={() => onJoinTournament(ti.id)}>
-                        {t('eventJoin.join')}
+                        {breakdown.urgencyLevel === 'success' ? t('eventJoin.open') : t('eventJoin.join')}
                       </Button>
                     }
                   />
