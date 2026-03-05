@@ -400,6 +400,10 @@ const sr: Translations = {
   'breakdown.captainMode': 'Režim Kapitena',
   'breakdown.maldiciones': 'Maldiciones',
 
+  // Event
+  'event.myTournaments': 'Moji turniri',
+  'event.linkByCode': 'Poveži kodom',
+
   // Planner App
   'app.connectionError': 'Greška u Povezivanju',
   'app.retry': 'Pokušaj ponovo',

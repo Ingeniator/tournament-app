@@ -396,6 +396,8 @@ const en: Translations = {
   'event.tournaments': 'Tournaments ({count})',
   'event.noTournaments': 'No tournaments linked yet',
   'event.addTournament': 'Add Tournament',
+  'event.myTournaments': 'My Tournaments',
+  'event.linkByCode': 'Link by code',
   'event.linkPlaceholder': 'Tournament code',
   'event.link': 'Link',
   'event.unlink': 'Unlink',

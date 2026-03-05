@@ -297,6 +297,73 @@
   padding: var(--space-md);
 }
 
+/* Own tournaments picker */
+.ownTournaments {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: var(--space-md);
+}
+
+.ownLabel {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-weight: 500;
+  margin-bottom: var(--space-xs);
+}
+
+.ownItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-sm);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  font-size: var(--text-sm);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.ownItem:last-child {
+  border-bottom: none;
+}
+
+.ownItem:active {
+  background-color: var(--color-surface-raised);
+}
+
+.ownItem:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.ownName {
+  flex: 1;
+  min-width: 0;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ownDate {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.ownAdd {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-primary);
+  flex-shrink: 0;
+  width: 24px;
+  text-align: center;
+}
+
 /* Link tournament */
 .linkInput {
   width: 100%;

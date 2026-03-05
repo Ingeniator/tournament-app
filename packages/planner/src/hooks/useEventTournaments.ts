@@ -98,16 +98,6 @@ export function useEventTournaments(links: EventTournamentLink[]) {
           const maldicionesData = data.maldiciones as { enabled?: boolean } | undefined;
           const maldiciones = !!(maldicionesData?.enabled);
           const format = data.format as TournamentFormat | undefined;
-          const statuses = getPlayerStatuses(playerList, capacity, {
-            format,
-            clubs: clubs.length > 0 ? clubs : undefined,
-            rankLabels: rankLabels.length > 0 ? rankLabels : undefined,
-            captainMode: captainMode || undefined,
-          });
-          const playerCount = [...statuses.values()].filter(s => s === 'playing').length;
-          const approvedCount = captainMode
-            ? playerList.filter(p => p.confirmed !== false && p.captainApproved === true).length
-            : playerCount;
           const registeredCount = playerList.filter(p => p.confirmed !== false).length;
 
           // Determine if started: has runnerData with at least one scored match
@@ -119,6 +109,26 @@ export function useEventTournaments(links: EventTournamentLink[]) {
                 break;
               }
             }
+          }
+
+          // For started/completed tournaments, all confirmed players are "playing"
+          // (draft status logic only applies to pre-start registration)
+          let playerCount: number;
+          let approvedCount: number;
+          if (completedAt || hasStarted) {
+            playerCount = registeredCount;
+            approvedCount = registeredCount;
+          } else {
+            const statuses = getPlayerStatuses(playerList, capacity, {
+              format,
+              clubs: clubs.length > 0 ? clubs : undefined,
+              rankLabels: rankLabels.length > 0 ? rankLabels : undefined,
+              captainMode: captainMode || undefined,
+            });
+            playerCount = [...statuses.values()].filter(s => s === 'playing').length;
+            approvedCount = captainMode
+              ? playerList.filter(p => p.confirmed !== false && p.captainApproved === true).length
+              : playerCount;
           }
 
           dataMap.set(tid, runnerData ?? null);

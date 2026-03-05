@@ -400,6 +400,10 @@ const fr: Translations = {
   'breakdown.captainMode': 'Mode Capitaine',
   'breakdown.maldiciones': 'Maldiciones',
 
+  // Event
+  'event.myTournaments': 'Mes Tournois',
+  'event.linkByCode': 'Lier par code',
+
   // Planner App
   'app.connectionError': 'Erreur de Connexion',
   'app.retry': 'Réessayer',

@@ -134,17 +134,19 @@ function computeClubBreakdown(
     };
   });
 
-  const totalFilled = clubBars.reduce((s, c) => s + Math.min(c.filled, c.capacity), 0);
+  const assignedFilled = clubBars.reduce((s, c) => s + Math.min(c.filled, c.capacity), 0);
   const unassigned = confirmed.filter(p => !p.clubId).length;
 
-  // Find club with most open spots for urgency
-  const { urgency, urgencyLevel } = clubUrgency(clubBars, totalFilled + unassigned, capacity, captainMode);
+  // Captain mode: urgency reflects club assignments only (unassigned don't count as "filling" a club)
+  // Non-captain: unassigned count toward total since they'll be placed automatically
+  const urgencyFilled = captainMode ? assignedFilled : assignedFilled + unassigned;
+  const { urgency, urgencyLevel } = clubUrgency(clubBars, urgencyFilled, capacity, captainMode);
 
   return {
     kind: 'club',
     captainMode,
     clubs: clubBars,
-    filled: totalFilled + unassigned,
+    filled: assignedFilled + unassigned,
     total: capacity,
     urgency,
     urgencyLevel,
@@ -205,7 +207,12 @@ function computeClubRankedBreakdown(
     };
   });
 
-  const totalFilled = rows.reduce((s, r) => s + r.cells.reduce((s2, c) => s2 + c.filled, 0), 0);
+  const matrixFilled = rows.reduce((s, r) => s + r.cells.reduce((s2, c) => s2 + c.filled, 0), 0);
+  const unplacedCount = confirmed.length - matrixFilled;
+
+  // For urgency: captain mode only counts matrix-placed players (unplaced don't "fill" slots)
+  // Non-captain: unplaced count toward total since they'll be placed automatically
+  const urgencyFilled = captainMode ? matrixFilled : matrixFilled + unplacedCount;
 
   // Find the cell with the most gaps for urgency
   let maxGap = 0;
@@ -226,7 +233,7 @@ function computeClubRankedBreakdown(
   let urgency: UrgencyMessage;
   let urgencyLevel: UrgencyLevel;
 
-  if (totalFilled >= capacity) {
+  if (urgencyFilled >= capacity) {
     urgency = { key: 'breakdown.full' };
     urgencyLevel = 'success';
   } else if (maxGap > 0 && gapRank) {
@@ -236,7 +243,7 @@ function computeClubRankedBreakdown(
       : { key: 'breakdown.noRankPlayers', params: { club: shortLabel(gapClub), rank: shortLabel(gapRank), count: maxGap } };
     urgencyLevel = captainMode ? 'neutral' : (maxGap <= 2 ? 'warning' : 'danger');
   } else {
-    const spotsLeft = Math.max(0, capacity - totalFilled);
+    const spotsLeft = Math.max(0, capacity - urgencyFilled);
     urgency = { key: 'breakdown.spotsOpen', params: { count: spotsLeft } };
     urgencyLevel = spotsLeft <= 2 ? 'warning' : 'neutral';
   }
@@ -247,7 +254,7 @@ function computeClubRankedBreakdown(
     hasPairs,
     rankLabels,
     rows,
-    filled: totalFilled,
+    filled: matrixFilled + unplacedCount,
     total: capacity,
     urgency,
     urgencyLevel,

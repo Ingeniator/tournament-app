@@ -398,6 +398,10 @@ const sv: Translations = {
   'breakdown.captainMode': 'Kaptenläge',
   'breakdown.maldiciones': 'Maldiciones',
 
+  // Event
+  'event.myTournaments': 'Mina turneringar',
+  'event.linkByCode': 'Länka med kod',
+
   // Planner App
   'app.connectionError': 'Anslutningsfel',
   'app.retry': 'Försök igen',

@@ -3,6 +3,7 @@ import { Button, Card, Toast, useToast, useTranslation } from '@padel/common';
 import { useEvent } from '../hooks/useEvent';
 import { useEventTournaments } from '../hooks/useEventTournaments';
 import type { EventTournamentInfo } from '../hooks/useEventTournaments';
+import { usePlanner } from '../state/PlannerContext';
 import { computeEventStandings, computeEventClubStandings } from '../utils/eventStandings';
 import { computeBreakdown } from '../utils/tournamentBreakdown';
 import { TournamentBreakdownView } from '../components/TournamentBreakdown';
@@ -20,12 +21,19 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
   const { event, loading, updateEvent, linkTournament, unlinkTournament, updateTournamentWeight, deleteEvent } = useEvent(eventId);
   const { t, locale } = useTranslation();
   const { toastMessage, showToast } = useToast();
+  const { myTournaments } = usePlanner();
   const [linkCode, setLinkCode] = useState('');
   const [linking, setLinking] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
 
   const tournamentLinks = useMemo(() => event?.tournaments ?? [], [event?.tournaments]);
   const { tournamentData, tournamentInfos, status } = useEventTournaments(tournamentLinks);
+
+  const linkedIds = useMemo(() => new Set(tournamentLinks.map(tl => tl.tournamentId)), [tournamentLinks]);
+  const availableOwnTournaments = useMemo(
+    () => myTournaments.filter(mt => !linkedIds.has(mt.id)),
+    [myTournaments, linkedIds],
+  );
 
   const standings = useMemo(() => {
     if (!event || tournamentData.size === 0) return [];
@@ -82,6 +90,17 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
     } catch {
       showToast(t('organizer.failedCopy'));
     }
+  };
+
+  const handleLinkOwn = async (tournamentId: string) => {
+    setLinking(true);
+    try {
+      await linkTournament(tournamentId);
+      showToast(t('event.tournamentLinked'));
+    } catch {
+      showToast(t('event.linkFailed'));
+    }
+    setLinking(false);
   };
 
   const handleLinkByCode = async () => {
@@ -163,20 +182,6 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
           </Card>
         )}
 
-        {/* Share card (owner only) */}
-        {isOwner && event.code && (
-          <Card>
-            <h2 className={styles.sectionTitle}>{t('event.shareWithPlayers')}</h2>
-            <div className={styles.codeDisplay}>
-              <span className={styles.code} onClick={handleCopyEventCode}>{event.code}</span>
-            </div>
-            <p className={styles.shareHint}>{t('event.shareHint')}</p>
-            <Button variant="secondary" fullWidth onClick={handleCopyEventLink}>
-              {t('event.copyLink')}
-            </Button>
-          </Card>
-        )}
-
         {/* FOCUS SWITCHING based on computed status */}
         {status === 'active' || status === 'completed' ? (
           <>
@@ -220,6 +225,28 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
         {isOwner && (
           <Card>
             <h2 className={styles.sectionTitle}>{t('event.addTournament')}</h2>
+
+            {/* Own tournaments quick-pick */}
+            {availableOwnTournaments.length > 0 && (
+              <div className={styles.ownTournaments}>
+                <label className={styles.ownLabel}>{t('event.myTournaments')}</label>
+                {availableOwnTournaments.map(mt => (
+                  <button
+                    key={mt.id}
+                    className={styles.ownItem}
+                    onClick={() => handleLinkOwn(mt.id)}
+                    disabled={linking}
+                  >
+                    <span className={styles.ownName}>{mt.name}</span>
+                    {mt.date && <span className={styles.ownDate}>{mt.date}</span>}
+                    <span className={styles.ownAdd}>+</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Link by code (for other organizers' tournaments) */}
+            <label className={styles.ownLabel}>{t('event.linkByCode')}</label>
             <div className={styles.linkRow}>
               <input
                 className={styles.linkInput}
@@ -237,6 +264,20 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
             {linkError && (
               <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-danger)', marginTop: '8px' }}>{linkError}</div>
             )}
+          </Card>
+        )}
+
+        {/* Share card (owner only) */}
+        {isOwner && event.code && (
+          <Card>
+            <h2 className={styles.sectionTitle}>{t('event.shareWithPlayers')}</h2>
+            <div className={styles.codeDisplay}>
+              <span className={styles.code} onClick={handleCopyEventCode}>{event.code}</span>
+            </div>
+            <p className={styles.shareHint}>{t('event.shareHint')}</p>
+            <Button variant="secondary" fullWidth onClick={handleCopyEventLink}>
+              {t('event.copyLink')}
+            </Button>
           </Card>
         )}
 

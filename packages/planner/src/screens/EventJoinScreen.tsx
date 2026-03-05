@@ -105,6 +105,43 @@ export function EventJoinScreen({ eventId, uid, onJoinTournament, onBack, onEdit
           <p className={styles.description}>{event.description}</p>
         )}
 
+        {toast && <div className={styles.toast}>{toast}</div>}
+
+        {/* FOCUS SWITCHING based on computed status */}
+        {status === 'active' || status === 'completed' ? (
+          <>
+            {/* Active/Completed: Standings first */}
+            {clubStandings.length > 0 && (
+              <ClubStandingsCard clubStandings={clubStandings} status={status} t={t} />
+            )}
+            {standings.length > 0 && (
+              <StandingsCard standings={standings} status={status} t={t} />
+            )}
+            <TournamentListJoinCard
+              tournamentInfos={tournamentInfos}
+              onJoinTournament={onJoinTournament}
+              t={t}
+            />
+          </>
+        ) : (
+          <>
+            {/* Draft: Tournament list first */}
+            <TournamentListJoinCard
+              tournamentInfos={tournamentInfos}
+              onJoinTournament={onJoinTournament}
+              t={t}
+            />
+            {standings.length > 0 && (
+              <>
+                {clubStandings.length > 0 && (
+                  <ClubStandingsCard clubStandings={clubStandings} status={status} t={t} />
+                )}
+                <StandingsCard standings={standings} status={status} t={t} />
+              </>
+            )}
+          </>
+        )}
+
         {/* Share block */}
         {event.code && (status === 'active' || status === 'draft') && (
           <Card>
@@ -118,75 +155,74 @@ export function EventJoinScreen({ eventId, uid, onJoinTournament, onBack, onEdit
             </Button>
           </Card>
         )}
-
-        {toast && <div className={styles.toast}>{toast}</div>}
-
-        {/* Tournament list with join buttons */}
-        <Card>
-          <h2 className={styles.sectionTitle}>
-            {t('event.tournaments', { count: tournamentInfos.length })}
-          </h2>
-          {tournamentInfos.length === 0 ? (
-            <p className={styles.empty}>{t('event.noTournaments')}</p>
-          ) : (
-            <div className={styles.tournamentList}>
-              {tournamentInfos.map(ti => {
-                const preset = ti.format ? getPresetByFormat(ti.format as TournamentFormat) : null;
-                const formatLabel = preset ? t(preset.nameKey) : null;
-                const isDraft = !ti.isCompleted && !ti.hasStarted;
-                const breakdown = isDraft ? computeBreakdown(ti.raw, ti.capacity) : null;
-                return (
-                  <div key={ti.id} className={styles.tournamentItem}>
-                    <div className={styles.tournamentName}>
-                      <button className={styles.tournamentLink} onClick={() => onJoinTournament(ti.id)}>{ti.name}</button>
-                    </div>
-                    <div className={styles.tournamentMeta}>
-                      {formatLabel && <span>{formatLabel}</span>}
-                      {ti.raw.captainMode && <span>{t('breakdown.captainMode')}</span>}
-                      {ti.raw.maldiciones && <span>{t('breakdown.maldiciones')}</span>}
-                      {ti.registeredCount > 0 && <span>{t('event.registered', { count: ti.registeredCount })}</span>}
-                    </div>
-                    {ti.isCompleted ? (
-                      <div className={styles.tournamentMeta}>
-                        <span>{ti.playerCount}/{ti.capacity} {t('event.players')}</span>
-                        <span className={styles.tournamentCompleted}>{t('event.status.completed')}</span>
-                      </div>
-                    ) : ti.hasStarted ? (
-                      <div className={styles.tournamentMeta}>
-                        <span>{ti.playerCount}/{ti.capacity} {t('event.players')}</span>
-                        <span className={styles.tournamentActive}>{t('event.status.active')}</span>
-                      </div>
-                    ) : null}
-                    {breakdown && (
-                      <TournamentBreakdownView
-                        breakdown={breakdown}
-                        approvedCount={ti.approvedCount}
-                        action={
-                          <Button size="small" onClick={() => onJoinTournament(ti.id)}>
-                            {t('eventJoin.join')}
-                          </Button>
-                        }
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </Card>
-
-        {/* Combined standings */}
-        {(status === 'active' || status === 'completed') && (
-          <>
-            {clubStandings.length > 0 && (
-              <ClubStandingsCard clubStandings={clubStandings} status={status} t={t} />
-            )}
-            {standings.length > 0 && (
-              <StandingsCard standings={standings} status={status} t={t} />
-            )}
-          </>
-        )}
       </main>
     </div>
+  );
+}
+
+/* --- Sub-components --- */
+
+function TournamentListJoinCard({
+  tournamentInfos,
+  onJoinTournament,
+  t,
+}: {
+  tournamentInfos: ReturnType<typeof useEventTournaments>['tournamentInfos'];
+  onJoinTournament: (tournamentId: string) => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
+}) {
+  return (
+    <Card>
+      <h2 className={styles.sectionTitle}>
+        {t('event.tournaments', { count: tournamentInfos.length })}
+      </h2>
+      {tournamentInfos.length === 0 ? (
+        <p className={styles.empty}>{t('event.noTournaments')}</p>
+      ) : (
+        <div className={styles.tournamentList}>
+          {tournamentInfos.map(ti => {
+            const preset = ti.format ? getPresetByFormat(ti.format as TournamentFormat) : null;
+            const formatLabel = preset ? t(preset.nameKey) : null;
+            const isDraft = !ti.isCompleted && !ti.hasStarted;
+            const breakdown = isDraft ? computeBreakdown(ti.raw, ti.capacity) : null;
+            return (
+              <div key={ti.id} className={styles.tournamentItem}>
+                <div className={styles.tournamentName}>
+                  <button className={styles.tournamentLink} onClick={() => onJoinTournament(ti.id)}>{ti.name}</button>
+                </div>
+                <div className={styles.tournamentMeta}>
+                  {formatLabel && <span>{formatLabel}</span>}
+                  {ti.raw.captainMode && <span>{t('breakdown.captainMode')}</span>}
+                  {ti.raw.maldiciones && <span>{t('breakdown.maldiciones')}</span>}
+                  {ti.registeredCount > 0 && <span>{t('event.registered', { count: ti.registeredCount })}</span>}
+                </div>
+                {ti.isCompleted ? (
+                  <div className={styles.tournamentMeta}>
+                    <span>{ti.playerCount}/{ti.capacity} {t('event.players')}</span>
+                    <span className={styles.tournamentCompleted}>{t('event.status.completed')}</span>
+                  </div>
+                ) : ti.hasStarted ? (
+                  <div className={styles.tournamentMeta}>
+                    <span>{ti.playerCount}/{ti.capacity} {t('event.players')}</span>
+                    <span className={styles.tournamentActive}>{t('event.status.active')}</span>
+                  </div>
+                ) : null}
+                {breakdown && (
+                  <TournamentBreakdownView
+                    breakdown={breakdown}
+                    approvedCount={ti.approvedCount}
+                    action={
+                      <Button size="small" onClick={() => onJoinTournament(ti.id)}>
+                        {t('eventJoin.join')}
+                      </Button>
+                    }
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Card>
   );
 }
