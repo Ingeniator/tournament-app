@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Button, Card, getPresetByFormat, useTranslation, type TournamentFormat } from '@padel/common';
 import { useEvent } from '../hooks/useEvent';
 import { useEventTournaments } from '../hooks/useEventTournaments';
@@ -18,7 +18,7 @@ interface EventJoinScreenProps {
 
 export function EventJoinScreen({ eventId, uid, onJoinTournament, onBack, onEdit }: EventJoinScreenProps) {
   const { event, loading } = useEvent(eventId);
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   const tournamentLinks = useMemo(() => event?.tournaments ?? [], [event?.tournaments]);
   const { tournamentData, tournamentInfos, status } = useEventTournaments(tournamentLinks);
@@ -45,6 +45,33 @@ export function EventJoinScreen({ eventId, uid, onJoinTournament, onBack, onEdit
       </div>
     );
   }
+
+  const [toast, setToast] = useState<string | null>(null);
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2000); };
+
+  const botName = import.meta.env.VITE_TELEGRAM_BOT_NAME as string | undefined;
+  const isTelegram = !!window.Telegram?.WebApp?.initData;
+  const eventShareUrl = event.code
+    ? (isTelegram && botName
+      ? `https://t.me/${botName}?startapp=event_${event.code}`
+      : `${window.location.origin}/plan?event=${event.code}&lang=${locale}`)
+    : null;
+
+  const handleCopyLink = async () => {
+    if (!eventShareUrl) return;
+    try {
+      await navigator.clipboard.writeText(eventShareUrl);
+      showToast(t('event.linkCopied'));
+    } catch { /* silent */ }
+  };
+
+  const handleCopyCode = async () => {
+    if (!event.code) return;
+    try {
+      await navigator.clipboard.writeText(event.code);
+      showToast(t('event.codeCopied'));
+    } catch { /* silent */ }
+  };
 
   const statusClass =
     status === 'active' ? styles.statusActive :
@@ -77,6 +104,22 @@ export function EventJoinScreen({ eventId, uid, onJoinTournament, onBack, onEdit
         {event.description && (
           <p className={styles.description}>{event.description}</p>
         )}
+
+        {/* Share block */}
+        {event.code && (status === 'active' || status === 'draft') && (
+          <Card>
+            <h2 className={styles.sectionTitle}>{t('event.shareWithPlayers')}</h2>
+            <div className={styles.codeDisplay}>
+              <span className={styles.code} onClick={handleCopyCode}>{event.code}</span>
+            </div>
+            <p className={styles.shareHint}>{t('event.shareHint')}</p>
+            <Button variant="secondary" fullWidth onClick={handleCopyLink}>
+              {t('event.copyLink')}
+            </Button>
+          </Card>
+        )}
+
+        {toast && <div className={styles.toast}>{toast}</div>}
 
         {/* Tournament list with join buttons */}
         <Card>
