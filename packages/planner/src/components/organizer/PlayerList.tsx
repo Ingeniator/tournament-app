@@ -212,7 +212,7 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
         onClick={() => {
           setLinkingPlayer({ id: player.id, name: player.name, telegramUsername: player.telegramUsername, partnerName: player.partnerName, partnerTelegram: player.partnerTelegram, clubId: player.clubId, rankSlot: player.rankSlot, group: player.group });
           setLinkDraft(player.telegramUsername ? `@${player.telegramUsername}` : '');
-          setPartnerNameDraft(player.partnerName ?? '');
+          setPartnerNameDraft(player.partnerName ? (players.find(pl => pl.name === player.partnerName)?.id ?? '') : '');
           setPartnerTelegramDraft(player.partnerTelegram ? `@${player.partnerTelegram}` : '');
         }}
         title={t('organizer.linkProfile')}
@@ -430,7 +430,7 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                     setPartnerTelegramDraft('');
                   } else {
                     setPartnerNameDraft(val);
-                    const selected = players.find(p => p.name === val);
+                    const selected = players.find(p => p.id === val);
                     setPartnerTelegramDraft(selected?.telegramUsername ?? '');
                   }
                 }}
@@ -448,7 +448,7 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                     return true;
                   })
                   .map(p => (
-                    <option key={p.id} value={p.name}>{p.name}</option>
+                    <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 <option value={NEW_PLAYER_VALUE}>{t('organizer.newPlayer')}</option>
               </select>
@@ -511,7 +511,8 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                 updatePlayerTelegram(linkingPlayer.id, username);
                 if (showPartner && updatePlayerPartner) {
                   const isNew = partnerNameDraft === NEW_PLAYER_VALUE;
-                  const pName = isNew ? (newPartnerNameDraft.trim() || null) : (partnerNameDraft.trim() || null);
+                  const selectedPartner = isNew ? null : players.find(p => p.id === partnerNameDraft);
+                  const pName = isNew ? (newPartnerNameDraft.trim() || null) : (selectedPartner?.name.trim() || null);
                   const pTg = isNew ? (newPartnerTelegramDraft.trim().replace(/^@/, '') || null) : (partnerTelegramDraft.trim().replace(/^@/, '') || null);
                   const c: PartnerConstraints = {
                     requireSameClub: format ? formatHasClubs(format) : false,

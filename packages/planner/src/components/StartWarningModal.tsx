@@ -16,7 +16,12 @@ export function StartWarningModal({ open, startedBy, reason, onProceed, onClose 
   const { t } = useTranslation();
 
   const handleContinue = () => {
-    const hasRunnerData = !!localStorage.getItem(RUNNER_STORAGE_KEY);
+    let hasRunnerData = false;
+    try {
+      hasRunnerData = !!localStorage.getItem(RUNNER_STORAGE_KEY);
+    } catch {
+      // localStorage unavailable (private browsing, storage disabled)
+    }
     if (hasRunnerData) {
       window.location.href = '/play';
     } else {

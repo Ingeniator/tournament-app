@@ -58,6 +58,7 @@ export function useEventTournaments(links: EventTournamentLink[]) {
   const [tournamentData, setTournamentData] = useState<Map<string, Tournament>>(new Map());
   const [tournamentInfos, setTournamentInfos] = useState<EventTournamentInfo[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const stableKey = links.map(l => `${l.tournamentId}:${l.weight}`).join(',');
 
@@ -68,6 +69,7 @@ export function useEventTournaments(links: EventTournamentLink[]) {
       return;
     }
     setLoading(true);
+    setError(null);
 
     const unsubscribes: (() => void)[] = [];
     const dataMap = new Map<string, Tournament | null>();
@@ -170,6 +172,8 @@ export function useEventTournaments(links: EventTournamentLink[]) {
         setLoading(false);
       }, (err) => {
         console.warn(`Event tournament ${tid} listener failed:`, err.message);
+        setError(err.message);
+        setLoading(false);
       });
       unsubscribes.push(unsub);
     }
@@ -181,5 +185,5 @@ export function useEventTournaments(links: EventTournamentLink[]) {
 
   const status = useMemo(() => computeEventStatus(tournamentInfos), [tournamentInfos]);
 
-  return { tournamentData, tournamentInfos, status, loading };
+  return { tournamentData, tournamentInfos, status, loading, error };
 }

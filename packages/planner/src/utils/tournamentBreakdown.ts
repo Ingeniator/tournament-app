@@ -86,7 +86,7 @@ export function computeBreakdown(raw: EventTournamentRawData, capacity: number):
 
   // Club formats (non-ranked)
   if (format && formatHasClubs(format) && clubs.length > 0) {
-    return computeClubBreakdown(confirmed, clubs, capacity, captainMode, format);
+    return computeClubBreakdown(confirmed, clubs, capacity, captainMode);
   }
 
   // Group formats (mixicano, mixed-*)
@@ -117,7 +117,6 @@ function computeClubBreakdown(
   clubs: Club[],
   capacity: number,
   captainMode: boolean,
-  _format: TournamentFormat,
 ): ClubBreakdown {
   // Always show all registered (confirmed) players — never filter by captainApproved.
   // The goal is to drive registrations, not push captains to approve.

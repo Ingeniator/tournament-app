@@ -26,7 +26,8 @@ function PartnerEditor({ partnerName, partnerTelegram, onSave, players, currentP
   constraints: PartnerConstraints;
 }) {
   const { t } = useTranslation();
-  const [selectVal, setSelectVal] = useState(partnerName || '');
+  const partnerPlayer = players.find(p => p.name === partnerName);
+  const [selectVal, setSelectVal] = useState(partnerPlayer?.id || '');
   const [newNameVal, setNewNameVal] = useState('');
   const [newTgVal, setNewTgVal] = useState('');
   const [dirty, setDirty] = useState(false);
@@ -35,7 +36,8 @@ function PartnerEditor({ partnerName, partnerTelegram, onSave, players, currentP
   const currentPlayer = players.find(p => p.id === currentPlayerId);
 
   useEffect(() => {
-    setSelectVal(partnerName || '');
+    const match = players.find(p => p.name === partnerName);
+    setSelectVal(match?.id || '');
     setNewNameVal('');
     setNewTgVal('');
     setDirty(false);
@@ -44,8 +46,9 @@ function PartnerEditor({ partnerName, partnerTelegram, onSave, players, currentP
 
   const handleSave = useCallback(async () => {
     const isNew = selectVal === NEW_PARTNER;
-    const pName = isNew ? (newNameVal.trim() || null) : (selectVal.trim() || null);
-    const pTg = isNew ? (newTgVal.trim().replace(/^@/, '') || null) : (players.find(p => p.name === selectVal)?.telegramUsername ?? null);
+    const selectedPlayer = isNew ? null : players.find(p => p.id === selectVal);
+    const pName = isNew ? (newNameVal.trim() || null) : (selectedPlayer?.name.trim() || null);
+    const pTg = isNew ? (newTgVal.trim().replace(/^@/, '') || null) : (selectedPlayer?.telegramUsername ?? null);
     const rejection = await onSave(pName, pTg);
     if (rejection) {
       setError(rejectionMessage(rejection, t));
@@ -80,7 +83,7 @@ function PartnerEditor({ partnerName, partnerTelegram, onSave, players, currentP
             return true;
           })
           .map(p => (
-            <option key={p.id} value={p.name}>{p.name}</option>
+            <option key={p.id} value={p.id}>{p.name}</option>
           ))}
         <option value={NEW_PARTNER}>{t('organizer.newPlayer')}</option>
       </select>
@@ -222,7 +225,7 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
   const openLinkModal = (p: PlannerRegistration) => {
     setLinkingPlayer(p);
     setLinkDraft(p.telegramUsername ? `@${p.telegramUsername}` : '');
-    setPartnerNameDraft(p.partnerName ?? '');
+    setPartnerNameDraft(p.partnerName ? (players.find(pl => pl.name === p.partnerName)?.id ?? '') : '');
     setPartnerTelegramDraft(p.partnerTelegram ? `@${p.partnerTelegram}` : '');
   };
 
@@ -401,7 +404,7 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
                     setPartnerTelegramDraft('');
                   } else {
                     setPartnerNameDraft(val);
-                    const selected = players.find(p => p.name === val);
+                    const selected = players.find(p => p.id === val);
                     setPartnerTelegramDraft(selected?.telegramUsername ?? '');
                   }
                 }}
@@ -419,7 +422,7 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
                     return true;
                   })
                   .map(p => (
-                    <option key={p.id} value={p.name}>{p.name}</option>
+                    <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 <option value={NEW_PLAYER_VALUE}>{t('organizer.newPlayer')}</option>
               </select>
@@ -475,7 +478,8 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
                 }
                 if (isPairFormat && onUpdatePartner) {
                   const isNew = partnerNameDraft === NEW_PLAYER_VALUE;
-                  const pName = isNew ? (newPartnerNameDraft.trim() || null) : (partnerNameDraft.trim() || null);
+                  const selectedPartner = isNew ? null : players.find(p => p.id === partnerNameDraft);
+                  const pName = isNew ? (newPartnerNameDraft.trim() || null) : (selectedPartner?.name.trim() || null);
                   const pTg = isNew ? (newPartnerTelegramDraft.trim().replace(/^@/, '') || null) : (partnerTelegramDraft.trim().replace(/^@/, '') || null);
                   const rejection = await onUpdatePartner(linkingPlayer.id, pName, pTg, constraints, isNew ? captainName : undefined);
                   if (rejection) {
@@ -620,8 +624,9 @@ export function JoinScreen() {
       await registerPlayer(trimmed, Object.keys(extras).length > 0 ? extras : undefined);
       if (uid && (regPartnerName.trim() || regNewPartnerName.trim())) {
         const isNew = regPartnerName === NEW_PARTNER;
-        const pName = isNew ? (regNewPartnerName.trim() || null) : (regPartnerName.trim() || null);
-        const pTg = isNew ? (regNewPartnerTelegram.trim().replace(/^@/, '') || null) : (players.find(p => p.name === regPartnerName)?.telegramUsername ?? null);
+        const selectedPartner = isNew ? null : players.find(p => p.id === regPartnerName);
+        const pName = isNew ? (regNewPartnerName.trim() || null) : (selectedPartner?.name.trim() || null);
+        const pTg = isNew ? (regNewPartnerTelegram.trim().replace(/^@/, '') || null) : (selectedPartner?.telegramUsername ?? null);
         const constraints: PartnerConstraints = {
           requireSameClub: formatHasClubs(tournament.format),
           requireSameRank: tournament.format === 'club-ranked',
@@ -1094,7 +1099,7 @@ export function JoinScreen() {
                       return true;
                     })
                     .map(p => (
-                      <option key={p.id} value={p.name}>{p.name}</option>
+                      <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
                   <option value={NEW_PARTNER}>{t('organizer.newPlayer')}</option>
                 </select>

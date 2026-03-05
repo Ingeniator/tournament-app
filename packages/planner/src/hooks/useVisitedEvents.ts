@@ -25,6 +25,7 @@ export async function markEventVisited(uid: string, eventId: string): Promise<vo
 export function useVisitedEvents(uid: string | null, createdEventIds: Set<string>) {
   const [events, setEvents] = useState<PadelEventSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const versionRef = useRef(0);
 
   useEffect(() => {
@@ -34,8 +35,10 @@ export function useVisitedEvents(uid: string | null, createdEventIds: Set<string
       return;
     }
     setLoading(true);
+    setError(null);
     const unsubscribe = onValue(ref(db, `users/${uid}/visitedEvents`), async (snapshot) => {
       const version = ++versionRef.current;
+      setError(null);
       const data = snapshot.val() as Record<string, boolean> | null;
       if (!data) {
         setEvents([]);
@@ -51,13 +54,13 @@ export function useVisitedEvents(uid: string | null, createdEventIds: Set<string
         await Promise.all(ids.map(async (id) => {
           const snap = await get(ref(db!, `events/${id}`));
           if (!snap.exists()) {
-            remove(ref(db!, `users/${uid}/visitedEvents/${id}`));
+            remove(ref(db!, `users/${uid}/visitedEvents/${id}`)).catch(() => {});
             return;
           }
           results.push(toSummary(id, snap.val()));
         }));
-      } catch {
-        // Network or permission error
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load visited events');
       }
 
       if (version !== versionRef.current) return;
@@ -70,9 +73,13 @@ export function useVisitedEvents(uid: string | null, createdEventIds: Set<string
       });
       setEvents(results);
       setLoading(false);
+    }, (err) => {
+      console.warn('Visited events listener failed:', err.message);
+      setError(err.message);
+      setLoading(false);
     });
     return unsubscribe;
   }, [uid, createdEventIds]);
 
-  return { events, loading };
+  return { events, loading, error };
 }

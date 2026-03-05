@@ -50,7 +50,10 @@ export function TournamentBreakdownView({ breakdown, action, approvedCount }: Pr
       <div className={styles.footer}>
         <div
           className={`${styles.footerLeft} ${expandable ? styles.footerClickable : ''}`}
+          role={expandable ? 'button' : undefined}
+          tabIndex={expandable ? 0 : undefined}
           onClick={expandable ? () => setExpanded(v => !v) : undefined}
+          onKeyDown={expandable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpanded(v => !v); } } : undefined}
         >
           <span className={`${styles.urgencyText} ${urgencyClass(breakdown.urgencyLevel)}`}>
             {urgencyText}

@@ -124,7 +124,7 @@ export function getPlayerStatuses(
   // distribute extra pairs to ranks by earliest overflow player.
   const rankLabels = options?.rankLabels;
   if (format === 'club-ranked' && clubs && clubs.length > 0 && rankLabels && rankLabels.length > 0) {
-    const eligible = eligibleFlat!;
+    const eligible = eligibleFlat ?? [];
 
     const slotsPerClub = Math.floor(capacity / clubs.length);
     const rankCount = rankLabels.length;
@@ -241,8 +241,9 @@ export function getPlayerStatuses(
 
   // Pair-format: capacity is counted in pair slots for formatHasFixedPartners
   if (format && formatHasFixedPartners(format)) {
+    const pairs = eligiblePairs ?? [];
     // Sort eligible pairs by pairedAt (earlier pairs get priority)
-    eligiblePairs!.sort((a, b) => a.pairedAt - b.pairedAt);
+    pairs.sort((a, b) => a.pairedAt - b.pairedAt);
 
     const pairCapacity = Math.floor(capacity / 2);
 
@@ -251,7 +252,7 @@ export function getPlayerStatuses(
       const perClubPairCap = Math.floor(pairCapacity / clubs.length);
       const clubPairCounts = new Map<string, number>();
 
-      for (const pair of eligiblePairs!) {
+      for (const pair of pairs) {
         const clubId = pair.players[0].clubId ?? pair.players[1].clubId ?? '';
         const count = clubPairCounts.get(clubId) ?? 0;
         if (count < perClubPairCap) {
@@ -266,7 +267,7 @@ export function getPlayerStatuses(
     } else {
       // Non-club: simple pair capacity
       let pairsPlaying = 0;
-      for (const pair of eligiblePairs!) {
+      for (const pair of pairs) {
         if (pairsPlaying < pairCapacity) {
           statuses.set(pair.players[0].id, 'playing');
           statuses.set(pair.players[1].id, 'playing');
