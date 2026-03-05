@@ -33,6 +33,9 @@ export function EventJoinScreen({ eventId, uid, onJoinTournament, onBack, onEdit
     return computeEventClubStandings(event.tournaments, tournamentData);
   }, [event, tournamentData]);
 
+  const [toast, setToast] = useState<string | null>(null);
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2000); };
+
   if (loading || !event) {
     return (
       <div className={styles.container}>
@@ -45,9 +48,6 @@ export function EventJoinScreen({ eventId, uid, onJoinTournament, onBack, onEdit
       </div>
     );
   }
-
-  const [toast, setToast] = useState<string | null>(null);
-  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2000); };
 
   const botName = import.meta.env.VITE_TELEGRAM_BOT_NAME as string | undefined;
   const isTelegram = !!window.Telegram?.WebApp?.initData;
