@@ -12,21 +12,34 @@ export function useUserProfile(uid: string | null) {
   useEffect(() => {
     if (!uid || !db) return;
     setLoading(true);
-    const unsubscribe = onValue(ref(db, `users/${uid}/name`), (snapshot) => {
-      setName(snapshot.val() as string | null);
-      setLoading(false);
-    });
+    const unsubscribe = onValue(
+      ref(db, `users/${uid}/name`),
+      (snapshot) => {
+        setName(snapshot.val() as string | null);
+        setLoading(false);
+      },
+      (err) => {
+        console.warn('User name listener failed:', err.message);
+        setLoading(false);
+      },
+    );
     return unsubscribe;
   }, [uid]);
 
   useEffect(() => {
     if (!uid || !db) return;
-    const unsubscribe = onValue(ref(db, `users/${uid}/skin`), (snapshot) => {
-      const val = snapshot.val() as string | null;
-      if (val && isValidSkin(val)) {
-        setSkinState(val);
-      }
-    });
+    const unsubscribe = onValue(
+      ref(db, `users/${uid}/skin`),
+      (snapshot) => {
+        const val = snapshot.val() as string | null;
+        if (val && isValidSkin(val)) {
+          setSkinState(val);
+        }
+      },
+      (err) => {
+        console.warn('User skin listener failed:', err.message);
+      },
+    );
     return unsubscribe;
   }, [uid]);
 

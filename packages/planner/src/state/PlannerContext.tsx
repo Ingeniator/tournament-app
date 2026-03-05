@@ -23,6 +23,7 @@ export interface PlannerContextValue {
   uid: string | null;
   authLoading: boolean;
   authError: string | null;
+  dataError: string | null;
   tournament: PlannerTournament | null;
   tournamentLoading: boolean;
   players: PlannerRegistration[];
@@ -102,6 +103,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     tournament,
     completedAt,
     loading: tournamentLoading,
+    error: tournamentError,
     createTournament: createInDb,
     updateTournament,
     loadByCode: loadByCodeFromDb,
@@ -110,7 +112,9 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     undoComplete,
   } = usePlannerTournament(tournamentId);
 
-  const { players, registerPlayer: registerInDb, removePlayer, updateConfirmed: updateConfirmedInDb, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, updatePlayerRank, updatePlayerPartner, updateCaptainApproval, isRegistered: checkRegistered, claimOrphanRegistration } = usePlayers(tournamentId);
+  const { players, error: playersError, registerPlayer: registerInDb, removePlayer, updateConfirmed: updateConfirmedInDb, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, updatePlayerRank, updatePlayerPartner, updateCaptainApproval, isRegistered: checkRegistered, claimOrphanRegistration } = usePlayers(tournamentId);
+
+  const dataError = tournamentError || playersError;
 
   const { name: userName, skin: userSkin, loading: userNameLoading, updateName: updateUserName, updateSkin: updateUserSkin, updateTelegramId, updateTelegramUsername } = useUserProfile(uid);
 
@@ -286,6 +290,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       uid,
       authLoading,
       authError,
+      dataError,
       tournament,
       tournamentLoading,
       players,

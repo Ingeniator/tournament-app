@@ -18,6 +18,7 @@ function toSummary(id: string, data: Record<string, unknown>): PadelEventSummary
 export function useMyEvents(uid: string | null) {
   const [events, setEvents] = useState<PadelEventSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const versionRef = useRef(0);
 
   useEffect(() => {
@@ -27,7 +28,9 @@ export function useMyEvents(uid: string | null) {
       return;
     }
     setLoading(true);
+    setError(null);
     const unsubscribe = onValue(ref(db, `users/${uid}/events`), async (snapshot) => {
+      setError(null);
       const version = ++versionRef.current;
       const data = snapshot.val() as Record<string, boolean> | null;
       if (!data) {
@@ -64,9 +67,13 @@ export function useMyEvents(uid: string | null) {
       });
       setEvents(results);
       setLoading(false);
+    }, (err) => {
+      console.warn('My events listener failed:', err.message);
+      setError(err.message);
+      setLoading(false);
     });
     return unsubscribe;
   }, [uid]);
 
-  return { events, loading };
+  return { events, loading, error };
 }

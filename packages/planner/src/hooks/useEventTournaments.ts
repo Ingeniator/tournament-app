@@ -168,6 +168,8 @@ export function useEventTournaments(links: EventTournamentLink[]) {
         });
         setTournamentInfos(infos);
         setLoading(false);
+      }, (err) => {
+        console.warn(`Event tournament ${tid} listener failed:`, err.message);
       });
       unsubscribes.push(unsub);
     }

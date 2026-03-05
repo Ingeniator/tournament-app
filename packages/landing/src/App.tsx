@@ -78,13 +78,19 @@ function AppContent() {
   // Read skin from Firebase (source of truth)
   useEffect(() => {
     if (!uid || !firebase) return;
-    const unsub = firebase.onValue(firebase.ref(firebase.db, `users/${uid}/skin`), (snapshot) => {
-      const val = snapshot.val() as string | null;
-      if (val && isValidSkin(val)) {
-        rawSetSkin(val);
-        try { localStorage.setItem(SKIN_KEY, val); } catch {}
-      }
-    });
+    const unsub = firebase.onValue(
+      firebase.ref(firebase.db, `users/${uid}/skin`),
+      (snapshot) => {
+        const val = snapshot.val() as string | null;
+        if (val && isValidSkin(val)) {
+          rawSetSkin(val);
+          try { localStorage.setItem(SKIN_KEY, val); } catch {}
+        }
+      },
+      (err: Error) => {
+        console.warn('Skin listener failed:', err.message);
+      },
+    );
     return unsub;
   }, [uid, rawSetSkin, firebase]);
 

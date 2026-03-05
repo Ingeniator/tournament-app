@@ -37,13 +37,19 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // Read skin from Firebase (source of truth)
   useEffect(() => {
     if (!uid || !db) return;
-    const unsub = onValue(ref(db, `users/${uid}/skin`), (snapshot) => {
-      const val = snapshot.val() as string | null;
-      if (val && isValidSkin(val)) {
-        rawSetSkin(val);
-        saveSkin(val);
-      }
-    });
+    const unsub = onValue(
+      ref(db, `users/${uid}/skin`),
+      (snapshot) => {
+        const val = snapshot.val() as string | null;
+        if (val && isValidSkin(val)) {
+          rawSetSkin(val);
+          saveSkin(val);
+        }
+      },
+      (err) => {
+        console.warn('Skin listener failed:', err.message);
+      },
+    );
     return unsub;
   }, [uid, rawSetSkin]);
 

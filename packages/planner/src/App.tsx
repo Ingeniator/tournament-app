@@ -39,7 +39,7 @@ function FirebaseSetupMessage() {
 }
 
 function AppContent() {
-  const { screen, setScreen, authLoading, authError, loadByCode, loadEventByCode, openTournament, tournament, uid, activeEventId, setActiveEventId, openTournamentFromEvent } = usePlanner();
+  const { screen, setScreen, authLoading, authError, dataError, loadByCode, loadEventByCode, openTournament, tournament, uid, activeEventId, setActiveEventId, openTournamentFromEvent } = usePlanner();
   const { t, setLocale } = useTranslation();
 
   // Apply tournament locale for Telegram deep links (no &lang= in URL)
@@ -99,6 +99,16 @@ function AppContent() {
       <div className={styles.setup}>
         <h1>{t('app.connectionError')}</h1>
         <p>{authError}</p>
+        <button onClick={() => window.location.reload()}>{t('app.retry')}</button>
+      </div>
+    );
+  }
+
+  if (dataError) {
+    return (
+      <div className={styles.setup}>
+        <h1>{t('app.connectionError')}</h1>
+        <p>{dataError}</p>
         <button onClick={() => window.location.reload()}>{t('app.retry')}</button>
       </div>
     );
