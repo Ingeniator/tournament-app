@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, createContext, useContext, type ReactNode } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef, createContext, useContext, type ReactNode } from 'react';
 import { ref, get, update as firebaseUpdate } from 'firebase/database';
 import type { PlannerTournament, PlannerRegistration, TournamentSummary, SkinId, PadelEventSummary } from '@padel/common';
 import { useTranslation, useTheme, isValidSkin, DEFAULT_SKIN } from '@padel/common';
@@ -13,6 +13,7 @@ import { useTelegram, type TelegramUser } from '../hooks/useTelegram';
 import { useTelegramSync } from '../hooks/useTelegramSync';
 import { useChatRoomTournaments } from '../hooks/useChatRoomTournaments';
 import { useMyEvents } from '../hooks/useMyEvents';
+import { useVisitedEvents, markEventVisited } from '../hooks/useVisitedEvents';
 import { loadEventByCode as loadEventByCodeFn } from '../hooks/useEvent';
 import { linkTournamentToChat } from '../utils/chatRoom';
 
@@ -63,6 +64,7 @@ export interface PlannerContextValue {
   skin: SkinId;
   setSkin: (skin: SkinId) => void;
   myEvents: PadelEventSummary[];
+  visitedEvents: PadelEventSummary[];
   eventsLoading: boolean;
   activeEventId: string | null;
   setActiveEventId: (id: string | null) => void;
@@ -145,6 +147,8 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
   const { tournaments: registeredTournaments, loading: regLoading } = useRegisteredTournaments(uid);
   const { tournaments: chatRoomTournaments, loading: chatRoomLoading } = useChatRoomTournaments(chatInstance);
   const { events: myEvents, loading: eventsLoading } = useMyEvents(uid);
+  const createdEventIds = useMemo(() => new Set(myEvents.map(e => e.id)), [myEvents]);
+  const { events: visitedEvents } = useVisitedEvents(uid, createdEventIds);
   const [activeEventId, setActiveEventId] = useState<string | null>(null);
   const [joinReturnScreen, setJoinReturnScreen] = useState<Screen>('home');
 
@@ -263,10 +267,11 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     const id = await loadEventByCodeFn(code);
     if (id) {
       setActiveEventId(id);
+      if (uid) markEventVisited(uid, id);
       return true;
     }
     return false;
-  }, []);
+  }, [uid]);
 
   const openTournamentFromEvent = useCallback((tournamentId: string) => {
     setJoinReturnScreen('event-join');
@@ -322,6 +327,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       skin,
       setSkin,
       myEvents,
+      visitedEvents,
       eventsLoading,
       activeEventId,
       setActiveEventId,

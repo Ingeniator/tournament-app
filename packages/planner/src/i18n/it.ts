@@ -33,6 +33,7 @@ const it: Translations = {
   'home.playerMode': 'Giocatore',
   'home.organizerMode': 'Organizzatore',
   'home.joinNotFound': 'Nessun torneo o evento trovato con questo codice',
+  'home.myEvents': 'I Miei Eventi',
 
   // Footer & Options
   'footer.freeOpenSource': 'Gratuito e open source',

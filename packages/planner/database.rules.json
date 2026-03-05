@@ -85,6 +85,12 @@
             ".validate": "newData.isBoolean() || !newData.exists()"
           }
         },
+        "visitedEvents": {
+          "$eventId": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.isBoolean() || !newData.exists()"
+          }
+        },
         "telegramId": {
           ".write": "auth != null && auth.uid === $uid",
           ".validate": "newData.isNumber()"

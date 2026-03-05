@@ -38,7 +38,7 @@ export function HomeScreen() {
     myTournaments, registeredTournaments, listingsLoading,
     chatRoomTournaments, chatRoomLoading,
     openTournament, deleteTournamentById, skin, setSkin,
-    myEvents, eventsLoading, setActiveEventId,
+    myEvents, visitedEvents, eventsLoading, setActiveEventId,
   } = usePlanner();
   const { t } = useTranslation();
 
@@ -271,6 +271,31 @@ export function HomeScreen() {
                     <span className={styles.tournamentMeta}>
                       {ct.date && <span>{formatDate(ct.date)}</span>}
                       {ct.organizerName && <span>by {ct.organizerName}</span>}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {/* Visited Events */}
+          {visitedEvents.length > 0 && (
+            <Card>
+              <h2 className={styles.sectionTitle}>{t('home.myEvents')}</h2>
+              <div className={styles.tournamentList}>
+                {visitedEvents.map(ev => (
+                  <div
+                    key={ev.id}
+                    className={styles.tournamentItem}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => { setActiveEventId(ev.id); setScreen('event-join'); }}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveEventId(ev.id); setScreen('event-join'); } }}
+                  >
+                    <span className={styles.tournamentName}>{ev.name}</span>
+                    <span className={styles.tournamentMeta}>
+                      <span>{ev.date}</span>
+                      <span>{t('event.tournaments', { count: ev.tournamentCount })}</span>
                     </span>
                   </div>
                 ))}

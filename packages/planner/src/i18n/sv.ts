@@ -33,6 +33,7 @@ const sv: Translations = {
   'home.playerMode': 'Spelare',
   'home.organizerMode': 'Arrangör',
   'home.joinNotFound': 'Ingen turnering eller evenemang hittades med denna kod',
+  'home.myEvents': 'Mina Evenemang',
 
   // Footer & Options
   'footer.freeOpenSource': 'Gratis och öppen källkod',

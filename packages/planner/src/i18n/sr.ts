@@ -33,6 +33,7 @@ const sr: Translations = {
   'home.playerMode': 'Igrač',
   'home.organizerMode': 'Organizator',
   'home.joinNotFound': 'Nije pronađen turnir niti događaj sa ovim kodom',
+  'home.myEvents': 'Moji Događaji',
 
   // Footer & Options
   'footer.freeOpenSource': 'Besplatno i otvorenog koda',
