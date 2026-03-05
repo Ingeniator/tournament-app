@@ -109,13 +109,29 @@ function PartnerEditor({ partnerName, partnerTelegram, onSave, players, currentP
       {error && (
         <span style={{ color: 'var(--color-error, #e53935)', fontSize: 'var(--text-sm)' }}>{error}</span>
       )}
-      {dirty && (
-        <Button size="small" onClick={handleSave}
-          disabled={selectVal === NEW_PARTNER ? !newNameVal.trim() : !selectVal}
-        >
-          {t('join.save')}
-        </Button>
-      )}
+      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+        {partnerName && (
+          <Button variant="secondary" size="small" onClick={async () => {
+            const rejection = await onSave(null, null);
+            if (rejection) {
+              setError(rejectionMessage(rejection, t));
+            } else {
+              setSelectVal('');
+              setDirty(false);
+              setError(null);
+            }
+          }}>
+            {t('organizer.removePartner')}
+          </Button>
+        )}
+        {dirty && (
+          <Button size="small" onClick={handleSave}
+            disabled={selectVal === NEW_PARTNER ? !newNameVal.trim() : !selectVal}
+          >
+            {t('join.save')}
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
