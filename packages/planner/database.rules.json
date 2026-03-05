@@ -38,6 +38,15 @@
           ".write": "auth != null",
           ".validate": "newData.isNumber()"
         },
+        "startDelegateId": {
+          ".validate": "newData.isString() && newData.val().length < 128"
+        },
+        "startDelegateTelegram": {
+          ".validate": "newData.isString() && newData.val().length < 50"
+        },
+        "captainMode": {
+          ".validate": "newData.isBoolean()"
+        },
         "chatRooms": {
           "$chatInstance": {
             ".write": "auth != null && (!data.exists() || root.child('tournaments').child($tournamentId).child('organizerId').val() === auth.uid)",
