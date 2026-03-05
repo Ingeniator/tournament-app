@@ -28,20 +28,31 @@ function toEvent(id: string, data: Record<string, unknown>): PadelEvent {
 export function useEvent(eventId: string | null) {
   const [event, setEvent] = useState<PadelEvent | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Real-time subscription
   useEffect(() => {
     if (!eventId || !db) return;
     setLoading(true);
-    const unsubscribe = onValue(ref(db, `events/${eventId}`), (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        setEvent(toEvent(eventId, data));
-      } else {
-        setEvent(null);
-      }
-      setLoading(false);
-    });
+    setError(null);
+    const unsubscribe = onValue(
+      ref(db, `events/${eventId}`),
+      (snapshot) => {
+        setError(null);
+        const data = snapshot.val();
+        if (data) {
+          setEvent(toEvent(eventId, data));
+        } else {
+          setEvent(null);
+        }
+        setLoading(false);
+      },
+      (err) => {
+        console.warn('Event listener failed:', err.message);
+        setError(err.message);
+        setLoading(false);
+      },
+    );
     return unsubscribe;
   }, [eventId]);
 
@@ -124,6 +135,7 @@ export function useEvent(eventId: string | null) {
   return {
     event,
     loading,
+    error,
     createEvent,
     updateEvent,
     linkTournament,

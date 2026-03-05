@@ -1,8 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Button, Card, getPresetByFormat, useTranslation, type TournamentFormat } from '@padel/common';
 import { useEvent } from '../hooks/useEvent';
 import { useEventTournaments } from '../hooks/useEventTournaments';
 import { computeEventStandings, computeEventClubStandings } from '../utils/eventStandings';
+import { computeBreakdown } from '../utils/tournamentBreakdown';
+import { TournamentBreakdownView } from '../components/TournamentBreakdown';
 import { StandingsCard, ClubStandingsCard } from '../components/EventStandingsCards';
 import styles from './EventJoinScreen.module.css';
 
@@ -16,7 +18,7 @@ interface EventJoinScreenProps {
 
 export function EventJoinScreen({ eventId, uid, onJoinTournament, onBack, onEdit }: EventJoinScreenProps) {
   const { event, loading } = useEvent(eventId);
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   const tournamentLinks = useMemo(() => event?.tournaments ?? [], [event?.tournaments]);
   const { tournamentData, tournamentInfos, status } = useEventTournaments(tournamentLinks);
@@ -31,6 +33,9 @@ export function EventJoinScreen({ eventId, uid, onJoinTournament, onBack, onEdit
     return computeEventClubStandings(event.tournaments, tournamentData);
   }, [event, tournamentData]);
 
+  const [toast, setToast] = useState<string | null>(null);
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2000); };
+
   if (loading || !event) {
     return (
       <div className={styles.container}>
@@ -43,6 +48,30 @@ export function EventJoinScreen({ eventId, uid, onJoinTournament, onBack, onEdit
       </div>
     );
   }
+
+  const botName = import.meta.env.VITE_TELEGRAM_BOT_NAME as string | undefined;
+  const isTelegram = !!window.Telegram?.WebApp?.initData;
+  const eventShareUrl = event.code
+    ? (isTelegram && botName
+      ? `https://t.me/${botName}?startapp=event_${event.code}`
+      : `${window.location.origin}/plan?event=${event.code}&lang=${locale}`)
+    : null;
+
+  const handleCopyLink = async () => {
+    if (!eventShareUrl) return;
+    try {
+      await navigator.clipboard.writeText(eventShareUrl);
+      showToast(t('event.linkCopied'));
+    } catch { /* silent */ }
+  };
+
+  const handleCopyCode = async () => {
+    if (!event.code) return;
+    try {
+      await navigator.clipboard.writeText(event.code);
+      showToast(t('event.codeCopied'));
+    } catch { /* silent */ }
+  };
 
   const statusClass =
     status === 'active' ? styles.statusActive :
@@ -76,60 +105,124 @@ export function EventJoinScreen({ eventId, uid, onJoinTournament, onBack, onEdit
           <p className={styles.description}>{event.description}</p>
         )}
 
-        {/* Tournament list with join buttons */}
-        <Card>
-          <h2 className={styles.sectionTitle}>
-            {t('event.tournaments', { count: tournamentInfos.length })}
-          </h2>
-          {tournamentInfos.length === 0 ? (
-            <p className={styles.empty}>{t('event.noTournaments')}</p>
-          ) : (
-            <div className={styles.tournamentList}>
-              {tournamentInfos.map(ti => {
-                const preset = ti.format ? getPresetByFormat(ti.format as TournamentFormat) : null;
-                const formatLabel = preset ? t(preset.nameKey) : null;
-                return (
-                  <div key={ti.id} className={styles.tournamentItem}>
-                    <div className={styles.tournamentName}>{ti.name}</div>
-                    <div className={styles.tournamentRow}>
-                      <div className={styles.tournamentMeta}>
-                        {formatLabel && <span>{formatLabel}</span>}
-                        {ti.date && <span>{ti.date}</span>}
-                        {ti.place && <span>{ti.place}</span>}
-                        <span>{ti.playerCount}/{ti.capacity} {t('event.players')}</span>
-                        {ti.isCompleted ? (
-                          <span className={styles.tournamentCompleted}>{t('event.status.completed')}</span>
-                        ) : ti.hasStarted ? (
-                          <span className={styles.tournamentActive}>{t('event.status.active')}</span>
-                        ) : (
-                          <span>{t('event.spotsOpen', { count: Math.max(0, ti.capacity - ti.playerCount) })}</span>
-                        )}
-                      </div>
-                      {!ti.isCompleted && !ti.hasStarted && (
-                        <Button size="small" onClick={() => onJoinTournament(ti.id)}>
-                          {t('eventJoin.join')}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </Card>
+        {toast && <div className={styles.toast}>{toast}</div>}
 
-        {/* Combined standings */}
-        {(status === 'active' || status === 'completed') && (
+        {/* FOCUS SWITCHING based on computed status */}
+        {status === 'active' || status === 'completed' ? (
           <>
+            {/* Active/Completed: Standings first */}
             {clubStandings.length > 0 && (
               <ClubStandingsCard clubStandings={clubStandings} status={status} t={t} />
             )}
             {standings.length > 0 && (
               <StandingsCard standings={standings} status={status} t={t} />
             )}
+            <TournamentListJoinCard
+              tournamentInfos={tournamentInfos}
+              onJoinTournament={onJoinTournament}
+              t={t}
+            />
           </>
+        ) : (
+          <>
+            {/* Draft: Tournament list first */}
+            <TournamentListJoinCard
+              tournamentInfos={tournamentInfos}
+              onJoinTournament={onJoinTournament}
+              t={t}
+            />
+            {standings.length > 0 && (
+              <>
+                {clubStandings.length > 0 && (
+                  <ClubStandingsCard clubStandings={clubStandings} status={status} t={t} />
+                )}
+                <StandingsCard standings={standings} status={status} t={t} />
+              </>
+            )}
+          </>
+        )}
+
+        {/* Share block */}
+        {event.code && (status === 'active' || status === 'draft') && (
+          <Card>
+            <h2 className={styles.sectionTitle}>{t('event.shareWithPlayers')}</h2>
+            <div className={styles.codeDisplay}>
+              <span className={styles.code} onClick={handleCopyCode}>{event.code}</span>
+            </div>
+            <p className={styles.shareHint}>{t('event.shareHint')}</p>
+            <Button variant="secondary" fullWidth onClick={handleCopyLink}>
+              {t('event.copyLink')}
+            </Button>
+          </Card>
         )}
       </main>
     </div>
+  );
+}
+
+/* --- Sub-components --- */
+
+function TournamentListJoinCard({
+  tournamentInfos,
+  onJoinTournament,
+  t,
+}: {
+  tournamentInfos: ReturnType<typeof useEventTournaments>['tournamentInfos'];
+  onJoinTournament: (tournamentId: string) => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
+}) {
+  return (
+    <Card>
+      <h2 className={styles.sectionTitle}>
+        {t('event.tournaments', { count: tournamentInfos.length })}
+      </h2>
+      {tournamentInfos.length === 0 ? (
+        <p className={styles.empty}>{t('event.noTournaments')}</p>
+      ) : (
+        <div className={styles.tournamentList}>
+          {tournamentInfos.map(ti => {
+            const preset = ti.format ? getPresetByFormat(ti.format as TournamentFormat) : null;
+            const formatLabel = preset ? t(preset.nameKey) : null;
+            const isDraft = !ti.isCompleted && !ti.hasStarted;
+            const breakdown = isDraft ? computeBreakdown(ti.raw, ti.capacity) : null;
+            return (
+              <div key={ti.id} className={styles.tournamentItem}>
+                <div className={styles.tournamentName}>
+                  <button className={styles.tournamentLink} onClick={() => onJoinTournament(ti.id)}>{ti.name}</button>
+                </div>
+                <div className={styles.tournamentMeta}>
+                  {formatLabel && <span>{formatLabel}</span>}
+                  {ti.raw.captainMode && <span>{t('breakdown.captainMode')}</span>}
+                  {ti.raw.maldiciones && <span>{t('breakdown.maldiciones')}</span>}
+                  {ti.registeredCount > 0 && <span>{t('event.registered', { count: ti.registeredCount })}</span>}
+                </div>
+                {ti.isCompleted ? (
+                  <div className={styles.tournamentMeta}>
+                    <span>{ti.playerCount}/{ti.capacity} {t('event.players')}</span>
+                    <span className={styles.tournamentCompleted}>{t('event.status.completed')}</span>
+                  </div>
+                ) : ti.hasStarted ? (
+                  <div className={styles.tournamentMeta}>
+                    <span>{ti.playerCount}/{ti.capacity} {t('event.players')}</span>
+                    <span className={styles.tournamentActive}>{t('event.status.active')}</span>
+                  </div>
+                ) : null}
+                {breakdown && (
+                  <TournamentBreakdownView
+                    breakdown={breakdown}
+                    approvedCount={ti.approvedCount}
+                    action={
+                      <Button size="small" onClick={() => onJoinTournament(ti.id)}>
+                        {breakdown.urgencyLevel === 'success' ? t('eventJoin.open') : t('eventJoin.join')}
+                      </Button>
+                    }
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Card>
   );
 }

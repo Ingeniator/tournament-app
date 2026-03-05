@@ -3,7 +3,10 @@ import { Button, Card, Toast, useToast, useTranslation } from '@padel/common';
 import { useEvent } from '../hooks/useEvent';
 import { useEventTournaments } from '../hooks/useEventTournaments';
 import type { EventTournamentInfo } from '../hooks/useEventTournaments';
+import { usePlanner } from '../state/PlannerContext';
 import { computeEventStandings, computeEventClubStandings } from '../utils/eventStandings';
+import { computeBreakdown } from '../utils/tournamentBreakdown';
+import { TournamentBreakdownView } from '../components/TournamentBreakdown';
 import { StandingsCard, ClubStandingsCard } from '../components/EventStandingsCards';
 import styles from './EventScreen.module.css';
 
@@ -18,12 +21,19 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
   const { event, loading, updateEvent, linkTournament, unlinkTournament, updateTournamentWeight, deleteEvent } = useEvent(eventId);
   const { t, locale } = useTranslation();
   const { toastMessage, showToast } = useToast();
+  const { myTournaments } = usePlanner();
   const [linkCode, setLinkCode] = useState('');
   const [linking, setLinking] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
 
   const tournamentLinks = useMemo(() => event?.tournaments ?? [], [event?.tournaments]);
   const { tournamentData, tournamentInfos, status } = useEventTournaments(tournamentLinks);
+
+  const linkedIds = useMemo(() => new Set(tournamentLinks.map(tl => tl.tournamentId)), [tournamentLinks]);
+  const availableOwnTournaments = useMemo(
+    () => myTournaments.filter(mt => !linkedIds.has(mt.id)),
+    [myTournaments, linkedIds],
+  );
 
   const standings = useMemo(() => {
     if (!event || tournamentData.size === 0) return [];
@@ -80,6 +90,17 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
     } catch {
       showToast(t('organizer.failedCopy'));
     }
+  };
+
+  const handleLinkOwn = async (tournamentId: string) => {
+    setLinking(true);
+    try {
+      await linkTournament(tournamentId);
+      showToast(t('event.tournamentLinked'));
+    } catch {
+      showToast(t('event.linkFailed'));
+    }
+    setLinking(false);
   };
 
   const handleLinkByCode = async () => {
@@ -161,20 +182,6 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
           </Card>
         )}
 
-        {/* Share card (owner only) */}
-        {isOwner && event.code && (
-          <Card>
-            <h2 className={styles.sectionTitle}>{t('event.shareWithPlayers')}</h2>
-            <div className={styles.codeDisplay}>
-              <span className={styles.code} onClick={handleCopyEventCode}>{event.code}</span>
-            </div>
-            <p className={styles.shareHint}>{t('event.shareHint')}</p>
-            <Button variant="secondary" fullWidth onClick={handleCopyEventLink}>
-              {t('event.copyLink')}
-            </Button>
-          </Card>
-        )}
-
         {/* FOCUS SWITCHING based on computed status */}
         {status === 'active' || status === 'completed' ? (
           <>
@@ -218,6 +225,28 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
         {isOwner && (
           <Card>
             <h2 className={styles.sectionTitle}>{t('event.addTournament')}</h2>
+
+            {/* Own tournaments quick-pick */}
+            {availableOwnTournaments.length > 0 && (
+              <div className={styles.ownTournaments}>
+                <label className={styles.ownLabel}>{t('event.myTournaments')}</label>
+                {availableOwnTournaments.map(mt => (
+                  <button
+                    key={mt.id}
+                    className={styles.ownItem}
+                    onClick={() => handleLinkOwn(mt.id)}
+                    disabled={linking}
+                  >
+                    <span className={styles.ownName}>{mt.name}</span>
+                    {mt.date && <span className={styles.ownDate}>{mt.date}</span>}
+                    <span className={styles.ownAdd}>+</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Link by code (for other organizers' tournaments) */}
+            <label className={styles.ownLabel}>{t('event.linkByCode')}</label>
             <div className={styles.linkRow}>
               <input
                 className={styles.linkInput}
@@ -235,6 +264,20 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
             {linkError && (
               <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-danger)', marginTop: '8px' }}>{linkError}</div>
             )}
+          </Card>
+        )}
+
+        {/* Share card (owner only) */}
+        {isOwner && event.code && (
+          <Card>
+            <h2 className={styles.sectionTitle}>{t('event.shareWithPlayers')}</h2>
+            <div className={styles.codeDisplay}>
+              <span className={styles.code} onClick={handleCopyEventCode}>{event.code}</span>
+            </div>
+            <p className={styles.shareHint}>{t('event.shareHint')}</p>
+            <Button variant="secondary" fullWidth onClick={handleCopyEventLink}>
+              {t('event.copyLink')}
+            </Button>
           </Card>
         )}
 
@@ -277,51 +320,65 @@ function TournamentListCard({
         <p className={styles.empty}>{t('event.noTournaments')}</p>
       ) : (
         <div className={styles.tournamentList}>
-          {infos.map(ti => (
-            <div key={ti.id} className={styles.tournamentItem}>
-              <div className={styles.tournamentDetails}>
-                <div className={styles.tournamentName}>
-                  {onOpen ? (
-                    <button className={styles.tournamentLink} onClick={() => onOpen(ti.id)}>{ti.name}</button>
-                  ) : ti.name}
-                </div>
-                <div className={styles.tournamentMeta}>
-                  {ti.date && <span>{ti.date}</span>}
-                  {ti.place && <span>{ti.place}</span>}
-                  <span>{ti.playerCount}/{ti.capacity} {t('event.players')}</span>
-                  {ti.isCompleted ? (
-                    <span className={styles.tournamentCompleted}>{t('event.status.completed')}</span>
-                  ) : ti.hasStarted ? (
-                    <span className={styles.tournamentActive}>{t('event.status.active')}</span>
-                  ) : (
-                    <span>{t('event.spotsOpen', { count: Math.max(0, ti.capacity - ti.playerCount) })}</span>
+          {infos.map(ti => {
+            const isDraft = !ti.isCompleted && !ti.hasStarted;
+            return (
+              <div key={ti.id} className={styles.tournamentItem}>
+                <div className={styles.tournamentTopRow}>
+                  <div className={styles.tournamentDetails}>
+                    <div className={styles.tournamentName}>
+                      {onOpen ? (
+                        <button className={styles.tournamentLink} onClick={() => onOpen(ti.id)}>{ti.name}</button>
+                      ) : ti.name}
+                    </div>
+                    <div className={styles.tournamentMeta}>
+                      {ti.date && <span>{ti.date}</span>}
+                      {ti.place && <span>{ti.place}</span>}
+                      {ti.raw.captainMode && <span>{t('breakdown.captainMode')}</span>}
+                      {ti.raw.maldiciones && <span>{t('breakdown.maldiciones')}</span>}
+                      {ti.registeredCount > 0 && <span>{t('event.registered', { count: ti.registeredCount })}</span>}
+                    </div>
+                    {ti.isCompleted ? (
+                      <div className={styles.tournamentMeta}>
+                        <span>{ti.playerCount}/{ti.capacity} {t('event.players')}</span>
+                        <span className={styles.tournamentCompleted}>{t('event.status.completed')}</span>
+                      </div>
+                    ) : ti.hasStarted ? (
+                      <div className={styles.tournamentMeta}>
+                        <span>{ti.playerCount}/{ti.capacity} {t('event.players')}</span>
+                        <span className={styles.tournamentActive}>{t('event.status.active')}</span>
+                      </div>
+                    ) : null}
+                    {isOwner && (
+                      <div className={styles.weightRow}>
+                        <span className={styles.weightLabel}>{t('event.weight')}:</span>
+                        <input
+                          className={styles.weightInput}
+                          type="number"
+                          value={ti.weight}
+                          onChange={e => onWeightChange(ti.id, parseFloat(e.target.value) || 1)}
+                          min={0.1}
+                          step={0.1}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  {isOwner && (
+                    <button
+                      className={styles.unlinkBtn}
+                      onClick={() => onUnlink(ti.id)}
+                      aria-label={t('event.unlink')}
+                    >
+                      &times;
+                    </button>
                   )}
                 </div>
-                {isOwner && (
-                  <div className={styles.weightRow}>
-                    <span className={styles.weightLabel}>{t('event.weight')}:</span>
-                    <input
-                      className={styles.weightInput}
-                      type="number"
-                      value={ti.weight}
-                      onChange={e => onWeightChange(ti.id, parseFloat(e.target.value) || 1)}
-                      min={0.1}
-                      step={0.1}
-                    />
-                  </div>
+                {isDraft && (
+                  <TournamentBreakdownView breakdown={computeBreakdown(ti.raw, ti.capacity)} approvedCount={ti.approvedCount} />
                 )}
               </div>
-              {isOwner && (
-                <button
-                  className={styles.unlinkBtn}
-                  onClick={() => onUnlink(ti.id)}
-                  aria-label={t('event.unlink')}
-                >
-                  &times;
-                </button>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </Card>

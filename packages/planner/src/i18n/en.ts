@@ -30,6 +30,10 @@ const en: Translations = {
   'home.expired': 'Expired',
   'home.completed': 'Completed',
   'home.groupTournaments': 'Group Tournaments',
+  'home.playerMode': 'Player',
+  'home.organizerMode': 'Organizer',
+  'home.joinNotFound': 'No tournament or event found with this code',
+  'home.myEvents': 'My Events',
 
   // Footer & Options
   'footer.freeOpenSource': 'Free & open source',
@@ -65,9 +69,11 @@ const en: Translations = {
   'organizer.telegramPlaceholder': '@username',
   'organizer.saveLink': 'Save',
   'organizer.removeLink': 'Remove',
-  'organizer.partnerSection': 'Preferred partner',
-  'organizer.partnerName': 'Partner name',
+  'organizer.partnerSection': 'Partner',
+  'organizer.partnerName': 'Select partner…',
   'organizer.partnerTelegram': 'Partner telegram (optional)',
+  'organizer.newPlayer': '+ New player',
+  'organizer.newPlayerName': 'Player name',
   'organizer.removePartner': 'Remove partner',
   'organizer.addedBy': 'Added by {name}',
   'organizer.reserve': 'reserve',
@@ -286,6 +292,8 @@ const en: Translations = {
   'join.approve': 'Approve',
   'join.reject': 'Reject',
   'join.pairSlots': '{pairs} pair slots',
+  'join.myClub': '{name}',
+  'join.allPlayers': 'All Players',
 
   // SupportOverlay
   'support.title': 'Support Us',
@@ -388,6 +396,8 @@ const en: Translations = {
   'event.tournaments': 'Tournaments ({count})',
   'event.noTournaments': 'No tournaments linked yet',
   'event.addTournament': 'Add Tournament',
+  'event.myTournaments': 'My Tournaments',
+  'event.linkByCode': 'Link by code',
   'event.linkPlaceholder': 'Tournament code',
   'event.link': 'Link',
   'event.unlink': 'Unlink',
@@ -396,6 +406,7 @@ const en: Translations = {
   'event.tournamentLinked': 'Tournament linked!',
   'event.linkFailed': 'Failed to link tournament',
   'event.players': 'players',
+  'event.registered': '{count} registered',
   'event.spotsOpen': '{count} spots open',
   'event.weight': 'Weight',
   'event.liveStandings': 'Live Standings',
@@ -422,7 +433,22 @@ const en: Translations = {
 
   // EventJoinScreen
   'eventJoin.join': 'Join',
+  'eventJoin.open': 'Open',
   'eventJoin.edit': 'Edit',
+
+  // Breakdown
+  'breakdown.spotsOpen': '{count} spots open',
+  'breakdown.hurrySpots': 'Hurry! Only {count} spots left',
+  'breakdown.lastSpot': 'Last spot!',
+  'breakdown.full': 'Full',
+  'breakdown.clubNeedsMore': '{club} needs {count} more',
+  'breakdown.clubNeedsMoreCaptain': '{club} needs more players',
+  'breakdown.noRankPlayers': '{club} {rank} needs {count} more',
+  'breakdown.noRankPlayersCaptain': '{club} needs more {rank} players',
+  'breakdown.groupNeedsMore': '{group} needs {count} more',
+  'breakdown.paired': 'Paired',
+  'breakdown.captainMode': 'Captain Mode',
+  'breakdown.maldiciones': 'Maldiciones',
 
   // Team Pairing (shared with runner)
   'teams.title': 'Teams',

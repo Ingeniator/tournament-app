@@ -18,6 +18,20 @@ function makePlayer(id: string, opts?: { confirmed?: boolean; group?: 'A' | 'B';
   } as PlannerRegistration;
 }
 
+/** Create a pair of matched players sharing the same club/rank/captain options */
+function makePair(
+  id1: string, id2: string,
+  shared?: { clubId?: string; rankSlot?: number; captainApproved?: boolean; pairedAt?: number },
+): [PlannerRegistration, PlannerRegistration] {
+  const ts1 = parseInt(id1, 10);
+  const ts2 = parseInt(id2, 10);
+  const pairedAt = shared?.pairedAt ?? Math.min(ts1, ts2);
+  return [
+    makePlayer(id1, { clubId: shared?.clubId, rankSlot: shared?.rankSlot, captainApproved: shared?.captainApproved, timestamp: ts1, partnerName: `Player ${id2}`, pairedAt }),
+    makePlayer(id2, { clubId: shared?.clubId, rankSlot: shared?.rankSlot, captainApproved: shared?.captainApproved, timestamp: ts2, partnerName: `Player ${id1}`, pairedAt }),
+  ];
+}
+
 describe('getPlayerStatuses', () => {
   describe('default behavior', () => {
     it('marks first N players as playing', () => {
@@ -51,7 +65,7 @@ describe('getPlayerStatuses', () => {
         makePlayer('5', { clubId: 'c2', timestamp: 5 }),
       ];
       // capacity=4, 2 clubs → 2 per club
-      const statuses = getPlayerStatuses(players, 4, { format: 'club-ranked', clubs });
+      const statuses = getPlayerStatuses(players, 4, { format: 'club-americano', clubs });
       expect(statuses.get('1')).toBe('playing');
       expect(statuses.get('2')).toBe('playing');
       expect(statuses.get('3')).toBe('reserve'); // 3rd in club A, only 2 spots
@@ -66,7 +80,7 @@ describe('getPlayerStatuses', () => {
         makePlayer('3', { clubId: 'c2', timestamp: 3 }),
       ];
       // capacity=4, 2 clubs → 2 per club; club A uses 1, club B uses 1 → 2 remaining
-      const statuses = getPlayerStatuses(players, 4, { format: 'club-ranked', clubs });
+      const statuses = getPlayerStatuses(players, 4, { format: 'club-americano', clubs });
       expect(statuses.get('1')).toBe('playing');
       expect(statuses.get('3')).toBe('playing');
       expect(statuses.get('2')).toBe('playing'); // fills remaining slot
@@ -82,7 +96,7 @@ describe('getPlayerStatuses', () => {
         makePlayer('6', { timestamp: 6 }), // unassigned
       ];
       // capacity=4, 2 per club → clubs fill 4 spots, no room for unassigned
-      const statuses = getPlayerStatuses(players, 4, { format: 'club-ranked', clubs });
+      const statuses = getPlayerStatuses(players, 4, { format: 'club-americano', clubs });
       expect(statuses.get('5')).toBe('reserve');
       expect(statuses.get('6')).toBe('reserve');
     });
@@ -93,7 +107,7 @@ describe('getPlayerStatuses', () => {
         makePlayer('2', { timestamp: 2 }),
         makePlayer('3', { timestamp: 3 }),
       ];
-      const statuses = getPlayerStatuses(players, 2, { format: 'club-ranked', clubs });
+      const statuses = getPlayerStatuses(players, 2, { format: 'club-americano', clubs });
       // No clubId on any player → falls through to default logic
       expect(statuses.get('1')).toBe('playing');
       expect(statuses.get('2')).toBe('playing');
@@ -106,7 +120,7 @@ describe('getPlayerStatuses', () => {
         makePlayer('2', { clubId: 'c1', timestamp: 2 }),
         makePlayer('3', { clubId: 'c2', timestamp: 3 }),
       ];
-      const statuses = getPlayerStatuses(players, 4, { format: 'club-ranked', clubs });
+      const statuses = getPlayerStatuses(players, 4, { format: 'club-americano', clubs });
       expect(statuses.get('1')).toBe('cancelled');
       expect(statuses.get('2')).toBe('playing');
       expect(statuses.get('3')).toBe('playing');
@@ -117,8 +131,18 @@ describe('getPlayerStatuses', () => {
         makePlayer('1', { clubId: 'c1', timestamp: 1 }),
         makePlayer('2', { timestamp: 2 }),
       ];
-      const statuses = getPlayerStatuses(players, 2, { format: 'club-ranked', clubs: [] });
+      const statuses = getPlayerStatuses(players, 2, { format: 'club-americano', clubs: [] });
       expect(statuses.get('1')).toBe('playing');
+      expect(statuses.get('2')).toBe('playing');
+    });
+
+    it('captain mode: unapproved player gets registered', () => {
+      const players = [
+        makePlayer('1', { clubId: 'c1', timestamp: 1 }),
+        makePlayer('2', { clubId: 'c2', timestamp: 2, captainApproved: true }),
+      ];
+      const statuses = getPlayerStatuses(players, 4, { format: 'club-americano', clubs, captainMode: true });
+      expect(statuses.get('1')).toBe('registered');
       expect(statuses.get('2')).toBe('playing');
     });
   });
@@ -132,223 +156,215 @@ describe('getPlayerStatuses', () => {
 
     // 2 clubs, capacity 8 → 4 per club; 2 ranks → 2 per (club, rank)
     it('limits per club per rank bucket', () => {
-      const players = [
-        makePlayer('1', { rankSlot: 0, clubId: 'c1', timestamp: 1 }),
-        makePlayer('2', { rankSlot: 0, clubId: 'c1', timestamp: 2 }),
-        makePlayer('3', { rankSlot: 0, clubId: 'c1', timestamp: 3 }), // 3rd in c1/rank0 → reserve
-        makePlayer('4', { rankSlot: 0, clubId: 'c2', timestamp: 4 }),
-        makePlayer('5', { rankSlot: 1, clubId: 'c1', timestamp: 5 }),
-      ];
+      const [p1, p2] = makePair('1', '2', { clubId: 'c1', rankSlot: 0 });
+      const [p3, p4] = makePair('3', '4', { clubId: 'c1', rankSlot: 0 }); // 2nd pair in c1/r0 → reserve
+      const [p5, p6] = makePair('5', '6', { clubId: 'c2', rankSlot: 0 });
+      const [p7, p8] = makePair('7', '8', { clubId: 'c1', rankSlot: 1 });
+      const players = [p1, p2, p3, p4, p5, p6, p7, p8];
       const statuses = getPlayerStatuses(players, 8, { format: 'club-ranked', clubs, rankLabels });
       expect(statuses.get('1')).toBe('playing');
       expect(statuses.get('2')).toBe('playing');
       expect(statuses.get('3')).toBe('reserve'); // bucket c1/rank0 full (2 slots)
-      expect(statuses.get('4')).toBe('playing');
+      expect(statuses.get('4')).toBe('reserve');
       expect(statuses.get('5')).toBe('playing');
+      expect(statuses.get('6')).toBe('playing');
+      expect(statuses.get('7')).toBe('playing');
+      expect(statuses.get('8')).toBe('playing');
     });
 
     it('players with club but no rank fill remaining club slots', () => {
-      const players = [
-        makePlayer('1', { rankSlot: 0, clubId: 'c1', timestamp: 1 }),
-        makePlayer('2', { clubId: 'c1', timestamp: 2 }), // no rank, same club
-      ];
-      // c1 has 4 slots, rank0 uses 1 → 3 remaining for no-rank (perBucket=2, only 1 used)
+      const [p1, p2] = makePair('1', '2', { clubId: 'c1', rankSlot: 0 });
+      const [p3, p4] = makePair('3', '4', { clubId: 'c1' }); // no rank
+      const players = [p1, p2, p3, p4];
+      // c1 has 4 slots, rank0 uses 2 → 2 remaining for no-rank
       const statuses = getPlayerStatuses(players, 8, { format: 'club-ranked', clubs, rankLabels });
       expect(statuses.get('1')).toBe('playing');
       expect(statuses.get('2')).toBe('playing');
+      expect(statuses.get('3')).toBe('playing');
+      expect(statuses.get('4')).toBe('playing');
     });
 
     it('fully unassigned players fill remaining global slots', () => {
-      const players = [
-        makePlayer('1', { rankSlot: 0, clubId: 'c1', timestamp: 1 }),
-        makePlayer('2', { timestamp: 2 }), // no club, no rank
-      ];
+      const [p1, p2] = makePair('1', '2', { clubId: 'c1', rankSlot: 0 });
+      const [p3, p4] = makePair('3', '4'); // no club, no rank
+      const players = [p1, p2, p3, p4];
       const statuses = getPlayerStatuses(players, 8, { format: 'club-ranked', clubs, rankLabels });
       expect(statuses.get('1')).toBe('playing');
       expect(statuses.get('2')).toBe('playing');
+      expect(statuses.get('3')).toBe('playing');
+      expect(statuses.get('4')).toBe('playing');
     });
 
     it('marks excess as reserve when all buckets full', () => {
-      const players = [
-        makePlayer('1', { rankSlot: 0, clubId: 'c1', timestamp: 1 }),
-        makePlayer('2', { rankSlot: 0, clubId: 'c1', timestamp: 2 }),
-        makePlayer('3', { rankSlot: 1, clubId: 'c1', timestamp: 3 }),
-        makePlayer('4', { rankSlot: 1, clubId: 'c1', timestamp: 4 }),
-        makePlayer('5', { rankSlot: 0, clubId: 'c2', timestamp: 5 }),
-        makePlayer('6', { rankSlot: 0, clubId: 'c2', timestamp: 6 }),
-        makePlayer('7', { rankSlot: 1, clubId: 'c2', timestamp: 7 }),
-        makePlayer('8', { rankSlot: 1, clubId: 'c2', timestamp: 8 }),
-        makePlayer('9', { timestamp: 9 }), // capacity 8 full
-      ];
+      const [p1, p2] = makePair('1', '2', { clubId: 'c1', rankSlot: 0 });
+      const [p3, p4] = makePair('3', '4', { clubId: 'c1', rankSlot: 1 });
+      const [p5, p6] = makePair('5', '6', { clubId: 'c2', rankSlot: 0 });
+      const [p7, p8] = makePair('7', '8', { clubId: 'c2', rankSlot: 1 });
+      const [p9, p10] = makePair('9', '10'); // capacity 8 full → overflow
+      const players = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10];
       // capacity=8, 2 clubs → 4 per club, 2 ranks → 2 per (club, rank)
       const statuses = getPlayerStatuses(players, 8, { format: 'club-ranked', clubs, rankLabels });
       for (let i = 1; i <= 8; i++) {
         expect(statuses.get(String(i))).toBe('playing');
       }
       expect(statuses.get('9')).toBe('reserve');
+      expect(statuses.get('10')).toBe('reserve');
     });
 
-    it('falls through to club logic when no rankLabels provided', () => {
-      const players = [
-        makePlayer('1', { clubId: 'c1', timestamp: 1 }),
-        makePlayer('2', { clubId: 'c1', timestamp: 2 }),
-        makePlayer('3', { clubId: 'c1', timestamp: 3 }),
-        makePlayer('4', { clubId: 'c2', timestamp: 4 }),
-      ];
-      // No rankLabels → per-club capacity (2 per club)
+    it('falls through to pair logic when no rankLabels provided', () => {
+      const [p1, p2] = makePair('1', '2', { clubId: 'c1' });
+      const [p3, p4] = makePair('3', '4', { clubId: 'c1' });
+      const [p5, p6] = makePair('5', '6', { clubId: 'c2' });
+      const players = [p1, p2, p3, p4, p5, p6];
+      // No rankLabels → falls through to pair-format branch
+      // cap=4 → pairCap=2, perClubPairCap=1
       const statuses = getPlayerStatuses(players, 4, { format: 'club-ranked', clubs });
       expect(statuses.get('1')).toBe('playing');
       expect(statuses.get('2')).toBe('playing');
-      expect(statuses.get('3')).toBe('reserve');
-      expect(statuses.get('4')).toBe('playing');
+      expect(statuses.get('3')).toBe('reserve'); // 2nd c1 pair exceeds per-club pair cap
+      expect(statuses.get('4')).toBe('reserve');
+      expect(statuses.get('5')).toBe('playing');
+      expect(statuses.get('6')).toBe('playing');
     });
 
     it('handles cancelled players', () => {
-      const players = [
-        makePlayer('1', { rankSlot: 0, clubId: 'c1', confirmed: false, timestamp: 1 }),
-        makePlayer('2', { rankSlot: 0, clubId: 'c2', timestamp: 2 }),
-      ];
+      const p1 = makePlayer('1', { rankSlot: 0, clubId: 'c1', confirmed: false, timestamp: 1 });
+      const [p2, p3] = makePair('2', '3', { clubId: 'c2', rankSlot: 0 });
+      const players = [p1, p2, p3];
       const statuses = getPlayerStatuses(players, 8, { format: 'club-ranked', clubs, rankLabels });
       expect(statuses.get('1')).toBe('cancelled');
       expect(statuses.get('2')).toBe('playing');
+      expect(statuses.get('3')).toBe('playing');
     });
 
     it('keeps per-bucket capacity even and gives extra pair to rank with earliest overflow', () => {
       // capacity=12, 2 clubs → 6 per club, 2 ranks → raw 3 per bucket (odd)
       // base=2 (rounded down to even), remainingPerClub=2, 1 bonus pair
-      const players = [
-        makePlayer('1',  { rankSlot: 0, clubId: 'c1', timestamp: 1 }),
-        makePlayer('2',  { rankSlot: 0, clubId: 'c2', timestamp: 2 }),
-        makePlayer('3',  { rankSlot: 1, clubId: 'c1', timestamp: 3 }),
-        makePlayer('4',  { rankSlot: 1, clubId: 'c2', timestamp: 4 }),
-        makePlayer('5',  { rankSlot: 0, clubId: 'c1', timestamp: 5 }),
-        makePlayer('6',  { rankSlot: 0, clubId: 'c2', timestamp: 6 }),
-        makePlayer('7',  { rankSlot: 1, clubId: 'c1', timestamp: 7 }),
-        makePlayer('8',  { rankSlot: 1, clubId: 'c2', timestamp: 8 }),
-        // base slots full (2 per bucket). Next overflow decides bonus rank.
-        makePlayer('9',  { rankSlot: 0, clubId: 'c1', timestamp: 9 }),  // rank 0 overflows first → gets +2
-        makePlayer('10', { rankSlot: 0, clubId: 'c2', timestamp: 10 }), // fits in rank 0 bonus
-        makePlayer('11', { rankSlot: 1, clubId: 'c1', timestamp: 11 }), // rank 1 no bonus → reserve
-        makePlayer('12', { rankSlot: 1, clubId: 'c2', timestamp: 12 }), // rank 1 no bonus → reserve
-      ];
+      const [p1, p2] = makePair('1', '2', { clubId: 'c1', rankSlot: 0 });
+      const [p3, p4] = makePair('3', '4', { clubId: 'c2', rankSlot: 0 });
+      const [p5, p6] = makePair('5', '6', { clubId: 'c1', rankSlot: 1 });
+      const [p7, p8] = makePair('7', '8', { clubId: 'c2', rankSlot: 1 });
+      // rank 0 overflows first in c1 → gets bonus
+      const [p9, p10] = makePair('9', '10', { clubId: 'c1', rankSlot: 0 });
+      // rank 1 in c1 overflows after bonus used → reserve
+      const [p11, p12] = makePair('11', '12', { clubId: 'c1', rankSlot: 1 });
+      const players = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12];
       const statuses = getPlayerStatuses(players, 12, { format: 'club-ranked', clubs, rankLabels });
-      // rank 0: cap 4 per club
+      // rank 0: cap 4 per club (base 2 + bonus 2)
       expect(statuses.get('9')).toBe('playing');
       expect(statuses.get('10')).toBe('playing');
-      // rank 1: cap 2 per club
+      // rank 1: cap 2 per club (no bonus left)
       expect(statuses.get('11')).toBe('reserve');
       expect(statuses.get('12')).toBe('reserve');
     });
 
-    it('captain mode: unapproved player gets registered', () => {
-      const players = [
-        makePlayer('1', { rankSlot: 0, clubId: 'c1', timestamp: 1 }),
-        makePlayer('2', { rankSlot: 0, clubId: 'c2', timestamp: 2, captainApproved: true }),
-      ];
+    it('captain mode: unapproved pair gets registered', () => {
+      const [p1, p2] = makePair('1', '2', { clubId: 'c1', rankSlot: 0 }); // not approved
+      const [p3, p4] = makePair('3', '4', { clubId: 'c2', rankSlot: 0, captainApproved: true });
+      const players = [p1, p2, p3, p4];
       const statuses = getPlayerStatuses(players, 8, { format: 'club-ranked', clubs, rankLabels, captainMode: true });
       expect(statuses.get('1')).toBe('registered');
-      expect(statuses.get('2')).toBe('playing');
+      expect(statuses.get('2')).toBe('registered');
+      expect(statuses.get('3')).toBe('playing');
+      expect(statuses.get('4')).toBe('playing');
     });
 
-    it('captain mode: approved player within bucket gets playing', () => {
-      const players = [
-        makePlayer('1', { rankSlot: 0, clubId: 'c1', timestamp: 1, captainApproved: true }),
-        makePlayer('2', { rankSlot: 0, clubId: 'c2', timestamp: 2, captainApproved: true }),
-      ];
+    it('captain mode: approved pair within bucket gets playing', () => {
+      const [p1, p2] = makePair('1', '2', { clubId: 'c1', rankSlot: 0, captainApproved: true });
+      const [p3, p4] = makePair('3', '4', { clubId: 'c2', rankSlot: 0, captainApproved: true });
+      const players = [p1, p2, p3, p4];
       const statuses = getPlayerStatuses(players, 8, { format: 'club-ranked', clubs, rankLabels, captainMode: true });
       expect(statuses.get('1')).toBe('playing');
       expect(statuses.get('2')).toBe('playing');
+      expect(statuses.get('3')).toBe('playing');
+      expect(statuses.get('4')).toBe('playing');
     });
 
-    it('captain mode: approved player over bucket gets reserve', () => {
-      const players = [
-        makePlayer('1', { rankSlot: 0, clubId: 'c1', timestamp: 1, captainApproved: true }),
-        makePlayer('2', { rankSlot: 0, clubId: 'c1', timestamp: 2, captainApproved: true }),
-        makePlayer('3', { rankSlot: 0, clubId: 'c1', timestamp: 3, captainApproved: true }), // over bucket
-      ];
+    it('captain mode: approved pair over bucket gets reserve', () => {
+      const [p1, p2] = makePair('1', '2', { clubId: 'c1', rankSlot: 0, captainApproved: true });
+      const [p3, p4] = makePair('3', '4', { clubId: 'c1', rankSlot: 0, captainApproved: true }); // over bucket
+      const players = [p1, p2, p3, p4];
       const statuses = getPlayerStatuses(players, 8, { format: 'club-ranked', clubs, rankLabels, captainMode: true });
       expect(statuses.get('1')).toBe('playing');
       expect(statuses.get('2')).toBe('playing');
       expect(statuses.get('3')).toBe('reserve');
+      expect(statuses.get('4')).toBe('reserve');
     });
 
     it('captain mode off: unchanged behavior (regression)', () => {
-      const players = [
-        makePlayer('1', { rankSlot: 0, clubId: 'c1', timestamp: 1 }),
-        makePlayer('2', { rankSlot: 0, clubId: 'c2', timestamp: 2 }),
-      ];
+      const [p1, p2] = makePair('1', '2', { clubId: 'c1', rankSlot: 0 });
+      const [p3, p4] = makePair('3', '4', { clubId: 'c2', rankSlot: 0 });
+      const players = [p1, p2, p3, p4];
       const statuses = getPlayerStatuses(players, 8, { format: 'club-ranked', clubs, rankLabels, captainMode: false });
       expect(statuses.get('1')).toBe('playing');
       expect(statuses.get('2')).toBe('playing');
+      expect(statuses.get('3')).toBe('playing');
+      expect(statuses.get('4')).toBe('playing');
+    });
+
+    it('captain mode: one partner approved, other not — both registered', () => {
+      const p1 = makePlayer('1', { clubId: 'c1', rankSlot: 0, timestamp: 1, partnerName: 'Player 2', pairedAt: 100, captainApproved: true });
+      const p2 = makePlayer('2', { clubId: 'c1', rankSlot: 0, timestamp: 2, partnerName: 'Player 1', pairedAt: 100 }); // not approved
+      const players = [p1, p2];
+      const statuses = getPlayerStatuses(players, 8, { format: 'club-ranked', clubs, rankLabels, captainMode: true });
+      expect(statuses.get('1')).toBe('registered');
+      expect(statuses.get('2')).toBe('registered');
     });
 
     it('gives bonus to rank 1 when it overflows first', () => {
       // Same setup but rank 1 overflows before rank 0
-      const players = [
-        makePlayer('1',  { rankSlot: 0, clubId: 'c1', timestamp: 1 }),
-        makePlayer('2',  { rankSlot: 1, clubId: 'c1', timestamp: 2 }),
-        makePlayer('3',  { rankSlot: 0, clubId: 'c2', timestamp: 3 }),
-        makePlayer('4',  { rankSlot: 1, clubId: 'c2', timestamp: 4 }),
-        makePlayer('5',  { rankSlot: 1, clubId: 'c1', timestamp: 5 }),
-        makePlayer('6',  { rankSlot: 1, clubId: 'c2', timestamp: 6 }),
-        // rank 1 has 2 per club already; rank 0 has 1 per club
-        makePlayer('7',  { rankSlot: 1, clubId: 'c1', timestamp: 7 }),  // rank 1 overflows → gets bonus
-        makePlayer('8',  { rankSlot: 0, clubId: 'c1', timestamp: 8 }),
-        makePlayer('9',  { rankSlot: 0, clubId: 'c2', timestamp: 9 }),
-      ];
+      const [p1, p2] = makePair('1', '2', { clubId: 'c1', rankSlot: 0 });
+      const [p3, p4] = makePair('3', '4', { clubId: 'c1', rankSlot: 1 });
+      const [p5, p6] = makePair('5', '6', { clubId: 'c2', rankSlot: 0 });
+      const [p7, p8] = makePair('7', '8', { clubId: 'c2', rankSlot: 1 });
+      // rank 1 overflows first in c1
+      const [p9, p10] = makePair('9', '10', { clubId: 'c1', rankSlot: 1 });
+      const players = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10];
       const statuses = getPlayerStatuses(players, 12, { format: 'club-ranked', clubs, rankLabels });
-      expect(statuses.get('7')).toBe('playing');  // rank 1 got bonus
+      expect(statuses.get('9')).toBe('playing');  // rank 1 got bonus
+      expect(statuses.get('10')).toBe('playing');
     });
 
-    it('paired players get same status when bucket overflows', () => {
-      // bucket cap = 2 per (club, rank). 1 solo + 1 pair in same bucket.
-      // Solo takes 1 slot, pair needs 2 but only 1 remains → both reserve.
-      const players = [
-        makePlayer('1', { rankSlot: 0, clubId: 'c1', timestamp: 1 }), // solo
-        makePlayer('2', { rankSlot: 0, clubId: 'c1', timestamp: 2, partnerName: 'Player 3', pairedAt: 100 }),
-        makePlayer('3', { rankSlot: 0, clubId: 'c1', timestamp: 3, partnerName: 'Player 2', pairedAt: 100 }),
-      ];
+    it('paired players both get reserve when bucket overflows', () => {
+      // bucket cap = 2. First pair fills it, second pair overflows → both reserve.
+      const [p1, p2] = makePair('1', '2', { clubId: 'c1', rankSlot: 0 });
+      const [p3, p4] = makePair('3', '4', { clubId: 'c1', rankSlot: 0 });
+      const players = [p1, p2, p3, p4];
       const statuses = getPlayerStatuses(players, 8, { format: 'club-ranked', clubs, rankLabels });
       expect(statuses.get('1')).toBe('playing');
-      // Pair can't split — both reserve (only 1 slot left in bucket of 2)
-      expect(statuses.get('2')).toBe('reserve');
+      expect(statuses.get('2')).toBe('playing');
+      // Pair can't split — both reserve
       expect(statuses.get('3')).toBe('reserve');
+      expect(statuses.get('4')).toBe('reserve');
     });
 
     it('paired players both play when bucket has room', () => {
-      const players = [
-        makePlayer('1', { rankSlot: 0, clubId: 'c1', timestamp: 1, partnerName: 'Player 2', pairedAt: 100 }),
-        makePlayer('2', { rankSlot: 0, clubId: 'c1', timestamp: 2, partnerName: 'Player 1', pairedAt: 100 }),
-      ];
+      const [p1, p2] = makePair('1', '2', { clubId: 'c1', rankSlot: 0 });
+      const players = [p1, p2];
       const statuses = getPlayerStatuses(players, 8, { format: 'club-ranked', clubs, rankLabels });
       expect(statuses.get('1')).toBe('playing');
       expect(statuses.get('2')).toBe('playing');
     });
 
     it('paired players use bonus together', () => {
-      // capacity=12, 2 clubs, 2 ranks → slotsPerClub=6, base=2, 1 bonus pair per club
+      // capacity=12, 2 clubs, 2 ranks → 6/club, base=2, 1 bonus pair per club
       // Fill base bucket (2), then pair overflows → uses bonus (+2 slots)
-      const players = [
-        makePlayer('1', { rankSlot: 0, clubId: 'c1', timestamp: 1 }),
-        makePlayer('2', { rankSlot: 0, clubId: 'c1', timestamp: 2 }),
-        // Pair that overflows base bucket → should use bonus together
-        makePlayer('3', { rankSlot: 0, clubId: 'c1', timestamp: 3, partnerName: 'Player 4', pairedAt: 100 }),
-        makePlayer('4', { rankSlot: 0, clubId: 'c1', timestamp: 4, partnerName: 'Player 3', pairedAt: 100 }),
-      ];
+      const [p1, p2] = makePair('1', '2', { clubId: 'c1', rankSlot: 0 });
+      const [p3, p4] = makePair('3', '4', { clubId: 'c1', rankSlot: 1 });
+      // Pair that overflows base bucket → should use bonus together
+      const [p5, p6] = makePair('5', '6', { clubId: 'c1', rankSlot: 0 });
+      const players = [p1, p2, p3, p4, p5, p6];
       const statuses = getPlayerStatuses(players, 12, { format: 'club-ranked', clubs, rankLabels });
-      expect(statuses.get('3')).toBe('playing');
-      expect(statuses.get('4')).toBe('playing');
+      expect(statuses.get('5')).toBe('playing');
+      expect(statuses.get('6')).toBe('playing');
     });
 
     it('paired players both reserve when no bonus available', () => {
-      // capacity=8, 2 clubs, 2 ranks → slotsPerClub=4, base=2, 0 bonus pairs
+      // capacity=8, 2 clubs, 2 ranks → 4/club, base=2, 0 bonus pairs
       // Fill bucket, then pair overflows with no bonus
-      const players = [
-        makePlayer('1', { rankSlot: 0, clubId: 'c1', timestamp: 1 }),
-        makePlayer('2', { rankSlot: 0, clubId: 'c1', timestamp: 2 }),
-        makePlayer('3', { rankSlot: 0, clubId: 'c1', timestamp: 3, partnerName: 'Player 4', pairedAt: 100 }),
-        makePlayer('4', { rankSlot: 0, clubId: 'c1', timestamp: 4, partnerName: 'Player 3', pairedAt: 100 }),
-      ];
+      const [p1, p2] = makePair('1', '2', { clubId: 'c1', rankSlot: 0 });
+      const [p3, p4] = makePair('3', '4', { clubId: 'c1', rankSlot: 0 });
+      const players = [p1, p2, p3, p4];
       const statuses = getPlayerStatuses(players, 8, { format: 'club-ranked', clubs, rankLabels });
       expect(statuses.get('1')).toBe('playing');
       expect(statuses.get('2')).toBe('playing');
@@ -357,26 +373,27 @@ describe('getPlayerStatuses', () => {
     });
 
     it('bonus pairs are independent per club (regression)', () => {
-      // 12 capacity, 2 clubs, 2 ranks → slotsPerClub=6, base=2, 1 bonus pair per club
-      // c1 overflows rank 0 first, c2 overflows rank 1 first
-      // Each club should independently decide which rank gets the bonus
-      const players = [
-        makePlayer('1',  { rankSlot: 0, clubId: 'c1', timestamp: 1 }),
-        makePlayer('2',  { rankSlot: 0, clubId: 'c1', timestamp: 2 }),
-        makePlayer('3',  { rankSlot: 1, clubId: 'c1', timestamp: 3 }),
-        makePlayer('4',  { rankSlot: 1, clubId: 'c1', timestamp: 4 }),
-        makePlayer('5',  { rankSlot: 0, clubId: 'c2', timestamp: 5 }),
-        makePlayer('6',  { rankSlot: 0, clubId: 'c2', timestamp: 6 }),
-        makePlayer('7',  { rankSlot: 1, clubId: 'c2', timestamp: 7 }),
-        makePlayer('8',  { rankSlot: 1, clubId: 'c2', timestamp: 8 }),
-        // c1 overflows rank 0 → uses c1's bonus
-        makePlayer('9',  { rankSlot: 0, clubId: 'c1', timestamp: 9 }),
-        // c2 overflows rank 1 → should use c2's own bonus (not consumed by c1)
-        makePlayer('10', { rankSlot: 1, clubId: 'c2', timestamp: 10 }),
-      ];
+      // 12 capacity, 2 clubs, 2 ranks → 6/club, base=2, 1 bonus pair per club
+      const [p1, p2] = makePair('1', '2', { clubId: 'c1', rankSlot: 0 });
+      const [p3, p4] = makePair('3', '4', { clubId: 'c1', rankSlot: 1 });
+      const [p5, p6] = makePair('5', '6', { clubId: 'c2', rankSlot: 0 });
+      const [p7, p8] = makePair('7', '8', { clubId: 'c2', rankSlot: 1 });
+      // c1 overflows rank 0 → uses c1's bonus
+      const [p9, p10] = makePair('9', '10', { clubId: 'c1', rankSlot: 0 });
+      // c2 overflows rank 1 → should use c2's own bonus (not consumed by c1)
+      const [p11, p12] = makePair('11', '12', { clubId: 'c2', rankSlot: 1 });
+      const players = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12];
       const statuses = getPlayerStatuses(players, 12, { format: 'club-ranked', clubs, rankLabels });
       expect(statuses.get('9')).toBe('playing');   // c1 bonus → rank 0
-      expect(statuses.get('10')).toBe('playing');  // c2 bonus → rank 1 (independent)
+      expect(statuses.get('10')).toBe('playing');
+      expect(statuses.get('11')).toBe('playing');  // c2 bonus → rank 1 (independent)
+      expect(statuses.get('12')).toBe('playing');
+    });
+
+    it('solo player gets needs-partner', () => {
+      const players = [makePlayer('1', { timestamp: 1 })];
+      const statuses = getPlayerStatuses(players, 8, { format: 'club-ranked', clubs, rankLabels });
+      expect(statuses.get('1')).toBe('needs-partner');
     });
   });
 
@@ -598,21 +615,13 @@ describe('getPlayerStatuses', () => {
       expect(statuses.get('5')).toBe('playing');
     });
 
-    it('all formats in formatHasFixedPartners use pair logic (except club-ranked)', () => {
-      const pairFormats = ['team-americano', 'team-mexicano', 'mixed-team-americano', 'mixed-team-mexicano', 'club-team-americano', 'club-team-mexicano'] as const;
+    it('all formats in formatHasFixedPartners use pair logic', () => {
+      const pairFormats = ['team-americano', 'team-mexicano', 'mixed-team-americano', 'mixed-team-mexicano', 'club-ranked', 'club-team-americano', 'club-team-mexicano'] as const;
       for (const format of pairFormats) {
         const players = [makePlayer('1', { timestamp: 1 })]; // solo
         const statuses = getPlayerStatuses(players, 8, { format });
         expect(statuses.get('1'), `format ${format}`).toBe('needs-partner');
       }
-    });
-
-    it('club-ranked format does NOT use pair logic', () => {
-      const players = [makePlayer('1', { timestamp: 1 })]; // solo, no partner
-      const clubs: Club[] = [{ id: 'c1', name: 'Club A' }];
-      const statuses = getPlayerStatuses(players, 8, { format: 'club-ranked', clubs });
-      // Should NOT be 'needs-partner' — club-ranked has its own logic
-      expect(statuses.get('1')).not.toBe('needs-partner');
     });
   });
 });

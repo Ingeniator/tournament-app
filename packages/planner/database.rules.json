@@ -6,11 +6,27 @@
         ".write": "auth != null && (!data.exists() || data.child('organizerId').val() === auth.uid || root.child('users').child(auth.uid).child('telegramUsername').exists() && root.child('users').child(auth.uid).child('telegramUsername').val() === root.child('users').child(data.child('organizerId').val()).child('telegramUsername').val())",
         "players": {
           "$playerId": {
-            ".write": "auth != null && ($playerId === auth.uid || !newData.exists() && data.child('telegramUsername').exists() && data.child('telegramUsername').val() === root.child('users').child(auth.uid).child('telegramUsername').val())",
+            ".write": "auth != null && ($playerId === auth.uid || !data.exists() || !newData.exists() && data.child('telegramUsername').exists() && data.child('telegramUsername').val() === root.child('users').child(auth.uid).child('telegramUsername').val())",
             ".validate": "newData.hasChildren(['name', 'timestamp']) && newData.child('name').isString() && newData.child('name').val().length < 30 && newData.child('timestamp').isNumber() && (!newData.hasChild('confirmed') || newData.child('confirmed').isBoolean()) && (!newData.hasChild('telegramUsername') || newData.child('telegramUsername').isString() && newData.child('telegramUsername').val().length < 50)",
             "captainApproved": {
-              ".write": "auth != null",  // TODO: restrict to captain/organizer — any auth'd user can self-approve
+              ".write": "auth != null",
               ".validate": "newData.isBoolean() || !newData.exists()"
+            },
+            "partnerName": {
+              ".write": "auth != null",
+              ".validate": "newData.isString() || !newData.exists()"
+            },
+            "partnerTelegram": {
+              ".write": "auth != null",
+              ".validate": "newData.isString() || !newData.exists()"
+            },
+            "pairedAt": {
+              ".write": "auth != null",
+              ".validate": "newData.isNumber() || !newData.exists()"
+            },
+            "addedByPartner": {
+              ".write": "auth != null",
+              ".validate": "newData.isString() || newData.isBoolean() || !newData.exists()"
             }
           }
         },
@@ -66,6 +82,12 @@
         "registrations": {
           "$tournamentId": {
             ".write": "auth != null && (auth.uid === $uid || !newData.exists() && root.child('tournaments').child($tournamentId).child('organizerId').val() === auth.uid || !newData.exists() && root.child('users').child(auth.uid).child('telegramUsername').exists() && root.child('users').child(auth.uid).child('telegramUsername').val() === root.child('users').child($uid).child('telegramUsername').val())",
+            ".validate": "newData.isBoolean() || !newData.exists()"
+          }
+        },
+        "visitedEvents": {
+          "$eventId": {
+            ".write": "auth != null && auth.uid === $uid",
             ".validate": "newData.isBoolean() || !newData.exists()"
           }
         },

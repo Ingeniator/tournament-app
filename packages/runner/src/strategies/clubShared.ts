@@ -145,6 +145,54 @@ export function generateClubRound(
   };
 }
 
+/** For individual club formats (Club Americano, Club Mexicano) — 2 per club minimum */
+export function clubIndividualValidateSetup(players: Player[], config: TournamentConfig): string[] {
+  const errors: string[] = [];
+  const availableCourts = config.courts.filter(c => !c.unavailable);
+
+  if (availableCourts.length === 0) {
+    errors.push('At least 1 court is required');
+  }
+  if (config.pointsPerMatch < 1) {
+    errors.push('Points per match must be at least 1');
+  }
+
+  const clubCounts = new Map<string, number>();
+  let unassigned = 0;
+  for (const p of players) {
+    if (p.clubId) {
+      clubCounts.set(p.clubId, (clubCounts.get(p.clubId) ?? 0) + 1);
+    } else {
+      unassigned++;
+    }
+  }
+
+  if (clubCounts.size < 2) {
+    errors.push('At least 2 clubs are required');
+  }
+
+  if (unassigned > 0) {
+    errors.push(`${unassigned} player(s) not assigned to a club`);
+  }
+
+  for (const [, count] of clubCounts) {
+    if (count < 2) {
+      errors.push('Each club needs at least 2 players');
+      break;
+    }
+  }
+
+  for (const [, count] of clubCounts) {
+    if (count % 2 !== 0) {
+      errors.push('Each club needs an even number of players');
+      break;
+    }
+  }
+
+  return errors;
+}
+
+/** For team club formats (Club Team Americano, etc.) — 4 per club minimum (2 pairs) */
 export function clubValidateSetup(players: Player[], config: TournamentConfig): string[] {
   const errors: string[] = [];
   const availableCourts = config.courts.filter(c => !c.unavailable);

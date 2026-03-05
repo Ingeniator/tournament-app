@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ref, onValue, get, remove } from 'firebase/database';
+import { ref, onValue, get, remove, set } from 'firebase/database';
 import type { PadelEventSummary, EventTournamentLink } from '@padel/common';
 import { db } from '../firebase';
 
@@ -15,7 +15,14 @@ function toSummary(id: string, data: Record<string, unknown>): PadelEventSummary
   };
 }
 
-export function useMyEvents(uid: string | null) {
+/** Track that a user visited an event */
+export async function markEventVisited(uid: string, eventId: string): Promise<void> {
+  if (!db) return;
+  await set(ref(db, `users/${uid}/visitedEvents/${eventId}`), true);
+}
+
+/** Live list of events the user has visited (but not created) */
+export function useVisitedEvents(uid: string | null, createdEventIds: Set<string>) {
   const [events, setEvents] = useState<PadelEventSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,9 +36,9 @@ export function useMyEvents(uid: string | null) {
     }
     setLoading(true);
     setError(null);
-    const unsubscribe = onValue(ref(db, `users/${uid}/events`), async (snapshot) => {
-      setError(null);
+    const unsubscribe = onValue(ref(db, `users/${uid}/visitedEvents`), async (snapshot) => {
       const version = ++versionRef.current;
+      setError(null);
       const data = snapshot.val() as Record<string, boolean> | null;
       if (!data) {
         setEvents([]);
@@ -39,27 +46,26 @@ export function useMyEvents(uid: string | null) {
         return;
       }
 
-      const ids = Object.keys(data);
+      // Exclude events the user created (those show in Organizer tab)
+      const ids = Object.keys(data).filter(id => !createdEventIds.has(id));
       const results: PadelEventSummary[] = [];
 
       try {
         await Promise.all(ids.map(async (id) => {
           const snap = await get(ref(db!, `events/${id}`));
           if (!snap.exists()) {
-            // Event deleted — lazy cleanup
-            remove(ref(db!, `users/${uid}/events/${id}`));
+            remove(ref(db!, `users/${uid}/visitedEvents/${id}`)).catch(() => {});
             return;
           }
           results.push(toSummary(id, snap.val()));
         }));
-      } catch {
-        // Network or permission error — show whatever we have
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load visited events');
       }
 
       if (version !== versionRef.current) return;
 
       results.sort((a, b) => {
-        // Sort by date descending, then by createdAt descending
         if (a.date && b.date) return b.date.localeCompare(a.date);
         if (a.date) return -1;
         if (b.date) return 1;
@@ -68,12 +74,12 @@ export function useMyEvents(uid: string | null) {
       setEvents(results);
       setLoading(false);
     }, (err) => {
-      console.warn('My events listener failed:', err.message);
+      console.warn('Visited events listener failed:', err.message);
       setError(err.message);
       setLoading(false);
     });
     return unsubscribe;
-  }, [uid]);
+  }, [uid, createdEventIds]);
 
   return { events, loading, error };
 }

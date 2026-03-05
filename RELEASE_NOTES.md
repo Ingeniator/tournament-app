@@ -1,5 +1,66 @@
 # Release Notes
 
+## v0.6.0
+
+### New Features
+
+#### Tournament Breakdown Views
+  - Visual progress bars and matrix views showing tournament fill status on Event and EventJoin screens
+  - Urgency messaging ("Hurry! Only 2 spots left", "{Club} needs {count} more")
+  - Per-format breakdown views: simple, club, club-ranked, group
+  - Captain mode awareness in breakdown display
+
+#### Visited Events Tracking
+  - Players see previously visited events in a "My Events" section on the home screen
+  - Visit history persisted in Firebase under user profile
+
+#### Home Screen Player/Organizer Mode Toggle
+  - Home screen split into Player mode (registered tournaments, visited events, join with code) and Organizer mode (created tournaments, events, create actions)
+
+#### Partner Selection Dropdown
+  - Partner assignment converted from free-text input to dropdown selector
+  - Shows eligible players filtered by club/rank/group constraints
+  - "+ New player" option for adding unregistered partners
+
+#### Quick-Link Tournaments to Events
+  - Event organizers can link their own tournaments to an event from a list without entering codes
+
+#### Club Filter for Captains
+  - Captain mode join screen now has "My Club" / "All Players" toggle to filter the player list
+
+#### Share Event from Join Screen
+  - Event share card (code + copy link) now shown on EventJoinScreen
+
+#### Join Code Resolves Events
+  - Join code input now resolves both tournament and event codes
+
+### Bug Fixes
+
+  - Fixed club americano tournament start — persistence migration no longer incorrectly converts new club-americano exports to club-ranked
+  - Relaxed club americano validation to accept 2 players per club (down from 4)
+  - Fixed pair-aware player status for club-ranked format — pairs treated atomically for bucket allocation
+  - Fixed captain approval to work per-pair (both partners must be approved)
+  - Fixed StartWarningModal to check for existing runner data before redirect
+
+### Improvements
+
+#### Error Handling
+  - Added error callbacks to all Firebase `onValue` listeners across ~12 hooks
+  - New `dataError` state exposed from PlannerContext and displayed in App when data fails to load
+
+#### Player Status Refactoring
+  - Unified captain mode and partner filtering logic in playerStatus.ts
+  - Club-ranked format now shares pair-aware logic with other fixed-partner formats
+
+#### i18n
+  - All 7 languages updated with new keys for breakdown messages, mode toggle, partner selection, event features
+
+### Technical
+
+  - New `clubShared.ts` shared strategy helpers for club individual formats
+  - Expanded club americano tests for 2-per-club scenarios
+  - Refactored playerStatus tests with pair-aware helpers
+
 ## v0.5.0
 
 ### New Features

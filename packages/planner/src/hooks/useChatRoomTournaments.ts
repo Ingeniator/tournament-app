@@ -31,6 +31,7 @@ function sortByLinkedAt(a: TournamentSummary, b: TournamentSummary): number {
 export function useChatRoomTournaments(chatInstance: string | null) {
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!chatInstance || !db) {
@@ -39,20 +40,30 @@ export function useChatRoomTournaments(chatInstance: string | null) {
       return;
     }
     setLoading(true);
-    const unsubscribe = onValue(ref(db, `chatRooms/${chatInstance}/tournaments`), (snapshot) => {
-      const data = snapshot.val() as Record<string, ChatRoomEntry> | null;
-      if (!data) {
-        setTournaments([]);
+    setError(null);
+    const unsubscribe = onValue(
+      ref(db, `chatRooms/${chatInstance}/tournaments`),
+      (snapshot) => {
+        setError(null);
+        const data = snapshot.val() as Record<string, ChatRoomEntry> | null;
+        if (!data) {
+          setTournaments([]);
+          setLoading(false);
+          return;
+        }
+        const results = Object.entries(data).map(([id, entry]) => toSummary(id, entry));
+        results.sort(sortByLinkedAt);
+        setTournaments(results);
         setLoading(false);
-        return;
-      }
-      const results = Object.entries(data).map(([id, entry]) => toSummary(id, entry));
-      results.sort(sortByLinkedAt);
-      setTournaments(results);
-      setLoading(false);
-    });
+      },
+      (err) => {
+        console.warn('Chat room tournaments listener failed:', err.message);
+        setError(err.message);
+        setLoading(false);
+      },
+    );
     return unsubscribe;
   }, [chatInstance]);
 
-  return { tournaments, loading };
+  return { tournaments, loading, error };
 }

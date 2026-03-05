@@ -131,6 +131,21 @@
   font-size: var(--text-sm);
 }
 
+.tournamentLink {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+  text-align: left;
+}
+
+.tournamentLink:active {
+  opacity: 0.7;
+}
+
 .tournamentRow {
   display: flex;
   align-items: center;
@@ -138,14 +153,33 @@
   gap: var(--space-sm);
 }
 
+.tournamentCta {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.tournamentDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
 .tournamentMeta {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-sm);
+  align-items: center;
+  gap: 2px var(--space-sm);
   font-size: var(--text-xs);
   color: var(--color-text-muted);
-  flex: 1;
-  min-width: 0;
+}
+
+.tournamentMeta span + span::before {
+  content: '·';
+  margin-right: var(--space-sm);
+  color: var(--color-text-muted);
 }
 
 .tournamentActive {
@@ -183,4 +217,45 @@
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* Share card */
+.codeDisplay {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-sm);
+}
+
+.code {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  user-select: all;
+}
+
+.code:active {
+  opacity: 0.7;
+}
+
+.shareHint {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+  margin-bottom: var(--space-md);
+}
+
+.toast {
+  position: fixed;
+  bottom: var(--space-xl);
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--color-text);
+  color: var(--color-bg);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  z-index: 100;
+  pointer-events: none;
 }

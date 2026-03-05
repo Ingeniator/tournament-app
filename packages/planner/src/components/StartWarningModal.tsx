@@ -10,11 +10,23 @@ interface StartWarningModalProps {
   onClose: () => void;
 }
 
+const RUNNER_STORAGE_KEY = 'padel-tournament-v1';
+
 export function StartWarningModal({ open, startedBy, reason, onProceed, onClose }: StartWarningModalProps) {
   const { t } = useTranslation();
 
   const handleContinue = () => {
-    window.location.href = '/play';
+    let hasRunnerData = false;
+    try {
+      hasRunnerData = !!localStorage.getItem(RUNNER_STORAGE_KEY);
+    } catch {
+      // localStorage unavailable (private browsing, storage disabled)
+    }
+    if (hasRunnerData) {
+      window.location.href = '/play';
+    } else {
+      onProceed();
+    }
   };
 
   return (

@@ -33,15 +33,16 @@ function isExpired(t: TournamentSummary): boolean {
 
 export function HomeScreen() {
   const {
-    createTournament, loadByCode, setScreen,
+    createTournament, loadByCode, loadEventByCode, setScreen,
     userName, userNameLoading, updateUserName,
     myTournaments, registeredTournaments, listingsLoading,
     chatRoomTournaments, chatRoomLoading,
     openTournament, deleteTournamentById, skin, setSkin,
-    myEvents, eventsLoading, setActiveEventId,
+    myEvents, visitedEvents, eventsLoading, setActiveEventId,
   } = usePlanner();
   const { t } = useTranslation();
 
+  const [mode, setMode] = useState<'player' | 'organizer'>('player');
   const [name, setName] = useState(randomTournamentName);
   const [joinCode, setJoinCode] = useState('');
   const [joinMode, setJoinMode] = useState(false);
@@ -73,13 +74,18 @@ export function HomeScreen() {
     }
     setJoining(true);
     setError(null);
-    const found = await loadByCode(code);
-    if (found) {
+    const foundTournament = await loadByCode(code);
+    if (foundTournament) {
       setScreen('join');
-    } else {
-      setError(t('home.tournamentNotFound'));
-      setJoining(false);
+      return;
     }
+    const foundEvent = await loadEventByCode(code);
+    if (foundEvent) {
+      setScreen('event-join');
+      return;
+    }
+    setError(t('home.joinNotFound'));
+    setJoining(false);
   };
 
   const handleSaveName = async () => {
@@ -215,169 +221,211 @@ export function HomeScreen() {
         </div>
       )}
 
-      {/* Name prompt */}
-      {!userNameLoading && !userName && (
-        <Card>
-          <div className={styles.namePrompt}>
-            <span className={styles.namePromptLabel}>{t('home.namePrompt')}</span>
-            <span className={styles.namePromptLabel}>{t('home.namePromptSub')}</span>
-            <input
-              className={styles.input}
-              type="text"
-              value={profileName}
-              onChange={e => setProfileName(e.target.value)}
-              placeholder={t('home.namePlaceholder')}
-              onKeyDown={e => e.key === 'Enter' && handleSaveName()}
-              aria-label={t('home.namePlaceholder')}
-              autoFocus
-            />
-            <Button fullWidth onClick={handleSaveName} disabled={savingName || !profileName.trim()}>
-              {savingName ? t('home.saving') : t('home.save')}
-            </Button>
-          </div>
-        </Card>
-      )}
-
-      {/* Actions */}
-      <div className={styles.actions}>
-        <div className={styles.createSection}>
-          <label className={styles.inputLabel} htmlFor="tournament-name">{t('home.tournamentName')}</label>
-          <input
-            id="tournament-name"
-            className={styles.input}
-            type="text"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            placeholder={t('home.tournamentNamePlaceholder')}
-            onKeyDown={e => e.key === 'Enter' && handleCreate()}
-          />
-          <Button fullWidth onClick={handleCreate} disabled={creating || !name.trim() || !userName}>
-            {creating ? t('home.creating') : t('home.createTournament')}
-          </Button>
-        </div>
-
-        <div className={styles.divider}>
-          <span>{t('home.or')}</span>
-        </div>
-
-        {joinMode ? (
-          <div className={styles.joinSection}>
-            <input
-              className={styles.codeInput}
-              type="text"
-              value={joinCode}
-              onChange={e => {
-                setJoinCode(e.target.value.toUpperCase().slice(0, 6));
-                setError(null);
-              }}
-              placeholder={t('home.codePlaceholder')}
-              maxLength={6}
-              autoFocus
-              onKeyDown={e => e.key === 'Enter' && handleJoin()}
-              aria-label="Tournament join code"
-            />
-            {error && <div className={styles.error}>{error}</div>}
-            <Button fullWidth onClick={handleJoin} disabled={joining || joinCode.length !== 6}>
-              {joining ? t('home.joining') : t('home.join')}
-            </Button>
-            <Button variant="ghost" fullWidth onClick={() => { setJoinMode(false); setError(null); }}>
-              {t('home.cancel')}
-            </Button>
-          </div>
-        ) : (
-          <Button variant="secondary" fullWidth onClick={() => setJoinMode(true)}>
-            {t('home.joinWithCode')}
-          </Button>
-        )}
+      {/* Mode toggle */}
+      <div className={styles.modeToggle}>
+        <button
+          className={mode === 'player' ? styles.modeBtnActive : styles.modeBtn}
+          onClick={() => setMode('player')}
+        >
+          {t('home.playerMode')}
+        </button>
+        <button
+          className={mode === 'organizer' ? styles.modeBtnActive : styles.modeBtn}
+          onClick={() => setMode('organizer')}
+        >
+          {t('home.organizerMode')}
+        </button>
       </div>
 
-      {/* Group Tournaments */}
-      {!chatRoomLoading && chatRoomTournaments.length > 0 && (
-        <Card>
-          <h2 className={styles.sectionTitle}>{t('home.groupTournaments')}</h2>
-          <div className={styles.tournamentList}>
-            {chatRoomTournaments.map(ct => (
-              <div
-                key={ct.id}
-                className={styles.tournamentItem}
-                role="button"
-                tabIndex={0}
-                onClick={() => handleOpenGroupTournament(ct.code)}
-                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleOpenGroupTournament(ct.code); } }}
-              >
-                <span className={styles.tournamentName}>{ct.name}</span>
-                <span className={styles.tournamentMeta}>
-                  {ct.date && <span>{formatDate(ct.date)}</span>}
-                  {ct.organizerName && <span>by {ct.organizerName}</span>}
-                </span>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {/* My Tournaments */}
-      {!listingsLoading && (
-        <Card>
-          <h2 className={styles.sectionTitle}>{t('home.myTournaments')}</h2>
-          {myTournaments.length === 0 ? (
-            <p className={styles.empty}>{t('home.noTournamentsCreated')}</p>
-          ) : (
-            <div className={styles.tournamentList}>
-              {myTournaments.map(ti => renderTournamentItem(ti, 'organizer', { swipeToDelete: true }))}
-            </div>
-          )}
-        </Card>
-      )}
-
-      {/* My Events */}
-      {!eventsLoading && (
-        <Card>
-          <h2 className={styles.sectionTitle}>{t('event.myEvents')}</h2>
-          {myEvents.length === 0 ? (
-            <p className={styles.empty}>{t('event.noEvents')}</p>
-          ) : (
-            <div className={styles.tournamentList}>
-              {myEvents.map(ev => (
-                <div
-                  key={ev.id}
-                  className={styles.tournamentItem}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => { setActiveEventId(ev.id); setScreen('event-detail'); }}
-                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveEventId(ev.id); setScreen('event-detail'); } }}
-                >
-                  <span className={styles.tournamentNameRow}>
-                    <span className={styles.tournamentName}>{ev.name}</span>
-                  </span>
-                  <span className={styles.tournamentMeta}>
-                    <span>{ev.date}</span>
-                    <span>{t('event.tournaments', { count: ev.tournamentCount })}</span>
-                  </span>
+      {mode === 'player' ? (
+        <>
+          {/* Registered Tournaments */}
+          {!listingsLoading && (
+            <Card>
+              <h2 className={styles.sectionTitle}>{t('home.registeredTournaments')}</h2>
+              {registeredTournaments.length === 0 ? (
+                <p className={styles.empty}>{t('home.noTournamentsJoined')}</p>
+              ) : (
+                <div className={styles.tournamentList}>
+                  {registeredTournaments.map(ti => renderTournamentItem(ti, 'join'))}
                 </div>
-              ))}
-            </div>
+              )}
+            </Card>
           )}
-          <div style={{ marginTop: 'var(--space-md)' }}>
-            <Button variant="secondary" fullWidth onClick={() => setScreen('event-create')} disabled={!userName}>
-              {t('event.createEvent')}
-            </Button>
-          </div>
-        </Card>
-      )}
 
-      {/* Registered Tournaments */}
-      {!listingsLoading && (
-        <Card>
-          <h2 className={styles.sectionTitle}>{t('home.registeredTournaments')}</h2>
-          {registeredTournaments.length === 0 ? (
-            <p className={styles.empty}>{t('home.noTournamentsJoined')}</p>
-          ) : (
-            <div className={styles.tournamentList}>
-              {registeredTournaments.map(ti => renderTournamentItem(ti, 'join'))}
-            </div>
+          {/* Group Tournaments */}
+          {!chatRoomLoading && chatRoomTournaments.length > 0 && (
+            <Card>
+              <h2 className={styles.sectionTitle}>{t('home.groupTournaments')}</h2>
+              <div className={styles.tournamentList}>
+                {chatRoomTournaments.map(ct => (
+                  <div
+                    key={ct.id}
+                    className={styles.tournamentItem}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleOpenGroupTournament(ct.code)}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleOpenGroupTournament(ct.code); } }}
+                  >
+                    <span className={styles.tournamentName}>{ct.name}</span>
+                    <span className={styles.tournamentMeta}>
+                      {ct.date && <span>{formatDate(ct.date)}</span>}
+                      {ct.organizerName && <span>by {ct.organizerName}</span>}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </Card>
           )}
-        </Card>
+
+          {/* Visited Events */}
+          {visitedEvents.length > 0 && (
+            <Card>
+              <h2 className={styles.sectionTitle}>{t('home.myEvents')}</h2>
+              <div className={styles.tournamentList}>
+                {visitedEvents.map(ev => (
+                  <div
+                    key={ev.id}
+                    className={styles.tournamentItem}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => { setActiveEventId(ev.id); setScreen('event-join'); }}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveEventId(ev.id); setScreen('event-join'); } }}
+                  >
+                    <span className={styles.tournamentName}>{ev.name}</span>
+                    <span className={styles.tournamentMeta}>
+                      <span>{ev.date}</span>
+                      <span>{t('event.tournaments', { count: ev.tournamentCount })}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {/* Join with Code */}
+          {joinMode ? (
+            <Card>
+              <div className={styles.joinSection}>
+                <input
+                  className={styles.codeInput}
+                  type="text"
+                  value={joinCode}
+                  onChange={e => {
+                    setJoinCode(e.target.value.toUpperCase().slice(0, 6));
+                    setError(null);
+                  }}
+                  placeholder={t('home.codePlaceholder')}
+                  maxLength={6}
+                  autoFocus
+                  onKeyDown={e => e.key === 'Enter' && handleJoin()}
+                  aria-label="Join code"
+                />
+                {error && <div className={styles.error}>{error}</div>}
+                <Button fullWidth onClick={handleJoin} disabled={joining || joinCode.length !== 6}>
+                  {joining ? t('home.joining') : t('home.join')}
+                </Button>
+                <Button variant="ghost" fullWidth onClick={() => { setJoinMode(false); setError(null); }}>
+                  {t('home.cancel')}
+                </Button>
+              </div>
+            </Card>
+          ) : (
+            <Button variant="secondary" fullWidth onClick={() => setJoinMode(true)}>
+              {t('home.joinWithCode')}
+            </Button>
+          )}
+        </>
+      ) : (
+        <>
+          {/* Name prompt (organizer needs a name to create tournaments) */}
+          {!userNameLoading && !userName && (
+            <Card>
+              <div className={styles.namePrompt}>
+                <span className={styles.namePromptLabel}>{t('home.namePrompt')}</span>
+                <span className={styles.namePromptLabel}>{t('home.namePromptSub')}</span>
+                <input
+                  className={styles.input}
+                  type="text"
+                  value={profileName}
+                  onChange={e => setProfileName(e.target.value)}
+                  placeholder={t('home.namePlaceholder')}
+                  onKeyDown={e => e.key === 'Enter' && handleSaveName()}
+                  aria-label={t('home.namePlaceholder')}
+                  autoFocus
+                />
+                <Button fullWidth onClick={handleSaveName} disabled={savingName || !profileName.trim()}>
+                  {savingName ? t('home.saving') : t('home.save')}
+                </Button>
+              </div>
+            </Card>
+          )}
+
+          {/* My Tournaments */}
+          {!listingsLoading && (
+            <Card>
+              <h2 className={styles.sectionTitle}>{t('home.myTournaments')}</h2>
+              {myTournaments.length === 0 ? (
+                <p className={styles.empty}>{t('home.noTournamentsCreated')}</p>
+              ) : (
+                <div className={styles.tournamentList}>
+                  {myTournaments.map(ti => renderTournamentItem(ti, 'organizer', { swipeToDelete: true }))}
+                </div>
+              )}
+              <div className={styles.createSection} style={{ marginTop: 'var(--space-md)' }}>
+                <label className={styles.inputLabel} htmlFor="tournament-name">{t('home.tournamentName')}</label>
+                <input
+                  id="tournament-name"
+                  className={styles.input}
+                  type="text"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder={t('home.tournamentNamePlaceholder')}
+                  onKeyDown={e => e.key === 'Enter' && handleCreate()}
+                />
+                <Button fullWidth onClick={handleCreate} disabled={creating || !name.trim() || !userName}>
+                  {creating ? t('home.creating') : t('home.createTournament')}
+                </Button>
+              </div>
+            </Card>
+          )}
+
+          {/* My Events */}
+          {!eventsLoading && (
+            <Card>
+              <h2 className={styles.sectionTitle}>{t('event.myEvents')}</h2>
+              {myEvents.length === 0 ? (
+                <p className={styles.empty}>{t('event.noEvents')}</p>
+              ) : (
+                <div className={styles.tournamentList}>
+                  {myEvents.map(ev => (
+                    <div
+                      key={ev.id}
+                      className={styles.tournamentItem}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => { setActiveEventId(ev.id); setScreen('event-detail'); }}
+                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveEventId(ev.id); setScreen('event-detail'); } }}
+                    >
+                      <span className={styles.tournamentNameRow}>
+                        <span className={styles.tournamentName}>{ev.name}</span>
+                      </span>
+                      <span className={styles.tournamentMeta}>
+                        <span>{ev.date}</span>
+                        <span>{t('event.tournaments', { count: ev.tournamentCount })}</span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div style={{ marginTop: 'var(--space-md)' }}>
+                <Button variant="secondary" fullWidth onClick={() => setScreen('event-create')} disabled={!userName}>
+                  {t('event.createEvent')}
+                </Button>
+              </div>
+            </Card>
+          )}
+        </>
       )}
 
       </main>

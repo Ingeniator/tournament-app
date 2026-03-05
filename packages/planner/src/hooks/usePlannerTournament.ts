@@ -62,22 +62,33 @@ export function usePlannerTournament(tournamentId: string | null) {
   const [tournament, setTournament] = useState<PlannerTournament | null>(null);
   const [completedAt, setCompletedAt] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Real-time subscription
   useEffect(() => {
     if (!tournamentId || !db) return;
     setLoading(true);
-    const unsubscribe = onValue(ref(db, `tournaments/${tournamentId}`), (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        setTournament(toTournament(tournamentId, data));
-        setCompletedAt(typeof data.completedAt === 'number' ? data.completedAt : null);
-      } else {
-        setTournament(null);
-        setCompletedAt(null);
-      }
-      setLoading(false);
-    });
+    setError(null);
+    const unsubscribe = onValue(
+      ref(db, `tournaments/${tournamentId}`),
+      (snapshot) => {
+        setError(null);
+        const data = snapshot.val();
+        if (data) {
+          setTournament(toTournament(tournamentId, data));
+          setCompletedAt(typeof data.completedAt === 'number' ? data.completedAt : null);
+        } else {
+          setTournament(null);
+          setCompletedAt(null);
+        }
+        setLoading(false);
+      },
+      (err) => {
+        console.warn('Tournament listener failed:', err.message);
+        setError(err.message);
+        setLoading(false);
+      },
+    );
     return unsubscribe;
   }, [tournamentId]);
 
@@ -190,5 +201,5 @@ export function usePlannerTournament(tournamentId: string | null) {
     await firebaseUpdate(ref(db), deletes);
   }, []);
 
-  return { tournament, completedAt, loading, createTournament, updateTournament, loadByCode, deleteTournament, deleteTournamentById, undoComplete };
+  return { tournament, completedAt, loading, error, createTournament, updateTournament, loadByCode, deleteTournament, deleteTournamentById, undoComplete };
 }

@@ -30,6 +30,10 @@ const sv: Translations = {
   'home.expired': 'Utgången',
   'home.completed': 'Avslutad',
   'home.groupTournaments': 'Gruppturneringar',
+  'home.playerMode': 'Spelare',
+  'home.organizerMode': 'Arrangör',
+  'home.joinNotFound': 'Ingen turnering eller evenemang hittades med denna kod',
+  'home.myEvents': 'Mina Evenemang',
 
   // Footer & Options
   'footer.freeOpenSource': 'Gratis och öppen källkod',
@@ -64,9 +68,11 @@ const sv: Translations = {
   'organizer.telegramPlaceholder': '@användarnamn',
   'organizer.saveLink': 'Spara',
   'organizer.removeLink': 'Ta bort',
-  'organizer.partnerSection': 'Föredragen partner',
-  'organizer.partnerName': 'Partners namn',
+  'organizer.partnerSection': 'Partner',
+  'organizer.partnerName': 'Välj partner…',
   'organizer.partnerTelegram': 'Partners telegram (valfritt)',
+  'organizer.newPlayer': '+ Ny spelare',
+  'organizer.newPlayerName': 'Spelarnamn',
   'organizer.removePartner': 'Ta bort partner',
   'organizer.addedBy': 'Tillagd av {name}',
   'organizer.reserve': 'reserv',
@@ -284,6 +290,8 @@ const sv: Translations = {
   'join.approve': 'Godkänn',
   'join.reject': 'Avslå',
   'join.pairSlots': '{pairs} parplatser',
+  'join.myClub': '{name}',
+  'join.allPlayers': 'Alla spelare',
 
   // SupportOverlay
   'support.title': 'Stöd Oss',
@@ -375,6 +383,24 @@ const sv: Translations = {
   'teams.shuffle': 'Blanda Lag',
   'teams.start': 'Starta Turnering',
   'teams.groupsAutoAssigned': '{count} spelare utan grupp — tilldelad(e) automatiskt',
+
+  // Breakdown
+  'breakdown.spotsOpen': '{count} platser lediga',
+  'breakdown.hurrySpots': 'Skynda! Bara {count} platser kvar',
+  'breakdown.lastSpot': 'Sista platsen!',
+  'breakdown.full': 'Fullt',
+  'breakdown.clubNeedsMore': '{club} behöver {count} till',
+  'breakdown.clubNeedsMoreCaptain': '{club} behöver fler spelare',
+  'breakdown.noRankPlayers': '{club} {rank} behöver {count} till',
+  'breakdown.noRankPlayersCaptain': '{club} behöver fler {rank}-spelare',
+  'breakdown.groupNeedsMore': '{group} behöver {count} till',
+  'breakdown.paired': 'Par',
+  'breakdown.captainMode': 'Kaptenläge',
+  'breakdown.maldiciones': 'Maldiciones',
+
+  // Event
+  'event.myTournaments': 'Mina turneringar',
+  'event.linkByCode': 'Länka med kod',
 
   // Planner App
   'app.connectionError': 'Anslutningsfel',

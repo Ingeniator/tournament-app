@@ -38,42 +38,44 @@ export function EventFormScreen({ uid, onBack, onCreated }: EventFormScreenProps
       </header>
       <main>
         <Card>
-          <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor="event-name">{t('event.name')}</label>
-            <input
-              id="event-name"
-              className={styles.input}
-              type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder={t('event.namePlaceholder')}
-              onKeyDown={e => e.key === 'Enter' && handleCreate()}
-              autoFocus
-            />
+          <div className={styles.form}>
+            <div className={styles.formGroup}>
+              <label className={styles.label} htmlFor="event-name">{t('event.name')}</label>
+              <input
+                id="event-name"
+                className={styles.input}
+                type="text"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder={t('event.namePlaceholder')}
+                onKeyDown={e => e.key === 'Enter' && handleCreate()}
+                autoFocus
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label className={styles.label} htmlFor="event-date">{t('event.date')}</label>
+              <input
+                id="event-date"
+                className={styles.input}
+                type="date"
+                value={date}
+                onChange={e => setDate(e.target.value)}
+              />
+            </div>
+
+            {error && (
+              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-danger)' }}>{error}</div>
+            )}
+
+            <Button
+              fullWidth
+              onClick={handleCreate}
+              disabled={creating || !name.trim() || !date || !uid}
+            >
+              {creating ? t('event.creating') : t('event.create')}
+            </Button>
           </div>
-
-          <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor="event-date">{t('event.date')}</label>
-            <input
-              id="event-date"
-              className={styles.input}
-              type="date"
-              value={date}
-              onChange={e => setDate(e.target.value)}
-            />
-          </div>
-
-          {error && (
-            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-danger)' }}>{error}</div>
-          )}
-
-          <Button
-            fullWidth
-            onClick={handleCreate}
-            disabled={creating || !name.trim() || !date || !uid}
-          >
-            {creating ? t('event.creating') : t('event.create')}
-          </Button>
         </Card>
       </main>
     </div>

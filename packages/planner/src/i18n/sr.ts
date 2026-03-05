@@ -30,6 +30,10 @@ const sr: Translations = {
   'home.expired': 'Istekao',
   'home.completed': 'Završen',
   'home.groupTournaments': 'Turniri Grupe',
+  'home.playerMode': 'Igrač',
+  'home.organizerMode': 'Organizator',
+  'home.joinNotFound': 'Nije pronađen turnir niti događaj sa ovim kodom',
+  'home.myEvents': 'Moji Događaji',
 
   // Footer & Options
   'footer.freeOpenSource': 'Besplatno i otvorenog koda',
@@ -65,9 +69,11 @@ const sr: Translations = {
   'organizer.telegramPlaceholder': '@korisnickoime',
   'organizer.saveLink': 'Sačuvaj',
   'organizer.removeLink': 'Ukloni',
-  'organizer.partnerSection': 'Željeni partner',
-  'organizer.partnerName': 'Ime partnera',
+  'organizer.partnerSection': 'Partner',
+  'organizer.partnerName': 'Izaberi partnera…',
   'organizer.partnerTelegram': 'Telegram partnera (opciono)',
+  'organizer.newPlayer': '+ Novi igrač',
+  'organizer.newPlayerName': 'Ime igrača',
   'organizer.removePartner': 'Ukloni partnera',
   'organizer.addedBy': 'Dodao/la {name}',
   'organizer.reserve': 'rezerva',
@@ -286,6 +292,8 @@ const sr: Translations = {
   'join.approve': 'Odobri',
   'join.reject': 'Odbij',
   'join.pairSlots': '{pairs} mesta za parove',
+  'join.myClub': '{name}',
+  'join.allPlayers': 'Svi igrači',
 
   // SupportOverlay
   'support.title': 'Podržite Nas',
@@ -377,6 +385,24 @@ const sr: Translations = {
   'teams.shuffle': 'Pomešaj Timove',
   'teams.start': 'Pokreni Turnir',
   'teams.groupsAutoAssigned': '{count} igrač(a) bez grupe — automatski dodeljeno',
+
+  // Breakdown
+  'breakdown.spotsOpen': '{count} mesta slobodno',
+  'breakdown.hurrySpots': 'Požurite! Još samo {count} mesta',
+  'breakdown.lastSpot': 'Poslednje mesto!',
+  'breakdown.full': 'Popunjeno',
+  'breakdown.clubNeedsMore': '{club} treba još {count}',
+  'breakdown.clubNeedsMoreCaptain': '{club} treba više igrača',
+  'breakdown.noRankPlayers': '{club} {rank} treba još {count}',
+  'breakdown.noRankPlayersCaptain': '{club} treba više {rank} igrača',
+  'breakdown.groupNeedsMore': '{group} treba još {count}',
+  'breakdown.paired': 'Parovi',
+  'breakdown.captainMode': 'Režim Kapitena',
+  'breakdown.maldiciones': 'Maldiciones',
+
+  // Event
+  'event.myTournaments': 'Moji turniri',
+  'event.linkByCode': 'Poveži kodom',
 
   // Planner App
   'app.connectionError': 'Greška u Povezivanju',

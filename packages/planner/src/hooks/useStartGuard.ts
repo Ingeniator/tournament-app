@@ -16,9 +16,15 @@ export function useStartGuard(tournamentId: string | null, uid: string | null, u
   useEffect(() => {
     if (!tournamentId || !db) return;
     const startedByRef = ref(db, `tournaments/${tournamentId}/startedBy`);
-    const unsub = onValue(startedByRef, (snap) => {
-      setStartedBy(snap.exists() ? (snap.val() as TournamentStartInfo) : null);
-    });
+    const unsub = onValue(
+      startedByRef,
+      (snap) => {
+        setStartedBy(snap.exists() ? (snap.val() as TournamentStartInfo) : null);
+      },
+      (err) => {
+        console.warn('StartGuard listener failed:', err.message);
+      },
+    );
     return unsub;
   }, [tournamentId]);
 

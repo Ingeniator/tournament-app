@@ -2,7 +2,7 @@ import type { TournamentStrategy, ScheduleResult } from './types';
 import type { Player, TournamentConfig, Round, Match, Tournament, Club } from '@padel/common';
 import { generateId } from '@padel/common';
 import { shuffle, partnerKey, commonValidateScore, seedFromRounds, calculateCompetitorStandings, calculateIndividualStandings } from './shared';
-import { generateClubFixtures, clubValidateSetup, clubValidateWarnings } from './clubShared';
+import { generateClubFixtures, clubIndividualValidateSetup, clubValidateWarnings } from './clubShared';
 
 /**
  * Club Mexicano: random partners within club, standings-based opponents across clubs.
@@ -263,7 +263,7 @@ export const clubMexicanoStrategy: TournamentStrategy = (() => {
     isDynamic: true,
     hasFixedPartners: false,
 
-    validateSetup: clubValidateSetup,
+    validateSetup: clubIndividualValidateSetup,
     validateWarnings: clubValidateWarnings,
     validateScore: commonValidateScore,
 

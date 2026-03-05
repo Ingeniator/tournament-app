@@ -8,24 +8,35 @@ import { resolvePartnerUpdate, type PartnerConstraints, type PartnerRejection } 
 export function usePlayers(tournamentId: string | null) {
   const [players, setPlayers] = useState<PlannerRegistration[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!tournamentId || !db) return;
     setLoading(true);
-    const unsubscribe = onValue(ref(db, `tournaments/${tournamentId}/players`), (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const list = Object.entries(data).map(([key, val]) => ({
-          ...(val as Omit<PlannerRegistration, 'id'>),
-          id: key,
-        }));
-        list.sort((a, b) => a.timestamp - b.timestamp);
-        setPlayers(list);
-      } else {
-        setPlayers([]);
-      }
-      setLoading(false);
-    });
+    setError(null);
+    const unsubscribe = onValue(
+      ref(db, `tournaments/${tournamentId}/players`),
+      (snapshot) => {
+        setError(null);
+        const data = snapshot.val();
+        if (data) {
+          const list = Object.entries(data).map(([key, val]) => ({
+            ...(val as Omit<PlannerRegistration, 'id'>),
+            id: key,
+          }));
+          list.sort((a, b) => a.timestamp - b.timestamp);
+          setPlayers(list);
+        } else {
+          setPlayers([]);
+        }
+        setLoading(false);
+      },
+      (err) => {
+        console.warn('Players listener failed:', err.message);
+        setError(err.message);
+        setLoading(false);
+      },
+    );
     return unsubscribe;
   }, [tournamentId]);
 
@@ -197,9 +208,9 @@ export function usePlayers(tournamentId: string | null) {
     });
   }, [tournamentId]);
 
-  const updatePlayerPartner = useCallback(async (playerId: string, partnerName: string | null, partnerTelegram: string | null, constraints?: PartnerConstraints): Promise<PartnerRejection | null> => {
+  const updatePlayerPartner = useCallback(async (playerId: string, partnerName: string | null, partnerTelegram: string | null, constraints?: PartnerConstraints, addedBy?: string): Promise<PartnerRejection | null> => {
     if (!tournamentId || !db) return null;
-    const { writes, newPlayer, rejected } = resolvePartnerUpdate(playerId, partnerName, partnerTelegram, players, constraints);
+    const { writes, newPlayer, rejected } = resolvePartnerUpdate(playerId, partnerName, partnerTelegram, players, constraints, addedBy);
 
     if (rejected) return rejected;
 
@@ -263,5 +274,5 @@ export function usePlayers(tournamentId: string | null) {
     return players.some(p => p.id === uid);
   }, [players]);
 
-  return { players, loading, registerPlayer, removePlayer, updateConfirmed, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, updatePlayerRank, updatePlayerPartner, updateCaptainApproval, isRegistered, claimOrphanRegistration };
+  return { players, loading, error, registerPlayer, removePlayer, updateConfirmed, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, updatePlayerRank, updatePlayerPartner, updateCaptainApproval, isRegistered, claimOrphanRegistration };
 }

@@ -19,13 +19,16 @@ function sortByDate(a: TournamentSummary, b: TournamentSummary): number {
 export function useMyTournaments(uid: string | null) {
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   // Guard against re-entrant listener calls caused by lazy cleanup remove()
   const versionRef = useRef(0);
 
   useEffect(() => {
     if (!uid || !db) return;
     setLoading(true);
+    setError(null);
     const unsubscribe = onValue(ref(db, `users/${uid}/organized`), async (snapshot) => {
+      setError(null);
       const version = ++versionRef.current;
       const data = snapshot.val() as Record<string, boolean> | null;
       if (!data) {
@@ -58,9 +61,13 @@ export function useMyTournaments(uid: string | null) {
       results.sort(sortByDate);
       setTournaments(results);
       setLoading(false);
+    }, (err) => {
+      console.warn('My tournaments listener failed:', err.message);
+      setError(err.message);
+      setLoading(false);
     });
     return unsubscribe;
   }, [uid]);
 
-  return { tournaments, loading };
+  return { tournaments, loading, error };
 }

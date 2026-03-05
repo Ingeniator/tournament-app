@@ -30,6 +30,10 @@ const it: Translations = {
   'home.expired': 'Scaduto',
   'home.completed': 'Completato',
   'home.groupTournaments': 'Tornei del Gruppo',
+  'home.playerMode': 'Giocatore',
+  'home.organizerMode': 'Organizzatore',
+  'home.joinNotFound': 'Nessun torneo o evento trovato con questo codice',
+  'home.myEvents': 'I Miei Eventi',
 
   // Footer & Options
   'footer.freeOpenSource': 'Gratuito e open source',
@@ -65,9 +69,11 @@ const it: Translations = {
   'organizer.telegramPlaceholder': '@username',
   'organizer.saveLink': 'Salva',
   'organizer.removeLink': 'Rimuovi',
-  'organizer.partnerSection': 'Partner preferito',
-  'organizer.partnerName': 'Nome del partner',
+  'organizer.partnerSection': 'Partner',
+  'organizer.partnerName': 'Seleziona partner…',
   'organizer.partnerTelegram': 'Telegram del partner (opzionale)',
+  'organizer.newPlayer': '+ Nuovo giocatore',
+  'organizer.newPlayerName': 'Nome del giocatore',
   'organizer.removePartner': 'Rimuovi partner',
   'organizer.addedBy': 'Aggiunto da {name}',
   'organizer.reserve': 'riserva',
@@ -286,6 +292,8 @@ const it: Translations = {
   'join.approve': 'Approva',
   'join.reject': 'Rifiuta',
   'join.pairSlots': '{pairs} posti coppia',
+  'join.myClub': '{name}',
+  'join.allPlayers': 'Tutti i giocatori',
 
   // SupportOverlay
   'support.title': 'Supportaci',
@@ -377,6 +385,24 @@ const it: Translations = {
   'teams.shuffle': 'Mescola Squadre',
   'teams.start': 'Inizia Torneo',
   'teams.groupsAutoAssigned': '{count} giocatore/i senza gruppo — assegnato/i automaticamente',
+
+  // Breakdown
+  'breakdown.spotsOpen': '{count} posti liberi',
+  'breakdown.hurrySpots': 'Sbrigati! Solo {count} posti rimasti',
+  'breakdown.lastSpot': 'Ultimo posto!',
+  'breakdown.full': 'Completo',
+  'breakdown.clubNeedsMore': '{club} ha bisogno di {count} in più',
+  'breakdown.clubNeedsMoreCaptain': '{club} ha bisogno di più giocatori',
+  'breakdown.noRankPlayers': '{club} {rank} ha bisogno di {count} in più',
+  'breakdown.noRankPlayersCaptain': '{club} ha bisogno di più giocatori {rank}',
+  'breakdown.groupNeedsMore': '{group} ha bisogno di {count} in più',
+  'breakdown.paired': 'Coppie',
+  'breakdown.captainMode': 'Modalità Capitano',
+  'breakdown.maldiciones': 'Maldiciones',
+
+  // Event
+  'event.myTournaments': 'I Miei Tornei',
+  'event.linkByCode': 'Collega per codice',
 
   // Planner App
   'app.connectionError': 'Errore di Connessione',
