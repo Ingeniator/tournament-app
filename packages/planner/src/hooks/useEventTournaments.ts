@@ -90,7 +90,9 @@ export function useEventTournaments(links: EventTournamentLink[]) {
 
           const courtCount = Array.isArray(courts) ? courts.length :
             typeof courts === 'object' && courts !== null ? Object.keys(courts).length : 1;
-          const playerList = players ? Object.values(players) : [];
+          const playerList = players
+            ? Object.entries(players).map(([key, val]) => ({ ...val, id: key }))
+            : [];
           const capacity = courtCount * 4;
           const clubs = (data.clubs as Club[] | undefined) ?? [];
           const rankLabels = (data.rankLabels as string[] | undefined) ?? [];
