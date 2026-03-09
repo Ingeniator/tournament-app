@@ -203,9 +203,7 @@ export function usePlayers(tournamentId: string | null) {
 
   const updatePlayerRank = useCallback(async (playerId: string, rankSlot: number | null) => {
     if (!tournamentId || !db) return;
-    await update(ref(db, `tournaments/${tournamentId}/players/${playerId}`), {
-      rankSlot: rankSlot ?? null,
-    });
+    await set(ref(db, `tournaments/${tournamentId}/players/${playerId}/rankSlot`), rankSlot ?? null);
   }, [tournamentId]);
 
   const updatePlayerPartner = useCallback(async (playerId: string, partnerName: string | null, partnerTelegram: string | null, constraints?: PartnerConstraints, addedBy?: string): Promise<PartnerRejection | null> => {

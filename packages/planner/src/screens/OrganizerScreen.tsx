@@ -520,13 +520,8 @@ export function OrganizerScreen() {
         <Button variant="secondary" fullWidth onClick={handleCopyLink}>
           {t('organizer.copyLink')}
         </Button>
-      </Card>
-      )}
 
-      {/* Who can start — only in share mode */}
-      {playerMode === 'share' && (
-      <Card>
-        <h2 className={styles.sectionTitle}>{t('organizer.startDelegate')}</h2>
+        <h3 className={styles.subsectionTitle}>{t('organizer.startDelegate')}</h3>
         <select
           className={styles.select}
           value={delegateMode}

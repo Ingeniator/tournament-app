@@ -77,6 +77,14 @@
   color: var(--color-text-secondary);
 }
 
+.subsectionTitle {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  margin-top: var(--space-lg);
+  margin-bottom: var(--space-sm);
+  color: var(--color-text-secondary);
+}
+
 .codeDisplay {
   text-align: center;
   margin-bottom: var(--space-sm);

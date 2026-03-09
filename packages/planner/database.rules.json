@@ -27,6 +27,10 @@
             "addedByPartner": {
               ".write": "auth != null",
               ".validate": "newData.isString() || newData.isBoolean() || !newData.exists()"
+            },
+            "rankSlot": {
+              ".write": "auth != null",
+              ".validate": "newData.isNumber() || !newData.exists()"
             }
           }
         },
@@ -37,6 +41,15 @@
         "completedAt": {
           ".write": "auth != null",
           ".validate": "newData.isNumber()"
+        },
+        "startDelegateId": {
+          ".validate": "newData.isString() && newData.val().length < 128"
+        },
+        "startDelegateTelegram": {
+          ".validate": "newData.isString() && newData.val().length < 50"
+        },
+        "captainMode": {
+          ".validate": "newData.isBoolean()"
         },
         "chatRooms": {
           "$chatInstance": {
