@@ -1,39 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://padelday.net/</loc>
+    <loc>https://torneo.me/</loc>
+    <lastmod>2026-03-09</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://padelday.net/play</loc>
+    <loc>https://torneo.me/play</loc>
+    <lastmod>2026-03-09</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://padelday.net/plan</loc>
+    <loc>https://torneo.me/plan</loc>
+    <lastmod>2026-03-09</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://padelday.net/formats</loc>
+    <loc>https://torneo.me/formats</loc>
+    <lastmod>2026-03-09</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://padelday.net/americano</loc>
+    <loc>https://torneo.me/americano</loc>
+    <lastmod>2026-03-09</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://padelday.net/mexicano</loc>
+    <loc>https://torneo.me/mexicano</loc>
+    <lastmod>2026-03-09</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://padelday.net/awards</loc>
+    <loc>https://torneo.me/awards</loc>
+    <lastmod>2026-03-09</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://padelday.net/maldiciones</loc>
+    <loc>https://torneo.me/maldiciones</loc>
+    <lastmod>2026-03-09</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://padelday.net/club</loc>
+    <loc>https://torneo.me/club</loc>
+    <lastmod>2026-03-09</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 </urlset>

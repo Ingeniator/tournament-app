@@ -28,8 +28,8 @@ export default defineConfig({
       includeAssets: ['favicon.svg', 'apple-touch-icon-180x180.png'],
       manifest: {
         id: '/play',
-        name: 'PadelDay — Tournament Manager',
-        short_name: 'PadelDay',
+        name: 'Torneo — Tournament Manager',
+        short_name: 'Torneo',
         description: 'Run padel & racket sport tournaments on your phone. Score matches live, view standings, americano & mexicano formats. Free & offline.',
         start_url: '/play',
         scope: '/play',

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://padelday.net/sitemap.xml
+Sitemap: https://torneo.me/sitemap.xml
