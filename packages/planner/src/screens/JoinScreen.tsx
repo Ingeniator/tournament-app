@@ -120,12 +120,14 @@ function PartnerEditor({ partnerName, partnerTelegram, onSave, players, currentP
   );
 }
 
-function JoinPlayerRow({ player, idx, tournament, onLinkPlayer }: {
+function JoinPlayerRow({ player, idx, tournament, onLinkPlayer, onSetRank }: {
   player: PlannerRegistration;
   idx: number;
   tournament: { format: string; groupLabels?: [string, string]; clubs?: { id: string; name: string; color?: string }[]; rankLabels?: string[]; rankColors?: number[] };
   onLinkPlayer?: (player: PlannerRegistration) => void;
+  onSetRank?: (playerId: string, rankSlot: number | null) => void;
 }) {
+  const { t } = useTranslation();
   const isMixicano = formatHasGroups(tournament.format as TournamentFormat);
   const isClubFormat = formatHasClubs(tournament.format as TournamentFormat);
   const clubs = tournament.clubs ?? [];
@@ -146,7 +148,7 @@ function JoinPlayerRow({ player, idx, tournament, onLinkPlayer }: {
       {(
         (isMixicano && player.group) ||
         (isClubFormat && clubIdx >= 0) ||
-        (tournament.format === 'club-ranked' && player.rankSlot != null && tournament.rankLabels?.[player.rankSlot])
+        (tournament.format === 'club-ranked' && (onSetRank || (player.rankSlot != null && tournament.rankLabels?.[player.rankSlot])))
       ) && (
         <div className={styles.playerBadges}>
           {isMixicano && player.group && (
@@ -159,7 +161,25 @@ function JoinPlayerRow({ player, idx, tournament, onLinkPlayer }: {
               {shortLabel(clubs[clubIdx].name)}
             </span>
           )}
-          {tournament.format === 'club-ranked' && player.rankSlot != null && tournament.rankLabels?.[player.rankSlot] && (() => {
+          {tournament.format === 'club-ranked' && onSetRank && tournament.rankLabels && tournament.rankLabels.length > 0 ? (
+            <select
+              className={styles.rankSelect}
+              value={player.rankSlot != null ? String(player.rankSlot) : ''}
+              onChange={e => {
+                const val = e.target.value ? Number(e.target.value) : null;
+                onSetRank(player.id, val);
+              }}
+              style={player.rankSlot != null ? (() => {
+                const rc = getRankColor(player.rankSlot, tournament.rankColors?.[player.rankSlot]);
+                return rc.bg !== NO_COLOR ? { backgroundColor: rc.bg, color: rc.text, borderColor: rc.border } as React.CSSProperties : undefined;
+              })() : undefined}
+            >
+              <option value="">{t('organizer.selectRank')}</option>
+              {tournament.rankLabels.map((label, i) => (
+                <option key={i} value={String(i)}>{shortLabel(label)}</option>
+              ))}
+            </select>
+          ) : tournament.format === 'club-ranked' && player.rankSlot != null && tournament.rankLabels?.[player.rankSlot] && (() => {
             const rc = getRankColor(player.rankSlot, tournament.rankColors?.[player.rankSlot]);
             return (
               <span className={styles.rankBadge} style={rc.bg !== NO_COLOR ? { backgroundColor: rc.bg, color: rc.text, borderColor: rc.border } : undefined}>
@@ -184,7 +204,7 @@ function JoinPlayerRow({ player, idx, tournament, onLinkPlayer }: {
   );
 }
 
-function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCount, spotsLeft, reserveCount, t, isCaptainOf, onApprove, onReject, onUpdateTelegram, onUpdatePartner, showToast, captainName }: {
+function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCount, spotsLeft, reserveCount, t, isCaptainOf, onApprove, onReject, onUpdateTelegram, onUpdatePartner, onSetRank, showToast, captainName }: {
   players: PlannerRegistration[];
   statuses: Map<string, PlayerStatus>;
   tournament: import('@padel/common').PlannerTournament;
@@ -198,6 +218,7 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
   onReject?: (playerId: string) => Promise<void> | void;
   onUpdateTelegram?: (playerId: string, telegramUsername: string | null) => Promise<void>;
   onUpdatePartner?: (playerId: string, partnerName: string | null, partnerTelegram: string | null, constraints?: PartnerConstraints, addedBy?: string) => Promise<PartnerRejection | null>;
+  onSetRank?: (playerId: string, rankSlot: number | null) => Promise<void>;
   showToast?: (msg: string) => void;
   captainName?: string;
 }) {
@@ -221,6 +242,27 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
     : players;
 
   const canLinkPlayer = (p: PlannerRegistration) => isCaptainOf && p.clubId === isCaptainOf && (onUpdateTelegram || onUpdatePartner);
+
+  const canEditRank = (p: PlannerRegistration) =>
+    isCaptainOf && p.clubId === isCaptainOf && onSetRank && tournament.format === 'club-ranked';
+
+  const handleRankChange = async (playerId: string, rankSlot: number | null) => {
+    if (!onSetRank) return;
+    const player = players.find(p => p.id === playerId);
+    if (!player) return;
+    // If player has a partner, warn and break the link
+    if (player.partnerName && onUpdatePartner) {
+      const partner = findPartner(player, players);
+      if (partner) {
+        const reason = wouldBreakPartnerLink({ rankSlot }, partner, constraints);
+        if (reason) {
+          if (!await asyncConfirm(t('join.changeBreaksLink', { name: partner.name }))) return;
+          await onUpdatePartner(player.id, null, null);
+        }
+      }
+    }
+    await onSetRank(playerId, rankSlot);
+  };
 
   const openLinkModal = (p: PlannerRegistration) => {
     setLinkingPlayer(p);
@@ -256,8 +298,8 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
         const canAct = captainActions && isCaptainOf && (p.clubId === isCaptainOf || partner.clubId === isCaptainOf);
         elements.push(
           <div key={`pair-${p.id}`} className={styles.pairGroup}>
-            <JoinPlayerRow player={p} idx={i1} tournament={tournament} onLinkPlayer={canLinkPlayer(p) ? openLinkModal : undefined} />
-            <JoinPlayerRow player={partner} idx={i2} tournament={tournament} onLinkPlayer={canLinkPlayer(partner) ? openLinkModal : undefined} />
+            <JoinPlayerRow player={p} idx={i1} tournament={tournament} onLinkPlayer={canLinkPlayer(p) ? openLinkModal : undefined} onSetRank={canEditRank(p) ? handleRankChange : undefined} />
+            <JoinPlayerRow player={partner} idx={i2} tournament={tournament} onLinkPlayer={canLinkPlayer(partner) ? openLinkModal : undefined} onSetRank={canEditRank(partner) ? handleRankChange : undefined} />
             {canAct && (
               <div className={styles.captainActions} style={{ padding: '4px 8px', justifyContent: 'flex-end' }}>
                 {captainActions === 'approve-reject' && onApprove && (
@@ -275,7 +317,7 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
           </div>
         );
       } else {
-        elements.push(<JoinPlayerRow key={p.id} player={p} idx={globalIdx++} tournament={tournament} onLinkPlayer={canLinkPlayer(p) ? openLinkModal : undefined} />);
+        elements.push(<JoinPlayerRow key={p.id} player={p} idx={globalIdx++} tournament={tournament} onLinkPlayer={canLinkPlayer(p) ? openLinkModal : undefined} onSetRank={canEditRank(p) ? handleRankChange : undefined} />);
       }
     }
     return elements;
@@ -345,7 +387,7 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
                 </div>
                 <div className={styles.playerList}>
                   {paired ? renderPairedSection(sectionPlayers, key === 'registered' ? 'approve-reject' : (key === 'playing' || key === 'reserve') ? 'reject-only' : undefined) : sectionPlayers.map((p, i) => (
-                    <JoinPlayerRow key={p.id} player={p} idx={i} tournament={tournament} onLinkPlayer={canLinkPlayer(p) ? openLinkModal : undefined} />
+                    <JoinPlayerRow key={p.id} player={p} idx={i} tournament={tournament} onLinkPlayer={canLinkPlayer(p) ? openLinkModal : undefined} onSetRank={canEditRank(p) ? handleRankChange : undefined} />
                   ))}
                 </div>
               </div>
@@ -366,7 +408,7 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
         </>
       ) : (
         <div className={styles.playerList}>
-          {filteredPlayers.map((player, i) => <JoinPlayerRow key={player.id} player={player} idx={i} tournament={tournament} onLinkPlayer={canLinkPlayer(player) ? openLinkModal : undefined} />)}
+          {filteredPlayers.map((player, i) => <JoinPlayerRow key={player.id} player={player} idx={i} tournament={tournament} onLinkPlayer={canLinkPlayer(player) ? openLinkModal : undefined} onSetRank={canEditRank(player) ? handleRankChange : undefined} />)}
         </div>
       )}
 
@@ -1152,6 +1194,7 @@ export function JoinScreen() {
         onReject={pid => updateCaptainApproval(pid, false)}
         onUpdateTelegram={updatePlayerTelegram}
         onUpdatePartner={updatePlayerPartner}
+        onSetRank={updatePlayerRank}
         showToast={showToast}
         captainName={myRegistration?.name}
       />
