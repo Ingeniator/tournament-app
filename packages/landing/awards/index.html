@@ -35,14 +35,73 @@
     ]
   }
   </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What are Torneo tournament awards?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Torneo automatically computes 41 unique awards at the end of every tournament. Awards are based on match data — scores, streaks, comebacks, partnerships — and are revealed one by one in a tap-to-reveal ceremony. No voting or manual selection needed."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What are the award tiers?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Awards come in 3 tiers: Legendary (5 awards like Undefeated, Giant Slayer, Comeback King), Rare (11 awards like Dominator, Clutch Player, Iron Wall), and Common (13 awards like Point Machine, Quick Strike, Battle Tested). Plus 8 special Maldiciones awards."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does the award ceremony work?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "After the final match, Torneo presents each award one at a time with a tap-to-reveal animation. The group gathers around a phone and taps to reveal each award winner. It creates a fun social moment to end every tournament."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Are awards computed automatically?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, all 41 awards are computed automatically from match data. The algorithm analyzes scores, point differentials, win/loss streaks, partnership performance, and more. No manual input or voting is needed."
+        }
+      }
+    ]
+  }
+  </script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
   <div id="root"></div>
   <noscript>
     <h1>41 Tournament Awards — The Ceremony Everyone Talks About</h1>
-    <p>41 automatically computed awards across 3 tiers: Legendary, Rare, and Common. Every padel tournament ends with a tap-to-reveal ceremony.</p>
+    <p>Every Torneo tournament ends with a tap-to-reveal award ceremony. 41 unique awards are automatically computed from match data across 3 tiers.</p>
     <nav><a href="/">Torneo Home</a> &gt; Awards</nav>
+
+    <h2>Award Tiers</h2>
+    <h3>Legendary (5 awards)</h3>
+    <p>Undefeated, Giant Slayer, Comeback King, Nemesis, Underdog</p>
+    <h3>Rare (11 awards)</h3>
+    <p>Dominator, Clutch Player, Iron Wall, Consistency Champion, Gatekeeper, Best Duo, Hot Streak Duo, Nearly There, Court Climber, Club MVP, Club Rivalry</p>
+    <h3>Common (13 awards)</h3>
+    <p>Point Machine, Quick Strike, See-Saw Specialist, Instant Classic, Battle Tested, Warrior, Offensive Powerhouse, Offensive Duo, Defensive Duo, Rubber Match, Peacemaker, Social Butterfly, Club Solidarity</p>
+
+    <h2>Maldiciones Awards (8 special)</h2>
+    <p>Special awards unlocked when playing with <a href="/maldiciones">Maldiciones curse cards</a>: El Inmune, El Brujo, El Superviviente, El Intocable, El Resistente, Escudo de Oro, El Maldito, Karma.</p>
+
+    <h2>Frequently Asked Questions</h2>
+    <h3>Are awards computed automatically?</h3>
+    <p>Yes — all 41 awards are computed from match data. No voting or manual input needed.</p>
+    <h3>How does the ceremony work?</h3>
+    <p>After the final match, gather around a phone and tap to reveal each award one by one.</p>
+
+    <p><a href="/play">Run a Tournament with Awards</a> | <a href="/formats">See All Formats</a></p>
   </noscript>
   <script type="module" src="/src/main.tsx"></script>
 </body>

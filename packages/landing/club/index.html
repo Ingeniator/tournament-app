@@ -31,7 +31,56 @@
     "@type": "BreadcrumbList",
     "itemListElement": [
       { "@type": "ListItem", "position": 1, "name": "Torneo", "item": "https://torneo.me" },
-      { "@type": "ListItem", "position": 2, "name": "Club Tournament Formats", "item": "https://torneo.me/club" }
+      { "@type": "ListItem", "position": 2, "name": "Formats", "item": "https://torneo.me/formats" },
+      { "@type": "ListItem", "position": 3, "name": "Club Tournament Formats", "item": "https://torneo.me/club" }
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What are Club padel tournament formats?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Club formats are designed for inter-club padel competition where two or more clubs compete against each other. Players are tagged by club, and both individual and club-level standings are tracked. Torneo offers 5 Club formats: Club Americano, Club Mexicano, Club Ranked, Club Team Americano, and Club Team Mexicano."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do Club formats differ from regular formats?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Club formats add a club layer on top of regular tournament mechanics. Each player is assigned to a club, and the app tracks both individual scores and aggregate club scores. Cross-club pairings are prioritized — players from different clubs are matched against each other when possible."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is Captain Mode in Club formats?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Captain Mode lets a designated captain from each club assign pairings for their club's players each round. This adds a strategic team management element — captains can pair players strategically based on skill, court preferences, and matchup advantages."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How many clubs can compete in a Club tournament?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Torneo supports 2 or more clubs in a single tournament. Each club can have different numbers of players. The algorithm ensures fair rotation and cross-club matchups regardless of club sizes."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Which Club format should I choose?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Club Americano for social inter-club events with rotating partners. Club Mexicano for competitive inter-club play with standings-based matchups. Club Ranked for individual ranking across clubs. Club Team Americano/Mexicano for fixed team inter-club competition."
+        }
+      }
     ]
   }
   </script>
@@ -41,8 +90,28 @@
   <div id="root"></div>
   <noscript>
     <h1>Club Tournament Formats — Inter-Club Padel Competition</h1>
-    <p>5 inter-club padel formats: Club Americano, Club Mexicano, Club Ranked, Club Team Americano, and Club Team Mexicano. Organize club vs club tournaments.</p>
+    <p>5 inter-club padel formats for club vs club tournaments. Players are tagged by club, with both individual and club-level standings tracked automatically.</p>
     <nav><a href="/">Torneo Home</a> &gt; <a href="/formats">Formats</a> &gt; Club</nav>
+
+    <h2>5 Club Formats</h2>
+    <ul>
+      <li><strong>Club Americano</strong> — social inter-club with rotating partners across clubs</li>
+      <li><strong>Club Mexicano</strong> — competitive inter-club with standings-based matchups</li>
+      <li><strong>Club Ranked</strong> — individual ranking competition across clubs</li>
+      <li><strong>Club Team Americano</strong> — fixed team inter-club with rotating opponents</li>
+      <li><strong>Club Team Mexicano</strong> — fixed team inter-club with standings-based opponents</li>
+    </ul>
+
+    <h2>Captain Mode</h2>
+    <p>Designated captains assign pairings for their club's players each round, adding strategic team management to inter-club events.</p>
+
+    <h2>Frequently Asked Questions</h2>
+    <h3>How do Club formats differ from regular formats?</h3>
+    <p>Players are assigned to clubs. The app tracks both individual and club-level scores. Cross-club matchups are prioritized.</p>
+    <h3>Which Club format should I choose?</h3>
+    <p>Social inter-club: Club Americano. Competitive: Club Mexicano. Individual ranking: Club Ranked. Fixed teams: Club Team formats.</p>
+
+    <p><a href="/play">Run a Club Tournament</a> | <a href="/formats">See All Formats</a></p>
   </noscript>
   <script type="module" src="/src/main.tsx"></script>
 </body>

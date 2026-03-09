@@ -31,7 +31,96 @@
     "@type": "BreadcrumbList",
     "itemListElement": [
       { "@type": "ListItem", "position": 1, "name": "Torneo", "item": "https://torneo.me" },
-      { "@type": "ListItem", "position": 2, "name": "Mexicano Padel", "item": "https://torneo.me/mexicano" }
+      { "@type": "ListItem", "position": 2, "name": "Formats", "item": "https://torneo.me/formats" },
+      { "@type": "ListItem", "position": 3, "name": "Mexicano Padel", "item": "https://torneo.me/mexicano" }
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is Mexicano padel?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Mexicano is a competitive padel tournament format where matchups are dynamically determined by the current standings. After each round, the top-ranked players face each other and the bottom-ranked players face each other, creating increasingly competitive and balanced matches."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does Mexicano differ from Americano padel?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "In Americano, partners and opponents are randomly assigned. In Mexicano, the app uses the current standings to pair top players against top players and lower players against lower players. This creates more balanced, competitive matches as the tournament progresses."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do dynamic matchups work in Mexicano?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "After each round, players are ranked by total points. The algorithm pairs players with similar standings against each other: 1st vs 2nd, 3rd vs 4th, etc. Partners also change each round. This ensures increasingly competitive matches as the tournament progresses."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "When should I use Mexicano instead of Americano?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Use Mexicano when your group wants more competitive, balanced games — especially with players of similar skill levels. Use Americano when the focus is social and you want maximum mixing. Mexicano rewards consistency; Americano rewards adaptability."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How many players do you need for Mexicano?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Minimum 4 players (one court). For the best experience, 8–16 players with 2–4 courts is ideal. The dynamic matchup system works better with more players as it has more options for balanced pairings."
+        }
+      }
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "How to Organize a Mexicano Padel Tournament",
+    "description": "Step-by-step guide to running a Mexicano padel tournament with dynamic matchups based on standings.",
+    "step": [
+      {
+        "@type": "HowToStep",
+        "position": 1,
+        "name": "Gather players and courts",
+        "text": "Get a group of players (minimum 4, ideally 8–16) and book 1 court per 4 players."
+      },
+      {
+        "@type": "HowToStep",
+        "position": 2,
+        "name": "Set up the tournament",
+        "text": "Open Torneo, add player names, select Mexicano format, and choose the number of points per match."
+      },
+      {
+        "@type": "HowToStep",
+        "position": 3,
+        "name": "Play first round",
+        "text": "The first round pairings are random (like Americano). Play the matches and enter scores."
+      },
+      {
+        "@type": "HowToStep",
+        "position": 4,
+        "name": "Dynamic matchups begin",
+        "text": "From round 2 onwards, the app pairs players based on standings. Top-ranked face top-ranked, creating balanced competitive matches."
+      },
+      {
+        "@type": "HowToStep",
+        "position": 5,
+        "name": "Complete tournament",
+        "text": "After all rounds, view final standings and enjoy the automatic award ceremony with 41 unique awards."
+      }
     ]
   }
   </script>
@@ -41,9 +130,30 @@
   <div id="root"></div>
   <noscript>
     <h1>Mexicano Padel — Rules, Format & How to Play</h1>
-    <p>Complete guide to Mexicano padel: dynamic matchups, standings-based opponents, and competitive play. The most popular competitive padel tournament format.</p>
+    <p>Mexicano is the most popular competitive padel tournament format. Matchups are dynamically determined by the current standings — top players face top players, creating increasingly balanced and competitive matches.</p>
     <nav><a href="/">Torneo Home</a> &gt; <a href="/formats">Formats</a> &gt; Mexicano</nav>
-    <p><a href="/play">Run a Mexicano Tournament</a></p>
+
+    <h2>What is Mexicano Padel?</h2>
+    <p>A competitive tournament format where matchups change based on standings after each round. Unlike <a href="/americano">Americano</a> where pairings are random, Mexicano uses your current score to find the most balanced opponents.</p>
+
+    <h2>How Dynamic Matchups Work</h2>
+    <ol>
+      <li>Round 1 starts with random pairings (like Americano)</li>
+      <li>After each round, players are ranked by total points</li>
+      <li>Top-ranked players face each other; lower-ranked face each other</li>
+      <li>Partners also change each round</li>
+      <li>This creates increasingly tight, competitive matches</li>
+    </ol>
+
+    <h2>Frequently Asked Questions</h2>
+    <h3>How does Mexicano differ from Americano?</h3>
+    <p>In <a href="/americano">Americano</a>, pairings are random. In Mexicano, the app uses standings to create balanced matchups. Mexicano rewards consistency; Americano rewards adaptability.</p>
+    <h3>When should I use Mexicano?</h3>
+    <p>When your group wants competitive, balanced games — especially with players of similar skill levels.</p>
+    <h3>How many players do you need?</h3>
+    <p>Minimum 4. For the best experience, 8–16 players with 2–4 courts.</p>
+
+    <p><a href="/play">Run a Mexicano Tournament with Torneo</a></p>
   </noscript>
   <script type="module" src="/src/main.tsx"></script>
 </body>
