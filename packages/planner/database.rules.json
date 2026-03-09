@@ -27,6 +27,10 @@
             "addedByPartner": {
               ".write": "auth != null",
               ".validate": "newData.isString() || newData.isBoolean() || !newData.exists()"
+            },
+            "rankSlot": {
+              ".write": "auth != null",
+              ".validate": "newData.isNumber() || !newData.exists()"
             }
           }
         },
