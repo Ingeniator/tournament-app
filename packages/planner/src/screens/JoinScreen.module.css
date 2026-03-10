@@ -474,6 +474,20 @@
   border-color: var(--color-primary);
 }
 
+.captainAddRow {
+  display: flex;
+  gap: var(--space-xs);
+  align-items: center;
+  margin-top: var(--space-sm);
+}
+
+.captainAddRow .nameInput {
+  flex: 1;
+  min-width: 0;
+  padding: 8px var(--space-sm);
+  font-size: var(--text-sm);
+}
+
 /* Status sections for pair formats */
 .statusSection {
   margin-top: var(--space-md);

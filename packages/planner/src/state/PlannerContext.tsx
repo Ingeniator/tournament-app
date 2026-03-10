@@ -35,7 +35,7 @@ export interface PlannerContextValue {
   registerPlayer: (name: string, extras?: { group?: 'A' | 'B'; clubId?: string; rankSlot?: number }) => Promise<void>;
   removePlayer: (playerId: string) => Promise<void>;
   updateConfirmed: (confirmed: boolean) => Promise<void>;
-  addPlayer: (name: string, telegramUsername?: string) => Promise<void>;
+  addPlayer: (name: string, telegramUsername?: string, extras?: { clubId?: string }) => Promise<void>;
   bulkAddPlayers: (names: string[]) => Promise<void>;
   toggleConfirmed: (playerId: string, currentConfirmed: boolean) => Promise<void>;
   updatePlayerName: (playerId: string, name: string) => Promise<void>;
