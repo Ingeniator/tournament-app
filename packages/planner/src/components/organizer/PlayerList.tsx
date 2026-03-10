@@ -333,6 +333,82 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
     );
   };
 
+  const exportPlayers = () => {
+    const rl = rankLabels ?? [];
+    const cl = clubs ?? [];
+    const lines: string[] = [];
+    const renderPlayer = (p: PlannerRegistration) =>
+      p.telegramUsername ? `${p.name} (@${p.telegramUsername})` : p.name;
+
+    const renderPairs = (group: PlannerRegistration[], indent: string) => {
+      const rendered = new Set<string>();
+      for (const p of group) {
+        if (rendered.has(p.id)) continue;
+        rendered.add(p.id);
+        const partner = findPartner(p, players);
+        if (partner && !rendered.has(partner.id) && group.some(g => g.id === partner.id)) {
+          rendered.add(partner.id);
+          lines.push(`${indent}· ${renderPlayer(p)}`);
+          lines.push(`${indent}  ${renderPlayer(partner)}`);
+        } else {
+          lines.push(`${indent}· ${renderPlayer(p)}`);
+        }
+      }
+    };
+
+    const renderGrouped = (sectionPlayers: PlannerRegistration[]) => {
+      if (format === 'club-ranked' && rl.length > 0) {
+        const byRank = new Map<number | undefined, PlannerRegistration[]>();
+        for (const p of sectionPlayers) {
+          const key = p.rankSlot ?? undefined;
+          if (!byRank.has(key)) byRank.set(key, []);
+          byRank.get(key)!.push(p);
+        }
+        for (const [rankKey, rankGroup] of [...byRank.entries()].sort((a, b) => (a[0] ?? 999) - (b[0] ?? 999))) {
+          const label = rankKey != null && rl[rankKey] ? rl[rankKey] : (rankKey != null ? `Rank ${rankKey + 1}` : '');
+          if (label) lines.push(`  ${label}`);
+          const byClub = new Map<string | undefined, PlannerRegistration[]>();
+          for (const p of rankGroup) {
+            const key = p.clubId ?? undefined;
+            if (!byClub.has(key)) byClub.set(key, []);
+            byClub.get(key)!.push(p);
+          }
+          for (const [clubId, clubGroup] of byClub) {
+            const club = clubId ? cl.find(c => c.id === clubId) : undefined;
+            if (club) lines.push(`    ${club.name}`);
+            renderPairs(clubGroup, club ? '      ' : '    ');
+          }
+        }
+      } else {
+        renderPairs(sectionPlayers, '  ');
+      }
+    };
+
+    if (isPairFormat && sections) {
+      const sectionDefs: { key: PlayerStatus; labelKey: string }[] = [
+        { key: 'playing', labelKey: 'organizer.sectionPlaying' },
+        { key: 'reserve', labelKey: 'organizer.sectionReserve' },
+        ...(captainMode ? [{ key: 'registered' as PlayerStatus, labelKey: 'organizer.sectionRegistered' }] : []),
+        { key: 'needs-partner', labelKey: 'organizer.sectionNeedsPartner' },
+        { key: 'cancelled', labelKey: 'organizer.sectionCancelled' },
+      ];
+      for (const { key, labelKey } of sectionDefs) {
+        const sectionPlayers = sections[key];
+        if (sectionPlayers.length === 0) continue;
+        lines.push(t(labelKey, { count: sectionPlayers.length }));
+        renderGrouped(sectionPlayers);
+      }
+    } else {
+      renderGrouped(players);
+    }
+
+    const text = lines.join('\n');
+    navigator.clipboard.writeText(text).then(
+      () => showToast?.(t('join.copied')),
+      () => showToast?.(t('join.failedCopy')),
+    );
+  };
+
   return (
     <>
       <Card>
@@ -345,6 +421,11 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                 reserve: reserveCount > 0 ? t('organizer.reserveSuffix', { count: reserveCount }) : '',
               })
           }
+          {players.length > 0 && (
+            <Button size="small" variant="ghost" onClick={exportPlayers}>
+              {t('join.exportPairs')}
+            </Button>
+          )}
         </h2>
         {players.length === 0 ? (
           <p className={styles.empty}>{t('organizer.noPlayersYet')}</p>

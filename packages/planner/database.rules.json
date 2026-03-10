@@ -28,6 +28,10 @@
               ".write": "auth != null",
               ".validate": "newData.isString() || newData.isBoolean() || !newData.exists()"
             },
+            "telegramUsername": {
+              ".write": "auth != null",
+              ".validate": "newData.isString() && newData.val().length < 50 || !newData.exists()"
+            },
             "rankSlot": {
               ".write": "auth != null",
               ".validate": "newData.isNumber() || !newData.exists()"

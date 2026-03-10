@@ -220,7 +220,7 @@ function JoinPlayerRow({ player, idx, tournament, onLinkPlayer, onSetRank }: {
   );
 }
 
-function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCount, spotsLeft, reserveCount, t, isCaptainOf, onApprove, onReject, onUpdateTelegram, onUpdatePartner, onSetRank, showToast, captainName }: {
+function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCount, spotsLeft, reserveCount, t, isCaptainOf, onApprove, onReject, onUpdateTelegram, onUpdatePartner, onSetRank, onAddPlayer, showToast, captainName }: {
   players: PlannerRegistration[];
   statuses: Map<string, PlayerStatus>;
   tournament: import('@padel/common').PlannerTournament;
@@ -235,6 +235,7 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
   onUpdateTelegram?: (playerId: string, telegramUsername: string | null) => Promise<void>;
   onUpdatePartner?: (playerId: string, partnerName: string | null, partnerTelegram: string | null, constraints?: PartnerConstraints, addedBy?: string) => Promise<PartnerRejection | null>;
   onSetRank?: (playerId: string, rankSlot: number | null) => Promise<void>;
+  onAddPlayer?: (name: string) => Promise<void>;
   showToast?: (msg: string) => void;
   captainName?: string;
 }) {
@@ -251,6 +252,20 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
     requireSameClub: formatHasClubs(tournament.format),
     requireSameRank: tournament.format === 'club-ranked',
     requireOppositeGroup: formatHasGroups(tournament.format),
+  };
+
+  const [newPlayerName, setNewPlayerName] = useState('');
+  const addingPlayer = useRef(false);
+  const addPlayerInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAddPlayer = async () => {
+    if (!newPlayerName.trim() || addingPlayer.current || !onAddPlayer) return;
+    addingPlayer.current = true;
+    const trimmed = newPlayerName.trim();
+    setNewPlayerName('');
+    await onAddPlayer(trimmed);
+    addingPlayer.current = false;
+    addPlayerInputRef.current?.focus();
   };
 
   const filteredPlayers = isCaptainOf && clubFilter === 'my-club'
@@ -278,6 +293,91 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
       }
     }
     await onSetRank(playerId, rankSlot);
+  };
+
+  const exportPlayers = () => {
+    const sourcePlayers = clubFilter === 'all'
+      ? players
+      : players.filter(p => p.clubId === isCaptainOf);
+    if (sourcePlayers.length === 0) return;
+
+    const rl = tournament.rankLabels ?? [];
+    const cl = tournament.clubs ?? [];
+    const lines: string[] = [];
+    const renderPlayer = (p: PlannerRegistration) =>
+      p.telegramUsername ? `${p.name} (@${p.telegramUsername})` : p.name;
+
+    const renderPairs = (group: PlannerRegistration[], indent: string) => {
+      const rendered = new Set<string>();
+      for (const p of group) {
+        if (rendered.has(p.id)) continue;
+        rendered.add(p.id);
+        const partner = findPartner(p, players);
+        if (partner && !rendered.has(partner.id) && group.some(g => g.id === partner.id)) {
+          rendered.add(partner.id);
+          lines.push(`${indent}· ${renderPlayer(p)}`);
+          lines.push(`${indent}  ${renderPlayer(partner)}`);
+        } else {
+          lines.push(`${indent}· ${renderPlayer(p)}`);
+        }
+      }
+    };
+
+    const renderGrouped = (sectionPlayers: PlannerRegistration[]) => {
+      if (tournament.format === 'club-ranked' && rl.length > 0) {
+        const byRank = new Map<number | undefined, PlannerRegistration[]>();
+        for (const p of sectionPlayers) {
+          const key = p.rankSlot ?? undefined;
+          if (!byRank.has(key)) byRank.set(key, []);
+          byRank.get(key)!.push(p);
+        }
+        for (const [rankKey, rankGroup] of [...byRank.entries()].sort((a, b) => (a[0] ?? 999) - (b[0] ?? 999))) {
+          const label = rankKey != null && rl[rankKey] ? rl[rankKey] : (rankKey != null ? `Rank ${rankKey + 1}` : '');
+          if (label) lines.push(`  ${label}`);
+          if (clubFilter === 'all') {
+            const byClub = new Map<string | undefined, PlannerRegistration[]>();
+            for (const p of rankGroup) {
+              const key = p.clubId ?? undefined;
+              if (!byClub.has(key)) byClub.set(key, []);
+              byClub.get(key)!.push(p);
+            }
+            for (const [clubId, clubGroup] of byClub) {
+              const club = clubId ? cl.find(c => c.id === clubId) : undefined;
+              if (club) lines.push(`    ${club.name}`);
+              renderPairs(clubGroup, club ? '      ' : '    ');
+            }
+          } else {
+            renderPairs(rankGroup, '    ');
+          }
+        }
+      } else {
+        renderPairs(sectionPlayers, '  ');
+      }
+    };
+
+    if (isPairFormat && sections) {
+      const sectionDefs: { key: PlayerStatus; labelKey: string }[] = [
+        { key: 'playing', labelKey: 'organizer.sectionPlaying' },
+        { key: 'reserve', labelKey: 'organizer.sectionReserve' },
+        ...(tournament.captainMode ? [{ key: 'registered' as PlayerStatus, labelKey: 'organizer.sectionRegistered' }] : []),
+        { key: 'needs-partner', labelKey: 'organizer.sectionNeedsPartner' },
+        { key: 'cancelled', labelKey: 'organizer.sectionCancelled' },
+      ];
+      for (const { key, labelKey } of sectionDefs) {
+        const sectionPlayers = sections[key].filter(p => sourcePlayers.some(sp => sp.id === p.id));
+        if (sectionPlayers.length === 0) continue;
+        lines.push(t(labelKey, { count: sectionPlayers.length }));
+        renderGrouped(sectionPlayers);
+      }
+    } else {
+      renderGrouped(sourcePlayers);
+    }
+
+    const text = lines.join('\n');
+    navigator.clipboard.writeText(text).then(
+      () => showToast?.(t('join.copied')),
+      () => showToast?.(t('join.failedCopy')),
+    );
   };
 
   const openLinkModal = (p: PlannerRegistration) => {
@@ -358,7 +458,12 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
         <p className={styles.capacityHint}>ℹ️ {t('organizer.captainInstructions')}</p>
       )}
       {isCaptainOf && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-xs)' }}>
+          {players.length > 0 && (
+            <Button size="small" variant="ghost" onClick={exportPlayers}>
+              {t('join.exportPairs')}
+            </Button>
+          )}
           <div className={styles.groupToggle}>
             <button
               className={clubFilter === 'my-club' ? styles.groupBtnActive : styles.groupBtn}
@@ -425,6 +530,30 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
       ) : (
         <div className={styles.playerList}>
           {filteredPlayers.map((player, i) => <JoinPlayerRow key={player.id} player={player} idx={i} tournament={tournament} onLinkPlayer={canLinkPlayer(player) ? openLinkModal : undefined} onSetRank={canEditRank(player) ? handleRankChange : undefined} />)}
+        </div>
+      )}
+
+      {isCaptainOf && onAddPlayer && (
+        <div className={styles.captainAddRow}>
+          <input
+            ref={addPlayerInputRef}
+            className={styles.nameInput}
+            type="text"
+            value={newPlayerName}
+            onChange={e => setNewPlayerName(e.target.value)}
+            placeholder={t('organizer.playerNamePlaceholder')}
+            onKeyDown={async e => {
+              if (e.key === 'Enter') await handleAddPlayer();
+            }}
+          />
+          <Button
+            variant="ghost"
+            size="small"
+            onClick={handleAddPlayer}
+            disabled={!newPlayerName.trim()}
+          >
+            {t('organizer.addPlayer')}
+          </Button>
         </div>
       )}
 
@@ -561,7 +690,7 @@ function JoinPlayerList({ players, statuses, tournament, capacity, confirmedCoun
 }
 
 export function JoinScreen() {
-  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, updatePlayerGroup, updatePlayerClub, updatePlayerRank, updatePlayerPartner, updatePlayerTelegram, updateCaptainApproval, isRegistered, setScreen, organizerName, userName, telegramUser, completedAt, joinReturnScreen } = usePlanner();
+  const { tournament, players, uid, registerPlayer, updateConfirmed, updatePlayerName, updatePlayerGroup, updatePlayerClub, updatePlayerRank, updatePlayerPartner, updatePlayerTelegram, updateCaptainApproval, addPlayer, isRegistered, setScreen, organizerName, userName, telegramUser, completedAt, joinReturnScreen } = usePlanner();
   const { startedBy, showWarning, warningReason, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
   const { t } = useTranslation();
   // null = not yet edited by user, derive from external sources
@@ -1211,6 +1340,10 @@ export function JoinScreen() {
         onUpdateTelegram={updatePlayerTelegram}
         onUpdatePartner={updatePlayerPartner}
         onSetRank={updatePlayerRank}
+        onAddPlayer={async (name) => {
+          const clubId = tournament.clubs?.find(c => c.captainId === uid || (telegramUser?.username && c.captainTelegram === telegramUser.username))?.id;
+          await addPlayer(name, undefined, clubId ? { clubId } : undefined);
+        }}
         showToast={showToast}
         captainName={myRegistration?.name}
       />

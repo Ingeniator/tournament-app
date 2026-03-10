@@ -124,7 +124,7 @@ export function usePlayers(tournamentId: string | null) {
     await update(ref(db), atomicUpdates);
   }, [tournamentId, players]);
 
-  const addPlayer = useCallback(async (name: string, telegramUsername?: string) => {
+  const addPlayer = useCallback(async (name: string, telegramUsername?: string, extras?: { clubId?: string }) => {
     if (!tournamentId || !db) return;
     const id = generateId();
     await set(ref(db, `tournaments/${tournamentId}/players/${id}`), {
@@ -132,6 +132,7 @@ export function usePlayers(tournamentId: string | null) {
       timestamp: Date.now(),
       confirmed: true,
       ...(telegramUsername ? { telegramUsername } : {}),
+      ...(extras?.clubId ? { clubId: extras.clubId } : {}),
     });
   }, [tournamentId]);
 
@@ -182,9 +183,7 @@ export function usePlayers(tournamentId: string | null) {
 
   const updatePlayerTelegram = useCallback(async (playerId: string, telegramUsername: string | null) => {
     if (!tournamentId || !db) return;
-    await update(ref(db, `tournaments/${tournamentId}/players/${playerId}`), {
-      telegramUsername: telegramUsername || null,
-    });
+    await set(ref(db, `tournaments/${tournamentId}/players/${playerId}/telegramUsername`), telegramUsername || null);
   }, [tournamentId]);
 
   const updatePlayerGroup = useCallback(async (playerId: string, group: 'A' | 'B' | null) => {
