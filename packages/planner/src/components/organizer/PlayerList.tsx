@@ -115,6 +115,9 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
             <span className={styles.reserveBadge}>{t('organizer.reserve')}</span>
           )}
         </span>
+        {player.alias && (
+          <span className={styles.addedByHint}>{player.alias}</span>
+        )}
         {player.addedByPartner && (
           <span className={styles.addedByHint}>
             {t('organizer.addedBy', { name: typeof player.addedByPartner === 'string' ? player.addedByPartner : '?' })}
