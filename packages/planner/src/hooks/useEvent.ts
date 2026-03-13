@@ -148,7 +148,7 @@ export function useEvent(eventId: string | null) {
       name,
       date,
       code,
-      description,
+      ...(description ? { description } : {}),
       tournaments: tournamentIds ?? [],
       organizerId,
       createdAt: now,
