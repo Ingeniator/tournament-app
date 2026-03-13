@@ -122,7 +122,7 @@ export function HomeScreen() {
 
         {!hasSaved && (
           <>
-            <a href="/plan" className={styles.planLink}>
+            <a href="/plan?action=create" className={styles.planLink}>
               <Button fullWidth>
                 {t('home.planShare')}
               </Button>

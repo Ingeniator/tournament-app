@@ -10,6 +10,7 @@ import { EventScreen } from './screens/EventScreen';
 import { EventFormScreen } from './screens/EventFormScreen';
 import { EventJoinScreen } from './screens/EventJoinScreen';
 import { translations } from './i18n';
+import { randomTournamentName } from './utils/tournamentNames';
 import styles from './App.module.css';
 
 const LOCALE_KEY = 'padel-locale';
@@ -39,7 +40,7 @@ function FirebaseSetupMessage() {
 }
 
 function AppContent() {
-  const { screen, setScreen, authLoading, authError, dataError, loadByCode, loadEventByCode, openTournament, tournament, uid, activeEventId, setActiveEventId, openTournamentFromEvent } = usePlanner();
+  const { screen, setScreen, authLoading, authError, dataError, loadByCode, loadEventByCode, openTournament, tournament, uid, activeEventId, setActiveEventId, openTournamentFromEvent, createTournament } = usePlanner();
   const { t, setLocale } = useTranslation();
 
   // Apply tournament locale for Telegram deep links (no &lang= in URL)
@@ -74,19 +75,37 @@ function AppContent() {
       loadByCode(code).then(found => {
         setScreen(found ? 'join' : 'home');
       });
-    } else {
-      setScreen('home');
+      return;
     }
+
+    const action = params.get('action');
+    if (action === 'create') {
+      // Clean up URL param so refresh doesn't re-create
+      const url = new URL(window.location.href);
+      url.searchParams.delete('action');
+      history.replaceState(null, '', url.pathname + url.search);
+      // Auto-create will be triggered once auth is ready (uid available)
+      setScreen('auto-create');
+      return;
+    }
+
+    setScreen('home');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-create tournament when navigated from runner with ?action=create
+  useEffect(() => {
+    if (screen !== 'auto-create' || !uid) return;
+    createTournament(randomTournamentName());
+  }, [screen, uid, createTournament]);
 
   // Update URL hash for Cloudflare Web Analytics virtual pageviews
   useEffect(() => {
-    if (screen !== 'loading') {
+    if (screen !== 'loading' && screen !== 'auto-create') {
       history.replaceState(null, '', `#${screen}`);
     }
   }, [screen]);
 
-  if (authLoading || screen === 'loading') {
+  if (authLoading || screen === 'loading' || screen === 'auto-create') {
     return (
       <div className={styles.loading}>
         <div className={styles.spinner} />

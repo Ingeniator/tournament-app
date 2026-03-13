@@ -10,6 +10,7 @@ import { ClubSection } from '../components/setup/ClubSection';
 import { Button, Card, useTranslation, formatHasClubs } from '@padel/common';
 import styles from './SetupScreen.module.css';
 
+/** @deprecated Planner tournaments skip this screen — schedule is generated on load. */
 export function SetupScreen() {
   const { tournament, dispatch } = useTournament();
   const { t } = useTranslation();

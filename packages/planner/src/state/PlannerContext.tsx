@@ -17,7 +17,7 @@ import { useVisitedEvents, markEventVisited } from '../hooks/useVisitedEvents';
 import { loadEventByCode as loadEventByCodeFn, useEvent } from '../hooks/useEvent';
 import { linkTournamentToChat } from '../utils/chatRoom';
 
-export type Screen = 'loading' | 'home' | 'organizer' | 'join' | 'event-detail' | 'event-create' | 'event-join';
+export type Screen = 'loading' | 'home' | 'organizer' | 'join' | 'event-detail' | 'event-create' | 'event-join' | 'auto-create';
 
 export interface PlannerContextValue {
   uid: string | null;
