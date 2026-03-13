@@ -2,8 +2,8 @@ import { ref, get } from 'firebase/database';
 import type { PlannerTournament, PlannerRegistration, PadelEvent } from '@padel/common';
 import { db } from '../firebase';
 
-const EXPORT_FORMAT = 'planner-tournament-v1';
-const EVENT_EXPORT_FORMAT = 'planner-event-v1';
+const EXPORT_FORMAT = 'padel-tournament-v1';
+const EVENT_EXPORT_FORMAT = 'padel-event-v1';
 
 export interface ExportedPlayer {
   name: string;
@@ -102,10 +102,45 @@ export interface ParsedImport {
 }
 
 export function parsePlannerExport(text: string): ParsedImport {
-  const data = JSON.parse(text) as ExportedTournament;
-  if (data._format !== EXPORT_FORMAT) {
+  const raw = JSON.parse(text) as Record<string, unknown>;
+  if (raw._format !== EXPORT_FORMAT && raw._format !== 'planner-tournament-v1') {
     throw new Error('Invalid format');
   }
+
+  // Runner envelope format: { _format, tournament: { config: { format, courts, ... }, players, ... } }
+  const nested = raw.tournament as Record<string, unknown> | undefined;
+  if (nested && typeof nested === 'object' && nested.config) {
+    const config = nested.config as Record<string, unknown>;
+    const players = (Array.isArray(nested.players) ? nested.players : []) as Array<Record<string, unknown>>;
+    const tournament: Omit<ExportedTournament, '_format' | 'players'> = {
+      name: nested.name as string,
+      format: config.format as PlannerTournament['format'],
+      courts: config.courts as PlannerTournament['courts'],
+      ...(config.targetDuration != null ? { duration: config.targetDuration as number } : {}),
+      ...(config.pointsPerMatch != null ? { pointsPerMatch: config.pointsPerMatch as number } : {}),
+      ...(config.maxRounds != null ? { maxRounds: config.maxRounds as number } : {}),
+      ...(config.scoringMode ? { scoringMode: config.scoringMode as PlannerTournament['scoringMode'] } : {}),
+      ...(config.minutesPerRound != null ? { minutesPerRound: config.minutesPerRound as number } : {}),
+      ...(config.maldiciones ? { maldiciones: config.maldiciones as PlannerTournament['maldiciones'] } : {}),
+      ...(config.groupLabels ? { groupLabels: config.groupLabels as PlannerTournament['groupLabels'] } : {}),
+      ...(config.rankLabels ? { rankLabels: config.rankLabels as string[] } : {}),
+      ...(config.rankColors ? { rankColors: config.rankColors as number[] } : {}),
+      ...(nested.clubs ? { clubs: nested.clubs as PlannerTournament['clubs'] } : {}),
+    };
+    if (!tournament.name || !tournament.format || !tournament.courts) {
+      throw new Error('Missing required fields');
+    }
+    const exportedPlayers: ExportedPlayer[] = players.map(p => ({
+      name: p.name as string,
+      ...(p.group ? { group: p.group as 'A' | 'B' } : {}),
+      ...(p.clubId ? { clubId: p.clubId as string } : {}),
+      ...(p.rankSlot != null ? { rankSlot: p.rankSlot as number } : {}),
+    }));
+    return { tournament, players: exportedPlayers };
+  }
+
+  // Planner flat format: { _format, name, format, courts, players, ... }
+  const data = raw as unknown as ExportedTournament;
   if (!data.name || !data.format || !data.courts) {
     throw new Error('Missing required fields');
   }
@@ -209,7 +244,7 @@ export interface ParsedEventImport {
 
 export function parsePlannerEventExport(text: string): ParsedEventImport {
   const data = JSON.parse(text) as ExportedEvent;
-  if (data._format !== EVENT_EXPORT_FORMAT) {
+  if (data._format !== EVENT_EXPORT_FORMAT && data._format !== 'planner-event-v1') {
     throw new Error('Invalid format');
   }
   if (!data.name || !data.date || !Array.isArray(data.tournaments)) {

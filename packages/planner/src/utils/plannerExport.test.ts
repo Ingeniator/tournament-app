@@ -30,7 +30,7 @@ describe('exportPlannerTournament', () => {
     const json = exportPlannerTournament(t, []);
     const data = JSON.parse(json);
 
-    expect(data._format).toBe('planner-tournament-v1');
+    expect(data._format).toBe('padel-tournament-v1');
     expect(data.name).toBe('Saturday Padel');
     expect(data.format).toBe('americano');
     expect(data.courts).toEqual([{ id: 'c1', name: 'Court 1' }]);
@@ -157,17 +157,17 @@ describe('parsePlannerExport', () => {
   });
 
   it('throws on missing name', () => {
-    const json = JSON.stringify({ _format: 'planner-tournament-v1', format: 'americano', courts: [{ id: '1', name: 'C1' }] });
+    const json = JSON.stringify({ _format: 'padel-tournament-v1', format: 'americano', courts: [{ id: '1', name: 'C1' }] });
     expect(() => parsePlannerExport(json)).toThrow('Missing required fields');
   });
 
   it('throws on missing format', () => {
-    const json = JSON.stringify({ _format: 'planner-tournament-v1', name: 'T', courts: [{ id: '1', name: 'C1' }] });
+    const json = JSON.stringify({ _format: 'padel-tournament-v1', name: 'T', courts: [{ id: '1', name: 'C1' }] });
     expect(() => parsePlannerExport(json)).toThrow('Missing required fields');
   });
 
   it('throws on missing courts', () => {
-    const json = JSON.stringify({ _format: 'planner-tournament-v1', name: 'T', format: 'americano' });
+    const json = JSON.stringify({ _format: 'padel-tournament-v1', name: 'T', format: 'americano' });
     expect(() => parsePlannerExport(json)).toThrow('Missing required fields');
   });
 
@@ -177,7 +177,7 @@ describe('parsePlannerExport', () => {
 
   it('defaults players to empty array when missing', () => {
     const json = JSON.stringify({
-      _format: 'planner-tournament-v1',
+      _format: 'padel-tournament-v1',
       name: 'T',
       format: 'americano',
       courts: [{ id: '1', name: 'C1' }],
@@ -197,7 +197,7 @@ describe('parsePlannerExport', () => {
 describe('parsePlannerEventExport', () => {
   function makeEventJson(overrides?: Record<string, unknown>) {
     return JSON.stringify({
-      _format: 'planner-event-v1',
+      _format: 'padel-event-v1',
       name: 'Summer Event',
       date: '2026-06-15',
       tournaments: [
@@ -232,7 +232,7 @@ describe('parsePlannerEventExport', () => {
 
   it('defaults weight to 1 when missing', () => {
     const json = JSON.stringify({
-      _format: 'planner-event-v1',
+      _format: 'padel-event-v1',
       name: 'E',
       date: '2026-01-01',
       tournaments: [{ name: 'T', format: 'mexicano', courts: [], players: [] }],
@@ -243,7 +243,7 @@ describe('parsePlannerEventExport', () => {
 
   it('defaults players to empty array when missing', () => {
     const json = JSON.stringify({
-      _format: 'planner-event-v1',
+      _format: 'padel-event-v1',
       name: 'E',
       date: '2026-01-01',
       tournaments: [{ name: 'T', format: 'mexicano', courts: [], weight: 1 }],
@@ -258,19 +258,19 @@ describe('parsePlannerEventExport', () => {
 
   it('throws on missing name', () => {
     expect(() => parsePlannerEventExport(JSON.stringify({
-      _format: 'planner-event-v1', date: '2026-01-01', tournaments: [],
+      _format: 'padel-event-v1', date: '2026-01-01', tournaments: [],
     }))).toThrow('Missing required fields');
   });
 
   it('throws on missing date', () => {
     expect(() => parsePlannerEventExport(JSON.stringify({
-      _format: 'planner-event-v1', name: 'E', tournaments: [],
+      _format: 'padel-event-v1', name: 'E', tournaments: [],
     }))).toThrow('Missing required fields');
   });
 
   it('throws on missing tournaments array', () => {
     expect(() => parsePlannerEventExport(JSON.stringify({
-      _format: 'planner-event-v1', name: 'E', date: '2026-01-01',
+      _format: 'padel-event-v1', name: 'E', date: '2026-01-01',
     }))).toThrow('Missing required fields');
   });
 
@@ -280,7 +280,7 @@ describe('parsePlannerEventExport', () => {
 
   it('handles multiple tournaments', () => {
     const json = JSON.stringify({
-      _format: 'planner-event-v1',
+      _format: 'padel-event-v1',
       name: 'Multi',
       date: '2026-07-01',
       tournaments: [
@@ -301,5 +301,102 @@ describe('parsePlannerEventExport', () => {
     const t = parsed.tournaments[0].tournament;
     expect(t).not.toHaveProperty('players');
     expect(t).not.toHaveProperty('weight');
+  });
+});
+
+describe('cross-format: runner export → planner import', () => {
+  // Simulates importing a runner-exported JSON (envelope format with nested tournament)
+  // into the planner via parsePlannerExport.
+
+  function makeRunnerExport(overrides?: Partial<{
+    format: string;
+    courts: Array<{ id: string; name: string }>;
+    playerCount: number;
+    duration: number;
+  }>): string {
+    const format = overrides?.format ?? 'americano';
+    const courts = overrides?.courts ?? [{ id: 'c1', name: 'Court 1' }];
+    const playerCount = overrides?.playerCount ?? 4;
+    const duration = overrides?.duration ?? 120;
+
+    const players = Array.from({ length: playerCount }, (_, i) => ({
+      id: `p${i + 1}`,
+      name: `Player ${i + 1}`,
+    }));
+
+    return JSON.stringify({
+      _format: 'padel-tournament-v1',
+      tournament: {
+        id: 'runner-t1',
+        name: 'Runner Tournament',
+        config: {
+          format,
+          pointsPerMatch: 24,
+          courts,
+          maxRounds: 5,
+          targetDuration: duration,
+        },
+        phase: 'in-progress',
+        players,
+        rounds: [
+          {
+            id: 'r1',
+            roundNumber: 1,
+            matches: [{
+              id: 'm1',
+              courtId: 'c1',
+              team1: ['p1', 'p2'],
+              team2: ['p3', 'p4'],
+              score: { team1Points: 18, team2Points: 14 },
+            }],
+            sitOuts: [],
+          },
+        ],
+        createdAt: 1000,
+        updatedAt: 2000,
+      },
+    });
+  }
+
+  it('parses runner-exported americano tournament', () => {
+    const json = makeRunnerExport();
+    const parsed = parsePlannerExport(json);
+
+    expect(parsed.tournament.name).toBe('Runner Tournament');
+    expect(parsed.tournament.format).toBe('americano');
+    expect(parsed.tournament.courts).toEqual([{ id: 'c1', name: 'Court 1' }]);
+    expect(parsed.players).toHaveLength(4);
+    expect(parsed.players[0].name).toBe('Player 1');
+  });
+
+  it('extracts duration from runner config', () => {
+    const json = makeRunnerExport({ duration: 90 });
+    const parsed = parsePlannerExport(json);
+
+    expect(parsed.tournament.duration).toBe(90);
+  });
+
+  it('extracts pointsPerMatch and maxRounds from runner config', () => {
+    const json = makeRunnerExport();
+    const parsed = parsePlannerExport(json);
+
+    expect(parsed.tournament.pointsPerMatch).toBe(24);
+    expect(parsed.tournament.maxRounds).toBe(5);
+  });
+
+  it('handles multiple courts', () => {
+    const courts = [{ id: 'c1', name: 'Court 1' }, { id: 'c2', name: 'Court 2' }];
+    const json = makeRunnerExport({ courts, playerCount: 8 });
+    const parsed = parsePlannerExport(json);
+
+    expect(parsed.tournament.courts).toHaveLength(2);
+    expect(parsed.players).toHaveLength(8);
+  });
+
+  it('handles mexicano format', () => {
+    const json = makeRunnerExport({ format: 'mexicano' });
+    const parsed = parsePlannerExport(json);
+
+    expect(parsed.tournament.format).toBe('mexicano');
   });
 });

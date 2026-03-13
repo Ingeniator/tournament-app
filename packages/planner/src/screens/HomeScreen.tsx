@@ -139,7 +139,7 @@ export function HomeScreen() {
   const loadImport = useCallback((text: string) => {
     try {
       const parsed = JSON.parse(text);
-      if (parsed._format === 'planner-event-v1') {
+      if (parsed._format === 'padel-event-v1' || parsed._format === 'planner-event-v1') {
         const eventData = parsePlannerEventExport(text);
         if (window.confirm(t('event.importConfirm', { name: eventData.name, count: eventData.tournaments.length }))) {
           importEvent(eventData);
