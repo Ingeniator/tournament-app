@@ -205,17 +205,11 @@ export function usePlannerTournament(tournamentId: string | null) {
       ...(tournamentData.captainMode ? { captainMode: tournamentData.captainMode } : {}),
       locale,
     };
-    const updates: Record<string, unknown> = {
-      [`tournaments/${id}`]: tournament,
-      [`codes/${code}`]: id,
-      [`users/${organizerId}/organized/${id}`]: true,
-    };
-    if (telegramUsername) {
-      updates[`telegramUsers/${telegramUsername}/organized/${id}`] = true;
-      updates[`telegramUsers/${telegramUsername}/currentUid`] = organizerId;
-    }
-    // Add players
+    // Embed players inside tournament object to avoid Firebase ancestor path
+    // conflict (writing /tournaments/{id} AND /tournaments/{id}/players/{pid}
+    // in the same update() call is not allowed).
     const now = Date.now();
+    const playersMap: Record<string, Record<string, unknown>> = {};
     for (const p of players) {
       const playerId = generateId();
       const playerData: Record<string, unknown> = {
@@ -228,7 +222,20 @@ export function usePlannerTournament(tournamentId: string | null) {
       if (p.rankSlot != null) playerData.rankSlot = p.rankSlot;
       if (p.partnerName) playerData.partnerName = p.partnerName;
       if (p.telegramUsername) playerData.telegramUsername = p.telegramUsername;
-      updates[`tournaments/${id}/players/${playerId}`] = playerData;
+      playersMap[playerId] = playerData;
+    }
+    const tournamentWithPlayers = players.length > 0
+      ? { ...tournament, players: playersMap }
+      : tournament;
+
+    const updates: Record<string, unknown> = {
+      [`tournaments/${id}`]: tournamentWithPlayers,
+      [`codes/${code}`]: id,
+      [`users/${organizerId}/organized/${id}`]: true,
+    };
+    if (telegramUsername) {
+      updates[`telegramUsers/${telegramUsername}/organized/${id}`] = true;
+      updates[`telegramUsers/${telegramUsername}/currentUid`] = organizerId;
     }
     await firebaseUpdate(ref(db), updates);
     return id;
