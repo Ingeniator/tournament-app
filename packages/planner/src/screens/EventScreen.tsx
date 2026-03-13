@@ -1,11 +1,11 @@
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Button, Card, Toast, useToast, useTranslation } from '@padel/common';
 import { useEvent } from '../hooks/useEvent';
 import { useEventTournaments } from '../hooks/useEventTournaments';
 import type { EventTournamentInfo } from '../hooks/useEventTournaments';
 import { usePlanner } from '../state/PlannerContext';
 import { computeEventStandings, computeEventClubStandings } from '../utils/eventStandings';
-import { exportPlannerEvent, parsePlannerEventExport } from '../utils/plannerExport';
+import { exportPlannerEvent } from '../utils/plannerExport';
 import { computeBreakdown } from '../utils/tournamentBreakdown';
 import { TournamentBreakdownView } from '../components/TournamentBreakdown';
 import { StandingsCard, ClubStandingsCard } from '../components/EventStandingsCards';
@@ -46,39 +46,20 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
     return computeEventClubStandings(event.tournaments, tournamentData);
   }, [event, tournamentData]);
 
-  // Export/import hooks — must be before early returns to satisfy rules of hooks
-  const { importEvent } = usePlanner();
+  // Export hooks — must be before early returns to satisfy rules of hooks
   const [exportOpen, setExportOpen] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
-  const importRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const open = exportOpen || importOpen;
-    if (!open) return;
+    if (!exportOpen) return;
     const handleClick = (e: MouseEvent) => {
-      if (exportOpen && exportRef.current && !exportRef.current.contains(e.target as Node)) {
+      if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
         setExportOpen(false);
-      }
-      if (importOpen && importRef.current && !importRef.current.contains(e.target as Node)) {
-        setImportOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, [exportOpen, importOpen]);
-
-  const loadEventImport = useCallback((text: string) => {
-    try {
-      const data = parsePlannerEventExport(text);
-      if (window.confirm(t('event.importConfirm', { name: data.name, count: data.tournaments.length }))) {
-        importEvent(data);
-      }
-    } catch {
-      showToast(t('home.importFailed'));
-    }
-  }, [importEvent, showToast, t]);
+  }, [exportOpen]);
 
   if (loading || !event) {
     return (
@@ -210,27 +191,6 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
     }
   };
 
-  const handleImportClipboard = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      loadEventImport(text);
-    } catch {
-      showToast(t('organizer.failedCopy'));
-    }
-  };
-
-  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        loadEventImport(reader.result);
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  };
 
   return (
     <div className={styles.container}>
@@ -367,7 +327,7 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
         {isOwner && (
           <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
             <div className={styles.dropdown} ref={exportRef}>
-              <Button variant="ghost" fullWidth onClick={() => { setExportOpen(v => !v); setImportOpen(false); }}>
+              <Button variant="ghost" fullWidth onClick={() => setExportOpen(v => !v)}>
                 {t('event.export')} <span className={styles.dropdownArrow}>{exportOpen ? '\u25B2' : '\u25BC'}</span>
               </Button>
               {exportOpen && (
@@ -381,28 +341,6 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
                 </div>
               )}
             </div>
-            <div className={styles.dropdown} ref={importRef}>
-              <Button variant="ghost" fullWidth onClick={() => { setImportOpen(v => !v); setExportOpen(false); }}>
-                {t('event.import')} <span className={styles.dropdownArrow}>{importOpen ? '\u25B2' : '\u25BC'}</span>
-              </Button>
-              {importOpen && (
-                <div className={styles.dropdownMenu}>
-                  <button className={styles.dropdownItem} onClick={() => { setImportOpen(false); handleImportClipboard(); }}>
-                    {t('organizer.importFromClipboard')}
-                  </button>
-                  <button className={styles.dropdownItem} onClick={() => { setImportOpen(false); fileInputRef.current?.click(); }}>
-                    {t('organizer.loadFile')}
-                  </button>
-                </div>
-              )}
-            </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json,application/json"
-              onChange={handleImportFile}
-              className={styles.fileInput}
-            />
           </div>
         )}
         {isOwner && (

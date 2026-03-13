@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback, useRef, type ReactNode } from 'react';
+import { useState, useMemo, useEffect, useRef, type ReactNode } from 'react';
 import { ref, push, set } from 'firebase/database';
 import { Button, Card, NO_COLOR, CLUB_COLORS, getClubColor, RANK_COLORS, getRankColor, cycleColor, Modal, FeedbackModal, AppFooter, Toast, useToast, useTranslation, FormatPicker, getPresetByFormat, formatHasGroups, formatHasClubs, formatHasFixedPartners, resolveConfigDefaults, computeSitOutInfo, MINUTES_PER_POINT, MINUTES_PER_GAME, MINUTES_PER_SET, CHANGEOVER_MINUTES } from '@padel/common';
 import type { Court, Club, ChaosLevel, Team } from '@padel/common';
@@ -6,7 +6,7 @@ import { generateId } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { auth, db } from '../firebase';
 import { exportRunnerTournamentJSON } from '../utils/exportToRunner';
-import { exportPlannerTournament, parsePlannerExport } from '../utils/plannerExport';
+import { exportPlannerTournament } from '../utils/plannerExport';
 import { restoreFromBackup } from '../utils/restoreFromBackup';
 import { useStartGuard } from '../hooks/useStartGuard';
 import { StartWarningModal } from '../components/StartWarningModal';
@@ -52,7 +52,7 @@ function formatDuration(minutes: number): string {
 type PlayerMode = 'quick' | 'share';
 
 export function OrganizerScreen() {
-  const { tournament, players, removePlayer, updateTournament, importTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerAlias, updatePlayerTelegram, updatePlayerPartner, updatePlayerGroup, updatePlayerClub, updatePlayerRank, deleteTournament, completedAt, undoComplete, uid } = usePlanner();
+  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerAlias, updatePlayerTelegram, updatePlayerPartner, updatePlayerGroup, updatePlayerClub, updatePlayerRank, deleteTournament, completedAt, undoComplete, uid } = usePlanner();
   const { startedBy, showWarning, warningReason, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
   const { t, locale } = useTranslation();
   const { toastMessage, showToast } = useToast();
@@ -138,38 +138,20 @@ export function OrganizerScreen() {
     [players, statuses]
   );
 
-  // Export/import hooks — must be before early returns to satisfy rules of hooks
-  const loadPlannerImport = useCallback((text: string) => {
-    try {
-      const { tournament: data, players: importedPlayers } = parsePlannerExport(text);
-      if (window.confirm(t('organizer.importConfirm', { name: data.name, count: importedPlayers.length }))) {
-        importTournament(data, importedPlayers);
-      }
-    } catch {
-      showToast(t('home.importFailed'));
-    }
-  }, [importTournament, showToast, t]);
-
+  // Export hooks — must be before early returns to satisfy rules of hooks
   const [exportOpen, setExportOpen] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
-  const importRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const open = exportOpen || importOpen;
-    if (!open) return;
+    if (!exportOpen) return;
     const handleClick = (e: MouseEvent) => {
-      if (exportOpen && exportRef.current && !exportRef.current.contains(e.target as Node)) {
+      if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
         setExportOpen(false);
-      }
-      if (importOpen && importRef.current && !importRef.current.contains(e.target as Node)) {
-        setImportOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, [exportOpen, importOpen]);
+  }, [exportOpen]);
 
   if (!tournament) return null;
 
@@ -307,27 +289,6 @@ export function OrganizerScreen() {
     URL.revokeObjectURL(url);
   };
 
-  const handleImportClipboard = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      loadPlannerImport(text);
-    } catch {
-      showToast(t('organizer.failedCopy'));
-    }
-  };
-
-  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        loadPlannerImport(reader.result);
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  };
 
   const handleNameSave = async () => {
     const trimmed = nameDraft.trim();
@@ -1204,7 +1165,7 @@ export function OrganizerScreen() {
 
       <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
         <div className={styles.dropdown} ref={exportRef}>
-          <Button variant="ghost" fullWidth onClick={() => { setExportOpen(v => !v); setImportOpen(false); }}>
+          <Button variant="ghost" fullWidth onClick={() => setExportOpen(v => !v)}>
             {t('organizer.export')} <span className={styles.dropdownArrow}>{exportOpen ? '\u25B2' : '\u25BC'}</span>
           </Button>
           {exportOpen && (
@@ -1218,28 +1179,6 @@ export function OrganizerScreen() {
             </div>
           )}
         </div>
-        <div className={styles.dropdown} ref={importRef}>
-          <Button variant="ghost" fullWidth onClick={() => { setImportOpen(v => !v); setExportOpen(false); }}>
-            {t('organizer.import')} <span className={styles.dropdownArrow}>{importOpen ? '\u25B2' : '\u25BC'}</span>
-          </Button>
-          {importOpen && (
-            <div className={styles.dropdownMenu}>
-              <button className={styles.dropdownItem} onClick={() => { setImportOpen(false); handleImportClipboard(); }}>
-                {t('organizer.importFromClipboard')}
-              </button>
-              <button className={styles.dropdownItem} onClick={() => { setImportOpen(false); fileInputRef.current?.click(); }}>
-                {t('organizer.loadFile')}
-              </button>
-            </div>
-          )}
-        </div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".json,application/json"
-          onChange={handleImportFile}
-          className={styles.fileInput}
-        />
       </div>
 
       <button
