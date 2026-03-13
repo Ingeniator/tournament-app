@@ -1,5 +1,52 @@
 # Release Notes
 
+## v0.7.0
+
+### New Features
+
+#### Player Aliases
+  - Organizers can set display name aliases for players in the link profile modal
+  - Aliases are used as player names in the runner during gameplay
+  - Aliases shown as subtext below player name in the organizer's player list
+  - Aliases included in tournament and event export/import
+
+#### Tournament & Event Export/Import
+  - Export tournaments and events as JSON (copy to clipboard or download file)
+  - Import tournaments and events on HomeScreen to create copies with all players
+  - Cross-format compatibility: runner exports can be imported into planner and vice versa
+  - Unified format markers (`padel-tournament-v1`, `padel-event-v1`) with backward compatibility for old formats
+
+#### Direct Launch to Play
+  - "Let's play" now opens the runner directly in play mode — schedule is generated on load
+  - SetupScreen and TeamPairingScreen are skipped for planner-originated tournaments
+
+#### Rank Results Card
+  - New visual card showing rank-based match results in standings view
+
+#### Landing Page SEO
+  - FAQPage and HowTo structured data schemas for search engines
+  - Rich noscript content for crawlers
+  - Prerendering script for static HTML generation
+  - Sitemap added
+
+### Improvements
+
+  - Import button removed from EventScreen and OrganizerScreen detail pages (available only on HomeScreen, where it creates new items)
+  - Domain reverted from torneo.me to padelday.net
+
+### Bug Fixes
+
+  - Fixed Firebase ancestor path conflict when importing tournaments with players
+  - Fixed undefined description causing event import to fail
+  - Fixed export format mismatch between runner and planner
+
+### Technical
+
+  - Cross-format import/export test coverage (runner ↔ planner)
+  - Planner export tests expanded to 31 tests
+  - Runner import tests expanded to 33 tests
+  - E2E tests for rank results card
+
 ## v0.6.0
 
 ### New Features
