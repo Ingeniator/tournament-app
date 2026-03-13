@@ -8,6 +8,7 @@ const EVENT_EXPORT_FORMAT = 'planner-event-v1';
 export interface ExportedPlayer {
   name: string;
   confirmed?: boolean;
+  alias?: string;
   group?: 'A' | 'B';
   clubId?: string;
   rankSlot?: number;
@@ -49,6 +50,7 @@ function buildTournamentExport(
   const players: ExportedPlayer[] = registrations.map(r => {
     const p: ExportedPlayer = { name: r.name };
     if (r.confirmed !== undefined) p.confirmed = r.confirmed;
+    if (r.alias) p.alias = r.alias;
     if (r.group) p.group = r.group;
     if (r.clubId) p.clubId = r.clubId;
     if (r.rankSlot != null) p.rankSlot = r.rankSlot;
@@ -170,6 +172,7 @@ export async function exportPlannerEvent(event: PadelEvent): Promise<string> {
           name: (p.name as string) ?? '',
           timestamp: (p.timestamp as number) ?? 0,
           confirmed: p.confirmed as boolean | undefined,
+          alias: p.alias as string | undefined,
           group: p.group as 'A' | 'B' | undefined,
           clubId: p.clubId as string | undefined,
           rankSlot: p.rankSlot as number | undefined,

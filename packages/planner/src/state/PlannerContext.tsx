@@ -41,6 +41,7 @@ export interface PlannerContextValue {
   bulkAddPlayers: (names: string[]) => Promise<void>;
   toggleConfirmed: (playerId: string, currentConfirmed: boolean) => Promise<void>;
   updatePlayerName: (playerId: string, name: string) => Promise<void>;
+  updatePlayerAlias: (playerId: string, alias: string | null) => Promise<void>;
   updatePlayerTelegram: (playerId: string, telegramUsername: string | null) => Promise<void>;
   updatePlayerGroup: (playerId: string, group: 'A' | 'B' | null) => Promise<void>;
   updatePlayerClub: (playerId: string, clubId: string | null) => Promise<void>;
@@ -115,7 +116,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     undoComplete,
   } = usePlannerTournament(tournamentId);
 
-  const { players, error: playersError, registerPlayer: registerInDb, removePlayer, updateConfirmed: updateConfirmedInDb, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, updatePlayerRank, updatePlayerPartner, updateCaptainApproval, isRegistered: checkRegistered, claimOrphanRegistration } = usePlayers(tournamentId);
+  const { players, error: playersError, registerPlayer: registerInDb, removePlayer, updateConfirmed: updateConfirmedInDb, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerAlias, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, updatePlayerRank, updatePlayerPartner, updateCaptainApproval, isRegistered: checkRegistered, claimOrphanRegistration } = usePlayers(tournamentId);
 
   const dataError = tournamentError || playersError;
 
@@ -348,6 +349,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       bulkAddPlayers,
       toggleConfirmed,
       updatePlayerName,
+      updatePlayerAlias,
       updatePlayerTelegram,
       updatePlayerGroup,
       updatePlayerClub,

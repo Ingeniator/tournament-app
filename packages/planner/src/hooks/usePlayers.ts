@@ -181,6 +181,11 @@ export function usePlayers(tournamentId: string | null) {
     await update(ref(db, `tournaments/${tournamentId}/players/${playerId}`), { name });
   }, [tournamentId]);
 
+  const updatePlayerAlias = useCallback(async (playerId: string, alias: string | null) => {
+    if (!tournamentId || !db) return;
+    await set(ref(db, `tournaments/${tournamentId}/players/${playerId}/alias`), alias || null);
+  }, [tournamentId]);
+
   const updatePlayerTelegram = useCallback(async (playerId: string, telegramUsername: string | null) => {
     if (!tournamentId || !db) return;
     await set(ref(db, `tournaments/${tournamentId}/players/${playerId}/telegramUsername`), telegramUsername || null);
@@ -271,5 +276,5 @@ export function usePlayers(tournamentId: string | null) {
     return players.some(p => p.id === uid);
   }, [players]);
 
-  return { players, loading, error, registerPlayer, removePlayer, updateConfirmed, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, updatePlayerRank, updatePlayerPartner, updateCaptainApproval, isRegistered, claimOrphanRegistration };
+  return { players, loading, error, registerPlayer, removePlayer, updateConfirmed, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerAlias, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, updatePlayerRank, updatePlayerPartner, updateCaptainApproval, isRegistered, claimOrphanRegistration };
 }

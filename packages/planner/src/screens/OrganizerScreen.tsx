@@ -52,7 +52,7 @@ function formatDuration(minutes: number): string {
 type PlayerMode = 'quick' | 'share';
 
 export function OrganizerScreen() {
-  const { tournament, players, removePlayer, updateTournament, importTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerTelegram, updatePlayerPartner, updatePlayerGroup, updatePlayerClub, updatePlayerRank, deleteTournament, completedAt, undoComplete, uid } = usePlanner();
+  const { tournament, players, removePlayer, updateTournament, importTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerAlias, updatePlayerTelegram, updatePlayerPartner, updatePlayerGroup, updatePlayerClub, updatePlayerRank, deleteTournament, completedAt, undoComplete, uid } = usePlanner();
   const { startedBy, showWarning, warningReason, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
   const { t, locale } = useTranslation();
   const { toastMessage, showToast } = useToast();
@@ -266,7 +266,9 @@ export function OrganizerScreen() {
       setShowTeamPairing(true);
       return;
     }
-    handleGuardedLaunch(tournament!, players);
+    const aliases = new Map<string, string>();
+    for (const p of players) { if (p.alias) aliases.set(p.id, p.alias); }
+    handleGuardedLaunch(tournament!, players, undefined, aliases.size > 0 ? aliases : undefined);
   };
 
   const handleTeamStart = (teams: Team[], aliases: Map<string, string>) => {
@@ -1125,6 +1127,7 @@ export function OrganizerScreen() {
         bulkAddPlayers={bulkAddPlayers}
         removePlayer={removePlayer}
         toggleConfirmed={toggleConfirmed}
+        updatePlayerAlias={updatePlayerAlias}
         updatePlayerTelegram={updatePlayerTelegram}
         updatePlayerPartner={updatePlayerPartner}
         statuses={statuses}

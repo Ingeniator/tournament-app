@@ -16,6 +16,7 @@ interface PlayerListProps {
   bulkAddPlayers: (names: string[]) => Promise<void>;
   removePlayer: (playerId: string) => Promise<void>;
   toggleConfirmed: (playerId: string, currentConfirmed: boolean) => Promise<void>;
+  updatePlayerAlias: (playerId: string, alias: string | null) => Promise<void>;
   updatePlayerTelegram: (playerId: string, telegramUsername: string | null) => Promise<void>;
   updatePlayerPartner?: (playerId: string, partnerName: string | null, partnerTelegram: string | null, constraints?: PartnerConstraints, addedBy?: string) => Promise<PartnerRejection | null>;
   statuses: Map<string, string>;
@@ -34,13 +35,14 @@ interface PlayerListProps {
   operatorName?: string;
 }
 
-export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, removePlayer, toggleConfirmed, updatePlayerTelegram, updatePlayerPartner, statuses, format, clubs, groupLabels, rankLabels, rankColors, onSetGroup, onSetClub, onSetRank, simplified, captainMode, showToast, operatorName }: PlayerListProps) {
+export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, removePlayer, toggleConfirmed, updatePlayerAlias, updatePlayerTelegram, updatePlayerPartner, statuses, format, clubs, groupLabels, rankLabels, rankColors, onSetGroup, onSetClub, onSetRank, simplified, captainMode, showToast, operatorName }: PlayerListProps) {
   const { t } = useTranslation();
   const [newPlayerName, setNewPlayerName] = useState('');
   const addingPlayer = useRef(false);
   const addPlayerInputRef = useRef<HTMLInputElement>(null);
-  const [linkingPlayer, setLinkingPlayer] = useState<{ id: string; name: string; telegramUsername?: string; partnerName?: string; partnerTelegram?: string; clubId?: string; rankSlot?: number; group?: 'A' | 'B' } | null>(null);
+  const [linkingPlayer, setLinkingPlayer] = useState<{ id: string; name: string; alias?: string; telegramUsername?: string; partnerName?: string; partnerTelegram?: string; clubId?: string; rankSlot?: number; group?: 'A' | 'B' } | null>(null);
   const NEW_PLAYER_VALUE = '__new__';
+  const [aliasDraft, setAliasDraft] = useState('');
   const [linkDraft, setLinkDraft] = useState('');
   const [partnerNameDraft, setPartnerNameDraft] = useState('');
   const [partnerTelegramDraft, setPartnerTelegramDraft] = useState('');
@@ -210,7 +212,8 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
       <button
         className={player.telegramUsername ? styles.linkBtnActive : styles.linkBtn}
         onClick={() => {
-          setLinkingPlayer({ id: player.id, name: player.name, telegramUsername: player.telegramUsername, partnerName: player.partnerName, partnerTelegram: player.partnerTelegram, clubId: player.clubId, rankSlot: player.rankSlot, group: player.group });
+          setLinkingPlayer({ id: player.id, name: player.name, alias: player.alias, telegramUsername: player.telegramUsername, partnerName: player.partnerName, partnerTelegram: player.partnerTelegram, clubId: player.clubId, rankSlot: player.rankSlot, group: player.group });
+          setAliasDraft(player.alias ?? '');
           setLinkDraft(player.telegramUsername ? `@${player.telegramUsername}` : '');
           setPartnerNameDraft(player.partnerName ? (players.find(pl => pl.name === player.partnerName)?.id ?? '') : '');
           setPartnerTelegramDraft(player.partnerTelegram ? `@${player.partnerTelegram}` : '');
@@ -488,6 +491,15 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
         onClose={() => setLinkingPlayer(null)}
       >
         <div className={styles.linkForm}>
+          <label className={styles.linkLabel}>{t('organizer.aliasLabel')}</label>
+          <input
+            className={styles.linkInput}
+            type="text"
+            value={aliasDraft}
+            onChange={e => setAliasDraft(e.target.value)}
+            placeholder={t('organizer.aliasPlaceholder')}
+            autoFocus
+          />
           <label className={styles.linkLabel}>{t('organizer.telegramUsername')}</label>
           <input
             className={styles.linkInput}
@@ -495,7 +507,6 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
             value={linkDraft}
             onChange={e => setLinkDraft(e.target.value)}
             placeholder={t('organizer.telegramPlaceholder')}
-            autoFocus
           />
           {showPartner && updatePlayerPartner && (
             <>
@@ -588,6 +599,8 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
               size="small"
               onClick={async () => {
                 if (!linkingPlayer) return;
+                const alias = aliasDraft.trim() || null;
+                updatePlayerAlias(linkingPlayer.id, alias);
                 const username = linkDraft.trim().replace(/^@/, '') || null;
                 updatePlayerTelegram(linkingPlayer.id, username);
                 if (showPartner && updatePlayerPartner) {
@@ -610,7 +623,7 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
                 setNewPartnerTelegramDraft('');
                 setLinkingPlayer(null);
               }}
-              disabled={!linkDraft.trim() && !(showPartner && (partnerNameDraft === NEW_PLAYER_VALUE ? newPartnerNameDraft.trim() : partnerNameDraft.trim()))}
+              disabled={!aliasDraft.trim() && !linkDraft.trim() && !(showPartner && (partnerNameDraft === NEW_PLAYER_VALUE ? newPartnerNameDraft.trim() : partnerNameDraft.trim()))}
             >
               {t('organizer.saveLink')}
             </Button>

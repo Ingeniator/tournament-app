@@ -67,6 +67,8 @@ const en: Translations = {
   'organizer.addPlayer': '+ Add',
   'organizer.linkProfile': 'Link profile',
   'organizer.linkProfileTitle': 'Link {name}',
+  'organizer.aliasLabel': 'Display name (alias)',
+  'organizer.aliasPlaceholder': 'Name used during the game',
   'organizer.telegramUsername': 'Telegram username',
   'organizer.telegramPlaceholder': '@username',
   'organizer.saveLink': 'Save',

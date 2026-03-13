@@ -81,7 +81,7 @@ describe('exportPlannerTournament', () => {
 
   it('exports player data with all optional fields', () => {
     const players: PlannerRegistration[] = [
-      { id: 'r1', name: 'Alice', timestamp: 1000, confirmed: true, group: 'A', clubId: 'club-1', rankSlot: 1, partnerName: 'Bob', telegramUsername: 'alice_tg' },
+      { id: 'r1', name: 'Alice', timestamp: 1000, confirmed: true, alias: 'Ali', group: 'A', clubId: 'club-1', rankSlot: 1, partnerName: 'Bob', telegramUsername: 'alice_tg' },
       { id: 'r2', name: 'Bob', timestamp: 1001 },
     ];
     const json = exportPlannerTournament(makeTournament(), players);
@@ -91,6 +91,7 @@ describe('exportPlannerTournament', () => {
     expect(data.players[0]).toEqual({
       name: 'Alice',
       confirmed: true,
+      alias: 'Ali',
       group: 'A',
       clubId: 'club-1',
       rankSlot: 1,
