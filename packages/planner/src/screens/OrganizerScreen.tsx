@@ -138,6 +138,39 @@ export function OrganizerScreen() {
     [players, statuses]
   );
 
+  // Export/import hooks — must be before early returns to satisfy rules of hooks
+  const loadPlannerImport = useCallback((text: string) => {
+    try {
+      const { tournament: data, players: importedPlayers } = parsePlannerExport(text);
+      if (window.confirm(t('organizer.importConfirm', { name: data.name, count: importedPlayers.length }))) {
+        importTournament(data, importedPlayers);
+      }
+    } catch {
+      showToast(t('home.importFailed'));
+    }
+  }, [importTournament, showToast, t]);
+
+  const [exportOpen, setExportOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const exportRef = useRef<HTMLDivElement>(null);
+  const importRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const open = exportOpen || importOpen;
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (exportOpen && exportRef.current && !exportRef.current.contains(e.target as Node)) {
+        setExportOpen(false);
+      }
+      if (importOpen && importRef.current && !importRef.current.contains(e.target as Node)) {
+        setImportOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [exportOpen, importOpen]);
+
   if (!tournament) return null;
 
   if (completedAt) {
@@ -293,38 +326,6 @@ export function OrganizerScreen() {
     reader.readAsText(file);
     e.target.value = '';
   };
-
-  const loadPlannerImport = useCallback((text: string) => {
-    try {
-      const { tournament: data, players: importedPlayers } = parsePlannerExport(text);
-      if (window.confirm(t('organizer.importConfirm', { name: data.name, count: importedPlayers.length }))) {
-        importTournament(data, importedPlayers);
-      }
-    } catch {
-      showToast(t('home.importFailed'));
-    }
-  }, [importTournament, showToast, t]);
-
-  const [exportOpen, setExportOpen] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
-  const exportRef = useRef<HTMLDivElement>(null);
-  const importRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const open = exportOpen || importOpen;
-    if (!open) return;
-    const handleClick = (e: MouseEvent) => {
-      if (exportOpen && exportRef.current && !exportRef.current.contains(e.target as Node)) {
-        setExportOpen(false);
-      }
-      if (importOpen && importRef.current && !importRef.current.contains(e.target as Node)) {
-        setImportOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [exportOpen, importOpen]);
 
   const handleNameSave = async () => {
     const trimmed = nameDraft.trim();

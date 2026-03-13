@@ -46,6 +46,40 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
     return computeEventClubStandings(event.tournaments, tournamentData);
   }, [event, tournamentData]);
 
+  // Export/import hooks — must be before early returns to satisfy rules of hooks
+  const { importEvent } = usePlanner();
+  const [exportOpen, setExportOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const exportRef = useRef<HTMLDivElement>(null);
+  const importRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const open = exportOpen || importOpen;
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (exportOpen && exportRef.current && !exportRef.current.contains(e.target as Node)) {
+        setExportOpen(false);
+      }
+      if (importOpen && importRef.current && !importRef.current.contains(e.target as Node)) {
+        setImportOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [exportOpen, importOpen]);
+
+  const loadEventImport = useCallback((text: string) => {
+    try {
+      const data = parsePlannerEventExport(text);
+      if (window.confirm(t('event.importConfirm', { name: data.name, count: data.tournaments.length }))) {
+        importEvent(data);
+      }
+    } catch {
+      showToast(t('home.importFailed'));
+    }
+  }, [importEvent, showToast, t]);
+
   if (loading || !event) {
     return (
       <div className={styles.container}>
@@ -151,28 +185,6 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
     }
   };
 
-  const { importEvent } = usePlanner();
-  const [exportOpen, setExportOpen] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
-  const exportRef = useRef<HTMLDivElement>(null);
-  const importRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const open = exportOpen || importOpen;
-    if (!open) return;
-    const handleClick = (e: MouseEvent) => {
-      if (exportOpen && exportRef.current && !exportRef.current.contains(e.target as Node)) {
-        setExportOpen(false);
-      }
-      if (importOpen && importRef.current && !importRef.current.contains(e.target as Node)) {
-        setImportOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [exportOpen, importOpen]);
-
   const handleExportCopy = async () => {
     try {
       const text = await exportPlannerEvent(event);
@@ -197,17 +209,6 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
       showToast(t('organizer.failedCopy'));
     }
   };
-
-  const loadEventImport = useCallback((text: string) => {
-    try {
-      const data = parsePlannerEventExport(text);
-      if (window.confirm(t('event.importConfirm', { name: data.name, count: data.tournaments.length }))) {
-        importEvent(data);
-      }
-    } catch {
-      showToast(t('home.importFailed'));
-    }
-  }, [importEvent, showToast, t]);
 
   const handleImportClipboard = async () => {
     try {
