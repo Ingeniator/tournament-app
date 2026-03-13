@@ -34,6 +34,8 @@ const en: Translations = {
   'home.organizerMode': 'Organizer',
   'home.joinNotFound': 'No tournament or event found with this code',
   'home.myEvents': 'My Events',
+  'home.importTournament': 'Import',
+  'home.importFailed': 'Invalid tournament data',
 
   // Footer & Options
   'footer.freeOpenSource': 'Free & open source',
@@ -138,6 +140,14 @@ const en: Translations = {
   'organizer.letsPlay': 'Let\'s play',
   'organizer.copyForDevice': 'Copy for Another Device',
   'organizer.jsonCopied': 'Tournament JSON copied!',
+  'organizer.export': 'Export',
+  'organizer.import': 'Import',
+  'organizer.copyData': 'Copy to Clipboard',
+  'organizer.exportFile': 'Download File',
+  'organizer.importFromClipboard': 'Paste from Clipboard',
+  'organizer.loadFile': 'Load File',
+  'organizer.exportCopied': 'Tournament export copied!',
+  'organizer.importConfirm': 'Import "{name}" with {count} players? This creates a new tournament.',
   'organizer.deleteTournament': 'Delete Tournament',
   'organizer.deleteConfirm': 'Delete this tournament? This cannot be undone.',
   'organizer.completed': 'Tournament Completed',
@@ -432,6 +442,10 @@ const en: Translations = {
   'event.codeCopied': 'Code copied!',
   'event.description': 'Description',
   'event.descriptionPlaceholder': 'Event details, rules, schedule, etc.',
+  'event.export': 'Export',
+  'event.import': 'Import',
+  'event.exportCopied': 'Event export copied!',
+  'event.importConfirm': 'Import event "{name}" with {count} tournament(s)? This creates a new event.',
 
   // EventJoinScreen
   'eventJoin.join': 'Join',

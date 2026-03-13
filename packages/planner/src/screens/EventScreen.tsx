@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Button, Card, Toast, useToast, useTranslation } from '@padel/common';
 import { useEvent } from '../hooks/useEvent';
 import { useEventTournaments } from '../hooks/useEventTournaments';
 import type { EventTournamentInfo } from '../hooks/useEventTournaments';
 import { usePlanner } from '../state/PlannerContext';
 import { computeEventStandings, computeEventClubStandings } from '../utils/eventStandings';
+import { exportPlannerEvent, parsePlannerEventExport } from '../utils/plannerExport';
 import { computeBreakdown } from '../utils/tournamentBreakdown';
 import { TournamentBreakdownView } from '../components/TournamentBreakdown';
 import { StandingsCard, ClubStandingsCard } from '../components/EventStandingsCards';
@@ -150,6 +151,86 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
     }
   };
 
+  const { importEvent } = usePlanner();
+  const [exportOpen, setExportOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const exportRef = useRef<HTMLDivElement>(null);
+  const importRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const open = exportOpen || importOpen;
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (exportOpen && exportRef.current && !exportRef.current.contains(e.target as Node)) {
+        setExportOpen(false);
+      }
+      if (importOpen && importRef.current && !importRef.current.contains(e.target as Node)) {
+        setImportOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [exportOpen, importOpen]);
+
+  const handleExportCopy = async () => {
+    try {
+      const text = await exportPlannerEvent(event);
+      await navigator.clipboard.writeText(text);
+      showToast(t('event.exportCopied'));
+    } catch {
+      showToast(t('organizer.failedCopy'));
+    }
+  };
+
+  const handleExportFile = async () => {
+    try {
+      const text = await exportPlannerEvent(event);
+      const blob = new Blob([text], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${event.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      showToast(t('organizer.failedCopy'));
+    }
+  };
+
+  const loadEventImport = useCallback((text: string) => {
+    try {
+      const data = parsePlannerEventExport(text);
+      if (window.confirm(t('event.importConfirm', { name: data.name, count: data.tournaments.length }))) {
+        importEvent(data);
+      }
+    } catch {
+      showToast(t('home.importFailed'));
+    }
+  }, [importEvent, showToast, t]);
+
+  const handleImportClipboard = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      loadEventImport(text);
+    } catch {
+      showToast(t('organizer.failedCopy'));
+    }
+  };
+
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        loadEventImport(reader.result);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -281,7 +362,48 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
           </Card>
         )}
 
-        {/* Delete event (owner only) */}
+        {/* Export / Import / Delete (owner only) */}
+        {isOwner && (
+          <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+            <div className={styles.dropdown} ref={exportRef}>
+              <Button variant="ghost" fullWidth onClick={() => { setExportOpen(v => !v); setImportOpen(false); }}>
+                {t('event.export')} <span className={styles.dropdownArrow}>{exportOpen ? '\u25B2' : '\u25BC'}</span>
+              </Button>
+              {exportOpen && (
+                <div className={styles.dropdownMenu}>
+                  <button className={styles.dropdownItem} onClick={() => { setExportOpen(false); handleExportCopy(); }}>
+                    {t('organizer.copyData')}
+                  </button>
+                  <button className={styles.dropdownItem} onClick={() => { setExportOpen(false); handleExportFile(); }}>
+                    {t('organizer.exportFile')}
+                  </button>
+                </div>
+              )}
+            </div>
+            <div className={styles.dropdown} ref={importRef}>
+              <Button variant="ghost" fullWidth onClick={() => { setImportOpen(v => !v); setExportOpen(false); }}>
+                {t('event.import')} <span className={styles.dropdownArrow}>{importOpen ? '\u25B2' : '\u25BC'}</span>
+              </Button>
+              {importOpen && (
+                <div className={styles.dropdownMenu}>
+                  <button className={styles.dropdownItem} onClick={() => { setImportOpen(false); handleImportClipboard(); }}>
+                    {t('organizer.importFromClipboard')}
+                  </button>
+                  <button className={styles.dropdownItem} onClick={() => { setImportOpen(false); fileInputRef.current?.click(); }}>
+                    {t('organizer.loadFile')}
+                  </button>
+                </div>
+              )}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json,application/json"
+              onChange={handleImportFile}
+              className={styles.fileInput}
+            />
+          </div>
+        )}
         {isOwner && (
           <button className={styles.deleteBtn} onClick={handleDelete}>
             {t('event.delete')}

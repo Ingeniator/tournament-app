@@ -132,11 +132,43 @@ export function useEvent(eventId: string | null) {
     await firebaseUpdate(ref(db), deletes);
   }, [eventId, event?.code]);
 
+  const importEvent = useCallback(async (
+    name: string,
+    date: string,
+    organizerId: string,
+    description?: string,
+    tournamentIds?: Array<{ tournamentId: string; weight: number }>,
+  ): Promise<string> => {
+    if (!db) throw new Error('Firebase not configured');
+    const id = generateId();
+    const code = await generateUniqueCode('eventCodes');
+    const now = Date.now();
+    const padelEvent: PadelEvent = {
+      id,
+      name,
+      date,
+      code,
+      description,
+      tournaments: tournamentIds ?? [],
+      organizerId,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const updates: Record<string, unknown> = {
+      [`events/${id}`]: padelEvent,
+      [`users/${organizerId}/events/${id}`]: true,
+      [`eventCodes/${code}`]: id,
+    };
+    await firebaseUpdate(ref(db), updates);
+    return id;
+  }, []);
+
   return {
     event,
     loading,
     error,
     createEvent,
+    importEvent,
     updateEvent,
     linkTournament,
     unlinkTournament,

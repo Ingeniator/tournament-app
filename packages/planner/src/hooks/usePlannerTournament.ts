@@ -169,6 +169,71 @@ export function usePlannerTournament(tournamentId: string | null) {
     await firebaseUpdate(ref(db), deletes);
   }, [tournamentId]);
 
+  const importTournament = useCallback(async (
+    tournamentData: Partial<PlannerTournament>,
+    players: Array<{ name: string; confirmed?: boolean; group?: 'A' | 'B'; clubId?: string; rankSlot?: number; partnerName?: string; telegramUsername?: string }>,
+    organizerId: string,
+    locale?: string,
+    telegramUsername?: string,
+  ): Promise<string> => {
+    if (!db) throw new Error('Firebase not configured');
+    const id = generateId();
+    const code = await generateUniqueCode();
+    const tournament: PlannerTournament = {
+      id,
+      name: tournamentData.name ?? 'Imported Tournament',
+      format: tournamentData.format ?? 'americano',
+      courts: tournamentData.courts ?? [{ id: generateId(), name: 'Court 1' }],
+      organizerId,
+      code,
+      createdAt: Date.now(),
+      ...(tournamentData.duration != null ? { duration: tournamentData.duration } : {}),
+      ...(tournamentData.date ? { date: tournamentData.date } : {}),
+      ...(tournamentData.place ? { place: tournamentData.place } : {}),
+      ...(tournamentData.description ? { description: tournamentData.description } : {}),
+      ...(tournamentData.chatLink ? { chatLink: tournamentData.chatLink } : {}),
+      ...(tournamentData.pointsPerMatch != null ? { pointsPerMatch: tournamentData.pointsPerMatch } : {}),
+      ...(tournamentData.maxRounds != null ? { maxRounds: tournamentData.maxRounds } : {}),
+      ...(tournamentData.extraSpots != null ? { extraSpots: tournamentData.extraSpots } : {}),
+      ...(tournamentData.clubs ? { clubs: tournamentData.clubs } : {}),
+      ...(tournamentData.groupLabels ? { groupLabels: tournamentData.groupLabels } : {}),
+      ...(tournamentData.rankLabels ? { rankLabels: tournamentData.rankLabels } : {}),
+      ...(tournamentData.rankColors ? { rankColors: tournamentData.rankColors } : {}),
+      ...(tournamentData.scoringMode ? { scoringMode: tournamentData.scoringMode } : {}),
+      ...(tournamentData.minutesPerRound != null ? { minutesPerRound: tournamentData.minutesPerRound } : {}),
+      ...(tournamentData.maldiciones ? { maldiciones: tournamentData.maldiciones } : {}),
+      ...(tournamentData.captainMode ? { captainMode: tournamentData.captainMode } : {}),
+      locale,
+    };
+    const updates: Record<string, unknown> = {
+      [`tournaments/${id}`]: tournament,
+      [`codes/${code}`]: id,
+      [`users/${organizerId}/organized/${id}`]: true,
+    };
+    if (telegramUsername) {
+      updates[`telegramUsers/${telegramUsername}/organized/${id}`] = true;
+      updates[`telegramUsers/${telegramUsername}/currentUid`] = organizerId;
+    }
+    // Add players
+    const now = Date.now();
+    for (const p of players) {
+      const playerId = generateId();
+      const playerData: Record<string, unknown> = {
+        name: p.name,
+        timestamp: now,
+        confirmed: p.confirmed ?? true,
+      };
+      if (p.group) playerData.group = p.group;
+      if (p.clubId) playerData.clubId = p.clubId;
+      if (p.rankSlot != null) playerData.rankSlot = p.rankSlot;
+      if (p.partnerName) playerData.partnerName = p.partnerName;
+      if (p.telegramUsername) playerData.telegramUsername = p.telegramUsername;
+      updates[`tournaments/${id}/players/${playerId}`] = playerData;
+    }
+    await firebaseUpdate(ref(db), updates);
+    return id;
+  }, []);
+
   const undoComplete = useCallback(async () => {
     if (!tournamentId || !db) return;
     await set(ref(db, `tournaments/${tournamentId}/completedAt`), null);
@@ -201,5 +266,5 @@ export function usePlannerTournament(tournamentId: string | null) {
     await firebaseUpdate(ref(db), deletes);
   }, []);
 
-  return { tournament, completedAt, loading, error, createTournament, updateTournament, loadByCode, deleteTournament, deleteTournamentById, undoComplete };
+  return { tournament, completedAt, loading, error, createTournament, importTournament, updateTournament, loadByCode, deleteTournament, deleteTournamentById, undoComplete };
 }
