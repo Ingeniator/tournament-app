@@ -2,6 +2,7 @@ import type { StandingsEntry, ClubStandingsEntry } from '@padel/common';
 import { NO_COLOR } from '@padel/common';
 import type { GroupInfo, ClubInfo } from '../components/standings/StandingsTable';
 import type { Nomination } from '../hooks/useNominations';
+import type { RankGroup } from '../components/standings/RankResultsCard';
 
 const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 
@@ -584,6 +585,131 @@ export function renderNominationImage(
   return canvas;
 }
 
+export function renderRankResultsImage(
+  tournamentName: string,
+  rankGroup: RankGroup,
+): HTMLCanvasElement {
+  const t = getThemeColors();
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d')!;
+
+  const canvasWidth = s(400);
+  const padding = s(20);
+  const headerHeight = s(36);
+  const rankLabelHeight = s(28);
+  const matchRowHeight = s(48);
+  const footerHeight = s(28);
+
+  const matches = rankGroup.matches;
+  const contentHeight = matches.length * matchRowHeight;
+  const canvasHeight = padding + headerHeight + rankLabelHeight + contentHeight + s(16) + footerHeight + padding;
+
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
+
+  // Card gradient background
+  const grad = ctx.createLinearGradient(0, 0, canvasWidth * 0.7, canvasHeight * 0.7);
+  grad.addColorStop(0, t.surface);
+  grad.addColorStop(1, t.surfaceRaised);
+  ctx.fillStyle = grad;
+  roundRect(ctx, 0, 0, canvasWidth, canvasHeight, s(16));
+  ctx.fill();
+
+  // Border
+  ctx.strokeStyle = t.border;
+  ctx.lineWidth = s(1);
+  roundRect(ctx, 0, 0, canvasWidth, canvasHeight, s(16));
+  ctx.stroke();
+
+  const cx = canvasWidth / 2;
+  let y = padding;
+
+  // Tournament name
+  ctx.textAlign = 'center';
+  ctx.fillStyle = t.textMuted;
+  ctx.font = `600 ${s(9)}px ${FONT}`;
+  ctx.fillText(tournamentName.toUpperCase(), cx, y + s(10));
+  y += headerHeight;
+
+  // Rank label
+  ctx.fillStyle = t.text;
+  ctx.font = `bold ${s(16)}px ${FONT}`;
+  ctx.fillText(rankGroup.rankLabel, cx, y + s(18));
+  y += rankLabelHeight;
+
+  // Match rows
+  const teamMaxW = (canvasWidth - padding * 2 - s(60)) / 2; // space for score in middle
+
+  for (let i = 0; i < matches.length; i++) {
+    const m = matches[i];
+    const rowY = y + matchRowHeight * i;
+
+    // Row separator
+    if (i > 0) {
+      ctx.strokeStyle = t.border;
+      ctx.globalAlpha = 0.5;
+      ctx.lineWidth = s(0.5);
+      ctx.beginPath();
+      ctx.moveTo(padding, rowY);
+      ctx.lineTo(canvasWidth - padding, rowY);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    const won1 = m.score1 > m.score2;
+    const won2 = m.score2 > m.score1;
+    const midY = rowY + matchRowHeight / 2;
+
+    // Left team (right-aligned)
+    const leftX = cx - s(30); // right edge of left team area
+    ctx.textAlign = 'right';
+    // Club name
+    ctx.font = `600 ${s(8)}px ${FONT}`;
+    ctx.fillStyle = t.textMuted;
+    ctx.fillText(truncateText(ctx, m.club1Name.toUpperCase(), teamMaxW), leftX, midY - s(6));
+    // Player names
+    ctx.font = won1 ? `600 ${s(11)}px ${FONT}` : `${s(11)}px ${FONT}`;
+    ctx.fillStyle = t.text;
+    ctx.fillText(truncateText(ctx, m.team1Names, teamMaxW), leftX, midY + s(10));
+
+    // Score
+    ctx.textAlign = 'center';
+    ctx.font = `bold ${s(14)}px ${FONT}`;
+    const scoreStr1 = String(m.score1);
+    const scoreStr2 = String(m.score2);
+    // score1
+    ctx.fillStyle = won1 ? t.primary : t.text;
+    ctx.fillText(scoreStr1, cx - s(8), midY + s(4));
+    // colon
+    ctx.fillStyle = t.textMuted;
+    ctx.fillText(':', cx, midY + s(4));
+    // score2
+    ctx.fillStyle = won2 ? t.primary : t.text;
+    ctx.fillText(scoreStr2, cx + s(8), midY + s(4));
+
+    // Right team (left-aligned)
+    const rightX = cx + s(30);
+    ctx.textAlign = 'left';
+    // Player names
+    ctx.font = won2 ? `600 ${s(11)}px ${FONT}` : `${s(11)}px ${FONT}`;
+    ctx.fillStyle = t.text;
+    ctx.fillText(truncateText(ctx, m.team2Names, teamMaxW), rightX, midY + s(10));
+    // Club name
+    ctx.font = `600 ${s(8)}px ${FONT}`;
+    ctx.fillStyle = t.textMuted;
+    ctx.fillText(truncateText(ctx, m.club2Name.toUpperCase(), teamMaxW), rightX, midY - s(6));
+  }
+
+  // Footer
+  const footerY = y + contentHeight + s(16);
+  ctx.textAlign = 'center';
+  ctx.font = `${s(8)}px ${FONT}`;
+  ctx.fillStyle = t.textMuted;
+  ctx.fillText(window.location.hostname, cx, footerY + s(12));
+
+  return canvas;
+}
+
 function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob | null> {
   return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
 }
@@ -604,15 +730,20 @@ export async function shareStandingsImage(
   clubStandings?: ClubStandingsEntry[],
   clubColorMap?: Map<string, string>,
   modeTitle?: string,
+  rankGroups?: RankGroup[],
 ): Promise<ShareImageResult> {
   let standingsCanvas: HTMLCanvasElement;
   let clubStandingsCanvas: HTMLCanvasElement | null = null;
+  let rankResultCanvases: HTMLCanvasElement[] = [];
   let nominationCanvases: HTMLCanvasElement[];
 
   try {
     standingsCanvas = renderStandingsImage(tournamentName, standings, groupInfo, clubInfo, modeTitle);
     if (clubStandings && clubStandings.length > 0 && clubColorMap) {
       clubStandingsCanvas = renderClubStandingsImage(tournamentName, clubStandings, clubColorMap);
+    }
+    if (rankGroups && rankGroups.length > 0) {
+      rankResultCanvases = rankGroups.map(rg => renderRankResultsImage(tournamentName, rg));
     }
     nominationCanvases = nominations.map(n => renderNominationImage(tournamentName, n));
   } catch {
@@ -657,6 +788,13 @@ export async function shareStandingsImage(
       const clubBlob = await canvasToBlob(clubStandingsCanvas);
       if (clubBlob) {
         files.push(new File([clubBlob], `${safeName}_club_standings.png`, { type: 'image/png' }));
+      }
+    }
+
+    for (let ri = 0; ri < rankResultCanvases.length; ri++) {
+      const blob = await canvasToBlob(rankResultCanvases[ri]);
+      if (blob) {
+        files.push(new File([blob], `${safeName}_rank_${ri + 1}.png`, { type: 'image/png' }));
       }
     }
 
@@ -730,6 +868,7 @@ export async function shareStandingsImage(
           ...podiumIndices.map(i => nominationCanvases[i]),
           standingsCanvas,
           ...(clubStandingsCanvas ? [clubStandingsCanvas] : []),
+          ...rankResultCanvases,
           ...otherIndices.map(i => nominationCanvases[i]),
         ];
         const blobs = await Promise.all(allCanvases.map(c => canvasToBlob(c)));
