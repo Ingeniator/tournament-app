@@ -29,10 +29,76 @@
     "aggregateRating": null
   }
   </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is PadelDay.net?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "PadelDay is a free tournament manager for padel, tennis, and other racket sports. It runs on your phone, works offline, and supports 15 tournament formats including Americano, Mexicano, Team, and Club formats. It includes live scoring, automatic standings, and a 41-award ceremony."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is PadelDay free?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, PadelDay is completely free. No account required, no ads, no premium features locked behind a paywall. All 15 tournament formats, 41 awards, and the Maldiciones curse card system are available to everyone."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does PadelDay work offline?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes! PadelDay is a Progressive Web App (PWA) that works fully offline after the first load. You can run entire tournaments without internet — perfect for padel clubs with spotty wifi or outdoor courts."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What tournament formats does PadelDay support?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "PadelDay supports 15 formats across 4 categories: Social (Americano, Mixed Americano, Mixicano), Competitive (Mexicano, King of the Court), Team (Team Americano, Team Mexicano), and Club (Club Americano, Club Mexicano, Club Ranked, Club Team Americano, Club Team Mexicano)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I organize a padel tournament with PadelDay?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Open padelday.net/play on your phone, add player names, choose a format, and start playing. The app generates fair pairings, tracks scores in real time, computes standings automatically, and presents 41 awards at the end. No signup or download needed."
+        }
+      }
+    ]
+  }
+  </script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
   <div id="root"></div>
+  <noscript>
+    <h1>PadelDay — Free Padel Tournament Manager</h1>
+    <p>Organize padel, tennis, and racket sport tournaments on your phone. Create brackets, track live scores, view standings, and share results. Works offline.</p>
+    <h2>Tournament Formats</h2>
+    <ul>
+      <li><a href="/americano">Americano Padel</a> — rotating partners, social format</li>
+      <li><a href="/mexicano">Mexicano Padel</a> — dynamic matchups, competitive format</li>
+      <li><a href="/formats">All 15 Tournament Formats</a></li>
+    </ul>
+    <h2>Features</h2>
+    <ul>
+      <li>Live match scoring and standings</li>
+      <li><a href="/awards">41 Tournament Awards</a> with tap-to-reveal ceremony</li>
+      <li><a href="/maldiciones">Maldiciones — Curse Cards</a> party mode</li>
+      <li><a href="/club">Club Tournament Formats</a> for inter-club competition</li>
+    </ul>
+    <p><a href="/play">Run a Tournament</a> | <a href="/plan">Plan a Tournament</a></p>
+  </noscript>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>

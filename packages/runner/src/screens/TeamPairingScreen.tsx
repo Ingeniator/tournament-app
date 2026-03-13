@@ -4,6 +4,7 @@ import { AppShell } from '../components/layout/AppShell';
 import { Button, useTranslation, NO_COLOR, CLUB_COLORS, getClubColor, formatHasGroups, formatHasClubs, shortLabel } from '@padel/common';
 import styles from './TeamPairingScreen.module.css';
 
+/** @deprecated Planner tournaments skip this screen — schedule is generated on load. */
 export function TeamPairingScreen() {
   const { tournament, dispatch } = useTournament();
   const { t } = useTranslation();

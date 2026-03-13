@@ -47,6 +47,7 @@ export interface PlannerRegistration {
   name: string;
   timestamp: number;
   confirmed?: boolean;
+  alias?: string;
   telegramUsername?: string;
   group?: 'A' | 'B';
   clubId?: string;

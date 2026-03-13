@@ -14,10 +14,10 @@ import { useTelegramSync } from '../hooks/useTelegramSync';
 import { useChatRoomTournaments } from '../hooks/useChatRoomTournaments';
 import { useMyEvents } from '../hooks/useMyEvents';
 import { useVisitedEvents, markEventVisited } from '../hooks/useVisitedEvents';
-import { loadEventByCode as loadEventByCodeFn } from '../hooks/useEvent';
+import { loadEventByCode as loadEventByCodeFn, useEvent } from '../hooks/useEvent';
 import { linkTournamentToChat } from '../utils/chatRoom';
 
-export type Screen = 'loading' | 'home' | 'organizer' | 'join' | 'event-detail' | 'event-create' | 'event-join';
+export type Screen = 'loading' | 'home' | 'organizer' | 'join' | 'event-detail' | 'event-create' | 'event-join' | 'auto-create';
 
 export interface PlannerContextValue {
   uid: string | null;
@@ -30,6 +30,8 @@ export interface PlannerContextValue {
   screen: Screen;
   setScreen: (screen: Screen) => void;
   createTournament: (name: string) => Promise<void>;
+  importTournament: (tournamentData: Partial<PlannerTournament>, players: Array<{ name: string; confirmed?: boolean; group?: 'A' | 'B'; clubId?: string; rankSlot?: number; partnerName?: string; telegramUsername?: string }>) => Promise<void>;
+  importEvent: (data: { name: string; date: string; description?: string; tournaments: Array<{ tournament: Partial<PlannerTournament>; players: Array<{ name: string; confirmed?: boolean; group?: 'A' | 'B'; clubId?: string; rankSlot?: number; partnerName?: string; telegramUsername?: string }>; weight: number }> }) => Promise<void>;
   loadByCode: (code: string) => Promise<boolean>;
   updateTournament: (updates: Partial<Pick<PlannerTournament, 'name' | 'format' | 'pointsPerMatch' | 'courts' | 'maxRounds' | 'duration' | 'date' | 'place' | 'extraSpots' | 'chatLink' | 'description' | 'clubs' | 'groupLabels' | 'rankLabels' | 'rankColors' | 'scoringMode' | 'maldiciones' | 'startDelegateId' | 'startDelegateTelegram' | 'minutesPerRound' | 'captainMode'>>) => Promise<void>;
   registerPlayer: (name: string, extras?: { group?: 'A' | 'B'; clubId?: string; rankSlot?: number }) => Promise<void>;
@@ -39,6 +41,7 @@ export interface PlannerContextValue {
   bulkAddPlayers: (names: string[]) => Promise<void>;
   toggleConfirmed: (playerId: string, currentConfirmed: boolean) => Promise<void>;
   updatePlayerName: (playerId: string, name: string) => Promise<void>;
+  updatePlayerAlias: (playerId: string, alias: string | null) => Promise<void>;
   updatePlayerTelegram: (playerId: string, telegramUsername: string | null) => Promise<void>;
   updatePlayerGroup: (playerId: string, group: 'A' | 'B' | null) => Promise<void>;
   updatePlayerClub: (playerId: string, clubId: string | null) => Promise<void>;
@@ -105,6 +108,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     loading: tournamentLoading,
     error: tournamentError,
     createTournament: createInDb,
+    importTournament: importInDb,
     updateTournament,
     loadByCode: loadByCodeFromDb,
     deleteTournament: deleteInDb,
@@ -112,7 +116,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     undoComplete,
   } = usePlannerTournament(tournamentId);
 
-  const { players, error: playersError, registerPlayer: registerInDb, removePlayer, updateConfirmed: updateConfirmedInDb, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, updatePlayerRank, updatePlayerPartner, updateCaptainApproval, isRegistered: checkRegistered, claimOrphanRegistration } = usePlayers(tournamentId);
+  const { players, error: playersError, registerPlayer: registerInDb, removePlayer, updateConfirmed: updateConfirmedInDb, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerName, updatePlayerAlias, updatePlayerTelegram, updatePlayerGroup, updatePlayerClub, updatePlayerRank, updatePlayerPartner, updateCaptainApproval, isRegistered: checkRegistered, claimOrphanRegistration } = usePlayers(tournamentId);
 
   const dataError = tournamentError || playersError;
 
@@ -150,6 +154,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
   const { tournaments: myTournaments, loading: myLoading } = useMyTournaments(uid);
   const { tournaments: registeredTournaments, loading: regLoading } = useRegisteredTournaments(uid);
   const { tournaments: chatRoomTournaments, loading: chatRoomLoading } = useChatRoomTournaments(chatInstance);
+  const { importEvent: importEventInDb } = useEvent(null);
   const { events: myEvents, loading: eventsLoading } = useMyEvents(uid);
   const createdEventIds = useMemo(() => new Set(myEvents.map(e => e.id)), [myEvents]);
   const { events: visitedEvents } = useVisitedEvents(uid, createdEventIds);
@@ -227,6 +232,42 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     }
   }, [uid, locale, telegramUser, chatInstance, createInDb]);
 
+  const importTournament = useCallback(async (
+    tournamentData: Partial<PlannerTournament>,
+    players: Array<{ name: string; confirmed?: boolean; group?: 'A' | 'B'; clubId?: string; rankSlot?: number; partnerName?: string; telegramUsername?: string }>,
+  ) => {
+    if (!uid) return;
+    const id = await importInDb(tournamentData, players, uid, locale, telegramUser?.username);
+    setTournamentId(id);
+    setScreen('organizer');
+    if (chatInstance) {
+      linkTournamentToChat(id, chatInstance, uid).catch(() => {});
+    }
+  }, [uid, locale, telegramUser, chatInstance, importInDb]);
+
+  const importEvent = useCallback(async (data: {
+    name: string;
+    date: string;
+    description?: string;
+    tournaments: Array<{
+      tournament: Partial<PlannerTournament>;
+      players: Array<{ name: string; confirmed?: boolean; group?: 'A' | 'B'; clubId?: string; rankSlot?: number; partnerName?: string; telegramUsername?: string }>;
+      weight: number;
+    }>;
+  }) => {
+    if (!uid) return;
+    // Create all tournaments first
+    const tournamentLinks: Array<{ tournamentId: string; weight: number }> = [];
+    for (const t of data.tournaments) {
+      const id = await importInDb(t.tournament, t.players, uid, locale, telegramUser?.username);
+      tournamentLinks.push({ tournamentId: id, weight: t.weight });
+    }
+    // Create the event linking them
+    const eventId = await importEventInDb(data.name, data.date, uid, data.description, tournamentLinks);
+    setActiveEventId(eventId);
+    setScreen('event-detail');
+  }, [uid, locale, telegramUser, importInDb, importEventInDb]);
+
   const loadByCode = useCallback(async (code: string): Promise<boolean> => {
     const id = await loadByCodeFromDb(code);
     if (id) {
@@ -297,6 +338,8 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       screen,
       setScreen,
       createTournament,
+      importTournament,
+      importEvent,
       loadByCode,
       updateTournament: wrappedUpdateTournament,
       registerPlayer,
@@ -306,6 +349,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       bulkAddPlayers,
       toggleConfirmed,
       updatePlayerName,
+      updatePlayerAlias,
       updatePlayerTelegram,
       updatePlayerGroup,
       updatePlayerClub,

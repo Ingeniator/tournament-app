@@ -350,6 +350,99 @@ describe('validateImport', () => {
   });
 });
 
+describe('cross-format: planner flat export → runner import', () => {
+  // Simulates importing a planner-exported JSON (flat format with name/format/courts/players
+  // at top level) into the runner via validateImport.
+
+  function makePlannerFlatExport(overrides?: Partial<{
+    format: string;
+    courts: Array<{ id: string; name: string }>;
+    playerCount: number;
+    duration: number;
+  }>): string {
+    const format = overrides?.format ?? 'americano';
+    const courts = overrides?.courts ?? [{ id: 'c1', name: 'Court 1' }];
+    const playerCount = overrides?.playerCount ?? 4;
+    const duration = overrides?.duration ?? 120;
+
+    const players = Array.from({ length: playerCount }, (_, i) => ({
+      name: `Player ${i + 1}`,
+      confirmed: true,
+    }));
+
+    return JSON.stringify({
+      _format: 'padel-tournament-v1',
+      name: 'Planner Tournament',
+      format,
+      courts,
+      duration,
+      players,
+    });
+  }
+
+  it('runner validates planner flat-exported americano tournament', () => {
+    const json = makePlannerFlatExport({ playerCount: 8, courts: [
+      { id: 'c1', name: 'Court 1' },
+      { id: 'c2', name: 'Court 2' },
+    ]});
+    const result = validateImport(json);
+
+    expect(result.error).toBeNull();
+    expect(result.tournament).not.toBeNull();
+    expect(result.tournament!.name).toBe('Planner Tournament');
+    expect(result.tournament!.config.format).toBe('americano');
+    expect(result.tournament!.players).toHaveLength(8);
+    expect(result.tournament!.phase).toBe('setup');
+    expect(result.tournament!.rounds).toEqual([]);
+  });
+
+  it('runner validates planner flat-exported mexicano tournament', () => {
+    const json = makePlannerFlatExport({ format: 'mexicano' });
+    const result = validateImport(json);
+
+    expect(result.error).toBeNull();
+    expect(result.tournament!.config.format).toBe('mexicano');
+  });
+
+  it('extracts duration from planner flat export', () => {
+    const json = makePlannerFlatExport({ duration: 90 });
+    const result = validateImport(json);
+
+    expect(result.error).toBeNull();
+    expect(result.tournament!.config.targetDuration).toBe(90);
+  });
+
+  it('generates player ids for planner flat export', () => {
+    const json = makePlannerFlatExport({ playerCount: 4 });
+    const result = validateImport(json);
+
+    expect(result.error).toBeNull();
+    const ids = result.tournament!.players.map(p => p.id);
+    expect(new Set(ids).size).toBe(4);
+    ids.forEach(id => expect(typeof id).toBe('string'));
+  });
+
+  it('preserves player groups from planner flat export', () => {
+    const json = JSON.stringify({
+      _format: 'padel-tournament-v1',
+      name: 'Mixed',
+      format: 'mixicano',
+      courts: [{ id: 'c1', name: 'Court 1' }],
+      players: [
+        { name: 'Alice', group: 'A' },
+        { name: 'Bob', group: 'B' },
+        { name: 'Carol', group: 'A' },
+        { name: 'Dave', group: 'B' },
+      ],
+    });
+    const result = validateImport(json);
+
+    expect(result.error).toBeNull();
+    expect(result.tournament!.players.find(p => p.name === 'Alice')?.group).toBe('A');
+    expect(result.tournament!.players.find(p => p.name === 'Bob')?.group).toBe('B');
+  });
+});
+
 describe('cross-device: planner export → runner import', () => {
   // Simulates the exact flow: plan on one device, "Copy for Another Device",
   // paste into runner's "Import from Clipboard" on a different device.

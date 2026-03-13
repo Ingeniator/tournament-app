@@ -6,30 +6,25 @@ import { saveTournament, loadTournament } from './persistence';
 import { db, signIn } from '../firebase';
 
 export function TournamentProvider({ children }: { children: ReactNode }) {
-  const [tournament, dispatch] = useReducer(tournamentReducer, null, () => loadTournament());
+  // For planner tournaments, generate the schedule synchronously on load
+  // so the runner opens directly to the in-progress play view.
+  const [tournament, dispatch] = useReducer(tournamentReducer, null, () => {
+    const loaded = loadTournament();
+    if (
+      loaded?.plannerTournamentId &&
+      (loaded.phase === 'setup' || loaded.phase === 'team-pairing')
+    ) {
+      return tournamentReducer(loaded, { type: 'GENERATE_SCHEDULE' });
+    }
+    return loaded;
+  });
   const [saveError, setSaveError] = useState(false);
   const prevPhaseRef = useRef(tournament?.phase);
-  const autoStartedRef = useRef(false);
 
   useEffect(() => {
     const ok = saveTournament(tournament);
     setSaveError(!ok);
   }, [tournament]);
-
-  // TODO: Remove auto-start — planner tournaments should go through setup so
-  // users can review/modify settings before generating the schedule.
-  // Remove SettingsScreen page for planner tournaments (settings are managed in
-  // the planner) and let the normal setup flow handle schedule generation.
-  useEffect(() => {
-    if (
-      !autoStartedRef.current &&
-      tournament?.plannerTournamentId &&
-      (tournament.phase === 'setup' || tournament.phase === 'team-pairing')
-    ) {
-      autoStartedRef.current = true;
-      dispatch({ type: 'GENERATE_SCHEDULE' });
-    }
-  }, [tournament?.plannerTournamentId, tournament?.phase]);
 
   // Write completedAt to Firebase when tournament transitions to completed
   useEffect(() => {

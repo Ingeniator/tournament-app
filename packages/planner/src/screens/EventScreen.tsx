@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Button, Card, Toast, useToast, useTranslation } from '@padel/common';
 import { useEvent } from '../hooks/useEvent';
 import { useEventTournaments } from '../hooks/useEventTournaments';
 import type { EventTournamentInfo } from '../hooks/useEventTournaments';
 import { usePlanner } from '../state/PlannerContext';
 import { computeEventStandings, computeEventClubStandings } from '../utils/eventStandings';
+import { exportPlannerEvent } from '../utils/plannerExport';
 import { computeBreakdown } from '../utils/tournamentBreakdown';
 import { TournamentBreakdownView } from '../components/TournamentBreakdown';
 import { StandingsCard, ClubStandingsCard } from '../components/EventStandingsCards';
@@ -44,6 +45,21 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
     if (!event || tournamentData.size === 0) return [];
     return computeEventClubStandings(event.tournaments, tournamentData);
   }, [event, tournamentData]);
+
+  // Export hooks — must be before early returns to satisfy rules of hooks
+  const [exportOpen, setExportOpen] = useState(false);
+  const exportRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!exportOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
+        setExportOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [exportOpen]);
 
   if (loading || !event) {
     return (
@@ -149,6 +165,32 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
       onBack();
     }
   };
+
+  const handleExportCopy = async () => {
+    try {
+      const text = await exportPlannerEvent(event);
+      await navigator.clipboard.writeText(text);
+      showToast(t('event.exportCopied'));
+    } catch {
+      showToast(t('organizer.failedCopy'));
+    }
+  };
+
+  const handleExportFile = async () => {
+    try {
+      const text = await exportPlannerEvent(event);
+      const blob = new Blob([text], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${event.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      showToast(t('organizer.failedCopy'));
+    }
+  };
+
 
   return (
     <div className={styles.container}>
@@ -281,7 +323,26 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
           </Card>
         )}
 
-        {/* Delete event (owner only) */}
+        {/* Export / Import / Delete (owner only) */}
+        {isOwner && (
+          <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+            <div className={styles.dropdown} ref={exportRef}>
+              <Button variant="ghost" fullWidth onClick={() => setExportOpen(v => !v)}>
+                {t('event.export')} <span className={styles.dropdownArrow}>{exportOpen ? '\u25B2' : '\u25BC'}</span>
+              </Button>
+              {exportOpen && (
+                <div className={styles.dropdownMenu}>
+                  <button className={styles.dropdownItem} onClick={() => { setExportOpen(false); handleExportCopy(); }}>
+                    {t('organizer.copyData')}
+                  </button>
+                  <button className={styles.dropdownItem} onClick={() => { setExportOpen(false); handleExportFile(); }}>
+                    {t('organizer.exportFile')}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
         {isOwner && (
           <button className={styles.deleteBtn} onClick={handleDelete}>
             {t('event.delete')}

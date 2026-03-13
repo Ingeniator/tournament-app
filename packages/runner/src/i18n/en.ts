@@ -8,7 +8,7 @@ const en: Translations = {
   'home.delete': 'Delete',
   'home.playersMeta': '{count} players \u00b7 {phase}',
   'home.newPlay': 'Quick Play',
-  'home.planShare': 'Plan Ahead',
+  'home.planShare': 'Setup Play',
   'home.importFromClipboard': 'Import from Clipboard',
   'home.cancel': 'Cancel',
   'home.importPlaceholder': 'Paste tournament JSON here...',

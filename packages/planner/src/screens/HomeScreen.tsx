@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { ref, push, set } from 'firebase/database';
 import { Button, Card, SkinPicker, FeedbackModal, AppFooter, useTranslation } from '@padel/common';
 import type { TournamentSummary } from '@padel/common';
@@ -6,6 +6,7 @@ import { usePlanner } from '../state/PlannerContext';
 import { auth, db } from '../firebase';
 import { randomTournamentName } from '../utils/tournamentNames';
 import { SwipeToDelete } from '../components/SwipeToDelete';
+import { parsePlannerExport, parsePlannerEventExport } from '../utils/plannerExport';
 import styles from './HomeScreen.module.css';
 
 function formatDate(iso: string): string {
@@ -33,7 +34,7 @@ function isExpired(t: TournamentSummary): boolean {
 
 export function HomeScreen() {
   const {
-    createTournament, loadByCode, loadEventByCode, setScreen,
+    createTournament, importTournament, importEvent, loadByCode, loadEventByCode, setScreen,
     userName, userNameLoading, updateUserName,
     myTournaments, registeredTournaments, listingsLoading,
     chatRoomTournaments, chatRoomLoading,
@@ -54,6 +55,20 @@ export function HomeScreen() {
   const [editingUserName, setEditingUserName] = useState(false);
   const [userNameDraft, setUserNameDraft] = useState('');
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const importRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!importOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (importRef.current && !importRef.current.contains(e.target as Node)) {
+        setImportOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [importOpen]);
 
   const handleCreate = async () => {
     if (!name.trim()) return;
@@ -119,6 +134,49 @@ export function HomeScreen() {
     if (!db) return;
     const feedbackRef = push(ref(db, 'feedback'));
     await set(feedbackRef, { message, source: 'planner', createdAt: Date.now() });
+  };
+
+  const loadImport = useCallback((text: string) => {
+    try {
+      const parsed = JSON.parse(text);
+      if (parsed._format === 'padel-event-v1' || parsed._format === 'planner-event-v1') {
+        const eventData = parsePlannerEventExport(text);
+        if (window.confirm(t('event.importConfirm', { name: eventData.name, count: eventData.tournaments.length }))) {
+          importEvent(eventData);
+        }
+      } else {
+        const { tournament: tournamentData, players } = parsePlannerExport(text);
+        if (window.confirm(t('organizer.importConfirm', { name: tournamentData.name, count: players.length }))) {
+          importTournament(tournamentData, players);
+        }
+      }
+    } catch {
+      setError(t('home.importFailed'));
+    }
+  }, [importTournament, importEvent, t]);
+
+  const handleImportClipboard = async () => {
+    setError(null);
+    try {
+      const text = await navigator.clipboard.readText();
+      loadImport(text);
+    } catch {
+      setError(t('organizer.failedCopy'));
+    }
+  };
+
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setError(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        loadImport(reader.result);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   };
 
   const handleDeleteTournament = (id: string) => {
@@ -386,6 +444,28 @@ export function HomeScreen() {
                 <Button fullWidth onClick={handleCreate} disabled={creating || !name.trim() || !userName}>
                   {creating ? t('home.creating') : t('home.createTournament')}
                 </Button>
+                <div className={styles.dropdown} ref={importRef}>
+                  <Button variant="ghost" fullWidth onClick={() => setImportOpen(v => !v)} disabled={!userName}>
+                    {t('home.importTournament')} <span className={styles.dropdownArrow}>{importOpen ? '\u25B2' : '\u25BC'}</span>
+                  </Button>
+                  {importOpen && (
+                    <div className={styles.dropdownMenu}>
+                      <button className={styles.dropdownItem} onClick={() => { setImportOpen(false); handleImportClipboard(); }}>
+                        {t('organizer.importFromClipboard')}
+                      </button>
+                      <button className={styles.dropdownItem} onClick={() => { setImportOpen(false); fileInputRef.current?.click(); }}>
+                        {t('organizer.loadFile')}
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".json,application/json"
+                  onChange={handleImportFile}
+                  className={styles.fileInput}
+                />
               </div>
             </Card>
           )}
@@ -440,6 +520,7 @@ export function HomeScreen() {
         onClose={() => setFeedbackOpen(false)}
         onSubmit={handleFeedback}
       />
+
     </div>
   );
 }

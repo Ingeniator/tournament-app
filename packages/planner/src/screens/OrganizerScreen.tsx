@@ -6,6 +6,7 @@ import { generateId } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { auth, db } from '../firebase';
 import { exportRunnerTournamentJSON } from '../utils/exportToRunner';
+import { exportPlannerTournament } from '../utils/plannerExport';
 import { restoreFromBackup } from '../utils/restoreFromBackup';
 import { useStartGuard } from '../hooks/useStartGuard';
 import { StartWarningModal } from '../components/StartWarningModal';
@@ -51,7 +52,7 @@ function formatDuration(minutes: number): string {
 type PlayerMode = 'quick' | 'share';
 
 export function OrganizerScreen() {
-  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerTelegram, updatePlayerPartner, updatePlayerGroup, updatePlayerClub, updatePlayerRank, deleteTournament, completedAt, undoComplete, uid } = usePlanner();
+  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerAlias, updatePlayerTelegram, updatePlayerPartner, updatePlayerGroup, updatePlayerClub, updatePlayerRank, deleteTournament, completedAt, undoComplete, uid } = usePlanner();
   const { startedBy, showWarning, warningReason, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
   const { t, locale } = useTranslation();
   const { toastMessage, showToast } = useToast();
@@ -136,6 +137,21 @@ export function OrganizerScreen() {
     players.filter(p => statuses.get(p.id) === 'playing'),
     [players, statuses]
   );
+
+  // Export hooks — must be before early returns to satisfy rules of hooks
+  const [exportOpen, setExportOpen] = useState(false);
+  const exportRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!exportOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
+        setExportOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [exportOpen]);
 
   if (!tournament) return null;
 
@@ -232,7 +248,9 @@ export function OrganizerScreen() {
       setShowTeamPairing(true);
       return;
     }
-    handleGuardedLaunch(tournament!, players);
+    const aliases = new Map<string, string>();
+    for (const p of players) { if (p.alias) aliases.set(p.id, p.alias); }
+    handleGuardedLaunch(tournament!, players, undefined, aliases.size > 0 ? aliases : undefined);
   };
 
   const handleTeamStart = (teams: Team[], aliases: Map<string, string>) => {
@@ -249,6 +267,28 @@ export function OrganizerScreen() {
       showToast(t('organizer.failedCopy'));
     }
   };
+
+  const handleExportCopy = async () => {
+    const text = exportPlannerTournament(tournament, players);
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast(t('organizer.exportCopied'));
+    } catch {
+      showToast(t('organizer.failedCopy'));
+    }
+  };
+
+  const handleExportFile = () => {
+    const text = exportPlannerTournament(tournament, players);
+    const blob = new Blob([text], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${tournament.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
 
   const handleNameSave = async () => {
     const trimmed = nameDraft.trim();
@@ -1048,6 +1088,7 @@ export function OrganizerScreen() {
         bulkAddPlayers={bulkAddPlayers}
         removePlayer={removePlayer}
         toggleConfirmed={toggleConfirmed}
+        updatePlayerAlias={updatePlayerAlias}
         updatePlayerTelegram={updatePlayerTelegram}
         updatePlayerPartner={updatePlayerPartner}
         statuses={statuses}
@@ -1121,6 +1162,24 @@ export function OrganizerScreen() {
         {t('organizer.copyForDevice')}
       </Button>
       )}
+
+      <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+        <div className={styles.dropdown} ref={exportRef}>
+          <Button variant="ghost" fullWidth onClick={() => setExportOpen(v => !v)}>
+            {t('organizer.export')} <span className={styles.dropdownArrow}>{exportOpen ? '\u25B2' : '\u25BC'}</span>
+          </Button>
+          {exportOpen && (
+            <div className={styles.dropdownMenu}>
+              <button className={styles.dropdownItem} onClick={() => { setExportOpen(false); handleExportCopy(); }}>
+                {t('organizer.copyData')}
+              </button>
+              <button className={styles.dropdownItem} onClick={() => { setExportOpen(false); handleExportFile(); }}>
+                {t('organizer.exportFile')}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
 
       <button
         className={styles.deleteBtn}

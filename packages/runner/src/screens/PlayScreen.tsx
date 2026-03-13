@@ -8,6 +8,7 @@ import { StandingsTable, type GroupInfo, type RankLabelInfo } from '../component
 import { ClubStandingsTable } from '../components/standings/ClubStandingsTable';
 import { NominationCard } from '../components/nominations/NominationCard';
 import { Carousel } from '../components/carousel/Carousel';
+import { buildRankGroups, RankResultsCard } from '../components/standings/RankResultsCard';
 import { CeremonyScreen } from '../components/ceremony/CeremonyScreen';
 import { useShareText } from '../hooks/useShareText';
 import { copyToClipboard } from '../utils/clipboard';
@@ -125,6 +126,7 @@ export function PlayScreen() {
     }
     return labelMap.size > 0 ? { labelMap } : undefined;
   }, [tournament]);
+  const rankGroups = useMemo(() => tournament ? buildRankGroups(tournament) : [], [tournament]);
   const { buildMessengerText } = useShareText(tournament, standings, nominations);
   const [showStandings, setShowStandings] = useState(false);
   const [standingsTab, setStandingsTab] = useState<'pairs' | 'clubs'>('pairs');
@@ -221,7 +223,7 @@ export function PlayScreen() {
     };
     const handleShareImage = async () => {
       const modeTitle = tournament.config.maldiciones?.enabled ? '🎭 Maldiciones del Padel' : undefined;
-      const result = await shareStandingsImage(tournament.name, standings, nominations, groupInfo, clubInfo, clubStandings, clubColorMap, modeTitle);
+      const result = await shareStandingsImage(tournament.name, standings, nominations, groupInfo, clubInfo, clubStandings, clubColorMap, modeTitle, rankGroups);
       if (result.status === 'shared') showToast(t('play.shared'));
       else if (result.status === 'downloaded') showToast(t('play.imageSaved'));
       else if (result.status === 'preview') setPreviewImages(result.dataUrls);
@@ -243,6 +245,9 @@ export function PlayScreen() {
                 <ClubStandingsTable standings={clubStandings} clubColorMap={clubColorMap} />
               </div>,
             ] : []),
+            ...rankGroups.map((rg, i) => (
+              <RankResultsCard key={`rank-${i}`} rankGroup={rg} tournamentName={tournament.name} />
+            )),
             ...nominations.map((nom, i) => (
               <NominationCard key={nom.id} nomination={nom} cardRef={setNomRef(i)} minHeight={nomMinHeight || undefined} />
             )),
