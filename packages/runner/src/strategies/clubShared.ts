@@ -49,13 +49,49 @@ export function getClubTeams(teams: Team[], players: Player[], clubId: string): 
   return teams.filter(t => clubPlayerIds.has(t.player1Id) && clubPlayerIds.has(t.player2Id));
 }
 
+/** Get the rank slot for a team from its players */
+function teamRankSlot(team: Team, players: Player[]): number | undefined {
+  const p1 = players.find(p => p.id === team.player1Id);
+  if (p1?.rankSlot != null) return p1.rankSlot;
+  const p2 = players.find(p => p.id === team.player2Id);
+  return p2?.rankSlot;
+}
+
 /** Match pairs from two clubs based on matchMode */
 export function matchFixturePairs(
   teamsA: Team[],
   teamsB: Team[],
   matchMode: MatchMode,
   teamPoints: Map<string, number>,
+  players?: Player[],
 ): [Team, Team][] {
+  if (matchMode === 'slots' && players) {
+    // Match teams by rank: rank 0 vs rank 0, rank 1 vs rank 1, etc.
+    const byRankA = new Map<number, Team[]>();
+    const byRankB = new Map<number, Team[]>();
+    for (const t of teamsA) {
+      const r = teamRankSlot(t, players) ?? 999;
+      if (!byRankA.has(r)) byRankA.set(r, []);
+      byRankA.get(r)!.push(t);
+    }
+    for (const t of teamsB) {
+      const r = teamRankSlot(t, players) ?? 999;
+      if (!byRankB.has(r)) byRankB.set(r, []);
+      byRankB.get(r)!.push(t);
+    }
+    const allRanks = [...new Set([...byRankA.keys(), ...byRankB.keys()])].sort((a, b) => a - b);
+    const pairs: [Team, Team][] = [];
+    for (const rank of allRanks) {
+      const ra = byRankA.get(rank) ?? [];
+      const rb = byRankB.get(rank) ?? [];
+      const count = Math.min(ra.length, rb.length);
+      for (let i = 0; i < count; i++) {
+        pairs.push([ra[i], rb[i]]);
+      }
+    }
+    return pairs;
+  }
+
   const count = Math.min(teamsA.length, teamsB.length);
   let orderedA = [...teamsA];
   let orderedB = [...teamsB];
@@ -67,7 +103,6 @@ export function matchFixturePairs(
     orderedA.sort((a, b) => (teamPoints.get(b.id) ?? 0) - (teamPoints.get(a.id) ?? 0));
     orderedB.sort((a, b) => (teamPoints.get(b.id) ?? 0) - (teamPoints.get(a.id) ?? 0));
   }
-  // 'slots': use original order
 
   const pairs: [Team, Team][] = [];
   for (let i = 0; i < count; i++) {
@@ -109,7 +144,7 @@ export function generateClubRound(
   for (const [clubAId, clubBId] of fixtures) {
     const teamsA = getClubTeams(teams, players, clubAId);
     const teamsB = getClubTeams(teams, players, clubBId);
-    const paired = matchFixturePairs(teamsA, teamsB, matchMode, teamPoints);
+    const paired = matchFixturePairs(teamsA, teamsB, matchMode, teamPoints, players);
 
     for (const [t1, t2] of paired) {
       if (courtIdx >= availableCourts.length) break;

@@ -132,10 +132,10 @@ export function getPlayerStatuses(
     const basePerBucket = Math.floor(rawPerBucket / 2) * 2; // round down to even
     const remainingPerClub = slotsPerClub - basePerBucket * rankCount;
 
-    // Process players with club+rank by timestamp
+    // Process players with club+rank: sort by rank first, then by timestamp within each rank
     const ranked = eligible
       .filter(p => p.clubId && p.rankSlot != null)
-      .sort((a, b) => a.timestamp - b.timestamp);
+      .sort((a, b) => (a.rankSlot! - b.rankSlot!) || (a.timestamp - b.timestamp));
 
     // Track paired players to avoid processing them twice across buckets
     const pairProcessed = new Set<string>();
