@@ -52,7 +52,7 @@ function formatDuration(minutes: number): string {
 type PlayerMode = 'quick' | 'share';
 
 export function OrganizerScreen() {
-  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerAlias, updatePlayerTelegram, updatePlayerPartner, updatePlayerGroup, updatePlayerClub, updatePlayerRank, deleteTournament, completedAt, undoComplete, uid } = usePlanner();
+  const { tournament, players, removePlayer, updateTournament, setScreen, userName, addPlayer, bulkAddPlayers, toggleConfirmed, updatePlayerAlias, updatePlayerTelegram, updatePlayerPartner, updatePlayerGroup, updatePlayerClub, updatePlayerRank, deleteTournament, completedAt, undoComplete, uid, updateCaptainApproval } = usePlanner();
   const { startedBy, showWarning, warningReason, handleLaunch: handleGuardedLaunch, proceedAnyway, dismissWarning } = useStartGuard(tournament?.id ?? null, uid, userName);
   const { t, locale } = useTranslation();
   const { toastMessage, showToast } = useToast();
@@ -1104,6 +1104,8 @@ export function OrganizerScreen() {
         captainMode={tournament.captainMode}
         showToast={showToast}
         operatorName={userName ?? undefined}
+        onApprove={tournament.captainMode ? (pid) => updateCaptainApproval(pid, true) : undefined}
+        onReject={tournament.captainMode ? (pid) => updateCaptainApproval(pid, false) : undefined}
       />
 
       {/* Club panel — visual overview of club assignments */}

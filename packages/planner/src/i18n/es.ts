@@ -80,6 +80,7 @@ const es: Translations = {
   'organizer.markCancelled': 'Marcar como cancelado',
   'organizer.markConfirmed': 'Marcar como confirmado',
   'organizer.removePlayer': 'Eliminar jugador',
+  'organizer.actions': 'Acciones',
   'organizer.selectClub': 'Club',
   'organizer.selectRank': 'Rango',
   'organizer.settings': 'Ajustes',
