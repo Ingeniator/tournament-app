@@ -43,10 +43,17 @@ export function generateClubFixtures(clubIds: string[], totalRounds: number): [s
   return rounds;
 }
 
-/** Get teams belonging to a club */
+/** Get teams belonging to a club, sorted by rank slot */
 export function getClubTeams(teams: Team[], players: Player[], clubId: string): Team[] {
   const clubPlayerIds = new Set(players.filter(p => p.clubId === clubId).map(p => p.id));
-  return teams.filter(t => clubPlayerIds.has(t.player1Id) && clubPlayerIds.has(t.player2Id));
+  const playerMap = new Map(players.map(p => [p.id, p]));
+  return teams
+    .filter(t => clubPlayerIds.has(t.player1Id) && clubPlayerIds.has(t.player2Id))
+    .sort((a, b) => {
+      const rankA = playerMap.get(a.player1Id)?.rankSlot ?? playerMap.get(a.player2Id)?.rankSlot ?? 999;
+      const rankB = playerMap.get(b.player1Id)?.rankSlot ?? playerMap.get(b.player2Id)?.rankSlot ?? 999;
+      return rankA - rankB;
+    });
 }
 
 /** Match pairs from two clubs based on matchMode */
