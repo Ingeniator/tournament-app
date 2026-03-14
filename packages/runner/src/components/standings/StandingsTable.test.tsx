@@ -35,7 +35,6 @@ describe('StandingsTable', () => {
 
   it('renders header columns', () => {
     render(<StandingsTable standings={[makeEntry()]} />);
-    expect(screen.getByText('#')).toBeTruthy();
     expect(screen.getByText('standings.name')).toBeTruthy();
     expect(screen.getByText('standings.pts')).toBeTruthy();
     expect(screen.getByText('standings.wtl')).toBeTruthy();
@@ -58,13 +57,13 @@ describe('StandingsTable', () => {
       makeEntry({ playerId: 'p4', playerName: 'Dave', rank: 4 }),
     ];
     const { container } = render(<StandingsTable standings={entries} />);
-    const rankCells = container.querySelectorAll('tbody td:first-child');
-    expect(rankCells[0].className).toContain('rank1');
-    expect(rankCells[1].className).toContain('rank2');
-    expect(rankCells[2].className).toContain('rank3');
-    expect(rankCells[3].className).not.toContain('rank1');
-    expect(rankCells[3].className).not.toContain('rank2');
-    expect(rankCells[3].className).not.toContain('rank3');
+    const rankLines = container.querySelectorAll('[class*="rankLine"]');
+    expect(rankLines[0].className).toContain('rank1');
+    expect(rankLines[1].className).toContain('rank2');
+    expect(rankLines[2].className).toContain('rank3');
+    expect(rankLines[3].className).not.toContain('rank1');
+    expect(rankLines[3].className).not.toContain('rank2');
+    expect(rankLines[3].className).not.toContain('rank3');
   });
 
   it('shows + prefix for positive diffs', () => {
