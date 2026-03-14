@@ -81,10 +81,27 @@ function generateTeams(players: PlannerRegistration[], format: TournamentFormat,
   return [...prePaired, ...autoTeams];
 }
 
+function buildInitialAliases(players: PlannerRegistration[]): Map<string, string> {
+  // Start with player-set aliases
+  const aliased = players.map(p => ({ id: p.id, name: p.alias || p.name }));
+  // Then deduplicate any collisions
+  const deduped = deduplicateNames(aliased);
+  const result = new Map<string, string>();
+  for (const p of players) {
+    const dedupName = deduped.get(p.id);
+    if (dedupName) {
+      result.set(p.id, dedupName);
+    } else if (p.alias) {
+      result.set(p.id, p.alias);
+    }
+  }
+  return result;
+}
+
 export function TeamPairingModal({ open, players, format, clubs, rankLabels, onStart, onClose }: TeamPairingModalProps) {
   const { t } = useTranslation();
   const [teams, setTeams] = useState<Team[]>(() => generateTeams(players, format, clubs));
-  const [aliases, setAliases] = useState<Map<string, string>>(() => deduplicateNames(players));
+  const [aliases, setAliases] = useState<Map<string, string>>(() => buildInitialAliases(players));
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState('');
@@ -94,7 +111,7 @@ export function TeamPairingModal({ open, players, format, clubs, rankLabels, onS
   useEffect(() => {
     if (open) {
       setTeams(generateTeams(players, format, clubs));
-      setAliases(deduplicateNames(players));
+      setAliases(buildInitialAliases(players));
       setSelectedPlayerId(null);
     }
   }, [open]);
