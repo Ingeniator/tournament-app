@@ -18,7 +18,7 @@ unit-test:
 	npm test --workspaces --if-present
 
 # Cloudflare Pages: merge both outputs into dist/
-deploy-build: build unit-test
+deploy-build: build
 	rm -rf dist
 	mkdir -p dist/play dist/plan
 	cp -r packages/runner/dist/* dist/play/

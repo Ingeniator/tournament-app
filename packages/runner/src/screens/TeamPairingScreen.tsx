@@ -19,9 +19,10 @@ export function TeamPairingScreen() {
     return map;
   }, [clubs]);
 
-  // Group teams by club for club formats
+  // Group teams by club for club formats, sorted by rank
   const teamsByClub = useMemo(() => {
     if (!tournament?.teams || !formatHasClubs(tournament.config.format) || clubs.length === 0) return null;
+    const playerRankOf = (id: string) => tournament.players.find(p => p.id === id)?.rankSlot;
     const playerClubOf = (id: string) => tournament.players.find(p => p.id === id)?.clubId;
     const grouped = new Map<string, typeof tournament.teams>();
     for (const club of clubs) {
@@ -32,6 +33,14 @@ export function TeamPairingScreen() {
       if (clubId && grouped.has(clubId)) {
         grouped.get(clubId)!.push(team);
       }
+    }
+    // Sort teams within each club by rank slot
+    for (const [, clubTeams] of grouped) {
+      clubTeams.sort((a, b) => {
+        const rankA = playerRankOf(a.player1Id) ?? playerRankOf(a.player2Id) ?? 999;
+        const rankB = playerRankOf(b.player1Id) ?? playerRankOf(b.player2Id) ?? 999;
+        return rankA - rankB;
+      });
     }
     return grouped;
   }, [tournament, clubs]);
