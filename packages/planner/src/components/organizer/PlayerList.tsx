@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, type ClipboardEvent, type ReactNode } from 'react';
+import { useState, useRef, useMemo, useEffect, useCallback, type ClipboardEvent, type ReactNode } from 'react';
 import { Button, Card, NO_COLOR, getClubColor, getRankColor, shortLabel, Modal, useTranslation, formatHasGroups, formatHasClubs, formatHasFixedPartners } from '@padel/common';
 import type { PlannerRegistration, TournamentFormat, Club } from '@padel/common';
 import { parsePlayerList } from '@padel/common';
@@ -43,6 +43,21 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
   const addingPlayer = useRef(false);
   const addPlayerInputRef = useRef<HTMLInputElement>(null);
   const [linkingPlayer, setLinkingPlayer] = useState<{ id: string; name: string; alias?: string; telegramUsername?: string; partnerName?: string; partnerTelegram?: string; clubId?: string; rankSlot?: number; group?: 'A' | 'B' } | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const closeMenu = useCallback(() => setOpenMenuId(null), []);
+
+  useEffect(() => {
+    if (!openMenuId) return;
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        closeMenu();
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [openMenuId, closeMenu]);
   const NEW_PLAYER_VALUE = '__new__';
   const [aliasDraft, setAliasDraft] = useState('');
   const [linkDraft, setLinkDraft] = useState('');
@@ -224,35 +239,56 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
           {t('join.reject')}
         </Button>
       )}
-      <button
-        className={player.telegramUsername ? styles.linkBtnActive : styles.linkBtn}
-        onClick={() => {
-          setLinkingPlayer({ id: player.id, name: player.name, alias: player.alias, telegramUsername: player.telegramUsername, partnerName: player.partnerName, partnerTelegram: player.partnerTelegram, clubId: player.clubId, rankSlot: player.rankSlot, group: player.group });
-          setAliasDraft(player.alias ?? '');
-          setLinkDraft(player.telegramUsername ? `@${player.telegramUsername}` : '');
-          setPartnerNameDraft(player.partnerName ? (players.find(pl => pl.name === player.partnerName)?.id ?? '') : '');
-          setPartnerTelegramDraft(player.partnerTelegram ? `@${player.partnerTelegram}` : '');
-        }}
-        title={t('organizer.linkProfile')}
-      >
-        &#x1F517;
-      </button>
-      {!simplified && (
+      <div className={styles.dotsMenuWrap} ref={openMenuId === player.id ? menuRef : undefined}>
         <button
-          className={player.confirmed !== false ? styles.statusConfirmed : styles.statusCancelled}
-          onClick={() => toggleConfirmed(player.id, player.confirmed !== false)}
-          title={player.confirmed !== false ? t('organizer.markCancelled') : t('organizer.markConfirmed')}
+          className={styles.dotsBtn}
+          onClick={() => setOpenMenuId(openMenuId === player.id ? null : player.id)}
+          aria-label={t('organizer.actions')}
         >
-          {player.confirmed !== false ? '\u2713' : '\u2717'}
+          {'\u22EF'}
         </button>
-      )}
-      <button
-        className={styles.removeBtn}
-        onClick={() => removePlayer(player.id)}
-        title={t('organizer.removePlayer')}
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-      </button>
+        {openMenuId === player.id && (
+          <div className={styles.dotsMenu}>
+            <button
+              className={styles.dotsMenuItem}
+              onClick={() => {
+                setLinkingPlayer({ id: player.id, name: player.name, alias: player.alias, telegramUsername: player.telegramUsername, partnerName: player.partnerName, partnerTelegram: player.partnerTelegram, clubId: player.clubId, rankSlot: player.rankSlot, group: player.group });
+                setAliasDraft(player.alias ?? '');
+                setLinkDraft(player.telegramUsername ? `@${player.telegramUsername}` : '');
+                setPartnerNameDraft(player.partnerName ? (players.find(pl => pl.name === player.partnerName)?.id ?? '') : '');
+                setPartnerTelegramDraft(player.partnerTelegram ? `@${player.partnerTelegram}` : '');
+                closeMenu();
+              }}
+            >
+              <span>&#x1F517;</span> {t('organizer.linkProfile')}
+            </button>
+            {!simplified && (
+              <button
+                className={styles.dotsMenuItem}
+                onClick={() => {
+                  toggleConfirmed(player.id, player.confirmed !== false);
+                  closeMenu();
+                }}
+              >
+                <span className={player.confirmed !== false ? styles.statusConfirmed : styles.statusCancelled}>
+                  {player.confirmed !== false ? '\u2713' : '\u2717'}
+                </span>
+                {player.confirmed !== false ? t('organizer.markCancelled') : t('organizer.markConfirmed')}
+              </button>
+            )}
+            <button
+              className={`${styles.dotsMenuItem} ${styles.dotsMenuDanger}`}
+              onClick={() => {
+                removePlayer(player.id);
+                closeMenu();
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+              {t('organizer.removePlayer')}
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 

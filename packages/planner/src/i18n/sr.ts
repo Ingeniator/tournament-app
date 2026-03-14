@@ -80,6 +80,7 @@ const sr: Translations = {
   'organizer.markCancelled': 'Označi kao otkazano',
   'organizer.markConfirmed': 'Označi kao potvrđeno',
   'organizer.removePlayer': 'Ukloni igrača',
+  'organizer.actions': 'Akcije',
   'organizer.selectClub': 'Klub',
   'organizer.selectRank': 'Rang',
   'organizer.settings': 'Podešavanja',
