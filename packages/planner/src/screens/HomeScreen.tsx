@@ -43,7 +43,10 @@ export function HomeScreen() {
   } = usePlanner();
   const { t } = useTranslation();
 
-  const [mode, setMode] = useState<'player' | 'organizer'>('player');
+  const [mode, setMode] = useState<'player' | 'organizer'>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('mode') === 'organizer' ? 'organizer' : 'player';
+  });
   const [name, setName] = useState(randomTournamentName);
   const [joinCode, setJoinCode] = useState('');
   const [joinMode, setJoinMode] = useState(false);
