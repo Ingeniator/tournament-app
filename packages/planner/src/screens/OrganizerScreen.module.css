@@ -629,6 +629,13 @@
   border-radius: 0 0 var(--radius-md) var(--radius-md);
 }
 
+.captainActions {
+  display: flex;
+  gap: var(--space-xs);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
 .needsPartnerBadge {
   display: inline-block;
   font-size: 11px;

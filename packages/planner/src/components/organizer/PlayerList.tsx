@@ -33,9 +33,11 @@ interface PlayerListProps {
   showToast?: (msg: string) => void;
   /** Name of the organizer / captain performing the action */
   operatorName?: string;
+  onApprove?: (playerId: string) => Promise<void>;
+  onReject?: (playerId: string) => Promise<void>;
 }
 
-export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, removePlayer, toggleConfirmed, updatePlayerAlias, updatePlayerTelegram, updatePlayerPartner, statuses, format, clubs, groupLabels, rankLabels, rankColors, onSetGroup, onSetClub, onSetRank, simplified, captainMode, showToast, operatorName }: PlayerListProps) {
+export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, removePlayer, toggleConfirmed, updatePlayerAlias, updatePlayerTelegram, updatePlayerPartner, statuses, format, clubs, groupLabels, rankLabels, rankColors, onSetGroup, onSetClub, onSetRank, simplified, captainMode, showToast, operatorName, onApprove, onReject }: PlayerListProps) {
   const { t } = useTranslation();
   const [newPlayerName, setNewPlayerName] = useState('');
   const addingPlayer = useRef(false);
@@ -212,6 +214,16 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
           )}
         </div>
       )}
+      {captainMode && !isPairFormat && statuses.get(player.id) === 'registered' && onApprove && (
+        <Button size="small" onClick={() => onApprove(player.id)}>
+          {t('join.approve')}
+        </Button>
+      )}
+      {captainMode && !isPairFormat && player.captainApproved === true && onReject && (
+        <Button size="small" variant="secondary" onClick={() => onReject(player.id)}>
+          {t('join.reject')}
+        </Button>
+      )}
       <button
         className={player.telegramUsername ? styles.linkBtnActive : styles.linkBtn}
         onClick={() => {
@@ -265,7 +277,7 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
   }, [isPairFormat, players, statuses]);
 
   /** Render players in pairs: partner rows adjacent, wrapped in pairGroup */
-  const renderPairedSection = (sectionPlayers: PlannerRegistration[]) => {
+  const renderPairedSection = (sectionPlayers: PlannerRegistration[], captainActions?: 'approve-reject' | 'reject-only') => {
     const rendered = new Set<string>();
     const elements: ReactNode[] = [];
     let globalIdx = 0;
@@ -283,6 +295,20 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
           <div key={`pair-${p.id}`} className={styles.pairGroup}>
             {renderPlayerRow(p, i1)}
             {renderPlayerRow(partner, i2)}
+            {captainActions && (
+              <div className={styles.captainActions} style={{ padding: '4px 8px', justifyContent: 'flex-end' }}>
+                {captainActions === 'approve-reject' && onApprove && (
+                  <Button size="small" onClick={async () => { await onApprove(p.id); await onApprove(partner.id); }}>
+                    {t('join.approve')}
+                  </Button>
+                )}
+                {onReject && (
+                  <Button size="small" variant="secondary" onClick={async () => { await onReject(p.id); await onReject(partner.id); }}>
+                    {t('join.reject')}
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         );
       } else {
@@ -308,13 +334,16 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
         {sectionDefs.map(({ key, labelKey, paired }) => {
           const sectionPlayers = sections[key];
           if (sectionPlayers.length === 0) return null;
+          const captainActions = captainMode && (onApprove || onReject)
+            ? (key === 'registered' ? 'approve-reject' as const : (key === 'playing' || key === 'reserve') ? 'reject-only' as const : undefined)
+            : undefined;
           return (
             <div key={key} className={styles.statusSection}>
               <div className={styles.statusSectionHeader}>
                 {t(labelKey, { count: sectionPlayers.length })}
               </div>
               <div className={styles.playerList}>
-                {paired ? renderPairedSection(sectionPlayers) : sectionPlayers.map((p, i) => renderPlayerRow(p, i))}
+                {paired ? renderPairedSection(sectionPlayers, captainActions) : sectionPlayers.map((p, i) => renderPlayerRow(p, i))}
               </div>
             </div>
           );
