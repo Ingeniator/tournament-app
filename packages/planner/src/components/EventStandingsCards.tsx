@@ -23,7 +23,6 @@ export function StandingsCard({
           <table className={styles.table}>
             <thead>
               <tr>
-                <th className={styles.rank}>#</th>
                 <th>{t('event.col.name')}</th>
                 <th className={styles.right}>{t('event.col.pts')}</th>
                 <th className={styles.right}>{t('event.col.mp')}</th>
@@ -43,8 +42,10 @@ export function StandingsCard({
 
                 return (
                   <tr key={entry.playerName}>
-                    <td className={`${styles.rank} ${rankClass}`}>{entry.rank}</td>
-                    <td className={styles.playerName}>{entry.playerName}</td>
+                    <td className={styles.playerName}>
+                      <span className={`${styles.rankLine} ${rankClass}`}>#{entry.rank}</span>
+                      <span className={styles.nameText}>{entry.playerName}</span>
+                    </td>
                     <td className={`${styles.right} ${styles.points}`}>{entry.totalPoints}</td>
                     <td className={styles.right}>{entry.matchesPlayed}</td>
                     <td className={styles.right}>{entry.matchesWon}</td>

@@ -242,7 +242,7 @@ export function OrganizerScreen() {
   };
 
   const handleLaunch = () => {
-    const result = validateLaunchUtil(tournament!, players, statuses);
+    const result = validateLaunchUtil(tournament!, players, statuses, capacity);
     if (result) { showToast(t(result.key, result.params)); return; }
     if (formatHasFixedPartners(tournament!.format)) {
       setShowTeamPairing(true);
@@ -280,13 +280,11 @@ export function OrganizerScreen() {
 
   const handleExportFile = () => {
     const text = exportPlannerTournament(tournament, players);
-    const blob = new Blob([text], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
+    const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(text);
     const a = document.createElement('a');
-    a.href = url;
+    a.href = dataUrl;
     a.download = `${tournament.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.json`;
     a.click();
-    URL.revokeObjectURL(url);
   };
 
 
@@ -298,7 +296,8 @@ export function OrganizerScreen() {
     setEditingName(false);
   };
 
-  const playerCount = confirmedCount || capacity;
+  const playingCount = [...statuses.values()].filter(s => s === 'playing').length;
+  const playerCount = playingCount || capacity;
 
   const handleAddCourt = async () => {
     const newIndex = tournament.courts.length;

@@ -208,6 +208,44 @@ describe('validateLaunch', () => {
     expect(validateLaunch(t, players, statuses)).toBeNull();
   });
 
+  // ─── Slots full: skip needs-partner ───
+
+  it('allows launch when slots are full even if some players need partners', () => {
+    const t = makeTournament({
+      format: 'club-ranked',
+      courts: [{ id: 'c1', name: 'Court 1' }, { id: 'c2', name: 'Court 2' },
+               { id: 'c3', name: 'Court 3' }, { id: 'c4', name: 'Court 4' }],
+      clubs: [{ id: 'cl1', name: 'Club A' }, { id: 'cl2', name: 'Club B' },
+              { id: 'cl3', name: 'Club C' }, { id: 'cl4', name: 'Club D' }],
+    });
+    // 16 playing + 8 needs-partner overflow
+    const playing = Array.from({ length: 16 }, (_, i) => makePlayer(String(i + 1), { clubId: `cl${(i % 4) + 1}` }));
+    const overflow = Array.from({ length: 8 }, (_, i) => makePlayer(String(i + 17)));
+    const statuses = statusMap([
+      ...playing.map(p => [p.id, 'playing'] as [string, PlayerStatus]),
+      ...overflow.map(p => [p.id, 'needs-partner'] as [string, PlayerStatus]),
+    ]);
+    // capacity = 4 courts * 4 = 16, all filled
+    expect(validateLaunch(t, [...playing, ...overflow], statuses, 16)).toBeNull();
+  });
+
+  it('still rejects needs-partner when slots are not full', () => {
+    const t = makeTournament({ format: 'team-americano' });
+    const players = [
+      makePlayer('1'), makePlayer('2'), makePlayer('3'),
+      makePlayer('4'), makePlayer('5'),
+    ];
+    const statuses = statusMap([
+      ['1', 'playing'], ['2', 'playing'], ['3', 'playing'], ['4', 'playing'],
+      ['5', 'needs-partner'],
+    ]);
+    // capacity = 8 but only 4 playing, slots not full
+    expect(validateLaunch(t, players, statuses, 8)).toEqual({
+      key: 'organizer.validationNeedsPartner',
+      params: { count: 1 },
+    });
+  });
+
   // ─── Priority order ───
 
   it('checks needs-partner before min-players', () => {

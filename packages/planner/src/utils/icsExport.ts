@@ -91,13 +91,11 @@ export async function downloadICS(tournament: PlannerTournament): Promise<void> 
     return;
   }
 
-  const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
+  const dataUrl = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(content);
   const link = document.createElement('a');
-  link.href = url;
+  link.href = dataUrl;
   link.download = `${tournament.name.replace(/[^a-zA-Z0-9]/g, '_')}.ics`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  URL.revokeObjectURL(url);
 }

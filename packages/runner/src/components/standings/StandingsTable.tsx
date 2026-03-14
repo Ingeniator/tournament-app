@@ -38,7 +38,6 @@ export const StandingsTable = memo(function StandingsTable({ standings, plannedG
     <table className={styles.table}>
       <thead>
         <tr>
-          <th className={styles.rank}>#</th>
           <th>{t('standings.name')}</th>
           <th className={`${styles.right} ${styles.numCol}`}>{t('standings.pts')}</th>
           {plannedGames && <th className={`${styles.right} ${styles.numCol}`}>{t('standings.gp')}</th>}
@@ -66,7 +65,6 @@ export const StandingsTable = memo(function StandingsTable({ standings, plannedG
 
           return (
             <tr key={entry.playerId}>
-              <td className={`${styles.rank} ${rankClass}`}>{entry.rank}</td>
               {(() => {
                 const nameParts = entry.playerName.split(' & ');
                 const isPair = nameParts.length === 2;
@@ -83,25 +81,27 @@ export const StandingsTable = memo(function StandingsTable({ standings, plannedG
                           <span className={styles.clubDot} style={{ backgroundColor: clubColor }} />
                         )}
                         <span className={styles.pairNames}>
+                          <span className={`${styles.rankLine} ${rankClass}`}>#{entry.rank}{rankLabel ? ` · ${shortLabel(rankLabel)}` : ''}</span>
                           <span>{nameParts[0]}</span>
                           <span className={styles.pairSecondary}>{nameParts[1]}</span>
                         </span>
-                        {rankLabel && (
-                          <span className={styles.rankBadge}>{shortLabel(rankLabel)}</span>
-                        )}
                       </div>
                     </td>
                   );
                 }
 
                 return (
-                  <td className={styles.name}>
-                    {entry.playerName}
-                    {groupInfo && groupInfo.map.has(entry.playerId) && (
-                      <span className={`${styles.groupBadge} ${groupInfo.map.get(entry.playerId) === 'A' ? styles.groupA : styles.groupB}`}>
-                        {groupInfo.map.get(entry.playerId) === 'A' ? groupInfo.labels[0] : groupInfo.labels[1]}
+                  <td className={`${styles.name} ${styles.pairCell}`}>
+                    <span className={styles.pairNames}>
+                      <span className={`${styles.rankLine} ${rankClass}`}>#{entry.rank}</span>
+                      <span>{entry.playerName}
+                        {groupInfo && groupInfo.map.has(entry.playerId) && (
+                          <span className={`${styles.groupBadge} ${groupInfo.map.get(entry.playerId) === 'A' ? styles.groupA : styles.groupB}`}>
+                            {groupInfo.map.get(entry.playerId) === 'A' ? groupInfo.labels[0] : groupInfo.labels[1]}
+                          </span>
+                        )}
                       </span>
-                    )}
+                    </span>
                   </td>
                 );
               })()}

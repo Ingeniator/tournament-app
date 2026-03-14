@@ -37,6 +37,7 @@
 
 .right {
   text-align: right;
+  font-size: var(--text-xs);
 }
 
 .rank {
@@ -51,6 +52,18 @@
 
 .playerName {
   font-weight: 500;
+  white-space: normal !important;
+}
+
+.nameText {
+  display: block;
+}
+
+.rankLine {
+  display: block;
+  font-size: 0.7em;
+  font-weight: 600;
+  color: var(--color-text-muted);
 }
 
 .points {
@@ -58,7 +71,7 @@
 }
 
 .diff {
-  width: 48px;
+  width: 36px;
 }
 
 .positive { color: var(--color-success); }

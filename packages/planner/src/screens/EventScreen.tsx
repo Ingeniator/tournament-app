@@ -179,13 +179,11 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
   const handleExportFile = async () => {
     try {
       const text = await exportPlannerEvent(event);
-      const blob = new Blob([text], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
+      const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(text);
       const a = document.createElement('a');
-      a.href = url;
+      a.href = dataUrl;
       a.download = `${event.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.json`;
       a.click();
-      URL.revokeObjectURL(url);
     } catch {
       showToast(t('organizer.failedCopy'));
     }
@@ -434,7 +432,7 @@ function TournamentListCard({
                     </button>
                   )}
                 </div>
-                {isDraft && (
+                {isDraft && ti.approvedCount < ti.capacity && (
                   <TournamentBreakdownView breakdown={computeBreakdown(ti.raw, ti.capacity)} approvedCount={ti.approvedCount} />
                 )}
               </div>

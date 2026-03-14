@@ -40,12 +40,12 @@
 
 .table td.right {
   text-align: right;
+  font-size: var(--text-xs);
 }
 
 .rank {
   font-weight: 700;
   color: var(--color-text-muted);
-  width: 28px;
 }
 
 .rank1 {
@@ -61,7 +61,7 @@
 }
 
 .name {
-  font-weight: 600;
+  font-weight: 400;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -87,12 +87,15 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.pairSecondary {
   font-weight: 400;
   color: var(--color-text-secondary);
   font-size: var(--text-xs);
+}
+
+.rankLine {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
 }
 
 .clubDot {
@@ -109,16 +112,16 @@
 }
 
 .numCol {
-  width: 36px;
+  width: 32px;
 }
 
 .wtlCol {
-  width: 56px;
+  width: 48px;
 }
 
 .diff {
   color: var(--color-text-secondary);
-  width: 40px;
+  width: 32px;
 }
 
 .positive {
