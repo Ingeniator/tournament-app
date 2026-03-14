@@ -10,15 +10,20 @@ export function validateLaunch(
   tournament: PlannerTournament,
   players: PlannerRegistration[],
   statuses: Map<string, PlayerStatus>,
+  capacity?: number,
 ): { key: string; params?: Record<string, number> } | null {
   const playingPlayers = players.filter(p => statuses.get(p.id) === 'playing');
   const count = playingPlayers.length;
 
-  // Check for needs-partner players in pair formats
+  // Check for needs-partner players in pair formats, but only when slots aren't full.
+  // When all slots are filled, unpaired players are beyond capacity and shouldn't block launch.
   const isTeamFormat = formatHasFixedPartners(tournament.format);
   if (isTeamFormat) {
-    const needsPartner = players.filter(p => statuses.get(p.id) === 'needs-partner').length;
-    if (needsPartner > 0) return { key: 'organizer.validationNeedsPartner', params: { count: needsPartner } };
+    const slotsFull = capacity != null && count >= capacity;
+    if (!slotsFull) {
+      const needsPartner = players.filter(p => statuses.get(p.id) === 'needs-partner').length;
+      if (needsPartner > 0) return { key: 'organizer.validationNeedsPartner', params: { count: needsPartner } };
+    }
   }
 
   if (count < 4) return { key: 'organizer.validationMinPlayers' };
