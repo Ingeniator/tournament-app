@@ -45,7 +45,6 @@
 .rank {
   font-weight: 700;
   color: var(--color-text-muted);
-  width: 28px;
 }
 
 .rank1 {
@@ -93,6 +92,12 @@
   font-weight: 400;
   color: var(--color-text-secondary);
   font-size: var(--text-xs);
+}
+
+.rankLine {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
 }
 
 .clubDot {
