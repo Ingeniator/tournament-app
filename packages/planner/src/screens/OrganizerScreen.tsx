@@ -280,13 +280,11 @@ export function OrganizerScreen() {
 
   const handleExportFile = () => {
     const text = exportPlannerTournament(tournament, players);
-    const blob = new Blob([text], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
+    const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(text);
     const a = document.createElement('a');
-    a.href = url;
+    a.href = dataUrl;
     a.download = `${tournament.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.json`;
     a.click();
-    URL.revokeObjectURL(url);
   };
 
 

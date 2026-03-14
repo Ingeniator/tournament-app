@@ -21,13 +21,11 @@ export function exportTournament(tournament: Tournament): string {
 
 export function exportTournamentToFile(tournament: Tournament): void {
   const json = exportTournament(tournament);
-  const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
+  const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
   const a = document.createElement('a');
-  a.href = url;
+  a.href = dataUrl;
   a.download = `${tournament.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.json`;
   a.click();
-  URL.revokeObjectURL(url);
 }
 
 export interface ImportError {
