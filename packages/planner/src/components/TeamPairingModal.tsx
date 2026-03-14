@@ -128,6 +128,7 @@ export function TeamPairingModal({ open, players, format, clubs, rankLabels, onS
 
   const teamsByClub = useMemo(() => {
     if (!isClubFormat || !clubs?.length) return null;
+    const playerRankOf = (id: string) => players.find(p => p.id === id)?.rankSlot;
     const playerClubOf = (id: string) => players.find(p => p.id === id)?.clubId;
     const grouped = new Map<string, Team[]>();
     for (const club of clubs) {
@@ -138,6 +139,14 @@ export function TeamPairingModal({ open, players, format, clubs, rankLabels, onS
       if (clubId && grouped.has(clubId)) {
         grouped.get(clubId)!.push(team);
       }
+    }
+    // Sort teams within each club by rank slot
+    for (const [, clubTeams] of grouped) {
+      clubTeams.sort((a, b) => {
+        const rankA = playerRankOf(a.player1Id) ?? playerRankOf(a.player2Id) ?? 999;
+        const rankB = playerRankOf(b.player1Id) ?? playerRankOf(b.player2Id) ?? 999;
+        return rankA - rankB;
+      });
     }
     return grouped;
   }, [teams, players, clubs, isClubFormat]);
