@@ -432,7 +432,7 @@ function TournamentListCard({
                     </button>
                   )}
                 </div>
-                {isDraft && (
+                {isDraft && ti.approvedCount < ti.capacity && (
                   <TournamentBreakdownView breakdown={computeBreakdown(ti.raw, ti.capacity)} approvedCount={ti.approvedCount} />
                 )}
               </div>
