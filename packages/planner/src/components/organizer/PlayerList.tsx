@@ -408,8 +408,10 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
     const rl = rankLabels ?? [];
     const cl = clubs ?? [];
     const lines: string[] = [];
-    const renderPlayer = (p: PlannerRegistration) =>
-      p.telegramUsername ? `${p.name} (@${p.telegramUsername})` : p.name;
+    const renderPlayer = (p: PlannerRegistration) => {
+      const displayName = p.alias || p.name;
+      return p.telegramUsername ? `${displayName} (@${p.telegramUsername})` : displayName;
+    };
 
     const renderPairs = (group: PlannerRegistration[], indent: string) => {
       const rendered = new Set<string>();
