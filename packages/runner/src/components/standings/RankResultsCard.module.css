@@ -71,7 +71,7 @@
 }
 
 .playerNames {
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
   display: flex;
   flex-direction: column;
   line-height: 1.3;
