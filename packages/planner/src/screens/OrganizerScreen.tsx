@@ -242,7 +242,7 @@ export function OrganizerScreen() {
   };
 
   const handleLaunch = () => {
-    const result = validateLaunchUtil(tournament!, players, statuses);
+    const result = validateLaunchUtil(tournament!, players, statuses, capacity);
     if (result) { showToast(t(result.key, result.params)); return; }
     if (formatHasFixedPartners(tournament!.format)) {
       setShowTeamPairing(true);
