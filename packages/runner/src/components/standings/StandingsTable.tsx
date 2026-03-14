@@ -81,9 +81,9 @@ export const StandingsTable = memo(function StandingsTable({ standings, plannedG
                           <span className={styles.clubDot} style={{ backgroundColor: clubColor }} />
                         )}
                         <span className={styles.pairNames}>
+                          <span className={`${styles.rankLine} ${rankClass}`}>#{entry.rank}{rankLabel ? ` · ${shortLabel(rankLabel)}` : ''}</span>
                           <span>{nameParts[0]}</span>
                           <span className={styles.pairSecondary}>{nameParts[1]}</span>
-                          <span className={`${styles.rankLine} ${rankClass}`}>#{entry.rank}{rankLabel ? ` · ${shortLabel(rankLabel)}` : ''}</span>
                         </span>
                       </div>
                     </td>
@@ -93,6 +93,7 @@ export const StandingsTable = memo(function StandingsTable({ standings, plannedG
                 return (
                   <td className={`${styles.name} ${styles.pairCell}`}>
                     <span className={styles.pairNames}>
+                      <span className={`${styles.rankLine} ${rankClass}`}>#{entry.rank}</span>
                       <span>{entry.playerName}
                         {groupInfo && groupInfo.map.has(entry.playerId) && (
                           <span className={`${styles.groupBadge} ${groupInfo.map.get(entry.playerId) === 'A' ? styles.groupA : styles.groupB}`}>
@@ -100,7 +101,6 @@ export const StandingsTable = memo(function StandingsTable({ standings, plannedG
                           </span>
                         )}
                       </span>
-                      <span className={`${styles.rankLine} ${rankClass}`}>#{entry.rank}</span>
                     </span>
                   </td>
                 );

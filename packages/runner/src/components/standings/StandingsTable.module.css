@@ -40,6 +40,7 @@
 
 .table td.right {
   text-align: right;
+  font-size: var(--text-xs);
 }
 
 .rank {
@@ -114,16 +115,16 @@
 }
 
 .numCol {
-  width: 36px;
+  width: 32px;
 }
 
 .wtlCol {
-  width: 56px;
+  width: 48px;
 }
 
 .diff {
   color: var(--color-text-secondary);
-  width: 40px;
+  width: 32px;
 }
 
 .positive {

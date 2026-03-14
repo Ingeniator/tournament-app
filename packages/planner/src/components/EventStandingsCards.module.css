@@ -37,6 +37,7 @@
 
 .right {
   text-align: right;
+  font-size: var(--text-xs);
 }
 
 .rank {
@@ -70,7 +71,7 @@
 }
 
 .diff {
-  width: 48px;
+  width: 36px;
 }
 
 .positive { color: var(--color-success); }
