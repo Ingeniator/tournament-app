@@ -296,7 +296,8 @@ export function OrganizerScreen() {
     setEditingName(false);
   };
 
-  const playerCount = confirmedCount || capacity;
+  const playingCount = [...statuses.values()].filter(s => s === 'playing').length;
+  const playerCount = playingCount || capacity;
 
   const handleAddCourt = async () => {
     const newIndex = tournament.courts.length;
