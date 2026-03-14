@@ -872,7 +872,7 @@ export function JoinScreen() {
   };
 
   const handleLaunch = () => {
-    const result = validateLaunch(tournament!, players, statuses);
+    const result = validateLaunch(tournament!, players, statuses, capacity);
     if (result) { showToast(t(result.key, result.params)); return; }
     handleGuardedLaunch(tournament!, players);
   };
