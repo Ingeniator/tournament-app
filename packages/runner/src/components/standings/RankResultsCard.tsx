@@ -1,4 +1,5 @@
 import type { Tournament, Match, Club, Player } from '@padel/common';
+import { shortLabel } from '@padel/common';
 import styles from './RankResultsCard.module.css';
 
 export interface RankMatch {
@@ -89,7 +90,7 @@ export function RankResultsCard({ rankGroup, tournamentName }: RankResultsCardPr
   return (
     <div className={styles.card}>
       <div className={styles.tournamentName}>{tournamentName}</div>
-      <div className={styles.rankLabel}>{rankGroup.rankLabel}</div>
+      <div className={styles.rankLabel}>{shortLabel(rankGroup.rankLabel)}</div>
       <div className={styles.matchList}>
         {rankGroup.matches.map((m, i) => {
           const won1 = m.score1 > m.score2;
@@ -98,7 +99,11 @@ export function RankResultsCard({ rankGroup, tournamentName }: RankResultsCardPr
             <div key={i} className={styles.matchRow}>
               <div className={`${styles.team} ${styles.teamLeft} ${won1 ? styles.winner : ''}`}>
                 <span className={styles.clubName}>{m.club1Name}</span>
-                <span className={styles.playerNames}>{m.team1Names}</span>
+                <span className={styles.playerNames}>
+                  {m.team1Names.split(' & ').map((name, j) => (
+                    <span key={j}>{name}</span>
+                  ))}
+                </span>
               </div>
               <div className={styles.score}>
                 <span className={won1 ? styles.scoreWin : ''}>{m.score1}</span>
@@ -107,7 +112,11 @@ export function RankResultsCard({ rankGroup, tournamentName }: RankResultsCardPr
               </div>
               <div className={`${styles.team} ${styles.teamRight} ${won2 ? styles.winner : ''}`}>
                 <span className={styles.clubName}>{m.club2Name}</span>
-                <span className={styles.playerNames}>{m.team2Names}</span>
+                <span className={styles.playerNames}>
+                  {m.team2Names.split(' & ').map((name, j) => (
+                    <span key={j}>{name}</span>
+                  ))}
+                </span>
               </div>
             </div>
           );

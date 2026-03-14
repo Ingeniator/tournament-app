@@ -71,9 +71,15 @@
 
 .playerNames {
   font-size: var(--text-sm);
-  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+
+.playerNames span {
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .winner .playerNames {
