@@ -13,11 +13,9 @@ import styles from './LogScreen.module.css';
 
 interface LogScreenProps {
   onNavigate?: (tab: 'play' | 'log' | 'settings') => void;
-  autoShowStats?: boolean;
-  onStatsShown?: () => void;
 }
 
-export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreenProps) {
+export function LogScreen({ onNavigate }: LogScreenProps) {
   const { tournament, dispatch } = useTournament();
   const { t } = useTranslation();
   const stats = usePlayerStats(tournament);
@@ -28,13 +26,6 @@ export function LogScreen({ onNavigate, autoShowStats, onStatsShown }: LogScreen
   const [optimizeElapsed, setOptimizeElapsed] = useState<number | null>(null);
   const [optimalBackup, setOptimalBackup] = useState<Round[] | null>(null);
   const optimizeCtrlRef = useRef<{ cancelled: boolean }>({ cancelled: false });
-
-  useEffect(() => {
-    if (autoShowStats) {
-      setShowStats(true);
-      onStatsShown?.();
-    }
-  }, [autoShowStats, onStatsShown]);
 
   // Cancel optimize loop on unmount
   useEffect(() => {

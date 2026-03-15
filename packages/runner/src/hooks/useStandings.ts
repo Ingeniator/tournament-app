@@ -4,7 +4,7 @@ import { getStrategy } from '../strategies';
 
 export function useStandings(tournament: Tournament | null): StandingsEntry[] {
   return useMemo(() => {
-    if (!tournament || tournament.phase === 'setup') return [];
+    if (!tournament) return [];
     const strategy = getStrategy(tournament.config.format);
     return strategy.calculateStandings(tournament);
   }, [tournament]);

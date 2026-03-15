@@ -1,8 +1,7 @@
-import type { Tournament, Player, Court, Club, TournamentConfig, Round } from '@padel/common';
+import type { Tournament, Player, Court, TournamentConfig, Round } from '@padel/common';
 import type { TournamentAction } from './actions';
-import { generateId, CLUB_COLORS } from '@padel/common';
-import { formatHasGroups, formatHasClubs } from '@padel/common';
-import { createTeams, createCrossGroupTeams, createClubTeams } from '@padel/common';
+import { generateId } from '@padel/common';
+import { createClubTeams } from '@padel/common';
 import { getStrategy } from '../strategies';
 import { deduplicateNames } from '../utils/deduplicateNames';
 import { resolveConfigDefaults } from '@padel/common';
@@ -46,38 +45,6 @@ export function tournamentReducer(
       return { ...loaded, players: deduplicateNames(loaded.players) };
     }
 
-    case 'ADD_PLAYER': {
-      if (!state || state.phase !== 'setup') return state;
-      const newPlayer = { id: generateId(), name: action.payload.name };
-      return {
-        ...state,
-        players: deduplicateNames([...state.players, newPlayer]),
-        updatedAt: Date.now(),
-      };
-    }
-
-    case 'ADD_PLAYERS_BULK': {
-      if (!state || state.phase !== 'setup') return state;
-      const newPlayers = action.payload.names.map(name => ({
-        id: generateId(),
-        name,
-      }));
-      return {
-        ...state,
-        players: deduplicateNames([...state.players, ...newPlayers]),
-        updatedAt: Date.now(),
-      };
-    }
-
-    case 'REMOVE_PLAYER': {
-      if (!state || state.phase !== 'setup') return state;
-      return {
-        ...state,
-        players: state.players.filter(p => p.id !== action.payload.playerId),
-        updatedAt: Date.now(),
-      };
-    }
-
     case 'UPDATE_PLAYER': {
       if (!state) return state;
       const updatedPlrs = state.players.map(p =>
@@ -91,22 +58,13 @@ export function tournamentReducer(
     }
 
     case 'SET_PLAYER_GROUP': {
-      if (!state || (state.phase !== 'setup' && state.phase !== 'in-progress')) return state;
+      if (!state || state.phase !== 'in-progress') return state;
       const { playerId: gpId, group } = action.payload;
       const gpPlayers = state.players.map(p =>
         p.id === gpId ? { ...p, group: group ?? undefined } : p
       );
-
-      if (state.phase === 'in-progress') {
-        const newRounds = regenerateUnscoredRounds(state, gpPlayers, state.config);
-        return { ...state, players: gpPlayers, rounds: newRounds, updatedAt: Date.now() };
-      }
-
-      return {
-        ...state,
-        players: gpPlayers,
-        updatedAt: Date.now(),
-      };
+      const newRounds = regenerateUnscoredRounds(state, gpPlayers, state.config);
+      return { ...state, players: gpPlayers, rounds: newRounds, updatedAt: Date.now() };
     }
 
     case 'TOGGLE_PLAYER_AVAILABILITY': {
@@ -257,89 +215,6 @@ export function tournamentReducer(
       return {
         ...state,
         name: action.payload.name,
-        updatedAt: Date.now(),
-      };
-    }
-
-    case 'UPDATE_CONFIG': {
-      if (!state || state.phase !== 'setup') return state;
-      return {
-        ...state,
-        config: { ...state.config, ...action.payload },
-        updatedAt: Date.now(),
-      };
-    }
-
-    case 'SET_TEAMS': {
-      if (!state || state.phase !== 'setup') return state;
-      if (!getStrategy(state.config.format).hasFixedPartners) return state;
-      const teams = formatHasClubs(state.config.format) && state.clubs?.length
-        ? createClubTeams(state.players, state.clubs)
-        : formatHasGroups(state.config.format)
-          ? createCrossGroupTeams(state.players)
-          : createTeams(state.players);
-      return {
-        ...state,
-        teams,
-        phase: 'team-pairing',
-        updatedAt: Date.now(),
-      };
-    }
-
-    case 'SHUFFLE_TEAMS': {
-      if (!state || state.phase !== 'team-pairing') return state;
-      const teams = formatHasClubs(state.config.format) && state.clubs?.length
-        ? createClubTeams(state.players, state.clubs)
-        : formatHasGroups(state.config.format)
-          ? createCrossGroupTeams(state.players)
-          : createTeams(state.players);
-      return {
-        ...state,
-        teams,
-        updatedAt: Date.now(),
-      };
-    }
-
-    case 'SWAP_PLAYERS': {
-      if (!state || state.phase !== 'team-pairing' || !state.teams) return state;
-      const { playerA, playerB } = action.payload;
-      const teamAIdx = state.teams.findIndex(t => t.player1Id === playerA || t.player2Id === playerA);
-      const teamBIdx = state.teams.findIndex(t => t.player1Id === playerB || t.player2Id === playerB);
-      if (teamAIdx === -1 || teamBIdx === -1 || teamAIdx === teamBIdx) return state;
-
-      const newTeams = state.teams.map(t => ({ ...t }));
-      // Swap playerA and playerB between their teams
-      const tA = newTeams[teamAIdx];
-      const tB = newTeams[teamBIdx];
-      if (tA.player1Id === playerA) tA.player1Id = playerB; else tA.player2Id = playerB;
-      if (tB.player1Id === playerB) tB.player1Id = playerA; else tB.player2Id = playerA;
-
-      return {
-        ...state,
-        teams: newTeams,
-        updatedAt: Date.now(),
-      };
-    }
-
-    case 'RENAME_TEAM': {
-      if (!state || state.phase !== 'team-pairing' || !state.teams) return state;
-      const { teamId, name } = action.payload;
-      const newTeams = state.teams.map(t =>
-        t.id === teamId ? { ...t, name: name.trim() || undefined } : t
-      );
-      return {
-        ...state,
-        teams: newTeams,
-        updatedAt: Date.now(),
-      };
-    }
-
-    case 'SET_TEAMS_BACK': {
-      if (!state || state.phase !== 'team-pairing') return state;
-      return {
-        ...state,
-        phase: 'setup',
-        teams: undefined,
         updatedAt: Date.now(),
       };
     }
@@ -538,55 +413,6 @@ export function tournamentReducer(
         ...state,
         nominations: action.payload.nominations,
         ceremonyCompleted: true,
-        updatedAt: Date.now(),
-      };
-    }
-
-    case 'ADD_CLUB': {
-      if (!state || state.phase !== 'setup') return state;
-      const existingClubs = state.clubs ?? [];
-      const usedColors = new Set(existingClubs.map(c => c.color).filter(Boolean));
-      const freeColor = CLUB_COLORS.find(c => !usedColors.has(c)) ?? CLUB_COLORS[existingClubs.length % CLUB_COLORS.length];
-      const newClub: Club = { id: generateId(), name: action.payload.name, color: freeColor };
-      return {
-        ...state,
-        clubs: [...existingClubs, newClub],
-        updatedAt: Date.now(),
-      };
-    }
-
-    case 'REMOVE_CLUB': {
-      if (!state || state.phase !== 'setup') return state;
-      const { clubId: removeClubId } = action.payload;
-      return {
-        ...state,
-        clubs: (state.clubs ?? []).filter(c => c.id !== removeClubId),
-        players: state.players.map(p =>
-          p.clubId === removeClubId ? { ...p, clubId: undefined } : p
-        ),
-        updatedAt: Date.now(),
-      };
-    }
-
-    case 'RENAME_CLUB': {
-      if (!state || state.phase !== 'setup') return state;
-      return {
-        ...state,
-        clubs: (state.clubs ?? []).map(c =>
-          c.id === action.payload.clubId ? { ...c, name: action.payload.name } : c
-        ),
-        updatedAt: Date.now(),
-      };
-    }
-
-    case 'SET_PLAYER_CLUB': {
-      if (!state || state.phase !== 'setup') return state;
-      const { playerId: pcId, clubId: pcClubId } = action.payload;
-      return {
-        ...state,
-        players: state.players.map(p =>
-          p.id === pcId ? { ...p, clubId: pcClubId ?? undefined } : p
-        ),
         updatedAt: Date.now(),
       };
     }

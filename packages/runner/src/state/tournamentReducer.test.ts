@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { tournamentReducer } from './tournamentReducer';
 import type { Tournament, TournamentConfig, Player, Team, MaldicionesHands } from '@padel/common';
+import { createTeams } from '@padel/common';
 
 function makeConfig(numCourts = 1): TournamentConfig {
   return {
@@ -23,6 +24,8 @@ function makeSetupTournament(playerCount = 4): Tournament {
     updatedAt: 1000,
   };
 }
+
+
 
 function makeInProgressTournament(): Tournament {
   const players: Player[] = Array.from({ length: 8 }, (_, i) => ({ id: `p${i + 1}`, name: `Player ${i + 1}` }));
@@ -63,58 +66,6 @@ describe('tournamentReducer', () => {
     });
   });
 
-  describe('ADD_PLAYER', () => {
-    it('adds a player in setup phase', () => {
-      const state = makeSetupTournament(0);
-      const result = tournamentReducer(state, {
-        type: 'ADD_PLAYER',
-        payload: { name: 'Alice' },
-      });
-      expect(result!.players.length).toBe(1);
-      expect(result!.players[0].name).toBe('Alice');
-    });
-
-    it('ignores in non-setup phase', () => {
-      const state = makeInProgressTournament();
-      const result = tournamentReducer(state, {
-        type: 'ADD_PLAYER',
-        payload: { name: 'New Player' },
-      });
-      expect(result!.players.length).toBe(state.players.length);
-    });
-
-    it('returns same state when state is null', () => {
-      const result = tournamentReducer(null, {
-        type: 'ADD_PLAYER',
-        payload: { name: 'Alice' },
-      });
-      expect(result).toBeNull();
-    });
-  });
-
-  describe('ADD_PLAYERS_BULK', () => {
-    it('adds multiple players at once', () => {
-      const state = makeSetupTournament(0);
-      const result = tournamentReducer(state, {
-        type: 'ADD_PLAYERS_BULK',
-        payload: { names: ['Alice', 'Bob', 'Charlie'] },
-      });
-      expect(result!.players.length).toBe(3);
-    });
-  });
-
-  describe('REMOVE_PLAYER', () => {
-    it('removes a player by id', () => {
-      const state = makeSetupTournament(4);
-      const result = tournamentReducer(state, {
-        type: 'REMOVE_PLAYER',
-        payload: { playerId: 'p2' },
-      });
-      expect(result!.players.length).toBe(3);
-      expect(result!.players.find(p => p.id === 'p2')).toBeUndefined();
-    });
-  });
-
   describe('UPDATE_PLAYER', () => {
     it('updates player name', () => {
       const state = makeSetupTournament(4);
@@ -134,28 +85,6 @@ describe('tournamentReducer', () => {
         payload: { name: 'New Tournament Name' },
       });
       expect(result!.name).toBe('New Tournament Name');
-    });
-  });
-
-  describe('UPDATE_CONFIG', () => {
-    it('merges config updates in setup phase', () => {
-      const state = makeSetupTournament();
-      const result = tournamentReducer(state, {
-        type: 'UPDATE_CONFIG',
-        payload: { pointsPerMatch: 32 },
-      });
-      expect(result!.config.pointsPerMatch).toBe(32);
-      expect(result!.config.format).toBe('americano'); // unchanged
-    });
-
-    it('ignores in non-setup phase', () => {
-      const state = makeInProgressTournament();
-      const original = state.config.pointsPerMatch;
-      const result = tournamentReducer(state, {
-        type: 'UPDATE_CONFIG',
-        payload: { pointsPerMatch: 99 },
-      });
-      expect(result!.config.pointsPerMatch).toBe(original);
     });
   });
 
@@ -435,12 +364,12 @@ describe('tournamentReducer', () => {
   describe('REPLACE_PLAYER (team-americano)', () => {
     function makeTeamAmericanoInProgress(): Tournament {
       const players: Player[] = Array.from({ length: 8 }, (_, i) => ({ id: `p${i + 1}`, name: `Player ${i + 1}` }));
+      const teams = createTeams(players);
       const config: TournamentConfig = {
         format: 'team-americano', pointsPerMatch: 21, maxRounds: 3,
         courts: [{ id: 'c1', name: 'C1' }, { id: 'c2', name: 'C2' }],
       };
-      const setup: Tournament = { id: 't1', name: 'Test', config, phase: 'setup', players, rounds: [], createdAt: 0, updatedAt: 0 };
-      const withTeams = tournamentReducer(setup, { type: 'SET_TEAMS' })!;
+      const withTeams: Tournament = { id: 't1', name: 'Test', config, phase: 'team-pairing', players, teams, rounds: [], createdAt: 0, updatedAt: 0 };
       return tournamentReducer(withTeams, { type: 'GENERATE_SCHEDULE' })!;
     }
 
@@ -526,12 +455,12 @@ describe('tournamentReducer', () => {
   describe('TOGGLE_PLAYER_AVAILABILITY (team-americano)', () => {
     function makeTeamAmericanoInProgress(): Tournament {
       const players: Player[] = Array.from({ length: 8 }, (_, i) => ({ id: `p${i + 1}`, name: `Player ${i + 1}` }));
+      const teams = createTeams(players);
       const config: TournamentConfig = {
         format: 'team-americano', pointsPerMatch: 21, maxRounds: 3,
         courts: [{ id: 'c1', name: 'C1' }, { id: 'c2', name: 'C2' }],
       };
-      const setup: Tournament = { id: 't1', name: 'Test', config, phase: 'setup', players, rounds: [], createdAt: 0, updatedAt: 0 };
-      const withTeams = tournamentReducer(setup, { type: 'SET_TEAMS' })!;
+      const withTeams: Tournament = { id: 't1', name: 'Test', config, phase: 'team-pairing', players, teams, rounds: [], createdAt: 0, updatedAt: 0 };
       return tournamentReducer(withTeams, { type: 'GENERATE_SCHEDULE' })!;
     }
 
@@ -558,64 +487,15 @@ describe('tournamentReducer', () => {
     });
   });
 
-  describe('SWAP_PLAYERS (team name preservation)', () => {
-    function makeTeamPairingState(): Tournament {
-      const players: Player[] = Array.from({ length: 4 }, (_, i) => ({ id: `p${i + 1}`, name: `Player ${i + 1}` }));
-      const config: TournamentConfig = {
-        format: 'team-americano', pointsPerMatch: 21, maxRounds: 3,
-        courts: [{ id: 'c1', name: 'C1' }],
-      };
-      const setup: Tournament = { id: 't1', name: 'Test', config, phase: 'setup', players, rounds: [], createdAt: 0, updatedAt: 0 };
-      return tournamentReducer(setup, { type: 'SET_TEAMS' })!;
-    }
-
-    it('preserves custom team name after swap', () => {
-      let state = makeTeamPairingState();
-      const team = state.teams![0];
-      // Set a custom name
-      state = tournamentReducer(state, {
-        type: 'RENAME_TEAM',
-        payload: { teamId: team.id, name: 'The Aces' },
-      })!;
-
-      // Swap a player between teams
-      const playerFromTeam0 = team.player1Id;
-      const playerFromTeam1 = state.teams![1].player1Id;
-      const result = tournamentReducer(state, {
-        type: 'SWAP_PLAYERS',
-        payload: { playerA: playerFromTeam0, playerB: playerFromTeam1 },
-      });
-
-      // Custom name should be preserved
-      const updatedTeam = result!.teams!.find(t => t.id === team.id)!;
-      expect(updatedTeam.name).toBe('The Aces');
-    });
-
-    it('teams without custom names have no stored name after swap', () => {
-      const state = makeTeamPairingState();
-      const team0 = state.teams![0];
-      const team1 = state.teams![1];
-
-      const result = tournamentReducer(state, {
-        type: 'SWAP_PLAYERS',
-        payload: { playerA: team0.player1Id, playerB: team1.player1Id },
-      });
-
-      // No custom name was set, so name should remain undefined
-      expect(result!.teams![0].name).toBeUndefined();
-      expect(result!.teams![1].name).toBeUndefined();
-    });
-  });
-
   describe('REPLACE_PLAYER (team name preservation)', () => {
     function makeTeamAmericanoInProgress(): Tournament {
       const players: Player[] = Array.from({ length: 4 }, (_, i) => ({ id: `p${i + 1}`, name: `Player ${i + 1}` }));
+      const teams = createTeams(players);
       const config: TournamentConfig = {
         format: 'team-americano', pointsPerMatch: 21, maxRounds: 3,
         courts: [{ id: 'c1', name: 'C1' }],
       };
-      const setup: Tournament = { id: 't1', name: 'Test', config, phase: 'setup', players, rounds: [], createdAt: 0, updatedAt: 0 };
-      const withTeams = tournamentReducer(setup, { type: 'SET_TEAMS' })!;
+      const withTeams: Tournament = { id: 't1', name: 'Test', config, phase: 'team-pairing', players, teams, rounds: [], createdAt: 0, updatedAt: 0 };
       return tournamentReducer(withTeams, { type: 'GENERATE_SCHEDULE' })!;
     }
 

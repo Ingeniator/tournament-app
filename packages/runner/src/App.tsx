@@ -1,12 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { TournamentProvider } from './state/TournamentContext';
 import { ThemeProvider } from './state/ThemeContext';
 import { useTournament } from './hooks/useTournament';
 import { AppShell } from './components/layout/AppShell';
 import { BottomNav, type TabId } from './components/layout/BottomNav';
 import { HomeScreen } from './screens/HomeScreen';
-import { SetupScreen } from './screens/SetupScreen';
-import { TeamPairingScreen } from './screens/TeamPairingScreen';
 import { PlayScreen } from './screens/PlayScreen';
 import { LogScreen } from './screens/LogScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
@@ -14,7 +12,6 @@ import { Button, ErrorBoundary, SkinPicker, I18nProvider, useTranslation } from 
 import { useRunnerTheme } from './state/ThemeContext';
 import { translations } from './i18n';
 import { saveUIState, loadUIState } from './state/persistence';
-import { getStrategy } from './strategies';
 import { IOSInstallBanner } from './components/IOSInstallBanner';
 
 function AppContent() {
@@ -27,9 +24,6 @@ function AppContent() {
     if (tab === 'play' || tab === 'log' || tab === 'settings') return tab;
     return 'play';
   });
-  const [showStatsOnMount, setShowStatsOnMount] = useState(false);
-  const prevPhaseRef = useRef(tournament?.phase);
-
   useEffect(() => {
     saveUIState({ activeTab });
   }, [activeTab]);
@@ -37,47 +31,17 @@ function AppContent() {
   // Update URL hash for Cloudflare Web Analytics virtual pageviews
   const currentScreen = !tournament
     ? 'home'
-    : tournament.phase === 'setup'
-      ? 'setup'
-      : tournament.phase === 'team-pairing'
-        ? 'team-pairing'
-        : tournament.phase === 'completed'
-          ? 'completed'
-          : activeTab;
+    : tournament.phase === 'completed'
+      ? 'completed'
+      : activeTab;
 
   useEffect(() => {
     history.replaceState(null, '', `#${currentScreen}`);
   }, [currentScreen]);
 
-  useEffect(() => {
-    const prevPhase = prevPhaseRef.current;
-    const curPhase = tournament?.phase;
-    prevPhaseRef.current = curPhase;
-
-    if ((prevPhase === 'setup' || prevPhase === 'team-pairing') && curPhase === 'in-progress') {
-      const isDynamic = tournament ? getStrategy(tournament.config.format).isDynamic : false;
-      if (isDynamic) {
-        setActiveTab('play');
-      } else {
-        setActiveTab('log');
-        setShowStatsOnMount(true);
-      }
-    }
-  }, [tournament?.phase, tournament?.config.format]);
-
   // No tournament — show home
   if (!tournament) {
     return <HomeScreen />;
-  }
-
-  // Setup phase
-  if (tournament.phase === 'setup') {
-    return <SetupScreen />;
-  }
-
-  // Team pairing phase
-  if (tournament.phase === 'team-pairing') {
-    return <TeamPairingScreen />;
   }
 
   // In-progress or completed — show tab view
@@ -110,11 +74,7 @@ function AppContent() {
       >
         {activeTab === 'play' && <PlayScreen />}
         {activeTab === 'log' && (
-          <LogScreen
-            onNavigate={setActiveTab}
-            autoShowStats={showStatsOnMount}
-            onStatsShown={() => setShowStatsOnMount(false)}
-          />
+          <LogScreen onNavigate={setActiveTab} />
         )}
         {activeTab === 'settings' && <SettingsScreen />}
       </AppShell>

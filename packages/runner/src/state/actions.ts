@@ -3,9 +3,6 @@ import type { TournamentConfig, MatchScore, Tournament, Round, Nomination } from
 export type TournamentAction =
   | { type: 'CREATE_TOURNAMENT'; payload: { name: string; config: TournamentConfig } }
   | { type: 'LOAD_TOURNAMENT'; payload: Tournament }
-  | { type: 'ADD_PLAYER'; payload: { name: string } }
-  | { type: 'ADD_PLAYERS_BULK'; payload: { names: string[] } }
-  | { type: 'REMOVE_PLAYER'; payload: { playerId: string } }
   | { type: 'UPDATE_PLAYER'; payload: { playerId: string; name: string } }
   | { type: 'TOGGLE_PLAYER_AVAILABILITY'; payload: { playerId: string } }
   | { type: 'REPLACE_PLAYER'; payload: { oldPlayerId: string; newPlayerName: string } }
@@ -18,25 +15,15 @@ export type TournamentAction =
   | { type: 'TOGGLE_COURT_AVAILABILITY'; payload: { courtId: string } }
   | { type: 'REPLACE_COURT'; payload: { oldCourtId: string; newCourtName: string } }
   | { type: 'UPDATE_NAME'; payload: { name: string } }
-  | { type: 'UPDATE_CONFIG'; payload: Partial<TournamentConfig> }
   | { type: 'GENERATE_SCHEDULE' }
   | { type: 'ADD_ROUNDS'; payload: { count: number } }
   | { type: 'SET_MATCH_SCORE'; payload: { roundId: string; matchId: string; score: MatchScore } }
   | { type: 'CLEAR_MATCH_SCORE'; payload: { roundId: string; matchId: string } }
   | { type: 'UPDATE_POINTS'; payload: { pointsPerMatch: number; minutesPerRound?: number } }
   | { type: 'SET_ROUND_COUNT'; payload: { count: number } }
-  | { type: 'SET_TEAMS' }
-  | { type: 'SHUFFLE_TEAMS' }
-  | { type: 'SWAP_PLAYERS'; payload: { playerA: string; playerB: string } }
-  | { type: 'RENAME_TEAM'; payload: { teamId: string; name: string } }
-  | { type: 'SET_TEAMS_BACK' }
   | { type: 'COMPLETE_TOURNAMENT' }
   | { type: 'COMPLETE_CEREMONY'; payload: { nominations: Nomination[] } }
   | { type: 'RESET_TOURNAMENT' }
-  | { type: 'ADD_CLUB'; payload: { name: string } }
-  | { type: 'REMOVE_CLUB'; payload: { clubId: string } }
-  | { type: 'RENAME_CLUB'; payload: { clubId: string; name: string } }
-  | { type: 'SET_PLAYER_CLUB'; payload: { playerId: string; clubId: string | null } }
-| { type: 'CAST_MALDICION'; payload: { roundId: string; matchId: string; castBy: 'team1' | 'team2'; cardId: string; targetPlayerId: string } }
+  | { type: 'CAST_MALDICION'; payload: { roundId: string; matchId: string; castBy: 'team1' | 'team2'; cardId: string; targetPlayerId: string } }
   | { type: 'USE_ESCUDO'; payload: { roundId: string; matchId: string } }
   | { type: 'VETO_MALDICION'; payload: { roundId: string; matchId: string } };

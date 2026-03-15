@@ -10,10 +10,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
   // so the runner opens directly to the in-progress play view.
   const [tournament, dispatch] = useReducer(tournamentReducer, null, () => {
     const loaded = loadTournament();
-    if (
-      loaded?.plannerTournamentId &&
-      (loaded.phase === 'setup' || loaded.phase === 'team-pairing')
-    ) {
+    if (loaded && (loaded.phase === 'setup' || loaded.phase === 'team-pairing')) {
       return tournamentReducer(loaded, { type: 'GENERATE_SCHEDULE' });
     }
     return loaded;

@@ -53,12 +53,8 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
   const handleAddPlayer = () => {
     const trimmed = addPlayerName.trim();
     if (!trimmed) return;
-    if (tournament.phase === 'in-progress') {
-      const group = formatHasGroups(tournament.config.format) ? addPlayerGroup : undefined;
-      dispatch({ type: 'ADD_PLAYER_LIVE', payload: { name: trimmed, group } });
-    } else {
-      dispatch({ type: 'ADD_PLAYER', payload: { name: trimmed } });
-    }
+    const group = formatHasGroups(tournament.config.format) ? addPlayerGroup : undefined;
+    dispatch({ type: 'ADD_PLAYER_LIVE', payload: { name: trimmed, group } });
     setAddPlayerName('');
     setShowAddPlayer(false);
     showToast(t('settings.playerAdded'));
@@ -71,11 +67,7 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
     const names = parsePlayerList(text);
     if (names.length === 0) return;
     for (const name of names) {
-      if (tournament.phase === 'in-progress') {
-        dispatch({ type: 'ADD_PLAYER_LIVE', payload: { name } });
-      } else {
-        dispatch({ type: 'ADD_PLAYER', payload: { name } });
-      }
+      dispatch({ type: 'ADD_PLAYER_LIVE', payload: { name } });
     }
     setAddPlayerName('');
     setShowAddPlayer(false);

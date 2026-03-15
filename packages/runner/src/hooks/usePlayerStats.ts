@@ -13,7 +13,7 @@ export interface PlayerStats {
 
 export function usePlayerStats(tournament: Tournament | null): PlayerStats[] {
   return useMemo(() => {
-    if (!tournament || tournament.phase === 'setup') return [];
+    if (!tournament) return [];
 
     const nameOf = (id: string) => tournament.players.find(p => p.id === id)?.name ?? '?';
 
