@@ -12,7 +12,7 @@ import { buildRankGroups, RankResultsCard } from '../components/standings/RankRe
 import { CeremonyScreen } from '../components/ceremony/CeremonyScreen';
 import { useShareText } from '../hooks/useShareText';
 import { copyToClipboard } from '../utils/clipboard';
-import { shareStandingsImage } from '../utils/standingsImage';
+import { shareStandingsImage, type ShareableItem } from '../utils/standingsImage';
 import { ref, push, set } from 'firebase/database';
 import { auth, db, firebaseConfigured } from '../firebase';
 import { Button, getClubColor, FeedbackModal, Modal, SupportOverlay, Toast, useToast, useTranslation, formatHasGroups, formatHasClubs, shortLabel } from '@padel/common';
@@ -201,6 +201,12 @@ export function PlayScreen() {
 
   const [previewImages, setPreviewImages] = useState<string[] | null>(null);
 
+  // Refs for hidden shareable cards
+  const shareStandingsRef = useRef<HTMLDivElement>(null);
+  const shareClubStandingsRef = useRef<HTMLDivElement>(null);
+  const shareRankRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const shareNomRefs = useRef<(HTMLDivElement | null)[]>([]);
+
   if (!tournament) return null;
 
   // Completed state — show ceremony or summary
@@ -222,8 +228,47 @@ export function PlayScreen() {
       showToast(ok ? t('play.copied') : t('play.failedCopy'));
     };
     const handleShareImage = async () => {
-      const modeTitle = tournament.config.maldiciones?.enabled ? '🎭 Maldiciones del Padel' : undefined;
-      const result = await shareStandingsImage(tournament.name, standings, nominations, groupInfo, clubInfo, clubStandings, clubColorMap, modeTitle, rankGroups);
+      const safeName = tournament.name.replace(/[^a-zA-Z0-9]/g, '_');
+      const items: ShareableItem[] = [];
+
+      // Podium nominations first
+      nominations.forEach((nom, i) => {
+        if (nom.id.startsWith('podium-') && shareNomRefs.current[i]) {
+          items.push({
+            element: shareNomRefs.current[i]!,
+            filename: `${safeName}_${nom.id.replace(/[^a-zA-Z0-9-]/g, '_')}.png`,
+          });
+        }
+      });
+
+      // Standings table
+      if (shareStandingsRef.current) {
+        items.push({ element: shareStandingsRef.current, filename: `${safeName}_results.png` });
+      }
+
+      // Club standings
+      if (shareClubStandingsRef.current) {
+        items.push({ element: shareClubStandingsRef.current, filename: `${safeName}_club_standings.png` });
+      }
+
+      // Rank results
+      rankGroups.forEach((_, i) => {
+        if (shareRankRefs.current[i]) {
+          items.push({ element: shareRankRefs.current[i]!, filename: `${safeName}_rank_${i + 1}.png` });
+        }
+      });
+
+      // Other nominations
+      nominations.forEach((nom, i) => {
+        if (!nom.id.startsWith('podium-') && shareNomRefs.current[i]) {
+          items.push({
+            element: shareNomRefs.current[i]!,
+            filename: `${safeName}_${nom.id.replace(/[^a-zA-Z0-9-]/g, '_')}.png`,
+          });
+        }
+      });
+
+      const result = await shareStandingsImage(items);
       if (result.status === 'shared') showToast(t('play.shared'));
       else if (result.status === 'downloaded') showToast(t('play.imageSaved'));
       else if (result.status === 'preview') setPreviewImages(result.dataUrls);
@@ -362,6 +407,40 @@ export function PlayScreen() {
             </div>
           </div>
         )}
+        {/* Hidden cards for image capture */}
+        <div className={styles.shareContainer} aria-hidden>
+          <div ref={shareStandingsRef} className={styles.shareCard}>
+            <div className={styles.shareHeader}>{tournament.name}</div>
+            {tournament.config.maldiciones?.enabled && (
+              <div className={styles.shareModeTitle}>{'🎭 Maldiciones del Padel'}</div>
+            )}
+            <div className={styles.completedStandings}>
+              <StandingsTable standings={standings} groupInfo={groupInfo} clubInfo={clubInfo} rankLabelInfo={rankLabelInfo} />
+            </div>
+            <div className={styles.shareWatermark}>{window.location.hostname}</div>
+          </div>
+          {clubStandings.length > 0 && (
+            <div ref={shareClubStandingsRef} className={styles.shareCard}>
+              <div className={styles.shareHeader}>{tournament.name}</div>
+              <div className={styles.completedStandings}>
+                <ClubStandingsTable standings={clubStandings} clubColorMap={clubColorMap} />
+              </div>
+              <div className={styles.shareWatermark}>{window.location.hostname}</div>
+            </div>
+          )}
+          {rankGroups.map((rg, i) => (
+            <div key={i} ref={el => { shareRankRefs.current[i] = el; }} className={styles.shareCard}>
+              <RankResultsCard rankGroup={rg} tournamentName={tournament.name} />
+              <div className={styles.shareWatermark}>{window.location.hostname}</div>
+            </div>
+          ))}
+          {nominations.map((nom, i) => (
+            <div key={nom.id} ref={el => { shareNomRefs.current[i] = el; }} className={styles.shareCard}>
+              <NominationCard nomination={nom} />
+              <div className={styles.shareWatermark}>{window.location.hostname}</div>
+            </div>
+          ))}
+        </div>
         <Toast message={toastMessage} />
       </div>
     );

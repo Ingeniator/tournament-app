@@ -375,6 +375,43 @@
   border-radius: var(--radius-md);
 }
 
+/* Hidden cards for image sharing */
+.shareContainer {
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  pointer-events: none;
+}
+
+.shareCard {
+  width: 400px;
+  background-color: var(--color-bg);
+  padding: 20px;
+}
+
+.shareHeader {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text);
+  text-align: center;
+  padding-bottom: 12px;
+}
+
+.shareModeTitle {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-align: center;
+  padding-bottom: 8px;
+}
+
+.shareWatermark {
+  font-size: 9px;
+  color: var(--color-text-muted);
+  text-align: center;
+  padding-top: 16px;
+}
+
 .standingsTabs {
   display: flex;
   gap: 0;
