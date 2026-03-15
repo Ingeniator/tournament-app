@@ -3,12 +3,13 @@ import {
   generateClubFixtures,
   getClubTeams,
   matchFixturePairs,
+  generateClubRound,
   clubValidateSetup,
   clubIndividualValidateSetup,
   clubValidateWarnings,
   type MatchMode,
 } from './clubShared';
-import type { Player, Team, TournamentConfig } from '@padel/common';
+import type { Player, Team, TournamentConfig, Club } from '@padel/common';
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -301,6 +302,335 @@ describe('matchFixturePairs', () => {
       expect(pairs[1]).toEqual([teamsA[0], teamsB[1]]); // rank 2
       expect(pairs[2]).toEqual([teamsA[2], teamsB[2]]); // rank 10
     });
+  });
+});
+
+// ── generateClubRound ───────────────────────────────────────────────────
+
+describe('generateClubRound', () => {
+  // 2 clubs, 2 teams each, 2 courts
+  function makeSetup(numCourts = 2) {
+    const clubs: Club[] = [
+      { id: 'cA', name: 'Club A' },
+      { id: 'cB', name: 'Club B' },
+    ];
+    const players = [
+      makePlayer('p1', 'cA', 0), makePlayer('p2', 'cA', 0),
+      makePlayer('p3', 'cA', 1), makePlayer('p4', 'cA', 1),
+      makePlayer('p5', 'cB', 0), makePlayer('p6', 'cB', 0),
+      makePlayer('p7', 'cB', 1), makePlayer('p8', 'cB', 1),
+    ];
+    const teams = [
+      makeTeam('tA0', 'p1', 'p2'),
+      makeTeam('tA1', 'p3', 'p4'),
+      makeTeam('tB0', 'p5', 'p6'),
+      makeTeam('tB1', 'p7', 'p8'),
+    ];
+    const config = makeConfig(numCourts);
+    return { clubs, players, teams, config };
+  }
+
+  function emptyMaps() {
+    return {
+      opponentCounts: new Map<string, number>(),
+      gamesPlayed: new Map<string, number>(),
+      lastSitOutRound: new Map<string, number>(),
+      teamPoints: new Map<string, number>(),
+    };
+  }
+
+  it('creates matches for a fixture between two clubs', () => {
+    const { clubs, players, teams, config } = makeSetup(2);
+    const maps = emptyMaps();
+    const round = generateClubRound(
+      clubs, teams, players, config,
+      [['cA', 'cB']], 1,
+      maps.opponentCounts, maps.gamesPlayed, maps.lastSitOutRound,
+      maps.teamPoints, 'slots',
+    );
+    expect(round.matches).toHaveLength(2);
+    expect(round.roundNumber).toBe(1);
+    expect(round.sitOuts).toEqual([]);
+  });
+
+  it('assigns courts in order', () => {
+    const { clubs, players, teams, config } = makeSetup(2);
+    const maps = emptyMaps();
+    const round = generateClubRound(
+      clubs, teams, players, config,
+      [['cA', 'cB']], 1,
+      maps.opponentCounts, maps.gamesPlayed, maps.lastSitOutRound,
+      maps.teamPoints, 'slots',
+    );
+    expect(round.matches[0].courtId).toBe('c1');
+    expect(round.matches[1].courtId).toBe('c2');
+  });
+
+  it('limits matches to available courts', () => {
+    const { clubs, players, teams, config } = makeSetup(1); // only 1 court
+    const maps = emptyMaps();
+    const round = generateClubRound(
+      clubs, teams, players, config,
+      [['cA', 'cB']], 1,
+      maps.opponentCounts, maps.gamesPlayed, maps.lastSitOutRound,
+      maps.teamPoints, 'slots',
+    );
+    // 2 possible pairs but only 1 court
+    expect(round.matches).toHaveLength(1);
+  });
+
+  it('skips unavailable courts', () => {
+    const { clubs, players, teams } = makeSetup();
+    const config: TournamentConfig = {
+      format: 'club-ranked',
+      pointsPerMatch: 21,
+      courts: [
+        { id: 'c1', name: 'Court 1', unavailable: true },
+        { id: 'c2', name: 'Court 2' },
+      ],
+      maxRounds: null,
+    };
+    const maps = emptyMaps();
+    const round = generateClubRound(
+      clubs, teams, players, config,
+      [['cA', 'cB']], 1,
+      maps.opponentCounts, maps.gamesPlayed, maps.lastSitOutRound,
+      maps.teamPoints, 'slots',
+    );
+    expect(round.matches).toHaveLength(1);
+    expect(round.matches[0].courtId).toBe('c2');
+  });
+
+  it('puts bye-club players in sitOuts', () => {
+    const clubs: Club[] = [
+      { id: 'cA', name: 'Club A' },
+      { id: 'cB', name: 'Club B' },
+      { id: 'cC', name: 'Club C' },
+    ];
+    const players = [
+      makePlayer('p1', 'cA'), makePlayer('p2', 'cA'),
+      makePlayer('p3', 'cB'), makePlayer('p4', 'cB'),
+      makePlayer('p5', 'cC'), makePlayer('p6', 'cC'),
+    ];
+    const teams = [
+      makeTeam('tA', 'p1', 'p2'),
+      makeTeam('tB', 'p3', 'p4'),
+      makeTeam('tC', 'p5', 'p6'),
+    ];
+    const config = makeConfig(1);
+    const maps = emptyMaps();
+    // Only cA vs cB — cC has bye
+    const round = generateClubRound(
+      clubs, teams, players, config,
+      [['cA', 'cB']], 1,
+      maps.opponentCounts, maps.gamesPlayed, maps.lastSitOutRound,
+      maps.teamPoints, 'random',
+    );
+    expect(round.sitOuts).toContain('p5');
+    expect(round.sitOuts).toContain('p6');
+    expect(round.sitOuts).not.toContain('p1');
+    expect(round.sitOuts).not.toContain('p3');
+  });
+
+  it('puts unpaired teams (unequal clubs) in sitOuts', () => {
+    const clubs: Club[] = [
+      { id: 'cA', name: 'Club A' },
+      { id: 'cB', name: 'Club B' },
+    ];
+    const players = [
+      makePlayer('p1', 'cA', 0), makePlayer('p2', 'cA', 0),
+      makePlayer('p3', 'cA', 1), makePlayer('p4', 'cA', 1),
+      makePlayer('p5', 'cB', 0), makePlayer('p6', 'cB', 0),
+      // cB has no rank-1 team
+    ];
+    const teams = [
+      makeTeam('tA0', 'p1', 'p2'),
+      makeTeam('tA1', 'p3', 'p4'),
+      makeTeam('tB0', 'p5', 'p6'),
+    ];
+    const config = makeConfig(2);
+    const maps = emptyMaps();
+    const round = generateClubRound(
+      clubs, teams, players, config,
+      [['cA', 'cB']], 1,
+      maps.opponentCounts, maps.gamesPlayed, maps.lastSitOutRound,
+      maps.teamPoints, 'slots',
+    );
+    // Only rank 0 matches; tA1 (rank 1) is unpaired
+    expect(round.matches).toHaveLength(1);
+    expect(round.sitOuts).toContain('p3');
+    expect(round.sitOuts).toContain('p4');
+  });
+
+  it('updates opponentCounts for paired teams', () => {
+    const { clubs, players, teams, config } = makeSetup(2);
+    const maps = emptyMaps();
+    generateClubRound(
+      clubs, teams, players, config,
+      [['cA', 'cB']], 1,
+      maps.opponentCounts, maps.gamesPlayed, maps.lastSitOutRound,
+      maps.teamPoints, 'slots',
+    );
+    // tA0 vs tB0, tA1 vs tB1
+    // teamKey sorts lexicographically
+    expect(maps.opponentCounts.size).toBe(2);
+    for (const count of maps.opponentCounts.values()) {
+      expect(count).toBe(1);
+    }
+  });
+
+  it('updates gamesPlayed for all playing teams', () => {
+    const { clubs, players, teams, config } = makeSetup(2);
+    const maps = emptyMaps();
+    generateClubRound(
+      clubs, teams, players, config,
+      [['cA', 'cB']], 1,
+      maps.opponentCounts, maps.gamesPlayed, maps.lastSitOutRound,
+      maps.teamPoints, 'slots',
+    );
+    expect(maps.gamesPlayed.get('tA0')).toBe(1);
+    expect(maps.gamesPlayed.get('tA1')).toBe(1);
+    expect(maps.gamesPlayed.get('tB0')).toBe(1);
+    expect(maps.gamesPlayed.get('tB1')).toBe(1);
+  });
+
+  it('accumulates gamesPlayed across multiple calls', () => {
+    const { clubs, players, teams, config } = makeSetup(2);
+    const maps = emptyMaps();
+    generateClubRound(
+      clubs, teams, players, config,
+      [['cA', 'cB']], 1,
+      maps.opponentCounts, maps.gamesPlayed, maps.lastSitOutRound,
+      maps.teamPoints, 'slots',
+    );
+    generateClubRound(
+      clubs, teams, players, config,
+      [['cA', 'cB']], 2,
+      maps.opponentCounts, maps.gamesPlayed, maps.lastSitOutRound,
+      maps.teamPoints, 'slots',
+    );
+    expect(maps.gamesPlayed.get('tA0')).toBe(2);
+  });
+
+  it('updates lastSitOutRound for bye-club teams', () => {
+    const clubs: Club[] = [
+      { id: 'cA', name: 'Club A' },
+      { id: 'cB', name: 'Club B' },
+      { id: 'cC', name: 'Club C' },
+    ];
+    const players = [
+      makePlayer('p1', 'cA'), makePlayer('p2', 'cA'),
+      makePlayer('p3', 'cB'), makePlayer('p4', 'cB'),
+      makePlayer('p5', 'cC'), makePlayer('p6', 'cC'),
+    ];
+    const teams = [
+      makeTeam('tA', 'p1', 'p2'),
+      makeTeam('tB', 'p3', 'p4'),
+      makeTeam('tC', 'p5', 'p6'),
+    ];
+    const config = makeConfig(1);
+    const maps = emptyMaps();
+    generateClubRound(
+      clubs, teams, players, config,
+      [['cA', 'cB']], 3,
+      maps.opponentCounts, maps.gamesPlayed, maps.lastSitOutRound,
+      maps.teamPoints, 'random',
+    );
+    expect(maps.lastSitOutRound.get('tC')).toBe(3);
+  });
+
+  it('updates lastSitOutRound for unpaired teams', () => {
+    const clubs: Club[] = [
+      { id: 'cA', name: 'Club A' },
+      { id: 'cB', name: 'Club B' },
+    ];
+    const players = [
+      makePlayer('p1', 'cA', 0), makePlayer('p2', 'cA', 0),
+      makePlayer('p3', 'cA', 1), makePlayer('p4', 'cA', 1),
+      makePlayer('p5', 'cB', 0), makePlayer('p6', 'cB', 0),
+    ];
+    const teams = [
+      makeTeam('tA0', 'p1', 'p2'),
+      makeTeam('tA1', 'p3', 'p4'),
+      makeTeam('tB0', 'p5', 'p6'),
+    ];
+    const config = makeConfig(2);
+    const maps = emptyMaps();
+    generateClubRound(
+      clubs, teams, players, config,
+      [['cA', 'cB']], 5,
+      maps.opponentCounts, maps.gamesPlayed, maps.lastSitOutRound,
+      maps.teamPoints, 'slots',
+    );
+    // tA1 is unpaired (no rank-1 in cB)
+    expect(maps.lastSitOutRound.get('tA1')).toBe(5);
+    // tA0 and tB0 played, no sit-out
+    expect(maps.lastSitOutRound.has('tA0')).toBe(false);
+    expect(maps.lastSitOutRound.has('tB0')).toBe(false);
+  });
+
+  it('match team arrays contain correct player ids', () => {
+    const { clubs, players, teams, config } = makeSetup(2);
+    const maps = emptyMaps();
+    const round = generateClubRound(
+      clubs, teams, players, config,
+      [['cA', 'cB']], 1,
+      maps.opponentCounts, maps.gamesPlayed, maps.lastSitOutRound,
+      maps.teamPoints, 'slots',
+    );
+    // With slots mode, rank 0 vs rank 0: tA0(p1,p2) vs tB0(p5,p6)
+    const m0 = round.matches[0];
+    expect(m0.team1).toEqual(['p1', 'p2']);
+    expect(m0.team2).toEqual(['p5', 'p6']);
+    // rank 1 vs rank 1: tA1(p3,p4) vs tB1(p7,p8)
+    const m1 = round.matches[1];
+    expect(m1.team1).toEqual(['p3', 'p4']);
+    expect(m1.team2).toEqual(['p7', 'p8']);
+  });
+
+  it('all matches have null scores', () => {
+    const { clubs, players, teams, config } = makeSetup(2);
+    const maps = emptyMaps();
+    const round = generateClubRound(
+      clubs, teams, players, config,
+      [['cA', 'cB']], 1,
+      maps.opponentCounts, maps.gamesPlayed, maps.lastSitOutRound,
+      maps.teamPoints, 'slots',
+    );
+    for (const match of round.matches) {
+      expect(match.score).toBeNull();
+    }
+  });
+
+  it('handles multiple fixtures in one round (4 clubs, 2 fixtures)', () => {
+    const clubs: Club[] = [
+      { id: 'cA', name: 'A' }, { id: 'cB', name: 'B' },
+      { id: 'cC', name: 'C' }, { id: 'cD', name: 'D' },
+    ];
+    const players = [
+      makePlayer('p1', 'cA'), makePlayer('p2', 'cA'),
+      makePlayer('p3', 'cB'), makePlayer('p4', 'cB'),
+      makePlayer('p5', 'cC'), makePlayer('p6', 'cC'),
+      makePlayer('p7', 'cD'), makePlayer('p8', 'cD'),
+    ];
+    const teams = [
+      makeTeam('tA', 'p1', 'p2'),
+      makeTeam('tB', 'p3', 'p4'),
+      makeTeam('tC', 'p5', 'p6'),
+      makeTeam('tD', 'p7', 'p8'),
+    ];
+    const config = makeConfig(2);
+    const maps = emptyMaps();
+    const round = generateClubRound(
+      clubs, teams, players, config,
+      [['cA', 'cB'], ['cC', 'cD']], 1,
+      maps.opponentCounts, maps.gamesPlayed, maps.lastSitOutRound,
+      maps.teamPoints, 'random',
+    );
+    expect(round.matches).toHaveLength(2);
+    expect(round.sitOuts).toEqual([]);
+    // All 4 teams played
+    expect(maps.gamesPlayed.size).toBe(4);
   });
 });
 
