@@ -52,8 +52,8 @@ function toTournament(id: string, data: Record<string, unknown>): PlannerTournam
     scoringMode: data.scoringMode as 'points' | 'games' | 'sets' | 'timed' | undefined,
     minutesPerRound: data.minutesPerRound as number | undefined,
     maldiciones: data.maldiciones as PlannerTournament['maldiciones'],
-    startDelegateId: data.startDelegateId as string | undefined,
-    startDelegateTelegram: data.startDelegateTelegram as string | undefined,
+    startDelegateId: (data.startDelegateId as string | null) ?? undefined,
+    startDelegateTelegram: (data.startDelegateTelegram as string | null) ?? undefined,
     captainMode: data.captainMode as boolean | undefined,
   };
 }

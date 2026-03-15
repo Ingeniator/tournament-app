@@ -28,13 +28,19 @@ export function useStartGuard(tournamentId: string | null, uid: string | null, u
     return unsub;
   }, [tournamentId]);
 
-  const writeStartedBy = (tournament: PlannerTournament) => {
-    if (!db || !uid) return;
+  const writeStartedBy = async (tournament: PlannerTournament): Promise<boolean> => {
+    if (!db || !uid) return false;
     const startedByRef = ref(db, `tournaments/${tournament.id}/startedBy`);
-    set(startedByRef, { uid, name: userName ?? 'Unknown', timestamp: Date.now() });
+    try {
+      await set(startedByRef, { uid, name: userName ?? 'Unknown', timestamp: Date.now() });
+      return true;
+    } catch (err) {
+      console.warn('Failed to write startedBy:', (err as Error).message);
+      return false;
+    }
   };
 
-  const handleLaunch = (tournament: PlannerTournament, players: PlannerRegistration[], teams?: Team[], aliases?: Map<string, string>) => {
+  const handleLaunch = async (tournament: PlannerTournament, players: PlannerRegistration[], teams?: Team[], aliases?: Map<string, string>) => {
     if (startedBy) {
       setWarningReason(startedBy.uid === uid ? 'same-user' : 'different-user');
       setPendingTeams(teams);
@@ -42,13 +48,15 @@ export function useStartGuard(tournamentId: string | null, uid: string | null, u
       setShowWarning(true);
       return;
     }
-    writeStartedBy(tournament);
+    const ok = await writeStartedBy(tournament);
+    if (!ok) return;
     launchInRunner(tournament, players, teams, aliases);
   };
 
-  const proceedAnyway = (tournament: PlannerTournament, players: PlannerRegistration[]) => {
+  const proceedAnyway = async (tournament: PlannerTournament, players: PlannerRegistration[]) => {
     setShowWarning(false);
-    writeStartedBy(tournament);
+    const ok = await writeStartedBy(tournament);
+    if (!ok) return;
     launchInRunner(tournament, players, pendingTeams, pendingAliases);
     setPendingTeams(undefined);
     setPendingAliases(undefined);

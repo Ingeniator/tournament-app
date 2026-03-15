@@ -109,14 +109,21 @@ export function OrganizerScreen() {
 
   const [showReopenModal, setShowReopenModal] = useState(false);
   const [showTeamPairing, setShowTeamPairing] = useState(false);
-  const [delegateMode, setDelegateMode] = useState<string>(
-    tournament?.startDelegateId
-      ? `player:${tournament.startDelegateId}`
-      : tournament?.startDelegateTelegram !== undefined
-        ? 'telegram'
-        : 'me'
-  );
-  const [tgDelegateInput, setTgDelegateInput] = useState(tournament?.startDelegateTelegram ?? '');
+  const [delegateMode, setDelegateMode] = useState<string>('me');
+  const [tgDelegateInput, setTgDelegateInput] = useState('');
+  const delegateSyncedRef = useRef(false);
+
+  // Sync delegate UI state when tournament data loads from Firebase
+  useEffect(() => {
+    if (!tournament || delegateSyncedRef.current) return;
+    delegateSyncedRef.current = true;
+    if (tournament.startDelegateId) {
+      setDelegateMode(`player:${tournament.startDelegateId}`);
+    } else if (tournament.startDelegateTelegram) {
+      setDelegateMode('telegram');
+      setTgDelegateInput(tournament.startDelegateTelegram);
+    }
+  }, [tournament]);
 
   const duplicateNames = useMemo(() => {
     const counts = new Map<string, number>();
@@ -241,7 +248,7 @@ export function OrganizerScreen() {
     }
   };
 
-  const handleLaunch = () => {
+  const handleLaunch = async () => {
     const result = validateLaunchUtil(tournament!, players, statuses, capacity);
     if (result) { showToast(t(result.key, result.params)); return; }
     if (formatHasFixedPartners(tournament!.format)) {
@@ -250,12 +257,12 @@ export function OrganizerScreen() {
     }
     const aliases = new Map<string, string>();
     for (const p of players) { if (p.alias) aliases.set(p.id, p.alias); }
-    handleGuardedLaunch(tournament!, players, undefined, aliases.size > 0 ? aliases : undefined);
+    await handleGuardedLaunch(tournament!, players, undefined, aliases.size > 0 ? aliases : undefined);
   };
 
-  const handleTeamStart = (teams: Team[], aliases: Map<string, string>) => {
+  const handleTeamStart = async (teams: Team[], aliases: Map<string, string>) => {
     setShowTeamPairing(false);
-    handleGuardedLaunch(tournament!, players, teams, aliases);
+    await handleGuardedLaunch(tournament!, players, teams, aliases);
   };
 
   const handleCopyExport = async () => {
@@ -593,7 +600,9 @@ export function OrganizerScreen() {
             onChange={e => {
               const raw = e.target.value.replace(/^@/, '');
               setTgDelegateInput(raw);
-              updateTournament({ startDelegateTelegram: raw || undefined });
+            }}
+            onBlur={() => {
+              updateTournament({ startDelegateTelegram: tgDelegateInput || undefined });
             }}
             placeholder={t('organizer.startDelegateTelegramPlaceholder')}
             style={{ marginTop: 'var(--space-sm)' }}
@@ -784,7 +793,7 @@ export function OrganizerScreen() {
                         ))}
                         <option value="telegram">{t('organizer.startDelegateTelegram')}</option>
                       </select>
-                      {(club.captainId ? false : (club.captainTelegram !== undefined)) && (
+                      {(!club.captainId && club.captainTelegram != null) && (
                         <input
                           className={styles.captainTgInput}
                           type="text"

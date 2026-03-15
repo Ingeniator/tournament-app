@@ -871,10 +871,10 @@ export function JoinScreen() {
     setUpdating(false);
   };
 
-  const handleLaunch = () => {
+  const handleLaunch = async () => {
     const result = validateLaunch(tournament!, players, statuses, capacity);
     if (result) { showToast(t(result.key, result.params)); return; }
-    handleGuardedLaunch(tournament!, players);
+    await handleGuardedLaunch(tournament!, players);
   };
 
   const handleCopyExport = async () => {
