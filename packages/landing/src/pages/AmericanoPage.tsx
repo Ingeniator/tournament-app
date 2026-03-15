@@ -13,6 +13,7 @@ export function AmericanoPage({ onFeedback }: Props) {
     <>
       <nav className={styles.nav}>
         <a className={styles.navLink} href="/">← Tournament Manager</a>
+        <a className={styles.navLink} href="/es/americano" lang="es">Español</a>
       </nav>
       <article className={styles.article}>
         <h1>Americano Padel — Rules, Format & How to Play</h1>

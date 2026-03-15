@@ -13,6 +13,7 @@ export function MexicanoPage({ onFeedback }: Props) {
     <>
       <nav className={styles.nav}>
         <a className={styles.navLink} href="/">← Tournament Manager</a>
+        <a className={styles.navLink} href="/es/mexicano" lang="es">Español</a>
       </nav>
       <article className={styles.article}>
         <h1>Mexicano Padel — Rules, Format & How to Play</h1>

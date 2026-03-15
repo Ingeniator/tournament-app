@@ -38,6 +38,7 @@ export function FormatsPage({ onFeedback }: Props) {
     <>
       <nav className={styles.nav}>
         <a className={styles.navLink} href="/">← Tournament Manager</a>
+        <a className={styles.navLink} href="/es/formatos" lang="es">Español</a>
       </nav>
       <article className={styles.article}>
         <h1>Tournament Formats — Complete Guide</h1>

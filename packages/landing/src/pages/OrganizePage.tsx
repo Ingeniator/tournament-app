@@ -13,6 +13,7 @@ export function OrganizePage({ onFeedback }: Props) {
     <>
       <nav className={styles.nav}>
         <a className={styles.navLink} href="/">← Tournament Manager</a>
+        <a className={styles.navLink} href="/es/organizar-torneo-padel" lang="es">Español</a>
       </nav>
       <article className={styles.article}>
         <h1>How to Organize a Padel Tournament</h1>

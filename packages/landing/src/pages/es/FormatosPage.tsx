@@ -38,6 +38,7 @@ export function FormatosPage({ onFeedback }: Props) {
     <>
       <nav className={styles.nav}>
         <a className={styles.navLink} href="/es/">← Gestor de Torneos</a>
+        <a className={styles.navLink} href="/formats" lang="en">English</a>
       </nav>
       <article className={styles.article}>
         <h1>Formatos de Torneo — Guía Completa</h1>
