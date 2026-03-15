@@ -710,8 +710,17 @@ export function renderRankResultsImage(
   return canvas;
 }
 
-function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob | null> {
-  return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+function canvasToBlob(canvas: HTMLCanvasElement): Blob | null {
+  // Use toDataURL (synchronous) instead of toBlob (callback/macrotask)
+  // to preserve user activation for navigator.share().
+  const dataUrl = canvas.toDataURL('image/png');
+  const byteString = atob(dataUrl.split(',')[1]);
+  const ab = new ArrayBuffer(byteString.length);
+  const ia = new Uint8Array(ab);
+  for (let i = 0; i < byteString.length; i++) {
+    ia[i] = byteString.charCodeAt(i);
+  }
+  return new Blob([ab], { type: 'image/png' });
 }
 
 
@@ -766,14 +775,14 @@ export async function shareStandingsImage(
 
   try {
     // Convert all to blobs
-    const standingsBlob = await canvasToBlob(standingsCanvas);
+    const standingsBlob = canvasToBlob(standingsCanvas);
     if (!standingsBlob) return { status: 'failed' };
 
     // Order: podium awards → standings table → other nominations
     const files: File[] = [];
 
     for (const i of podiumIndices) {
-      const blob = await canvasToBlob(nominationCanvases[i]);
+      const blob = canvasToBlob(nominationCanvases[i]);
       if (blob) {
         const nomName = nominations[i].id.replace(/[^a-zA-Z0-9-]/g, '_');
         files.push(new File([blob], `${safeName}_${nomName}.png`, { type: 'image/png' }));
@@ -785,21 +794,21 @@ export async function shareStandingsImage(
     );
 
     if (clubStandingsCanvas) {
-      const clubBlob = await canvasToBlob(clubStandingsCanvas);
+      const clubBlob = canvasToBlob(clubStandingsCanvas);
       if (clubBlob) {
         files.push(new File([clubBlob], `${safeName}_club_standings.png`, { type: 'image/png' }));
       }
     }
 
     for (let ri = 0; ri < rankResultCanvases.length; ri++) {
-      const blob = await canvasToBlob(rankResultCanvases[ri]);
+      const blob = canvasToBlob(rankResultCanvases[ri]);
       if (blob) {
         files.push(new File([blob], `${safeName}_rank_${ri + 1}.png`, { type: 'image/png' }));
       }
     }
 
     for (const i of otherIndices) {
-      const blob = await canvasToBlob(nominationCanvases[i]);
+      const blob = canvasToBlob(nominationCanvases[i]);
       if (blob) {
         const nomName = nominations[i].id.replace(/[^a-zA-Z0-9-]/g, '_');
         files.push(new File([blob], `${safeName}_${nomName}.png`, { type: 'image/png' }));
@@ -820,7 +829,7 @@ export async function shareStandingsImage(
         ...(clubStandingsCanvas ? [clubStandingsCanvas] : []),
         ...otherIndices.map(i => nominationCanvases[i]),
       ];
-      const blobs = await Promise.all(allCanvases.map(c => canvasToBlob(c)));
+      const blobs = allCanvases.map(c => canvasToBlob(c));
       const blobUrls = blobs
         .filter((b): b is Blob => b !== null)
         .map(b => URL.createObjectURL(b));
@@ -845,7 +854,15 @@ export async function shareStandingsImage(
       }
     }
 
-    // Fallback: download all files via <a> click
+    // On mobile, programmatic <a>.click() downloads are unreliable/blocked.
+    // Show preview overlay instead so user can long-press to save images.
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile) {
+      const blobUrls = files.map(f => URL.createObjectURL(f));
+      return { status: 'preview', dataUrls: blobUrls };
+    }
+
+    // Fallback: download all files via <a> click (desktop only)
     for (const file of files) {
       const url = URL.createObjectURL(file);
       const a = document.createElement('a');
@@ -871,7 +888,7 @@ export async function shareStandingsImage(
           ...rankResultCanvases,
           ...otherIndices.map(i => nominationCanvases[i]),
         ];
-        const blobs = await Promise.all(allCanvases.map(c => canvasToBlob(c)));
+        const blobs = allCanvases.map(c => canvasToBlob(c));
         const blobUrls = blobs
           .filter((b): b is Blob => b !== null)
           .map(b => URL.createObjectURL(b));
