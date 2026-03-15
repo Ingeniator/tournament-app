@@ -1,4 +1,4 @@
-.PHONY: dev build deploy-build clean test e2e e2e-ui e2e-staging coverage coverage-unit coverage-e2e
+.PHONY: dev build deploy-build clean test e2e e2e-ui e2e-staging coverage coverage-unit coverage-e2e release
 
 dev:
 	@pkill -9 -f 'vite.*padel' 2>/dev/null || true
@@ -51,3 +51,15 @@ coverage-e2e:
 	npx playwright test --reporter=html
 
 coverage: coverage-unit coverage-e2e
+
+release:
+	@if [ -z "$(VERSION)" ]; then echo "Usage: make release VERSION=X.Y.Z"; exit 1; fi
+	@if git rev-parse "$(VERSION)" >/dev/null 2>&1; then echo "Tag $(VERSION) already exists"; exit 1; fi
+	@echo "Running unit tests..."
+	npm test --workspaces --if-present
+	@echo "Running e2e tests..."
+	npx playwright test
+	@echo "All tests passed. Tagging $(VERSION)..."
+	git tag "$(VERSION)"
+	git push origin "$(VERSION)"
+	@echo "Released $(VERSION)"
