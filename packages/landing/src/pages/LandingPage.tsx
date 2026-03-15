@@ -9,6 +9,7 @@ interface Props {
   setSkin: (s: SkinId) => void;
   telegramName: string | null;
   onFeedback: (message: string) => Promise<void>;
+  langPrefix?: string;
 }
 
 const Logo = () => (
@@ -28,9 +29,10 @@ const Logo = () => (
   </svg>
 );
 
-export function LandingPage({ skin, setSkin, telegramName, onFeedback }: Props) {
+export function LandingPage({ skin, setSkin, telegramName, onFeedback, langPrefix = '' }: Props) {
   const { t } = useTranslation();
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const isEs = langPrefix === '/es';
 
   return (
     <>
@@ -135,12 +137,50 @@ export function LandingPage({ skin, setSkin, telegramName, onFeedback }: Props) 
 
       {/* SEO links */}
       <nav className={styles.seoLinks}>
-        <a className={styles.seoLink} href="/formats">Tournament Formats</a>
-        <a className={styles.seoLink} href="/americano">Americano Guide</a>
-        <a className={styles.seoLink} href="/mexicano">Mexicano Guide</a>
-        <a className={styles.seoLink} href="/club">Club Formats</a>
-        <a className={styles.seoLink} href="/awards">Awards & Ceremony</a>
-        <a className={styles.seoLink} href="/maldiciones">Maldiciones del Padel</a>
+        {isEs ? (
+          <>
+            <a className={styles.seoLink} href="/es/formatos">Formatos de Torneo</a>
+            <a className={styles.seoLink} href="/es/organizar-torneo-padel">Cómo Organizar</a>
+            <a className={styles.seoLink} href="/es/americano">Guía de Americano</a>
+            <a className={styles.seoLink} href="/es/mexicano">Guía de Mexicano</a>
+            <a className={styles.seoLink} href="/formats">Tournament Formats (EN)</a>
+            <a className={styles.seoLink} href="/americano">Americano Guide (EN)</a>
+            <a className={styles.seoLink} href="/mexicano">Mexicano Guide (EN)</a>
+            <a className={styles.seoLink} href="/americano-vs-mexicano">Americano vs Mexicano</a>
+            <a className={styles.seoLink} href="/team-americano">Team Americano</a>
+            <a className={styles.seoLink} href="/king-of-the-court">King of the Court</a>
+            <a className={styles.seoLink} href="/club">Formatos de Club</a>
+            <a className={styles.seoLink} href="/awards">Premios y Ceremonia</a>
+            <a className={styles.seoLink} href="/maldiciones">Maldiciones del Padel</a>
+          </>
+        ) : (
+          <>
+            <a className={styles.seoLink} href="/features">Free Tournament Software</a>
+            <a className={styles.seoLink} href="/planner">Tournament Planner Online</a>
+            <a className={styles.seoLink} href="/score-tracker">Padel Score Tracker</a>
+            <a className={styles.seoLink} href="/organize">How to Organize</a>
+            <a className={styles.seoLink} href="/beginners">Formats for Beginners</a>
+            <a className={styles.seoLink} href="/formats">Tournament Formats</a>
+            <a className={styles.seoLink} href="/which-format">Which Format to Choose</a>
+            <a className={styles.seoLink} href="/americano">Americano Guide</a>
+            <a className={styles.seoLink} href="/mexicano">Mexicano Guide</a>
+            <a className={styles.seoLink} href="/americano-vs-mexicano">Americano vs Mexicano</a>
+            <a className={styles.seoLink} href="/team-americano">Team Americano</a>
+            <a className={styles.seoLink} href="/king-of-the-court">King of the Court</a>
+            <a className={styles.seoLink} href="/how-long-padel-tournament">Tournament Duration Guide</a>
+            <a className={styles.seoLink} href="/social-padel-events">Social Event Ideas</a>
+            <a className={styles.seoLink} href="/inter-club">Inter-Club Tournaments</a>
+            <a className={styles.seoLink} href="/club">Club Formats</a>
+            <a className={styles.seoLink} href="/awards">Awards & Ceremony</a>
+            <a className={styles.seoLink} href="/maldiciones">Maldiciones del Padel</a>
+            <a className={styles.seoLink} href="/americano-8-players">Americano for 8 Players</a>
+            <a className={styles.seoLink} href="/americano-12-players">Americano for 12 Players</a>
+            <a className={styles.seoLink} href="/mexicano-8-players">Mexicano for 8 Players</a>
+            <a className={styles.seoLink} href="/mexicano-12-players">Mexicano for 12 Players</a>
+            <a className={styles.seoLink} href="/mexicano-16-players">Mexicano for 16 Players</a>
+            <a className={styles.seoLink} href="/es/">Español</a>
+          </>
+        )}
       </nav>
 
       {/* Footer */}
