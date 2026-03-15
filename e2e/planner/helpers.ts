@@ -142,3 +142,31 @@ export async function deleteTournament(page: Page) {
   // Should return to home
   await waitForHome(page);
 }
+
+/**
+ * Create an event from the home screen (organizer mode).
+ * Returns the event name used.
+ */
+export async function createEvent(page: Page, name?: string) {
+  const eventName = name ?? `E2E Event ${Date.now()}`;
+  // Click "Create Event" button
+  await page.getByRole('button', { name: 'Create Event' }).click();
+  // Fill event name
+  await page.locator('#event-name').fill(eventName);
+  // Click Create Event button in the form
+  const createBtn = page.getByRole('button', { name: 'Create Event' }).last();
+  await createBtn.click();
+  // Wait for event screen to load
+  await expect(page.getByText(eventName)).toBeVisible({ timeout: 15000 });
+  return eventName;
+}
+
+/**
+ * Delete the current event from the event screen (cleanup).
+ */
+export async function deleteEvent(page: Page) {
+  page.on('dialog', dialog => dialog.accept());
+  await page.getByRole('button', { name: 'Delete Event' }).click();
+  // Should return to home
+  await waitForHome(page);
+}

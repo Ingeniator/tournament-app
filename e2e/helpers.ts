@@ -290,3 +290,56 @@ export async function createCompletedTournament(page: Page) {
   // Completed view shows "Share Results as Text" button
   await page.getByRole('button', { name: 'Share Results as Text' }).waitFor();
 }
+
+/**
+ * Create a maldiciones-enabled team-americano tournament via localStorage.
+ * 6 players, 1 court, 3 rounds, maldiciones with medium chaos level.
+ * Returns on the Play tab with maldiciones UI active.
+ */
+export async function createMaldicionesTournament(page: Page) {
+  await clearState(page);
+  await page.evaluate(() => {
+    const id = Math.random().toString(36).slice(2, 10);
+    const now = Date.now();
+    const players = [
+      { id: 'p1', name: 'Alice' },
+      { id: 'p2', name: 'Bob' },
+      { id: 'p3', name: 'Charlie' },
+      { id: 'p4', name: 'Diana' },
+    ];
+    const teams = [
+      { id: 'team1', player1Id: 'p1', player2Id: 'p2' },
+      { id: 'team2', player1Id: 'p3', player2Id: 'p4' },
+    ];
+    const maldicionesHands = {
+      team1: { cardIds: ['los-mudos', 'el-espejo'], hasShield: true },
+      team2: { cardIds: ['slow-motion', 'el-pegajoso'], hasShield: true },
+    };
+    const tournament = {
+      id,
+      name: 'Maldiciones Cup',
+      config: {
+        format: 'team-americano',
+        pointsPerMatch: 24,
+        courts: [{ id: 'c1', name: 'Court 1' }],
+        maxRounds: 3,
+        maldiciones: { enabled: true, chaosLevel: 'medium' },
+      },
+      phase: 'in-progress',
+      players,
+      teams,
+      maldicionesHands,
+      rounds: [{
+        id: 'r1', roundNumber: 1, sitOuts: [],
+        matches: [
+          { id: 'm1', courtId: 'c1', team1: ['p1', 'p2'], team2: ['p3', 'p4'], score: null },
+        ],
+      }],
+      createdAt: now,
+      updatedAt: now,
+    };
+    localStorage.setItem('padel-tournament-v1', JSON.stringify(tournament));
+  });
+  await page.reload();
+  await navigateToTab(page, 'Play');
+}

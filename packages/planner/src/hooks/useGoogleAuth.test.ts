@@ -399,6 +399,85 @@ describe('useGoogleAuth', () => {
       expect(getNestedValue('tournaments/t2/players/google-uid')).toEqual({ name: 'Alice', timestamp: 1000 });
       expect(getNestedValue('tournaments/t2/players/anon-uid')).toBeUndefined();
     });
+
+    it('handles network timeout during claim sweep gracefully', async () => {
+      setCurrentUser('anon-uid', []);
+      store = {
+        users: {
+          'anon-uid': {
+            name: 'TimeoutUser',
+            organized: { t1: true },
+          },
+        },
+        tournaments: {
+          t1: { organizerId: 'anon-uid' },
+        },
+      };
+
+      mocks.credentialFromError.mockReturnValueOnce({ accessToken: 'tok' });
+      mocks.linkWithGoogle.mockRejectedValueOnce({ code: 'auth/credential-already-in-use' });
+      mocks.signInWithGoogleCredential.mockImplementation(async () => {
+        setCurrentUser('google-uid', [{ providerId: 'google.com', email: 'u@g.com' }]);
+      });
+
+      // Make the get call for organized tournaments succeed, but the subsequent
+      // set call (to update organizerId) fail with a network timeout
+      const originalMockSet = mockSet.getMockImplementation()!;
+      mockSet.mockRejectedValueOnce(new Error('network timeout'));
+
+      const { result } = renderHook(() => useGoogleAuth('anon-uid'));
+
+      await act(async () => {
+        await result.current.linkGoogle();
+      });
+
+      // The error from claimSweep propagates to the catch block in linkGoogle
+      // which sets the sign-in error
+      expect(result.current.linking).toBe(false);
+      expect(result.current.error).toBe('Failed to sign in with Google');
+
+      // Restore original set implementation for other tests
+      mockSet.mockImplementation(originalMockSet);
+    });
+
+    it('skips already-owned tournaments during claim sweep', async () => {
+      setCurrentUser('anon-uid', []);
+      store = {
+        users: {
+          'anon-uid': {
+            organized: { t1: true, t2: true },
+          },
+        },
+        tournaments: {
+          // t1 is already owned by google-uid (the target account)
+          t1: { organizerId: 'google-uid' },
+          // t2 is owned by anon-uid and should be swept
+          t2: { organizerId: 'anon-uid' },
+        },
+      };
+
+      mocks.credentialFromError.mockReturnValueOnce({ accessToken: 'tok' });
+      mocks.linkWithGoogle.mockRejectedValueOnce({ code: 'auth/credential-already-in-use' });
+      mocks.signInWithGoogleCredential.mockImplementation(async () => {
+        setCurrentUser('google-uid', [{ providerId: 'google.com', email: 'u@g.com' }]);
+      });
+
+      const { result } = renderHook(() => useGoogleAuth('anon-uid'));
+
+      await act(async () => {
+        await result.current.linkGoogle();
+      });
+
+      expect(result.current.error).toBeNull();
+
+      // t1 was already owned by google-uid — organizerId unchanged, not re-claimed
+      expect(getNestedValue('tournaments/t1/organizerId')).toBe('google-uid');
+
+      // t2 should be swept from anon-uid to google-uid
+      expect(getNestedValue('tournaments/t2/organizerId')).toBe('google-uid');
+      expect(getNestedValue('users/google-uid/organized/t2')).toBe(true);
+      expect(getNestedValue('users/anon-uid/organized/t2')).toBeUndefined();
+    });
   });
 
   describe('redirect flow', () => {

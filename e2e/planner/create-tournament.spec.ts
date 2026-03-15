@@ -84,4 +84,75 @@ test.describe('Create Tournament', () => {
     // Clean up
     await deleteTournament(page);
   });
+
+  test('tournament data persists after refresh', async ({ page }) => {
+    await page.goto('/plan');
+    await waitForHome(page);
+    await setProfileName(page, `Organizer ${Date.now()}`);
+
+    const tournamentName = await createTournament(page);
+
+    // Refresh the page
+    await page.reload();
+    await waitForHome(page);
+
+    // Tournament should still exist
+    await expect(page.getByText(tournamentName)).toBeVisible({ timeout: 15000 });
+
+    // Clean up
+    await page.getByText(tournamentName).click();
+    await expect(page.getByText(/Players \(/)).toBeVisible({ timeout: 10000 });
+    await deleteTournament(page);
+  });
+
+  test('player registrations persist after refresh', async ({ page }) => {
+    await page.goto('/plan');
+    await waitForHome(page);
+    await setProfileName(page, `Organizer ${Date.now()}`);
+
+    const tournamentName = await createTournament(page);
+    await addPlayerAsOrganizer(page, 'PersistPlayer');
+    await expect(page.getByText(/Players \(1/)).toBeVisible();
+
+    // Refresh
+    await page.reload();
+    // Wait for the organizer screen to reload
+    await expect(page.getByText(tournamentName)).toBeVisible({ timeout: 15000 });
+
+    // Player should still be there
+    await expect(page.getByText('PersistPlayer')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/Players \(1/)).toBeVisible({ timeout: 10000 });
+
+    // Clean up
+    await deleteTournament(page);
+  });
+
+  test('event data persists after refresh', async ({ page }) => {
+    await page.goto('/plan');
+    await waitForHome(page);
+    await setProfileName(page, `Organizer ${Date.now()}`);
+
+    // Import createEvent and deleteEvent
+    const eventName = `Persist Event ${Date.now()}`;
+    await page.getByRole('button', { name: 'Create Event' }).click();
+    await page.locator('#event-name').fill(eventName);
+    await page.getByRole('button', { name: 'Create Event' }).last().click();
+    await expect(page.getByText(eventName)).toBeVisible({ timeout: 15000 });
+
+    // Go back and refresh
+    await page.getByLabel('Back').click();
+    await waitForHome(page);
+    await page.reload();
+    await waitForHome(page);
+
+    // Event should persist
+    await expect(page.getByText(eventName)).toBeVisible({ timeout: 15000 });
+
+    // Clean up
+    await page.getByText(eventName).click();
+    await expect(page.getByText(eventName)).toBeVisible({ timeout: 15000 });
+    page.on('dialog', dialog => dialog.accept());
+    await page.getByRole('button', { name: 'Delete Event' }).click();
+    await waitForHome(page);
+  });
 });
