@@ -7,7 +7,6 @@ import {
   clubValidateSetup,
   clubIndividualValidateSetup,
   clubValidateWarnings,
-  type MatchMode,
 } from './clubShared';
 import type { Player, Team, TournamentConfig, Club } from '@padel/common';
 
