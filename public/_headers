@@ -10,3 +10,4 @@
 # so Telegram WebApp always gets the latest version
 /*
   Cache-Control: no-cache, no-store, must-revalidate
+  Cross-Origin-Opener-Policy: same-origin-allow-popups

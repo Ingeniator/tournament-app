@@ -9,7 +9,13 @@ export default defineConfig({
     __COMMIT_HASH__: JSON.stringify(commitHash),
   },
   base: '/plan',
-  server: { port: 5191, strictPort: true },
+  server: {
+    port: 5191,
+    strictPort: true,
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+    },
+  },
   build: {
     rollupOptions: {
       output: {
