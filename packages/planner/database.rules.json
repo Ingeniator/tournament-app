@@ -115,6 +115,14 @@
         "telegramUsername": {
           ".write": "auth != null && auth.uid === $uid",
           ".validate": "newData.isString() && newData.val().length < 50"
+        },
+        "googleEmail": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.isString() && newData.val().length < 128"
+        },
+        "skin": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.isString() && newData.val().length < 50"
         }
       }
     },

@@ -11,6 +11,7 @@ import { useMyTournaments } from '../hooks/useMyTournaments';
 import { useRegisteredTournaments } from '../hooks/useRegisteredTournaments';
 import { useTelegram, type TelegramUser } from '../hooks/useTelegram';
 import { useTelegramSync } from '../hooks/useTelegramSync';
+import { useGoogleAuth } from '../hooks/useGoogleAuth';
 import { useChatRoomTournaments } from '../hooks/useChatRoomTournaments';
 import { useMyEvents } from '../hooks/useMyEvents';
 import { useVisitedEvents, markEventVisited } from '../hooks/useVisitedEvents';
@@ -64,6 +65,10 @@ export interface PlannerContextValue {
   telegramUser: TelegramUser | null;
   chatInstance: string | null;
   chatRoomTournaments: TournamentSummary[];
+  isGoogleLinked: boolean;
+  googleEmail: string | null;
+  linkGoogle: () => Promise<void>;
+  googleLinking: boolean;
   chatRoomLoading: boolean;
   skin: SkinId;
   setSkin: (skin: SkinId) => void;
@@ -139,6 +144,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
   }, [rawSetSkin, updateUserSkin]);
 
   const { user: telegramUser, chatInstance } = useTelegram();
+  const { isGoogleLinked, googleEmail, linkGoogle, linking: googleLinking } = useGoogleAuth(uid);
 
   // Wrap updateTournament to sync name/date changes to chat room entries
   const wrappedUpdateTournament = useCallback(async (updates: Parameters<typeof updateTournament>[0]) => {
@@ -373,6 +379,10 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       chatInstance,
       chatRoomTournaments,
       chatRoomLoading,
+      isGoogleLinked,
+      googleEmail,
+      linkGoogle,
+      googleLinking,
       skin,
       setSkin,
       myEvents,

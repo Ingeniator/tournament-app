@@ -1,5 +1,5 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app';
-import { getAuth, signInAnonymously, type Auth } from 'firebase/auth';
+import { getAuth, signInAnonymously, GoogleAuthProvider, linkWithPopup, linkWithRedirect, signInWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult, type Auth } from 'firebase/auth';
 import { getDatabase, type Database } from 'firebase/database';
 
 const config = {
@@ -24,4 +24,34 @@ export { auth, db };
 export const signIn = () => {
   if (!auth) return Promise.reject(new Error('Firebase not configured'));
   return signInAnonymously(auth);
+};
+
+const googleProvider = new GoogleAuthProvider();
+
+const isWebView = () => Boolean(window.Telegram?.WebApp?.initData);
+
+export const linkWithGoogle = async () => {
+  if (!auth?.currentUser) throw new Error('Not authenticated');
+  if (isWebView()) {
+    return linkWithRedirect(auth.currentUser, googleProvider);
+  }
+  return linkWithPopup(auth.currentUser, googleProvider);
+};
+
+export const signInWithGoogle = async () => {
+  if (!auth) throw new Error('Firebase not configured');
+  if (isWebView()) {
+    return signInWithRedirect(auth, googleProvider);
+  }
+  return signInWithPopup(auth, googleProvider);
+};
+
+export const signInWithGoogleCredential = async (credential: import('firebase/auth').AuthCredential) => {
+  if (!auth) throw new Error('Firebase not configured');
+  return signInWithCredential(auth, credential);
+};
+
+export const getGoogleRedirectResult = async () => {
+  if (!auth) return null;
+  return getRedirectResult(auth);
 };

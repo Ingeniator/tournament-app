@@ -36,6 +36,8 @@ const en: Translations = {
   'home.myEvents': 'My Events',
   'home.importTournament': 'Import',
   'home.importFailed': 'Invalid tournament data',
+  'home.signInWithGoogle': 'Sign in with Google',
+  'home.linking': 'Signing in...',
 
   // Footer & Options
   'footer.freeOpenSource': 'Free & open source',
