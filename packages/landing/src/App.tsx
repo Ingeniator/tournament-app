@@ -81,10 +81,13 @@ function AppContent() {
   const isLandingPage = page === '/' || page === '/es';
   const isSpanish = page.startsWith('/es');
 
-  // Force Spanish locale for /es/* pages
+  // Force Spanish locale and html lang for /es/* pages
   const { setLocale } = useTranslation();
   useEffect(() => {
-    if (isSpanish) setLocale('es');
+    if (isSpanish) {
+      setLocale('es');
+      document.documentElement.lang = 'es';
+    }
   }, [isSpanish, setLocale]);
 
   // Landing page: load Firebase eagerly for skin sync
