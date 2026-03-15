@@ -68,6 +68,3 @@ export function shortLabel(label: string, maxLength = 12): string {
   const short = idx >= 0 ? label.slice(0, idx).trim() : label;
   return short.length > maxLength ? short.slice(0, maxLength).trimEnd() + '…' : short;
 }
-
-/** @deprecated Use shortLabel instead */
-export const shortRankLabel = shortLabel;

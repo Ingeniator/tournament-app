@@ -37,7 +37,6 @@ export type TournamentAction =
   | { type: 'REMOVE_CLUB'; payload: { clubId: string } }
   | { type: 'RENAME_CLUB'; payload: { clubId: string; name: string } }
   | { type: 'SET_PLAYER_CLUB'; payload: { playerId: string; clubId: string | null } }
-  | { type: 'UPDATE_RANK_LABEL'; payload: { index: number; label: string } }
-  | { type: 'CAST_MALDICION'; payload: { roundId: string; matchId: string; castBy: 'team1' | 'team2'; cardId: string; targetPlayerId: string } }
+| { type: 'CAST_MALDICION'; payload: { roundId: string; matchId: string; castBy: 'team1' | 'team2'; cardId: string; targetPlayerId: string } }
   | { type: 'USE_ESCUDO'; payload: { roundId: string; matchId: string } }
   | { type: 'VETO_MALDICION'; payload: { roundId: string; matchId: string } };
