@@ -48,24 +48,24 @@ export function useGoogleAuth(uid: string | null) {
       }
     }
 
-    // Sweep registrations using transactions
+    // Sweep registrations using individual player-level writes
+    // (parent-level players transaction would require organizer access)
     const registrations = registrationsSnap.val() as Record<string, boolean> | null;
     if (registrations) {
       for (const tournamentId of Object.keys(registrations)) {
-        const playersRef = ref(db, `tournaments/${tournamentId}/players`);
-        const { committed } = await runTransaction(playersRef, (players) => {
-          if (!players || !players[oldUid]) return; // abort: no old player data
-          if (players[newUid]) return; // abort: new uid already registered
-          players[newUid] = players[oldUid];
-          delete players[oldUid];
-          return players;
+        const oldPlayerSnap = await get(ref(db, `tournaments/${tournamentId}/players/${oldUid}`));
+        if (!oldPlayerSnap.exists()) continue;
+        const newPlayerSnap = await get(ref(db, `tournaments/${tournamentId}/players/${newUid}`));
+        if (newPlayerSnap.exists()) continue; // new uid already registered
+
+        const playerData = oldPlayerSnap.val();
+        // Atomic update: delete old player entry, create new one, update indexes
+        await update(ref(db), {
+          [`tournaments/${tournamentId}/players/${oldUid}`]: null,
+          [`tournaments/${tournamentId}/players/${newUid}`]: playerData,
+          [`users/${oldUid}/registrations/${tournamentId}`]: null,
+          [`users/${newUid}/registrations/${tournamentId}`]: true,
         });
-        if (committed) {
-          await update(ref(db), {
-            [`users/${oldUid}/registrations/${tournamentId}`]: null,
-            [`users/${newUid}/registrations/${tournamentId}`]: true,
-          });
-        }
       }
     }
 
@@ -90,6 +90,9 @@ export function useGoogleAuth(uid: string | null) {
         const result = await getGoogleRedirectResult();
         if (!result || cancelled) return;
 
+        // Successful redirect — clear retry guard
+        sessionStorage.removeItem('google-link-redirect-retry');
+
         // Redirect completed — refresh token so auth.token.email is populated,
         // then store google email (rules validate against auth.token.email)
         await result.user.getIdToken(true);
@@ -108,12 +111,19 @@ export function useGoogleAuth(uid: string | null) {
         const firebaseError = err as { code?: string };
         if (firebaseError.code === 'auth/credential-already-in-use') {
           // Link failed because Google account is already used.
-          // In redirect flow we can't recover the credential, so prompt user
-          // to try again — signInWithRedirect will be used instead.
+          // In redirect flow we can't recover the credential, so sign in
+          // with Google directly. Limit to one retry to avoid redirect loops.
+          const REDIRECT_RETRY_KEY = 'google-link-redirect-retry';
           const preUid = sessionStorage.getItem(PRE_LINK_UID_KEY);
-          if (preUid) {
+          const alreadyRetried = sessionStorage.getItem(REDIRECT_RETRY_KEY);
+          if (preUid && !alreadyRetried) {
             sessionStorage.setItem(PRE_LINK_UID_KEY, preUid); // keep for next redirect
+            sessionStorage.setItem(REDIRECT_RETRY_KEY, '1');
             await signInWithGoogle(); // triggers another redirect
+          } else {
+            // Give up after one retry — clean up
+            sessionStorage.removeItem(PRE_LINK_UID_KEY);
+            sessionStorage.removeItem(REDIRECT_RETRY_KEY);
           }
         }
       }
