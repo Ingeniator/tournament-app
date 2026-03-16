@@ -54,7 +54,7 @@ export function useVisitedEvents(uid: string | null, createdEventIds: Set<string
         await Promise.all(ids.map(async (id) => {
           const snap = await get(ref(db!, `events/${id}`));
           if (!snap.exists()) {
-            remove(ref(db!, `users/${uid}/visitedEvents/${id}`)).catch(() => {});
+            remove(ref(db!, `users/${uid}/visitedEvents/${id}`)).catch(e => console.warn('Failed to clean up visited event:', e));
             return;
           }
           results.push(toSummary(id, snap.val()));

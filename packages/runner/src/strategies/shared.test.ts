@@ -126,6 +126,45 @@ describe('commonValidateScore', () => {
   it('allows draw', () => {
     expect(commonValidateScore({ team1Points: 12, team2Points: 12 }, config)).toBeNull();
   });
+
+  it('accepts valid games-mode scores', () => {
+    const gamesConfig: TournamentConfig = {
+      ...makeConfig(1),
+      pointsPerMatch: 10,
+      scoringMode: 'games',
+    };
+    expect(commonValidateScore({ team1Points: 6, team2Points: 4 }, gamesConfig)).toBeNull();
+    expect(commonValidateScore({ team1Points: 5, team2Points: 5 }, gamesConfig)).toBeNull();
+  });
+
+  it('rejects invalid games-mode scores', () => {
+    const gamesConfig: TournamentConfig = {
+      ...makeConfig(1),
+      pointsPerMatch: 10,
+      scoringMode: 'games',
+    };
+    const err = commonValidateScore({ team1Points: 4, team2Points: 4 }, gamesConfig);
+    expect(err).toContain('Total points must equal 10');
+  });
+
+  it('accepts valid sets-mode scores', () => {
+    const setsConfig: TournamentConfig = {
+      ...makeConfig(1),
+      pointsPerMatch: 3,
+      scoringMode: 'sets',
+    };
+    expect(commonValidateScore({ team1Points: 2, team2Points: 1 }, setsConfig)).toBeNull();
+  });
+
+  it('rejects invalid sets-mode scores', () => {
+    const setsConfig: TournamentConfig = {
+      ...makeConfig(1),
+      pointsPerMatch: 3,
+      scoringMode: 'sets',
+    };
+    const err = commonValidateScore({ team1Points: 3, team2Points: 1 }, setsConfig);
+    expect(err).toContain('Total points must equal 3');
+  });
 });
 
 // ── seedFromRounds ──────────────────────────────────────────────────────

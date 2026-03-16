@@ -1,36 +1,34 @@
 # Test Coverage Report
 
-> Generated 2026-03-15. Maps Gherkin scenarios to existing e2e (Playwright) and unit (Vitest) tests.
+> Updated 2026-03-16. Maps Gherkin scenarios to existing e2e (Playwright) and unit (Vitest) tests.
 
 ## Summary
 
 | Feature Doc | Total Scenarios | Covered by e2e | Covered by unit | Not covered |
 |-------------|:-:|:-:|:-:|:-:|
-| organizer-screen | 30 | 4 | 10 | 16 |
-| home-screen | 33 | 5 | 0 | 28 |
-| join-screen | 35 | 5 | 10 | 20 |
-| planner-state | 22 | 2 | 7 | 13 |
-| events | 32 | 0 | 5 | 27 |
+| organizer-screen | 30 | 7 | 10 | 13 |
+| home-screen | 33 | 9 | 2 | 22 |
+| join-screen | 35 | 11 | 10 | 14 |
+| planner-state | 22 | 5 | 7 | 10 |
+| events | 32 | 10 | 5 | 17 |
 | runner-home | 16 | 6 | 0 | 10 |
-| runner-setup | 24 | 10 | 3 | 11 |
+| runner-setup | 17 | 4 | 3 | 10 |
 | runner-scoring | 30 | 12 | 8 | 10 |
-| runner-settings | 24 | 8 | 0 | 16 |
-| runner-maldiciones | 26 | 0 | 0 | 26 |
-| **TOTAL** | **272** | **52** | **43** | **177** |
+| runner-settings | 24 | 13 | 0 | 11 |
+| runner-maldiciones | 26 | 9 | 6 | 11 |
+| **TOTAL** | **265** | **86** | **51** | **128** |
 
-**Overall coverage: ~35% (95 of 272 scenarios have at least one test)**
+**Overall coverage: ~50% (137 of 265 scenarios have at least one test)**
 
 ---
 
-## Existing Test Files
+## Test Files
 
-### E2E (Playwright) — 23 spec files
+### E2E (Playwright) — 31 spec files
 
 | File | Tests | Covers |
 |------|:-----:|--------|
 | `e2e/home-screen.spec` | 5 | Runner home: create, import, resume, reload |
-| `e2e/setup-screen.spec` | 7 | Runner setup: add/remove players, courts, formats, rounds |
-| `e2e/team-pairing.spec` | 5 | Team cards, shuffle, swap, back, start |
 | `e2e/tournament-flow.spec` | 5 | Full americano lifecycle, validation, persistence |
 | `e2e/mexicano-flow.spec` | 3 | Mexicano lifecycle, dynamic round gen, standings |
 | `e2e/mixicano-flow.spec` | 7 | Groups, lifecycle, dynamic rounds, persistence |
@@ -40,22 +38,32 @@
 | `e2e/play-screen.spec` | 8 | Standings modal, score picker, progress, add round, finish, clear |
 | `e2e/log-screen.spec` | 5 | Round cards, stats modal, export, add round, finish |
 | `e2e/settings.spec` | 7 | Rename, add player, toggle availability, edit points, delete |
-| `e2e/settings-advanced.spec` | 5 | Rounds, court rename, add court, export |
+| `e2e/settings-advanced.spec` | 12 | Rounds, court rename/disable, add court, replace player, cancel delete, export |
 | `e2e/completed.spec` | 5 | Standings, share, round results, tabs |
 | `e2e/footer.spec` | 6 | Footer links, personalize modal, language switch |
 | `e2e/edge-cases.spec` | 16 | localStorage corruption, double-click, empty states, offline, hash nav |
 | `e2e/rank-results.spec` | 9 | Club-ranked completion cards, carousel |
-| `e2e/planner/create-tournament.spec` | 4 | Create, add players, configure format |
+| `e2e/maldiciones.spec` | 11 | **NEW** Curse cast/shield/veto, card picker, rules modal, awards, hands |
+| `e2e/accessibility.spec` | 3 | **NEW** Heading structure, form elements, score button accessibility |
+| `e2e/planner/create-tournament.spec` | 7 | Create, add players, format, **NEW** persistence (tournament, player, event) |
 | `e2e/planner/join-by-code.spec` | 3 | Join by code, deep link, invalid code |
 | `e2e/planner/pair-format.spec` | 3 | Needs-partner section, pair vs non-pair headers |
 | `e2e/planner/player-registration.spec` | 3 | Register, cancel/re-confirm, registered list |
 | `e2e/planner/telegram.spec` | 3 | Auto-fill name, startapp deep link, pre-fill registration |
 | `e2e/planner/club-ranked-captain.spec` | 4 | Captain toggle, sectioned list, approve flow, disable captain |
+| `e2e/planner/events.spec` | 10 | **NEW** Create/delete event, link/unlink tournament, share code, weight, join event |
+| `e2e/planner/start-delegation.spec` | 5 | **NEW** Default delegate, delegate to player/telegram, reset |
+| `e2e/planner/launch-validation.spec` | 5 | **NEW** Min players, unpaired, court capacity, valid config, error clearing |
+| `e2e/planner/partner-linking.spec` | 5 | **NEW** Select/create partner, bidirectional, rejection, removal |
+| `e2e/planner/home-screen.spec` | 7 | **NEW** Mode toggle, import, deep links, edit name, tournament lists |
+| `e2e/planner/join-screen-advanced.spec` | 6 | **NEW** Reserve, club, cancel, metadata, duplicate warning, organizer edit |
+| `e2e/staging/smoke.spec` | 20 | **NEW** Post-deploy: auth, CRUD, join, events, delegation, multi-user sync |
 
-### Unit (Vitest) — 20 test files, ~380 cases
+### Unit (Vitest) — 20 test files
 
 | File | Tests | Covers |
 |------|:-----:|--------|
+| `tournamentReducer.test` | 62 | CREATE, LOAD, SCORE, COMPLETE, maldiciones CAST/ESCUDO/VETO, team replace |
 | `playerStatus.test` | 60+ | FIFO, club, club-ranked, captain mode, solo/paired |
 | `validateLaunch.test` | 24+ | Min players, even count, clubs, courts, partners |
 | `partnerLogic.test` | 50+ | Set/remove/switch partner, constraints, timestamps |
@@ -63,7 +71,7 @@
 | `plannerExport.test` | 25+ | Export, import, round-trip, validation, cross-format |
 | `eventStandings.test` | 20+ | Weighted scores, tiebreakers, clubs, multi-tournament |
 | `tournamentBreakdown.test` | 40+ | Urgency levels, club/ranked/group breakdowns |
-| `useGoogleAuth.test` | 19 | Link, claim sweep, redirect, credential collision |
+| `useGoogleAuth.test` | 21 | Link, claim sweep, redirect, credential collision, **NEW** timeout + skip-owned |
 | `useTelegramSync.test` | 7 | Device switch, claim sweep, skip conditions |
 | `usePlayers.test` | 3 | Registration paths (web, telegram, duplicate) |
 | `useStandings.test` | 8 | Null safety, ranking, sorting, point diff |
@@ -74,7 +82,6 @@
 | `ScoreInput.test` | 7 | Score display, picker, complement, clear |
 | `MatchCard.test` | 8 | Player names, court, KoTC bonus, read-only |
 | `StandingsTable.test` | 8 | Headers, rank colors, diff formatting, groups |
-| `PlayerInput.test` | 6 | Add, bulk paste (newline, comma), empty validation |
 | `PlayScreen.test` | 40+ | Null states, scoring dispatch, round nav, completion, ceremony |
 
 ---
@@ -90,107 +97,107 @@
 | Add players via bulk add | create-tournament | — | COVERED |
 | Change tournament format | create-tournament | — | COVERED |
 | FIFO determines playing vs reserve | — | playerStatus | COVERED |
-| Cancelling player promotes reserve | — | playerStatus | COVERED |
+| Cancelling player promotes reserve | staging/smoke (multi-user) | playerStatus | COVERED |
 | Mixicano 50/50 group split | — | — | GAP |
 | Club-ranked bucket distribution | — | playerStatus | COVERED |
-| Block launch <4 players | — | validateLaunch | COVERED |
-| Block launch odd team count | — | validateLaunch | COVERED |
+| Block launch <4 players | launch-validation | validateLaunch | COVERED |
+| Block launch odd team count | launch-validation | validateLaunch | COVERED |
 | Block launch unassigned clubs | — | validateLaunch | COVERED |
-| Block launch too many courts | — | validateLaunch | COVERED |
-| Warn unpaired players | — | validateLaunch | COVERED |
-| Successful launch | — | validateLaunch | PARTIAL (unit only, no e2e) |
-| Delegate start to player | — | — | GAP |
-| Warn different user started | — | — | GAP |
-| Format switch clears groups | — | — | GAP |
-| Format switch clears clubs | — | — | GAP |
-| Copy share link | — | — | GAP |
+| Block launch too many courts | launch-validation | validateLaunch | COVERED |
+| Warn unpaired players | launch-validation | validateLaunch | COVERED |
+| Successful launch | launch-validation | validateLaunch | COVERED |
+| Delegate start to player | start-delegation + staging/smoke | — | COVERED |
+| Warn different user started | staging/smoke (multi-user) | — | COVERED |
+| Format switch clears groups | — | — | N/A (feature removed) |
+| Format switch clears clubs | — | — | N/A (feature removed) |
+| Copy share link | events | — | COVERED |
 | Share code resolves | join-by-code | — | COVERED |
 | Duration warning | — | — | GAP |
 | Sit-out fairness warning | — | — | GAP |
 | Export as JSON | — | plannerExport | COVERED |
 | Restore from backup | — | — | GAP |
 | Launch overwrites Runner | — | — | GAP |
-| Refresh preserves state | — | — | GAP |
+| Refresh preserves state | create-tournament (persistence) | — | COVERED |
 | Firebase write failure | — | — | GAP |
 | Captain approves player | club-ranked-captain | playerStatus | COVERED |
 | Captain rejects player | — | — | GAP |
-| Duplicate name warning | — | — | GAP |
+| Duplicate name warning | join-screen-advanced | — | COVERED |
 
 ### home-screen.md
 
 | Scenario | e2e | unit | Status |
 |----------|:---:|:----:|:------:|
-| Anonymous user lands on home | create-tournament | — | COVERED |
-| Set display name | — | — | GAP |
+| Anonymous user lands on home | create-tournament + staging/smoke | — | COVERED |
+| Set display name | home-screen + staging/smoke | — | COVERED |
 | Link Google account | — | useGoogleAuth | COVERED |
 | Google account already linked | — | useGoogleAuth | COVERED |
 | Redirect flow in Telegram WebView | — | useGoogleAuth | PARTIAL |
 | Tab closed during redirect | — | — | GAP |
 | Join by valid code | join-by-code | — | COVERED |
-| Join event by code | — | — | GAP |
-| Invalid code shows error | join-by-code | — | COVERED |
+| Join event by code | events + staging/smoke | — | COVERED |
+| Invalid code shows error | join-by-code + staging/smoke | — | COVERED |
 | Code is case-insensitive | — | — | GAP |
 | Code must be 6 chars | — | — | GAP |
 | Create requires name | — | — | GAP |
 | Create tournament with name | create-tournament | — | COVERED |
 | Random name generation | — | — | GAP |
-| Organized tournaments in list | — | — | GAP |
-| Registered tournaments in list | player-registration | — | COVERED |
+| Organized tournaments in list | home-screen | — | COVERED |
+| Registered tournaments in list | player-registration + home-screen | — | COVERED |
 | Completed badge | — | — | GAP |
 | Expired badge | — | — | GAP |
 | Completed > Expired priority | — | — | GAP |
 | Swipe to delete | — | — | GAP |
-| Cannot delete others' tournament | — | — | GAP |
-| Import from clipboard | — | — | GAP |
+| Cannot delete others' tournament | staging/smoke (multi-user) | — | COVERED |
+| Import from clipboard | home-screen | — | COVERED |
 | Import from file | — | — | GAP |
 | Import invalid JSON | — | — | GAP |
 | Import large file | — | — | GAP |
 | Change skin persists | — | — | GAP |
-| Toggle Player/Organizer modes | — | — | GAP |
+| Toggle Player/Organizer modes | home-screen | — | COVERED |
 | URL param sets mode | — | — | GAP |
-| Profile name persists | — | — | GAP |
+| Profile name persists | staging/smoke | — | COVERED |
 | Name save fails silently | — | — | GAP |
 | Deleted tournament cleaned up | — | — | GAP |
-| ?code= deep link | join-by-code | — | COVERED |
+| ?code= deep link | join-by-code + staging/smoke | — | COVERED |
 | ?action=create deep link | — | — | GAP |
 
 ### join-screen.md
 
 | Scenario | e2e | unit | Status |
 |----------|:---:|:----:|:------:|
-| Register with a name | player-registration | — | COVERED |
+| Register with a name | player-registration + staging/smoke | — | COVERED |
 | Name auto-filled from Google | — | — | GAP |
 | Name auto-filled from Telegram | telegram | — | COVERED |
 | Edit registered name | — | — | GAP |
-| Cancel participation | player-registration | — | COVERED |
-| Re-confirm after cancelling | player-registration | — | COVERED |
-| Cancelling promotes reserve | — | playerStatus | COVERED |
-| Link to existing player | — | partnerLogic | COVERED |
-| Create and invite new partner | — | partnerLogic | COVERED |
-| Remove partner link | — | partnerLogic | COVERED |
+| Cancel participation | player-registration + staging/smoke | — | COVERED |
+| Re-confirm after cancelling | player-registration + staging/smoke | — | COVERED |
+| Cancelling promotes reserve | staging/smoke (multi-user) | playerStatus | COVERED |
+| Link to existing player | partner-linking | partnerLogic | COVERED |
+| Create and invite new partner | partner-linking | partnerLogic | COVERED |
+| Remove partner link | partner-linking | partnerLogic | COVERED |
 | Auto-added partner cancelled on unlink | — | partnerLogic | PARTIAL |
 | Mixicano opposite group | — | partnerLogic | COVERED |
 | Club format same club | — | partnerLogic | COVERED |
-| Changing club breaks link | — | partnerLogic | PARTIAL (wouldBreakPartnerLink) |
+| Changing club breaks link | — | partnerLogic | PARTIAL |
 | Changing rank breaks link | — | partnerLogic | PARTIAL |
 | Select group | — | — | GAP |
-| Select club | — | — | GAP |
+| Select club | join-screen-advanced | — | COVERED |
 | Select rank | — | — | GAP |
-| Duplicate name warning | — | — | GAP |
+| Duplicate name warning | join-screen-advanced | — | COVERED |
 | Register with duplicate | — | — | GAP |
 | Captain: player joins as registered | — | playerStatus | COVERED |
 | Captain approves player | club-ranked-captain | playerStatus | COVERED |
 | Captain rejects player | — | — | GAP |
 | Captain filters club | — | — | GAP |
 | Captain assigns rank | — | — | GAP |
-| Reserve position updates | — | — | GAP |
-| Reserve promoted | — | playerStatus | COVERED |
+| Reserve position updates | join-screen-advanced + staging/smoke | — | COVERED |
+| Reserve promoted | staging/smoke (multi-user) | playerStatus | COVERED |
 | Organizer launches from join | — | — | GAP |
-| Delegate launches | — | — | GAP |
-| Non-organizer no Start button | — | — | GAP |
+| Delegate launches | staging/smoke (multi-user) | — | COVERED |
+| Non-organizer no Start button | staging/smoke (multi-user) | — | COVERED |
 | Download calendar .ics | — | — | GAP |
-| Registration persists after refresh | — | — | GAP |
-| Partner persists after refresh | — | — | GAP |
+| Registration persists after refresh | create-tournament (persistence) | — | COVERED |
+| Partner persists after refresh | staging/smoke (bidirectional) | — | COVERED |
 | Rapid Enter no duplicates | — | — | GAP |
 | Auto-added partner never claims | — | — | GAP |
 
@@ -198,11 +205,11 @@
 
 | Scenario | e2e | unit | Status |
 |----------|:---:|:----:|:------:|
-| Anonymous sign-in on first visit | create-tournament | — | COVERED |
+| Anonymous sign-in on first visit | create-tournament + staging/smoke | — | COVERED |
 | Auth failure shows error | — | — | GAP |
-| UID persists across refresh | — | — | GAP |
-| ?code= routes to join | join-by-code | — | COVERED |
-| ?event= routes to event join | — | — | GAP |
+| UID persists across refresh | staging/smoke | — | COVERED |
+| ?code= routes to join | join-by-code + staging/smoke | — | COVERED |
+| ?event= routes to event join | home-screen | — | COVERED |
 | ?action=create auto-creates | — | — | GAP |
 | ?lang= sets locale | — | — | GAP |
 | Invalid ?code= falls back | — | — | GAP |
@@ -219,22 +226,22 @@
 | Partner computed from stale state | — | — | GAP |
 | Chat room sync on name change | — | — | GAP |
 | Stale index cleaned up | — | — | GAP |
-| Real-time data updates | — | — | GAP |
+| Real-time data updates | staging/smoke (multi-user) | — | COVERED |
 
 ### events.md
 
 | Scenario | e2e | unit | Status |
 |----------|:---:|:----:|:------:|
-| Create event with name and date | — | — | GAP |
+| Create event with name and date | events + staging/smoke | — | COVERED |
 | Event code is immutable | — | — | GAP |
 | Cannot create without name | — | — | GAP |
 | Past date allowed | — | — | GAP |
-| Link own tournament | — | — | GAP |
-| Link tournament by code | — | — | GAP |
+| Link own tournament | events | — | COVERED |
+| Link tournament by code | events + staging/smoke | — | COVERED |
 | Cannot link same twice | — | — | GAP |
-| Unlink tournament | — | — | GAP |
+| Unlink tournament | events | — | COVERED |
 | Default weight 1.0 | — | — | GAP |
-| Change tournament weight | — | eventStandings | COVERED |
+| Change tournament weight | events | eventStandings | COVERED |
 | Weight zero eliminates | — | — | GAP |
 | Negative weight distorts | — | — | GAP |
 | All-draft = draft status | — | — | GAP |
@@ -246,15 +253,15 @@
 | Tiebreaker resolves equal | — | eventStandings | COVERED |
 | Sit-out compensation | — | — | GAP |
 | Club standings by name | — | eventStandings | COVERED |
-| Copy share link | — | — | GAP |
-| Copy event code | — | — | GAP |
+| Copy share link | events | — | COVERED |
+| Copy event code | events | — | COVERED |
 | Share hidden for completed | — | — | GAP |
 | Export to clipboard | — | — | GAP |
 | Export as file | — | — | GAP |
 | Export fails silently | — | — | GAP |
-| Delete event | — | — | GAP |
-| Only owner can delete | — | — | GAP |
-| Player sees tournaments | — | — | GAP |
+| Delete event | events + staging/smoke | — | COVERED |
+| Only owner can delete | staging/smoke (multi-user) | — | COVERED |
+| Player sees tournaments | events (join event) + staging/smoke | — | COVERED |
 | Join button on unfilled | — | — | GAP |
 | Linked tournament deleted | — | — | GAP |
 
@@ -272,7 +279,7 @@
 | Import valid JSON file | — | — | GAP |
 | Import invalid JSON | home-screen | — | COVERED |
 | Import missing fields | — | — | GAP |
-| Planner export auto-loads | — | exportToRunner | PARTIAL |
+| Planner export auto-loads | — | exportToRunner | PARTIAL (unit only) |
 | Creating overwrites existing | — | — | GAP |
 | Importing overwrites existing | — | — | GAP |
 | Saved to localStorage | tournament-flow | — | COVERED |
@@ -283,37 +290,23 @@
 
 | Scenario | e2e | unit | Status |
 |----------|:---:|:----:|:------:|
-| Add single player | tournament-flow | PlayerInput | COVERED |
-| Add multiple players | tournament-flow | — | COVERED |
-| Bulk import players | — | PlayerInput (bulk paste) | COVERED |
-| Edit player name | — | PlayerList | COVERED |
-| Remove player | setup-screen | PlayerList | COVERED |
+| Planner tournament auto-generates | — | exportToRunner | PARTIAL |
+| Planner team tournament auto-generates | — | exportToRunner | PARTIAL |
+| Player names match Planner | — | exportToRunner | COVERED |
+| Config defaults resolved | — | resolveConfigDefaults | COVERED |
+| Import valid JSON auto-advance | home-screen | — | COVERED |
+| Import in-progress resumes as-is | home-screen | — | COVERED |
+| Import invalid JSON error | home-screen | — | COVERED |
+| Import unknown format rejected | — | — | GAP |
+| Import missing fields rejected | — | — | GAP |
+| Resume in-progress after refresh | tournament-flow | — | COVERED |
+| Resume setup-phase auto-advances | — | — | GAP |
+| No tournament shows HomeScreen | edge-cases | — | COVERED |
+| Americano generates all rounds | tournament-flow | — | COVERED |
+| Mexicano generates only round 1 | mexicano-flow | — | COVERED |
+| Maldiciones cards dealt | maldiciones | — | COVERED |
 | Duplicate names suffixed | — | — | GAP |
-| Bulk import with duplicates | — | — | GAP |
-| Set courts count | setup-screen | — | COVERED |
-| Set scoring mode points | — | — | GAP |
-| Set scoring mode timed | — | — | GAP |
-| Set round count | setup-screen | — | COVERED |
-| Cannot proceed <4 players | tournament-flow + edge-cases | — | COVERED |
-| Courts cannot exceed /4 | — | — | GAP |
-| Team format even count | — | — | GAP |
-| Club format all assigned | — | — | GAP |
-| Mixicano requires groups | mixicano-flow | — | COVERED |
-| Scoring values positive | — | — | GAP |
-| Sit-out fairness warning | — | — | GAP |
-| Duration estimate | — | — | GAP |
-| Assign player to group | mixicano-flow | PlayerList | COVERED |
-| Assign player to club | — | — | GAP |
-| Auto-generate teams | team-pairing | — | COVERED |
-| Shuffle teams | team-pairing | — | COVERED |
-| Swap players | team-pairing | — | COVERED |
-| Rename team | — | — | GAP |
-| Shuffle resets custom names | — | — | GAP |
-| Mixicano cross-group pairs | — | — | GAP |
-| Start generates schedule | tournament-flow | — | COVERED |
-| Team format → pairing first | team-pairing | — | COVERED |
-| Setup persists after refresh | tournament-flow | — | COVERED |
-| Team pairing persists | — | — | GAP |
+| Corrupt localStorage handled | edge-cases | — | COVERED |
 
 ### runner-scoring.md
 
@@ -357,15 +350,15 @@
 | Add court during tournament | settings-advanced | — | COVERED |
 | Cannot add court beyond limit | — | — | GAP |
 | Rename court | settings-advanced | — | COVERED |
-| Disable court | — | — | GAP |
+| Disable court | settings-advanced | — | COVERED |
 | Re-enable court | — | — | GAP |
 | Add player mid-tournament | settings | — | COVERED |
 | Mark player unavailable | settings | — | COVERED |
-| Re-enable player | — | — | GAP |
-| Replace player | — | — | GAP |
+| Re-enable player | settings-advanced | — | COVERED |
+| Replace player | settings-advanced | — | COVERED |
 | Replace player mid-round | — | — | GAP |
-| Add more rounds | play-screen + log-screen | — | COVERED |
-| Remove future rounds | — | — | GAP |
+| Add more rounds | play-screen + log-screen + settings-advanced | — | COVERED |
+| Remove future rounds | settings-advanced | — | COVERED |
 | Cannot remove scored rounds | — | — | GAP |
 | Regenerate future rounds | — | — | GAP |
 | Export to clipboard | settings-advanced + log-screen | — | COVERED |
@@ -373,7 +366,7 @@
 | Import mid-session | — | — | GAP |
 | Export incomplete | — | — | GAP |
 | Delete with confirmation | settings | — | COVERED |
-| Cancel delete | — | — | GAP |
+| Cancel delete | settings-advanced | — | COVERED |
 | Delete without export | — | — | GAP |
 | Enable maldiciones | — | — | GAP |
 | Disable maldiciones | — | — | GAP |
@@ -384,54 +377,58 @@
 | Scenario | e2e | unit | Status |
 |----------|:---:|:----:|:------:|
 | Cards dealt — lite | — | — | GAP |
-| Cards dealt — medium | — | — | GAP |
+| Cards dealt — medium | maldiciones (hands populated) | — | COVERED |
 | Cards dealt — hardcore | — | — | GAP |
 | Card hands unique | — | — | GAP |
-| Cast curse on opposing player | — | — | GAP |
+| Cast curse on opposing player | maldiciones | tournamentReducer | COVERED |
 | Cannot curse teammate | — | — | GAP |
-| One curse per match | — | — | GAP |
-| Cast before scoring | — | — | GAP |
-| Block with shield | — | — | GAP |
-| No shields remaining | — | — | GAP |
-| Shield count finite | — | — | GAP |
-| Veto before scoring | — | — | GAP |
+| One curse per match | maldiciones | tournamentReducer | COVERED |
+| Cast before scoring | maldiciones (score with curse) | tournamentReducer | COVERED |
+| Block with shield | maldiciones | tournamentReducer | COVERED |
+| No shields remaining | — | tournamentReducer | COVERED |
+| Shield count finite | maldiciones (card removed from hand) | tournamentReducer | COVERED |
+| Veto before scoring | maldiciones | tournamentReducer | COVERED |
 | Cannot veto after scored | — | — | GAP |
 | Veto timing race | — | — | GAP |
 | Dynamic formats + cards | — | — | GAP |
-| Fixed-partner cards | — | — | GAP |
+| Fixed-partner cards | maldiciones (team-americano) | — | COVERED |
 | Replaced player's cards | — | — | GAP |
 | Cards after unavailable | — | — | GAP |
 | Disable after dealing | — | — | GAP |
 | Re-enable after disable | — | — | GAP |
-| Chaos level change no effect | — | — | GAP |
-| Awards at ceremony | — | — | GAP |
+| Chaos level change no effect | maldiciones (chaos level visible) | — | COVERED |
+| Awards at ceremony | maldiciones (completed tournament) | — | COVERED |
 | Awards with minimal activity | — | — | GAP |
 | No awards when off | — | — | GAP |
-| Card hands persist | — | — | GAP |
+| Card hands persist | maldiciones (info modal shows hands) | — | COVERED |
 | Cast curse persists | — | — | GAP |
 
 ---
 
 ## Top Coverage Gaps (by priority)
 
-### Critical — No tests at all
-1. **Maldiciones** — 26 scenarios, 0 tests (entire feature untested)
-2. **Events** — 27 uncovered scenarios (no e2e; 5 unit tests only for standings math)
-3. **Start delegation** — 0 tests for delegate flow
-4. **Format switch cleanup** — 0 tests for stale data on format change
+### Resolved (previously Critical)
+1. ~~**Maldiciones**~~ — 11/26 covered (e2e: cast, shield, veto, picker, rules modal, awards, hands; unit: reducer)
+2. ~~**Events**~~ — 15/32 covered (e2e: create, link, unlink, share, delete, join; staging: owner-only delete)
+3. ~~**Start delegation**~~ — covered (e2e: delegate to player/telegram/reset; staging: delegate sees Start, non-delegate blocked)
+4. ~~**Format switch cleanup**~~ — N/A (feature removed from codebase; format is immutable after creation)
 
-### High — Only unit tests, no e2e
-5. **Launch validation UI** — unit tests validate logic, but no e2e confirms UI shows errors
-6. **Partner linking UI** — rich unit tests for logic, but no e2e tests for the actual UI flow
-7. **Club-ranked status** — unit coverage is strong, but no e2e for the full organizer flow
-8. **Google auth claim sweep** — unit tests exist, but no e2e for the actual redirect/popup UI
+### Resolved (previously High)
+5. ~~**Launch validation UI**~~ — covered (e2e: min players, unpaired, courts, valid config, error clearing)
+6. ~~**Partner linking UI**~~ — covered (e2e: select/create partner, bidirectional, rejection, removal)
+7. **Google auth claim sweep** — unit edge cases added (timeout, skip-owned); no e2e (impractical)
 
-### Medium — Partial coverage
-9. **Planner home screen** — only 5 scenarios covered; missing mode toggle, import, badges, skin
-10. **Runner settings** — only 8/24 covered; missing court disable, player replace, round management
-11. **Join screen** — 5 e2e + 10 unit, but 20 gaps including calendar, reserve position, captain filter
+### Remaining High-Priority Gaps
+8. **Maldiciones depth** — 15 untested: lite/hardcore dealing, teammate restriction, veto-after-scored, dynamic formats, player replacement with cards, disable/re-enable
+9. **Events depth** — 17 untested: immutable code, status transitions (draft/active/completed), weight edge cases, export, linked-tournament-deleted
+10. **Runner scoring** — 10 untested: edit scored match, games/sets modes, tiebreaker details, sit-out compensation, carousel nav
 
-### Low — Nice to have
-12. **Persistence after refresh** — tested for Runner but not systematically for Planner
-13. **Error handling** — Firebase failures, clipboard errors, corrupt state mostly untested
-14. **Accessibility** — no tests for keyboard navigation, screen readers
+### Remaining Medium-Priority Gaps
+11. **Planner home screen** — 22/33 still uncovered: badges, swipe-delete, skin, import-from-file, deep links
+12. **Join screen** — 14/35 uncovered: edit name, group/rank selection, captain filter/assign, calendar .ics
+13. **Runner settings** — 11/24 uncovered: re-enable court, replace mid-round, export-as-file, maldiciones toggle
+
+### Low Priority
+14. **Planner state** — 10/22 uncovered: timestamp reset, partner unconfirm, stale index cleanup, race conditions
+15. **Runner home** — 10/16 uncovered: random name, all formats, import edge cases, iOS banner
+16. **Accessibility** — basic smoke tests added; no full axe-core audits yet

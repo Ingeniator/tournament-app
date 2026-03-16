@@ -89,6 +89,34 @@ function analyzeSchedule(players: Player[], config: TournamentConfig, rounds: Re
   return { gamesMin, gamesMax, sitMin, sitMax, partnerRepeats, oppMin, oppMax, courtSpreads };
 }
 
+describe('americano strategy metadata', () => {
+  it('is a static (non-dynamic) strategy', () => {
+    expect(americanoStrategy.isDynamic).toBe(false);
+  });
+});
+
+describe('americano generates all rounds upfront', () => {
+  it('generateSchedule returns multiple rounds in a single call', () => {
+    const players = makePlayers(8);
+    const config = makeConfig(2, 7);
+    const { rounds } = americanoStrategy.generateSchedule(players, config);
+    expect(rounds.length).toBeGreaterThan(1);
+    expect(rounds.length).toBe(7);
+  });
+
+  it('all rounds are generated upfront without needing scores from previous rounds', () => {
+    const players = makePlayers(8);
+    const config = makeConfig(2, 5);
+    const { rounds } = americanoStrategy.generateSchedule(players, config);
+    // All 5 rounds produced in one call — no intermediate scoring required
+    expect(rounds).toHaveLength(5);
+    // Each round has a sequential roundNumber
+    for (let i = 0; i < rounds.length; i++) {
+      expect(rounds[i].roundNumber).toBe(i + 1);
+    }
+  });
+});
+
 describe('americano distribution', () => {
   describe('8 players, 2 courts (no sit-outs)', () => {
     const players = makePlayers(8);

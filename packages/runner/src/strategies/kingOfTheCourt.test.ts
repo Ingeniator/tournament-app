@@ -604,6 +604,37 @@ describe('kingOfTheCourt generateAdditionalRounds', () => {
     expect(kingPlayers).toContain('p6');
   });
 
+  it('winners of king court stay on king court in next round', () => {
+    // p1+p2 win on c1 (king court) → should remain on c1
+    const round1: Round = {
+      id: 'r1',
+      roundNumber: 1,
+      matches: [
+        {
+          id: 'm1', courtId: 'c1',
+          team1: ['p1', 'p2'], team2: ['p3', 'p4'],
+          score: { team1Points: 18, team2Points: 6 },
+        },
+        {
+          id: 'm2', courtId: 'c2',
+          team1: ['p5', 'p6'], team2: ['p7', 'p8'],
+          score: { team1Points: 18, team2Points: 6 },
+        },
+      ],
+      sitOuts: [],
+    };
+
+    const { rounds } = kingOfTheCourtStrategy.generateAdditionalRounds(
+      players, config, [round1], 1,
+    );
+    const kingMatch = rounds[0].matches.find(m => m.courtId === 'c1')!;
+    const kingPlayers = [...kingMatch.team1, ...kingMatch.team2];
+
+    // p1 and p2 won on king court → they stay on king court
+    expect(kingPlayers).toContain('p1');
+    expect(kingPlayers).toContain('p2');
+  });
+
   it('losers of king court relegate to lower court', () => {
     const round1: Round = {
       id: 'r1',

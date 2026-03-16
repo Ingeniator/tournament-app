@@ -22,7 +22,7 @@ export default defineConfig({
     {
       name: 'runner',
       testDir: './e2e',
-      testIgnore: '**/planner/**',
+      testIgnore: ['**/planner/**', '**/staging/**'],
       use: {
         browserName: 'chromium',
         baseURL: 'http://localhost:5190/play',
@@ -32,7 +32,7 @@ export default defineConfig({
     {
       name: 'runner-mobile',
       testDir: './e2e',
-      testIgnore: '**/planner/**',
+      testIgnore: ['**/planner/**', '**/staging/**'],
       use: {
         ...devices['iPhone 14'],
         baseURL: 'http://localhost:5190/play',
@@ -41,7 +41,7 @@ export default defineConfig({
     {
       name: 'runner-tablet',
       testDir: './e2e',
-      testIgnore: '**/planner/**',
+      testIgnore: ['**/planner/**', '**/staging/**'],
       use: {
         ...devices['iPad Mini'],
         baseURL: 'http://localhost:5190/play',
@@ -65,7 +65,7 @@ export default defineConfig({
     },
     {
       name: 'planner-staging',
-      testDir: './e2e/planner',
+      testDir: './e2e/staging',
       use: {
         browserName: 'chromium',
         baseURL: 'https://staging.padelday.net/plan',

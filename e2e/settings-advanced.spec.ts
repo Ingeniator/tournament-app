@@ -114,6 +114,36 @@ test.describe('Settings Advanced', () => {
     await expect(page.getByText(/unavailable/i).or(page.locator('[class*="unavailable"]'))).toBeVisible({ timeout: 5000 });
   });
 
+  test('re-enable disabled court', async ({ page }) => {
+    // Same setup as disable court test - 8 players, 2 courts
+    await page.goto('/');
+    await clearState(page);
+    await createTournament(page);
+    await addPlayers(page, ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Hank']);
+    const roundsInput = page.locator('#config-rounds');
+    await roundsInput.fill('3');
+    await page.evaluate(() => {
+      const raw = localStorage.getItem('padel-tournament-v1');
+      if (!raw) return;
+      const t = JSON.parse(raw);
+      t.config.courts.push({ id: 'c2', name: 'Court 2' });
+      localStorage.setItem('padel-tournament-v1', JSON.stringify(t));
+    });
+    await page.reload();
+    await generateSchedule(page);
+    await navigateToTab(page, 'Settings');
+
+    // Disable Court 2
+    await page.getByText('Court 2').click();
+    await page.getByText('Available', { exact: true }).click();
+    await expect(page.getByText(/unavailable/i).or(page.locator('[class*="unavailable"]'))).toBeVisible({ timeout: 5000 });
+
+    // Re-enable Court 2
+    await page.getByText('Court 2').click();
+    const toggleBtn = page.getByText('Available', { exact: true }).or(page.getByText(/unavailable/i));
+    await toggleBtn.click();
+  });
+
   test('replace player mid-tournament', async ({ page }) => {
     // Click on a player name to open edit mode
     await page.getByText('Alice').click();

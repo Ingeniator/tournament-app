@@ -17,10 +17,11 @@ describe('usePlayerStats', () => {
     expect(result.current).toEqual([]);
   });
 
-  it('returns empty array during setup phase', () => {
+  it('returns stats for setup-phase tournament (all zeroes)', () => {
     const tournament = makeSetupTournament(8);
     const { result } = renderHook(() => usePlayerStats(tournament));
-    expect(result.current).toEqual([]);
+    expect(result.current.length).toBe(8);
+    expect(result.current.every(s => s.gamesPlayed === 0)).toBe(true);
   });
 
   it('returns stats for all players in in-progress tournament', () => {

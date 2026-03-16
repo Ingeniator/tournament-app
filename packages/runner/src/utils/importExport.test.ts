@@ -534,3 +534,42 @@ describe('cross-device: planner export → runner import', () => {
     expect(result.tournament!.config.targetDuration).toBe(90);
   });
 });
+
+describe('validateImport: unknown format rejected', () => {
+  it('rejects config with unregistered format string', () => {
+    const json = JSON.stringify({
+      _format: EXPORT_FORMAT,
+      tournament: {
+        id: 't1',
+        name: 'T',
+        phase: 'setup',
+        players: [],
+        rounds: [],
+        config: { format: 'unknown-format', courts: [], pointsPerMatch: 24, maxRounds: null },
+      },
+    });
+    const result = validateImport(json);
+    expect(result.error).not.toBeNull();
+    expect(result.error?.key).toBe('import.invalidConfig');
+    expect(result.tournament).toBeNull();
+  });
+});
+
+describe('validateImport: missing fields rejected', () => {
+  it('rejects tournament missing players array', () => {
+    const json = JSON.stringify({
+      _format: EXPORT_FORMAT,
+      tournament: {
+        id: 't1',
+        name: 'T',
+        phase: 'setup',
+        rounds: [],
+        config: { format: 'americano', courts: [], pointsPerMatch: 24, maxRounds: null },
+      },
+    });
+    const result = validateImport(json);
+    expect(result.error).not.toBeNull();
+    expect(result.error?.key).toBe('import.missingArrays');
+    expect(result.tournament).toBeNull();
+  });
+});

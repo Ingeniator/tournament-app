@@ -340,6 +340,75 @@ describe('computeMaldicionesAwards', () => {
     });
   });
 
+  describe('maldiciones awards with minimal card activity', () => {
+    it('computes escudo-de-oro with just 1 shielded curse in a single round', () => {
+      const t = makeTournament([
+        round(1, [match(['p1', 'p2'], ['p3', 'p4'], 10, 14, curse('los-mudos', 'team1', 'p3', true))]),
+      ]);
+      const awards = computeMaldicionesAwards(t);
+      const shield = findAward(awards, 'escudo-de-oro');
+      expect(shield).toBeTruthy();
+      expect(shield!.stat).toBe('1 block(s)');
+    });
+
+    it('computes el-brujo and el-maldito at exact minimum thresholds (2 curses)', () => {
+      const t = makeTournament([
+        round(1, [match(['p1', 'p2'], ['p3', 'p4'], 14, 10, curse('los-mudos', 'team1', 'p3'))]),
+        round(2, [match(['p1', 'p2'], ['p3', 'p4'], 16, 8, curse('el-espejo', 'team1', 'p4'))]),
+      ]);
+      const awards = computeMaldicionesAwards(t);
+      expect(findAward(awards, 'el-brujo')).toBeTruthy();
+      expect(findAward(awards, 'el-brujo')!.stat).toBe('2 effective curses');
+      expect(findAward(awards, 'el-maldito')).toBeTruthy();
+      expect(findAward(awards, 'el-maldito')!.stat).toBe('2 curses received');
+    });
+
+    it('computes karma at exact minimum threshold (2 backfires)', () => {
+      const t = makeTournament([
+        round(1, [match(['p1', 'p2'], ['p3', 'p4'], 8, 16, curse('los-mudos', 'team1', 'p3'))]),
+        round(2, [match(['p1', 'p2'], ['p3', 'p4'], 10, 14, curse('el-espejo', 'team1', 'p4'))]),
+      ]);
+      const awards = computeMaldicionesAwards(t);
+      expect(findAward(awards, 'karma')).toBeTruthy();
+      expect(findAward(awards, 'karma')!.stat).toBe('2 curses backfired');
+    });
+  });
+
+  describe('no maldiciones awards when feature is off', () => {
+    it('returns empty when maldiciones config is undefined', () => {
+      const t = makeTournament([
+        round(1, [match(['p1', 'p2'], ['p3', 'p4'], 14, 10, curse('los-mudos', 'team1', 'p3'))]),
+        round(2, [match(['p1', 'p2'], ['p5', 'p6'], 16, 8, curse('el-espejo', 'team1', 'p5'))]),
+      ]);
+      t.config.maldiciones = undefined;
+      expect(computeMaldicionesAwards(t)).toEqual([]);
+    });
+
+    it('returns empty when maldiciones enabled is false', () => {
+      const t = makeTournament([
+        round(1, [match(['p1', 'p2'], ['p3', 'p4'], 14, 10, curse('los-mudos', 'team1', 'p3'))]),
+        round(2, [match(['p1', 'p2'], ['p5', 'p6'], 16, 8, curse('el-espejo', 'team1', 'p5'))]),
+        round(3, [match(['p1', 'p2'], ['p3', 'p4'], 12, 12, curse('slow-motion', 'team1', 'p3', true))]),
+      ]);
+      t.config.maldiciones = { enabled: false, chaosLevel: 'hardcore' as const };
+      expect(computeMaldicionesAwards(t)).toEqual([]);
+    });
+
+    it('returns empty when maldiciones is absent despite rich curse data in matches', () => {
+      const t = makeTournament([
+        round(1, [match(['p1', 'p2'], ['p3', 'p4'], 14, 10, curse('los-mudos', 'team1', 'p3'))]),
+        round(2, [match(['p1', 'p2'], ['p5', 'p6'], 16, 8, curse('el-espejo', 'team1', 'p5'))]),
+        round(3, [match(['p1', 'p2'], ['p7', 'p8'], 18, 6, curse('slow-motion', 'team1', 'p7'))]),
+        round(4, [match(['p5', 'p6'], ['p3', 'p4'], 12, 10, curse('mano-muerta', 'team1', 'p3'))]),
+        round(5, [match(['p5', 'p6'], ['p7', 'p8'], 10, 14, curse('el-fantasma', 'team1', 'p7', true))]),
+      ]);
+      t.config.maldiciones = undefined;
+      const awards = computeMaldicionesAwards(t);
+      expect(awards).toEqual([]);
+      expect(awards).toHaveLength(0);
+    });
+  });
+
   describe('all awards together', () => {
     it('generates multiple awards from a rich tournament', () => {
       const t = makeTournament([

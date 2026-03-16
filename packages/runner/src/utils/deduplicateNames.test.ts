@@ -77,6 +77,24 @@ describe('deduplicateNames', () => {
     expect(result).toEqual([]);
   });
 
+  it('suffixes duplicate names with [2], [3]-style labels from the named pool', () => {
+    const players = [p('1', 'Alice'), p('2', 'Alice'), p('3', 'Alice')];
+    const result = deduplicateNames(players);
+    const names = result.map(r => r.name);
+    // All names should be unique
+    expect(new Set(names).size).toBe(3);
+    // Each deduplicated name should start with "Alice " and have a suffix
+    for (const name of names) {
+      expect(name.startsWith('Alice')).toBe(true);
+    }
+    // The suffixes should be from the named pool (e.g. "Jr.", "Sr.", "the Great")
+    const suffixes = names.filter(n => n !== 'Alice').map(n => n.replace('Alice ', ''));
+    expect(suffixes).toHaveLength(3); // all 3 get suffixed since all are bare "Alice"
+    for (const suffix of suffixes) {
+      expect(suffix.length).toBeGreaterThan(0);
+    }
+  });
+
   it('falls back to numeric suffix when all named suffixes are used', () => {
     // Create players where one already has each named suffix, exhausting the pool
     // The DEDUP_SUFFIXES array has 24 entries. We need >24 duplicates with same base.

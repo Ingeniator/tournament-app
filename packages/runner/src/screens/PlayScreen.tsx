@@ -4,6 +4,7 @@ import { useStandings } from '../hooks/useStandings';
 import { useClubStandings } from '../hooks/useClubStandings';
 import { useNominations } from '../hooks/useNominations';
 import { RoundCard } from '../components/rounds/RoundCard';
+import { MatchConfigProvider, type MatchConfig } from '../components/rounds/MatchConfigContext';
 import { StandingsTable, type GroupInfo, type RankLabelInfo } from '../components/standings/StandingsTable';
 import { ClubStandingsTable } from '../components/standings/ClubStandingsTable';
 import { NominationCard } from '../components/nominations/NominationCard';
@@ -177,6 +178,17 @@ export function PlayScreen() {
   const name = (id: string) => tournament?.players.find(p => p.id === id)?.name ?? '?';
 
   const maldicionesEnabled = !!tournament?.config.maldiciones?.enabled;
+
+  const matchConfig = useMemo<MatchConfig>(() => ({
+    players: tournament?.players ?? [],
+    courts: tournament?.config.courts ?? [],
+    pointsPerMatch: tournament?.config.pointsPerMatch ?? 24,
+    scoringMode: tournament?.config.scoringMode,
+    format: tournament?.config.format,
+    maldicionesEnabled,
+    maldicionesHands: tournament?.maldicionesHands,
+    teams: tournament?.teams,
+  }), [tournament?.players, tournament?.config.courts, tournament?.config.pointsPerMatch, tournament?.config.scoringMode, tournament?.config.format, maldicionesEnabled, tournament?.maldicionesHands, tournament?.teams]);
 
   // Equalize nomination card heights
   const nomCardRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -447,6 +459,7 @@ export function PlayScreen() {
   }
 
   return (
+    <MatchConfigProvider config={matchConfig}>
     <div className={styles.container}>
       {/* Progress line */}
       <div className={styles.progress}>
@@ -457,14 +470,6 @@ export function PlayScreen() {
       {activeRound && (
         <RoundCard
           round={activeRound}
-          players={tournament.players}
-          courts={tournament.config.courts}
-          pointsPerMatch={tournament.config.pointsPerMatch}
-          scoringMode={tournament.config.scoringMode}
-          format={tournament.config.format}
-          maldicionesEnabled={maldicionesEnabled}
-          maldicionesHands={tournament.maldicionesHands}
-          teams={tournament.teams}
           onScore={(matchId, score) =>
             dispatch({
               type: 'SET_MATCH_SCORE',
@@ -663,5 +668,6 @@ export function PlayScreen() {
 
       <Toast message={toastMessage} />
     </div>
+    </MatchConfigProvider>
   );
 }

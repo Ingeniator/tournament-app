@@ -1,20 +1,13 @@
-import type { Round, Player, Court, MatchScore, TournamentFormat, MaldicionesHands, Team } from '@padel/common';
+import type { Round, MatchScore } from '@padel/common';
 import { useTranslation } from '@padel/common';
+import { useMatchConfig } from './MatchConfigContext';
 import { MatchCard } from './MatchCard';
 import styles from './RoundCard.module.css';
 
 interface RoundCardProps {
   round: Round;
-  players: Player[];
-  courts: Court[];
-  pointsPerMatch: number;
-  scoringMode?: 'points' | 'games' | 'sets' | 'timed';
   readOnly?: boolean;
   editingMatchId?: string;
-  format?: TournamentFormat;
-  maldicionesEnabled?: boolean;
-  maldicionesHands?: MaldicionesHands;
-  teams?: Team[];
   onStartEdit?: (matchId: string) => void;
   onTapUnscored?: (matchId: string) => void;
   onScore: (matchId: string, score: MatchScore) => void;
@@ -24,7 +17,8 @@ interface RoundCardProps {
   onVeto?: (matchId: string) => void;
 }
 
-export function RoundCard({ round, players, courts, pointsPerMatch, scoringMode, readOnly, editingMatchId, format, maldicionesEnabled, maldicionesHands, teams, onStartEdit, onTapUnscored, onScore, onClear, onCast, onEscudo, onVeto }: RoundCardProps) {
+export function RoundCard({ round, readOnly, editingMatchId, onStartEdit, onTapUnscored, onScore, onClear, onCast, onEscudo, onVeto }: RoundCardProps) {
+  const { players } = useMatchConfig();
   const { t } = useTranslation();
   const name = (id: string) => players.find(p => p.id === id)?.name ?? '?';
   const scoredCount = round.matches.filter(m => m.score).length;
@@ -45,15 +39,7 @@ export function RoundCard({ round, players, courts, pointsPerMatch, scoringMode,
             <MatchCard
               key={match.id}
               match={match}
-              players={players}
-              courts={courts}
-              pointsPerMatch={pointsPerMatch}
-              scoringMode={scoringMode}
               readOnly={readOnly && !isEditing}
-              format={format}
-              maldicionesEnabled={maldicionesEnabled}
-              maldicionesHands={maldicionesHands}
-              teams={teams}
               onScore={score => onScore(match.id, score)}
               onClear={() => onClear(match.id)}
               onTapScore={

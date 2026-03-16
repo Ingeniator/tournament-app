@@ -20,6 +20,7 @@ vi.mock('./MatchCard', () => ({
 }));
 
 import { RoundCard } from './RoundCard';
+import { MatchConfigProvider, type MatchConfig } from './MatchConfigContext';
 
 const players: Player[] = [
   { id: 'p1', name: 'Alice' },
@@ -30,6 +31,8 @@ const players: Player[] = [
 ];
 
 const courts: Court[] = [{ id: 'c1', name: 'Court 1' }];
+
+const defaultConfig: MatchConfig = { players, courts, pointsPerMatch: 24 };
 
 function makeRound(overrides: Partial<Round> = {}): Round {
   return {
@@ -49,16 +52,17 @@ function makeRound(overrides: Partial<Round> = {}): Round {
   };
 }
 
+function renderWithConfig(ui: React.ReactElement) {
+  return render(<MatchConfigProvider config={defaultConfig}>{ui}</MatchConfigProvider>);
+}
+
 describe('RoundCard', () => {
   afterEach(cleanup);
 
   it('renders round title with number', () => {
-    render(
+    renderWithConfig(
       <RoundCard
         round={makeRound({ roundNumber: 3 })}
-        players={players}
-        courts={courts}
-        pointsPerMatch={24}
         onScore={vi.fn()}
         onClear={vi.fn()}
       />,
@@ -73,12 +77,9 @@ describe('RoundCard', () => {
         { id: 'm2', courtId: 'c1', team1: ['p1', 'p3'], team2: ['p2', 'p4'], score: null },
       ],
     });
-    render(
+    renderWithConfig(
       <RoundCard
         round={round}
-        players={players}
-        courts={courts}
-        pointsPerMatch={24}
         onScore={vi.fn()}
         onClear={vi.fn()}
       />,
@@ -93,12 +94,9 @@ describe('RoundCard', () => {
         { id: 'm2', courtId: 'c1', team1: ['p1', 'p3'], team2: ['p2', 'p4'], score: null },
       ],
     });
-    render(
+    renderWithConfig(
       <RoundCard
         round={round}
-        players={players}
-        courts={courts}
-        pointsPerMatch={24}
         onScore={vi.fn()}
         onClear={vi.fn()}
       />,
@@ -108,12 +106,9 @@ describe('RoundCard', () => {
   });
 
   it('renders sit-out names', () => {
-    render(
+    renderWithConfig(
       <RoundCard
         round={makeRound({ sitOuts: ['p5'] })}
-        players={players}
-        courts={courts}
-        pointsPerMatch={24}
         onScore={vi.fn()}
         onClear={vi.fn()}
       />,
@@ -122,12 +117,9 @@ describe('RoundCard', () => {
   });
 
   it('does not render sit-out section when no sit-outs', () => {
-    const { container } = render(
+    const { container } = renderWithConfig(
       <RoundCard
         round={makeRound({ sitOuts: [] })}
-        players={players}
-        courts={courts}
-        pointsPerMatch={24}
         onScore={vi.fn()}
         onClear={vi.fn()}
       />,

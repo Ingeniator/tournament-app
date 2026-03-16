@@ -6,10 +6,10 @@
 
 Entry point of the Runner PWA. Lets users start or resume a tournament:
 
-- **Create tournament** — pick a format from the 14 available, enter a name (or get a random one)
+- **Create tournament** — pick a format from the 14 available, enter a name (or get a random one); tournament is created in setup phase and auto-advanced to in-progress
 - **Resume tournament** — load saved tournament from localStorage (`padel-tournament-v1`)
-- **Import tournament** — from clipboard (JSON paste) or file upload; validates JSON schema
-- **Load from Planner** — when launched via Planner export, tournament auto-loads with schedule pre-generated (skips setup phase)
+- **Import tournament** — from clipboard (JSON paste) or file upload; validates JSON schema; setup/team-pairing phase tournaments auto-advance to in-progress
+- **Load from Planner** — when launched via Planner export, tournament auto-loads with schedule pre-generated
 
 ### Who Uses It
 
@@ -19,7 +19,7 @@ Tournament organizers at the venue, ready to run a live scoring session on a pho
 
 1. **Single tournament at a time** — localStorage holds one tournament; creating or importing overwrites the previous one
 2. **Import validation** — checks JSON schema, format compatibility, player count, court count
-3. **Planner-sourced tournaments skip setup** — schedule generated on load, phase jumps to in-progress
+3. **All tournaments auto-advance** — tournaments in setup/team-pairing phase auto-generate schedule and jump to in-progress on load
 4. **Resume shows tournament name + format** — so user knows what they're continuing
 5. **PWA install banner** — shown on iOS Safari when app is not installed
 
@@ -48,7 +48,7 @@ Feature: Runner Home
     When I enter "Weekend Padel" as name
     And I select "Americano" format
     And I tap Create
-    Then I land on the SetupScreen
+    Then the tournament is created and auto-advances to in-progress
     And the tournament name is "Weekend Padel"
     And the format is Americano
 
@@ -69,11 +69,11 @@ Feature: Runner Home
 
 ```gherkin
   Scenario: Resume saved tournament [PW] [e2e: home-screen + tournament-flow]
-    Given localStorage has a saved tournament "Friday Padel" in setup phase
+    Given localStorage has a saved tournament "Friday Padel"
     When I open the Runner app
     Then I see a "Resume" option showing "Friday Padel"
     When I tap Resume
-    Then I land on the SetupScreen with all saved data intact
+    Then I land on the Play/Log view with all saved data intact
 
   Scenario: Resume in-progress tournament [PW] [e2e: home-screen]
     Given localStorage has a tournament in in-progress phase
@@ -118,7 +118,7 @@ Feature: Runner Home
   Scenario: Planner export auto-loads with schedule [PW] [unit: exportToRunner.test]
     Given the Planner wrote tournament data to localStorage
     When I open the Runner app
-    Then the tournament loads in in-progress phase (setup skipped)
+    Then the tournament loads in in-progress phase
     And the schedule is pre-generated
     And all player names match the Planner registration
 ```

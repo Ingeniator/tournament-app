@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { saveTournament, loadTournament, saveUIState, loadUIState, saveSkin, loadSkin, isIOSInstallDismissed } from './persistence';
+import { tournamentReducer } from './tournamentReducer';
 import type { Tournament } from '@padel/common';
 import { DEFAULT_SKIN } from '@padel/common';
 
@@ -184,5 +185,35 @@ describe('isIOSInstallDismissed', () => {
     localStorageMock.getItem.mockImplementationOnce(() => { throw new Error('fail'); });
     const result = isIOSInstallDismissed();
     expect(result).toBe(false);
+  });
+});
+
+describe('resume setup-phase tournament', () => {
+  it('GENERATE_SCHEDULE transitions a loaded setup-phase tournament to in-progress', () => {
+    const setupTournament: Tournament = {
+      id: 't1',
+      name: 'Resumed',
+      config: {
+        format: 'americano',
+        pointsPerMatch: 24,
+        courts: [{ id: 'c1', name: 'Court 1' }, { id: 'c2', name: 'Court 2' }],
+        maxRounds: 3,
+      },
+      phase: 'setup',
+      players: Array.from({ length: 8 }, (_, i) => ({ id: `p${i + 1}`, name: `P${i + 1}` })),
+      rounds: [],
+      createdAt: 1000,
+      updatedAt: 1000,
+    };
+    // Simulate loading from persistence
+    storage.set('padel-tournament-v1', JSON.stringify(setupTournament));
+    const loaded = loadTournament();
+    expect(loaded).not.toBeNull();
+    expect(loaded!.phase).toBe('setup');
+
+    // Calling GENERATE_SCHEDULE should advance to in-progress
+    const result = tournamentReducer(loaded!, { type: 'GENERATE_SCHEDULE' });
+    expect(result!.phase).toBe('in-progress');
+    expect(result!.rounds.length).toBeGreaterThan(0);
   });
 });

@@ -98,12 +98,16 @@ function crossGroupStandingsRound(
   availableCourts: { id: string }[],
   standings: ReturnType<typeof calculateIndividualStandings>,
 ): Match[] {
-  const rankMap = new Map(standings.map(s => [s.playerId, s.rank]));
+  // Use average points per match for fair ranking across unequal groups
+  const avgMap = new Map(standings.map(s => [
+    s.playerId,
+    s.matchesPlayed > 0 ? s.totalPoints / s.matchesPlayed : 0,
+  ]));
   const rankedA = shuffle([...activeA]).sort(
-    (a, b) => (rankMap.get(a.id) ?? 999) - (rankMap.get(b.id) ?? 999)
+    (a, b) => (avgMap.get(b.id) ?? 0) - (avgMap.get(a.id) ?? 0)
   );
   const rankedB = shuffle([...activeB]).sort(
-    (a, b) => (rankMap.get(a.id) ?? 999) - (rankMap.get(b.id) ?? 999)
+    (a, b) => (avgMap.get(b.id) ?? 0) - (avgMap.get(a.id) ?? 0)
   );
 
   const matches: Match[] = [];
@@ -295,9 +299,42 @@ function buildMexicanoStrategy(crossGroupMode: boolean): TournamentStrategy {
     validateScore: commonValidateScore,
     calculateStandings(tournament: Tournament) {
       const competitors = strategy.getCompetitors(tournament);
-      return calculateCompetitorStandings(tournament, competitors, (side) =>
+      const entries = calculateCompetitorStandings(tournament, competitors, (side) =>
         side.map(pid => competitors.find(c => c.id === pid)!).filter(Boolean)
       );
+
+      // In cross-group mode, rank by average points per match to normalize
+      // for unequal group sizes (smaller group plays more, sits out less)
+      if (crossGroupMode && isCrossGroup(tournament.players)) {
+        entries.sort((a, b) => {
+          const avgA = a.matchesPlayed > 0 ? a.totalPoints / a.matchesPlayed : 0;
+          const avgB = b.matchesPlayed > 0 ? b.totalPoints / b.matchesPlayed : 0;
+          if (avgB !== avgA) return avgB - avgA;
+          if (b.pointDiff !== a.pointDiff) return b.pointDiff - a.pointDiff;
+          if (b.matchesWon !== a.matchesWon) return b.matchesWon - a.matchesWon;
+          return a.playerName.localeCompare(b.playerName);
+        });
+        entries.forEach((entry, i) => {
+          if (i === 0) {
+            entry.rank = 1;
+          } else {
+            const prev = entries[i - 1];
+            const avgCur = entry.matchesPlayed > 0 ? entry.totalPoints / entry.matchesPlayed : 0;
+            const avgPrev = prev.matchesPlayed > 0 ? prev.totalPoints / prev.matchesPlayed : 0;
+            if (
+              avgCur === avgPrev &&
+              entry.pointDiff === prev.pointDiff &&
+              entry.matchesWon === prev.matchesWon
+            ) {
+              entry.rank = prev.rank;
+            } else {
+              entry.rank = i + 1;
+            }
+          }
+        });
+      }
+
+      return entries;
     },
 
     getCompetitors(tournament: Tournament) {

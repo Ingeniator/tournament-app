@@ -14,6 +14,7 @@ vi.mock('./ScoreInput', () => ({
 }));
 
 import { MatchCard } from './MatchCard';
+import { MatchConfigProvider, type MatchConfig } from './MatchConfigContext';
 
 const players: Player[] = [
   { id: 'p1', name: 'Alice' },
@@ -38,16 +39,21 @@ function makeMatch(overrides: Partial<Match> = {}): Match {
   };
 }
 
+function makeConfig(overrides: Partial<MatchConfig> = {}): MatchConfig {
+  return { players, courts, pointsPerMatch: 24, ...overrides };
+}
+
+function renderWithConfig(ui: React.ReactElement, config: MatchConfig = makeConfig()) {
+  return render(<MatchConfigProvider config={config}>{ui}</MatchConfigProvider>);
+}
+
 describe('MatchCard', () => {
   afterEach(cleanup);
 
   it('renders player names', () => {
-    render(
+    renderWithConfig(
       <MatchCard
         match={makeMatch()}
-        players={players}
-        courts={courts}
-        pointsPerMatch={24}
         onScore={vi.fn()}
         onClear={vi.fn()}
       />,
@@ -59,12 +65,9 @@ describe('MatchCard', () => {
   });
 
   it('renders court name', () => {
-    render(
+    renderWithConfig(
       <MatchCard
         match={makeMatch()}
-        players={players}
-        courts={courts}
-        pointsPerMatch={24}
         onScore={vi.fn()}
         onClear={vi.fn()}
       />,
@@ -73,12 +76,9 @@ describe('MatchCard', () => {
   });
 
   it('renders score display in readOnly mode with score', () => {
-    render(
+    renderWithConfig(
       <MatchCard
         match={makeMatch({ score: { team1Points: 14, team2Points: 10 } })}
-        players={players}
-        courts={courts}
-        pointsPerMatch={24}
         readOnly
         onScore={vi.fn()}
         onClear={vi.fn()}
@@ -89,12 +89,9 @@ describe('MatchCard', () => {
   });
 
   it('renders ScoreInput when not readOnly', () => {
-    render(
+    renderWithConfig(
       <MatchCard
         match={makeMatch()}
-        players={players}
-        courts={courts}
-        pointsPerMatch={24}
         onScore={vi.fn()}
         onClear={vi.fn()}
       />,
@@ -103,16 +100,13 @@ describe('MatchCard', () => {
   });
 
   it('shows KOTC bonus for non-first court', () => {
-    render(
+    renderWithConfig(
       <MatchCard
         match={makeMatch({ courtId: 'c2' })}
-        players={players}
-        courts={courts}
-        pointsPerMatch={24}
-        format="king-of-the-court"
         onScore={vi.fn()}
         onClear={vi.fn()}
       />,
+      makeConfig({ format: 'king-of-the-court' }),
     );
     // Court 2 is index 1, bonus = 2 - 1 - 1 = 0 for 2 courts... let's check
     // Actually bonus = courts.length - 1 - courtIndex = 2 - 1 - 1 = 0
@@ -125,16 +119,13 @@ describe('MatchCard', () => {
       { id: 'c2', name: 'Court 2' },
       { id: 'c3', name: 'Court 3' },
     ];
-    render(
+    renderWithConfig(
       <MatchCard
         match={makeMatch({ courtId: 'c3' })}
-        players={players}
-        courts={threeCourts}
-        pointsPerMatch={24}
-        format="king-of-the-court"
         onScore={vi.fn()}
         onClear={vi.fn()}
       />,
+      makeConfig({ courts: threeCourts, format: 'king-of-the-court' }),
     );
     // Court 3 is index 2, bonus = 3 - 1 - 2 = 0 → no bonus
     // Court 1 is index 0 → crown emoji, bonus = 3-1-0 = 2
@@ -152,16 +143,13 @@ describe('MatchCard KOTC with 3 courts', () => {
   ];
 
   it('shows crown for first (top) court', () => {
-    render(
+    renderWithConfig(
       <MatchCard
         match={makeMatch({ courtId: 'c1' })}
-        players={players}
-        courts={threeCourts}
-        pointsPerMatch={24}
-        format="king-of-the-court"
         onScore={vi.fn()}
         onClear={vi.fn()}
       />,
+      makeConfig({ courts: threeCourts, format: 'king-of-the-court' }),
     );
     // courtIndex 0, bonus = 3-1-0 = 2
     expect(screen.getByText(/\u{1F451}/u)).toBeTruthy();
@@ -169,16 +157,13 @@ describe('MatchCard KOTC with 3 courts', () => {
   });
 
   it('shows bonus for middle court', () => {
-    render(
+    renderWithConfig(
       <MatchCard
         match={makeMatch({ courtId: 'c2' })}
-        players={players}
-        courts={threeCourts}
-        pointsPerMatch={24}
-        format="king-of-the-court"
         onScore={vi.fn()}
         onClear={vi.fn()}
       />,
+      makeConfig({ courts: threeCourts, format: 'king-of-the-court' }),
     );
     // courtIndex 1, bonus = 3-1-1 = 1
     expect(screen.getByText(/\+1 bonus pts/)).toBeTruthy();

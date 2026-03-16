@@ -1,6 +1,7 @@
 import { memo, useState } from 'react';
-import type { Match, MatchScore, Player, Court, TournamentFormat, MaldicionesHands, Team } from '@padel/common';
+import type { Match, MatchScore } from '@padel/common';
 import { useTranslation } from '@padel/common';
+import { useMatchConfig } from './MatchConfigContext';
 import { ScoreInput } from './ScoreInput';
 import { CurseLabel } from '../maldiciones/CurseLabel';
 import { CurseCardPicker } from '../maldiciones/CurseCardPicker';
@@ -10,15 +11,7 @@ import styles from './MatchCard.module.css';
 
 interface MatchCardProps {
   match: Match;
-  players: Player[];
-  courts: Court[];
-  pointsPerMatch: number;
-  scoringMode?: 'points' | 'games' | 'sets' | 'timed';
   readOnly?: boolean;
-  format?: TournamentFormat;
-  maldicionesEnabled?: boolean;
-  maldicionesHands?: MaldicionesHands;
-  teams?: Team[];
   onScore: (score: MatchScore) => void;
   onClear: () => void;
   onTapScore?: () => void;
@@ -27,7 +20,8 @@ interface MatchCardProps {
   onVeto?: () => void;
 }
 
-export const MatchCard = memo(function MatchCard({ match, players, courts, pointsPerMatch, scoringMode, readOnly, format, maldicionesEnabled, maldicionesHands, teams, onScore, onClear, onTapScore, onCast, onEscudo, onVeto }: MatchCardProps) {
+export const MatchCard = memo(function MatchCard({ match, readOnly, onScore, onClear, onTapScore, onCast, onEscudo, onVeto }: MatchCardProps) {
+  const { players, courts, pointsPerMatch, scoringMode, format, maldicionesEnabled, maldicionesHands, teams } = useMatchConfig();
   const { t } = useTranslation();
   const [pickingSide, setPickingSide] = useState<'team1' | 'team2' | null>(null);
 

@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTournament } from '../hooks/useTournament';
 import { usePlayerStats } from '../hooks/usePlayerStats';
 import { useDistributionStats } from '../hooks/useDistributionStats';
 import { RoundCard } from '../components/rounds/RoundCard';
+import { MatchConfigProvider, type MatchConfig } from '../components/rounds/MatchConfigContext';
 import { PlayerStats } from '../components/stats/PlayerStats';
 import { DistributionStats } from '../components/stats/DistributionStats';
 import { Button, Modal, useTranslation } from '@padel/common';
@@ -26,6 +27,14 @@ export function LogScreen({ onNavigate }: LogScreenProps) {
   const [optimizeElapsed, setOptimizeElapsed] = useState<number | null>(null);
   const [optimalBackup, setOptimalBackup] = useState<Round[] | null>(null);
   const optimizeCtrlRef = useRef<{ cancelled: boolean }>({ cancelled: false });
+
+  const matchConfig = useMemo<MatchConfig>(() => ({
+    players: tournament?.players ?? [],
+    courts: tournament?.config.courts ?? [],
+    pointsPerMatch: tournament?.config.pointsPerMatch ?? 24,
+    scoringMode: tournament?.config.scoringMode,
+    format: tournament?.config.format,
+  }), [tournament?.players, tournament?.config.courts, tournament?.config.pointsPerMatch, tournament?.config.scoringMode, tournament?.config.format]);
 
   // Cancel optimize loop on unmount
   useEffect(() => {
@@ -219,6 +228,7 @@ export function LogScreen({ onNavigate }: LogScreenProps) {
   };
 
   return (
+    <MatchConfigProvider config={matchConfig}>
     <div className={styles.container}>
       {tournament.rounds.length === 0 && (
         <div className={styles.empty}>{t('log.noRounds')}</div>
@@ -228,11 +238,6 @@ export function LogScreen({ onNavigate }: LogScreenProps) {
         <RoundCard
           key={round.id}
           round={round}
-          players={tournament.players}
-          courts={tournament.config.courts}
-          pointsPerMatch={tournament.config.pointsPerMatch}
-          scoringMode={tournament.config.scoringMode}
-          format={tournament.config.format}
           readOnly={editingMatch?.roundId !== round.id}
           editingMatchId={editingMatch?.roundId === round.id ? editingMatch.matchId : undefined}
           onStartEdit={(matchId) => setEditingMatch({ roundId: round.id, matchId })}
@@ -321,5 +326,6 @@ export function LogScreen({ onNavigate }: LogScreenProps) {
         />
       )}
     </div>
+    </MatchConfigProvider>
   );
 }

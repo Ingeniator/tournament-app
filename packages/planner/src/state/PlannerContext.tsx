@@ -139,7 +139,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
 
   const setSkin = useCallback((s: SkinId) => {
     rawSetSkin(s);
-    updateUserSkin(s).catch(() => {});
+    updateUserSkin(s).catch(e => console.warn('Failed to save skin:', e));
     try { localStorage.setItem(SKIN_KEY, s); } catch {}
   }, [rawSetSkin, updateUserSkin]);
 
@@ -153,7 +153,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       const chatUpdates: Record<string, unknown> = {};
       if (updates.name !== undefined) chatUpdates[`chatRooms/${chatInstance}/tournaments/${tournamentId}/name`] = updates.name;
       if (updates.date !== undefined) chatUpdates[`chatRooms/${chatInstance}/tournaments/${tournamentId}/date`] = updates.date ?? null;
-      firebaseUpdate(ref(db), chatUpdates).catch(() => {});
+      firebaseUpdate(ref(db), chatUpdates).catch(e => console.warn('Failed to sync chat room:', e));
     }
   }, [updateTournament, chatInstance, tournamentId]);
 
@@ -205,7 +205,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     if (!tournamentId || !chatInstance || !uid) return;
     if (linkedRef.current === tournamentId) return;
     linkedRef.current = tournamentId;
-    linkTournamentToChat(tournamentId, chatInstance, uid).catch(() => {});
+    linkTournamentToChat(tournamentId, chatInstance, uid).catch(e => console.warn('Failed to link tournament to chat:', e));
   }, [tournamentId, chatInstance, uid]);
 
   // Fetch organizer name for active tournament
@@ -230,26 +230,22 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
 
   const createTournament = useCallback(async (name: string) => {
     if (!uid) return;
-    const id = await createInDb(name, uid, locale, telegramUser?.username);
+    const chat = chatInstance ? { chatInstance, organizerName: userName ?? undefined } : undefined;
+    const id = await createInDb(name, uid, locale, telegramUser?.username, chat);
     setTournamentId(id);
     setScreen('organizer');
-    if (chatInstance) {
-      linkTournamentToChat(id, chatInstance, uid).catch(() => {});
-    }
-  }, [uid, locale, telegramUser, chatInstance, createInDb]);
+  }, [uid, locale, telegramUser, chatInstance, userName, createInDb]);
 
   const importTournament = useCallback(async (
     tournamentData: Partial<PlannerTournament>,
     players: Array<{ name: string; confirmed?: boolean; group?: 'A' | 'B'; clubId?: string; rankSlot?: number; partnerName?: string; telegramUsername?: string }>,
   ) => {
     if (!uid) return;
-    const id = await importInDb(tournamentData, players, uid, locale, telegramUser?.username);
+    const chat = chatInstance ? { chatInstance, organizerName: userName ?? undefined } : undefined;
+    const id = await importInDb(tournamentData, players, uid, locale, telegramUser?.username, chat);
     setTournamentId(id);
     setScreen('organizer');
-    if (chatInstance) {
-      linkTournamentToChat(id, chatInstance, uid).catch(() => {});
-    }
-  }, [uid, locale, telegramUser, chatInstance, importInDb]);
+  }, [uid, locale, telegramUser, chatInstance, userName, importInDb]);
 
   const importEvent = useCallback(async (data: {
     name: string;
@@ -265,14 +261,15 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     // Create all tournaments first
     const tournamentLinks: Array<{ tournamentId: string; weight: number }> = [];
     for (const t of data.tournaments) {
-      const id = await importInDb(t.tournament, t.players, uid, locale, telegramUser?.username);
+      const chat = chatInstance ? { chatInstance, organizerName: userName ?? undefined } : undefined;
+      const id = await importInDb(t.tournament, t.players, uid, locale, telegramUser?.username, chat);
       tournamentLinks.push({ tournamentId: id, weight: t.weight });
     }
     // Create the event linking them
     const eventId = await importEventInDb(data.name, data.date, uid, data.description, tournamentLinks);
     setActiveEventId(eventId);
     setScreen('event-detail');
-  }, [uid, locale, telegramUser, importInDb, importEventInDb]);
+  }, [uid, locale, telegramUser, chatInstance, userName, importInDb, importEventInDb]);
 
   const loadByCode = useCallback(async (code: string): Promise<boolean> => {
     const id = await loadByCodeFromDb(code);

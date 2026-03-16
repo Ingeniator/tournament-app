@@ -122,6 +122,37 @@ test.describe('Play Screen', () => {
     await expect(page.getByText(/12:\d+/)).toBeVisible();
   });
 
+  test('edit previously scored match', async ({ page }) => {
+    // Need multiple matches per round so a scored match stays in the active round.
+    await clearState(page);
+    await createTournament(page);
+    await addPlayers(page, ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry']);
+    await page.getByRole('button', { name: '+ Add court' }).click();
+    await generateSchedule(page);
+    await navigateToTab(page, 'Play');
+
+    // Score one match with 15 points
+    await scoreMatch(page, 15);
+
+    // The scored match should display "15" and "9"
+    await expect(page.getByText(/15\s*:\s*9/)).toBeVisible();
+
+    // Tap the "Edit score" button to re-open the picker
+    await page.getByRole('button', { name: 'Edit score' }).first().click();
+
+    // The picker should open — click Clear to reset the score
+    await page.getByRole('button', { name: 'Clear' }).click();
+
+    // All dash buttons should be restored (2 matches × 2 sides = 4)
+    await expect(page.getByRole('button', { name: '–' })).toHaveCount(4);
+
+    // Re-score with a different value (12 points)
+    await scoreMatch(page, 12);
+
+    // Verify the new score is shown
+    await expect(page.getByText(/12\s*:\s*12/)).toBeVisible();
+  });
+
   test('new button resets tournament', async ({ page }) => {
     page.on('dialog', dialog => dialog.accept());
     await page.getByRole('button', { name: 'New' }).click();

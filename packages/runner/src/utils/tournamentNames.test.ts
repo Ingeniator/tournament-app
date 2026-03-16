@@ -8,6 +8,14 @@ describe('randomTournamentName', () => {
     expect(name.length).toBeGreaterThan(0);
   });
 
+  it('always returns a non-empty string across multiple calls', () => {
+    for (let i = 0; i < 100; i++) {
+      const name = randomTournamentName();
+      expect(typeof name).toBe('string');
+      expect(name.length).toBeGreaterThan(0);
+    }
+  });
+
   it('returns different names over many calls (not always the same)', () => {
     const names = new Set<string>();
     for (let i = 0; i < 50; i++) {

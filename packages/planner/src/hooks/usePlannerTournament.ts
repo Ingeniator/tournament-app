@@ -92,7 +92,13 @@ export function usePlannerTournament(tournamentId: string | null) {
     return unsubscribe;
   }, [tournamentId]);
 
-  const createTournament = useCallback(async (name: string, organizerId: string, locale?: string, telegramUsername?: string): Promise<string> => {
+  const createTournament = useCallback(async (
+    name: string,
+    organizerId: string,
+    locale?: string,
+    telegramUsername?: string,
+    chatLink?: { chatInstance: string; organizerName?: string },
+  ): Promise<string> => {
     if (!db) throw new Error('Firebase not configured');
     const id = generateId();
     const code = await generateUniqueCode();
@@ -116,6 +122,17 @@ export function usePlannerTournament(tournamentId: string | null) {
     if (telegramUsername) {
       updates[`telegramUsers/${telegramUsername}/organized/${id}`] = true;
       updates[`telegramUsers/${telegramUsername}/currentUid`] = organizerId;
+    }
+    if (chatLink) {
+      updates[`chatRooms/${chatLink.chatInstance}/tournaments/${id}`] = {
+        name,
+        code,
+        organizerId,
+        ...(chatLink.organizerName && { organizerName: chatLink.organizerName }),
+        linkedAt: Date.now(),
+        linkedBy: organizerId,
+      };
+      updates[`tournaments/${id}/chatRooms/${chatLink.chatInstance}`] = true;
     }
     await firebaseUpdate(ref(db), updates);
     return id;
@@ -175,6 +192,7 @@ export function usePlannerTournament(tournamentId: string | null) {
     organizerId: string,
     locale?: string,
     telegramUsername?: string,
+    chatLink?: { chatInstance: string; organizerName?: string },
   ): Promise<string> => {
     if (!db) throw new Error('Firebase not configured');
     const id = generateId();
@@ -236,6 +254,18 @@ export function usePlannerTournament(tournamentId: string | null) {
     if (telegramUsername) {
       updates[`telegramUsers/${telegramUsername}/organized/${id}`] = true;
       updates[`telegramUsers/${telegramUsername}/currentUid`] = organizerId;
+    }
+    if (chatLink) {
+      updates[`chatRooms/${chatLink.chatInstance}/tournaments/${id}`] = {
+        name: tournament.name,
+        ...(tournament.date && { date: tournament.date }),
+        code,
+        organizerId,
+        ...(chatLink.organizerName && { organizerName: chatLink.organizerName }),
+        linkedAt: Date.now(),
+        linkedBy: organizerId,
+      };
+      updates[`tournaments/${id}/chatRooms/${chatLink.chatInstance}`] = true;
     }
     await firebaseUpdate(ref(db), updates);
     return id;

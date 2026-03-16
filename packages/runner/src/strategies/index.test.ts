@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getStrategy, registerStrategy } from './index';
+import { getStrategy, registerStrategy, getRegisteredFormats } from './index';
 
 describe('getStrategy', () => {
   it('returns americano strategy', () => {
@@ -17,6 +17,33 @@ describe('getStrategy', () => {
   it('throws for unknown format', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(() => getStrategy('unknown' as any)).toThrow('No strategy registered for format: unknown');
+  });
+});
+
+describe('getRegisteredFormats', () => {
+  it('returns all expected formats', () => {
+    const formats = getRegisteredFormats();
+    const expected = [
+      'americano',
+      'mexicano',
+      'mixicano',
+      'team-americano',
+      'team-mexicano',
+      'mixed-team-americano',
+      'mixed-team-mexicano',
+      'king-of-the-court',
+      'mixed-king-of-the-court',
+      'club-americano',
+      'club-mexicano',
+      'club-ranked',
+      'club-team-americano',
+      'club-team-mexicano',
+      'mixed-americano',
+    ];
+    for (const fmt of expected) {
+      expect(formats).toContain(fmt);
+    }
+    expect(formats.length).toBe(expected.length);
   });
 });
 
