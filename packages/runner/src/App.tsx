@@ -13,6 +13,7 @@ import { useRunnerTheme } from './state/ThemeContext';
 import { translations } from './i18n';
 import { saveUIState, loadUIState } from './state/persistence';
 import { IOSInstallBanner } from './components/IOSInstallBanner';
+import { UpdatePrompt } from './components/UpdatePrompt';
 
 function AppContent() {
   const { tournament, dispatch, saveError } = useTournament();
@@ -91,6 +92,7 @@ export function App() {
           <TournamentProvider>
             <AppContent />
             <IOSInstallBanner />
+            <UpdatePrompt />
           </TournamentProvider>
         </ThemeProvider>
       </I18nProvider>

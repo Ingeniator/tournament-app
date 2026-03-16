@@ -171,6 +171,70 @@ describe('usePlayers', () => {
     });
   });
 
+  describe('registerPlayer error paths', () => {
+    it('propagates error when telegram transaction rejects', async () => {
+      mockRunTransaction.mockRejectedValueOnce(new Error('Network error'));
+      const { result } = renderHook(() => usePlayers('t1'));
+
+      await expect(
+        act(async () => {
+          await result.current.registerPlayer('Alice', 'uid1', 'alice_tg');
+        }),
+      ).rejects.toThrow('Network error');
+    });
+
+    it('propagates error when player transaction rejects (no telegram)', async () => {
+      mockRunTransaction.mockRejectedValueOnce(new Error('PERMISSION_DENIED'));
+      const { result } = renderHook(() => usePlayers('t1'));
+
+      await expect(
+        act(async () => {
+          await result.current.registerPlayer('Alice', 'uid1');
+        }),
+      ).rejects.toThrow('PERMISSION_DENIED');
+    });
+
+    it('rolls back telegram index when UID transaction fails', async () => {
+      store = {
+        tournaments: { t1: { players: { uid1: { name: 'Existing', timestamp: 1000 } } } },
+      };
+
+      const { result } = renderHook(() => usePlayers('t1'));
+
+      await act(async () => {
+        await result.current.registerPlayer('Alice', 'uid1', 'alice_tg');
+      });
+
+      // Telegram transaction committed, but UID transaction aborted
+      expect(mockRunTransaction).toHaveBeenCalledTimes(2);
+      // Rollback: set telegram index to null
+      expect(mockSet).toHaveBeenCalledWith(
+        expect.objectContaining({ _path: 'telegramUsers/alice_tg/registrations/t1' }),
+        null,
+      );
+      // Should NOT write remaining indexes
+      expect(mockUpdate).not.toHaveBeenCalled();
+    });
+
+    it('skips duplicate telegram registration', async () => {
+      store = {
+        telegramUsers: { alice_tg: { registrations: { t1: true } } },
+      };
+
+      const { result } = renderHook(() => usePlayers('t1'));
+
+      await act(async () => {
+        await result.current.registerPlayer('Alice', 'uid1', 'alice_tg');
+      });
+
+      // First transaction not committed (telegram index exists)
+      expect(mockRunTransaction).toHaveBeenCalledTimes(1);
+      // No further writes
+      expect(mockSet).not.toHaveBeenCalled();
+      expect(mockUpdate).not.toHaveBeenCalled();
+    });
+  });
+
   describe('removePlayer', () => {
     it('removes 2 paths for web player (no telegram)', async () => {
       store = {
@@ -210,6 +274,81 @@ describe('usePlayers', () => {
         'users/uid1/registrations/t1': null,
         'telegramUsers/alice_tg/registrations/t1': null,
       });
+    });
+
+    it('propagates error when get fails during removePlayer', async () => {
+      mockGet.mockRejectedValueOnce(new Error('Network error'));
+      const { result } = renderHook(() => usePlayers('t1'));
+
+      await expect(
+        act(async () => {
+          await result.current.removePlayer('uid1');
+        }),
+      ).rejects.toThrow('Network error');
+    });
+
+    it('propagates error when update fails during removePlayer', async () => {
+      store = {
+        tournaments: { t1: { players: { uid1: { name: 'Alice', timestamp: 1000 } } } },
+      };
+      mockUpdate.mockRejectedValueOnce(new Error('PERMISSION_DENIED'));
+      const { result } = renderHook(() => usePlayers('t1'));
+
+      await expect(
+        act(async () => {
+          await result.current.removePlayer('uid1');
+        }),
+      ).rejects.toThrow('PERMISSION_DENIED');
+    });
+  });
+
+  describe('onValue listener errors', () => {
+    it('sets error state when listener fails', () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      // Override mockOnValue to capture error callback
+      type ErrorCb = (err: Error) => void;
+      let errorCb: ErrorCb | undefined;
+      mockOnValue.mockImplementationOnce((_refObj: unknown, _cb: unknown, errCb?: ErrorCb) => {
+        errorCb = errCb;
+        return vi.fn();
+      });
+
+      const { result } = renderHook(() => usePlayers('t1'));
+
+      act(() => {
+        errorCb?.(new Error('Permission denied'));
+      });
+
+      expect(result.current.error).toBe('Permission denied');
+      expect(result.current.loading).toBe(false);
+      expect(warnSpy).toHaveBeenCalledWith('Players listener failed:', 'Permission denied');
+      warnSpy.mockRestore();
+    });
+  });
+
+  describe('addPlayer error paths', () => {
+    it('propagates error when set fails', async () => {
+      mockSet.mockRejectedValueOnce(new Error('Quota exceeded'));
+      const { result } = renderHook(() => usePlayers('t1'));
+
+      await expect(
+        act(async () => {
+          await result.current.addPlayer('Alice');
+        }),
+      ).rejects.toThrow('Quota exceeded');
+    });
+  });
+
+  describe('bulkAddPlayers error paths', () => {
+    it('propagates error when update fails', async () => {
+      mockUpdate.mockRejectedValueOnce(new Error('Write failed'));
+      const { result } = renderHook(() => usePlayers('t1'));
+
+      await expect(
+        act(async () => {
+          await result.current.bulkAddPlayers(['Alice', 'Bob']);
+        }),
+      ).rejects.toThrow('Write failed');
     });
   });
 

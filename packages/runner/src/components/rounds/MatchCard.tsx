@@ -104,7 +104,7 @@ export const MatchCard = memo(function MatchCard({ match, readOnly, onScore, onC
                 />
               ) : team1CanCast ? (
                 <button className={styles.castBtn} onClick={() => setPickingSide('team1')}>
-                  {'\u2620\uFE0F'} <span className={styles.castCount}>{team1Hand!.cardIds.length}</span>
+                  {'\u2620\uFE0F'} <span className={styles.castCount}>{team1Hand?.cardIds.length ?? 0}</span>
                 </button>
               ) : null}
             </div>
@@ -127,7 +127,7 @@ export const MatchCard = memo(function MatchCard({ match, readOnly, onScore, onC
                 />
               ) : team2CanCast ? (
                 <button className={styles.castBtn} onClick={() => setPickingSide('team2')}>
-                  {'\u2620\uFE0F'} <span className={styles.castCount}>{team2Hand!.cardIds.length}</span>
+                  {'\u2620\uFE0F'} <span className={styles.castCount}>{team2Hand?.cardIds.length ?? 0}</span>
                 </button>
               ) : null}
             </div>

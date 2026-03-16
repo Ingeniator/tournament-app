@@ -6,12 +6,12 @@
  * fully-rendered HTML back to disk so Google sees real content instead
  * of an empty <div id="root"></div>.
  *
- * Usage:  node scripts/prerender.mjs
+ * Usage:  npx tsx scripts/prerender.ts
  * Requires: built landing output in packages/landing/dist/
  */
 
 import { chromium } from 'playwright';
-import { createServer } from 'http';
+import { createServer, type IncomingMessage, type ServerResponse, type Server } from 'http';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join, extname } from 'path';
 
@@ -26,9 +26,9 @@ const ROUTES = [
   '/awards',
   '/maldiciones',
   '/club',
-];
+] as const;
 
-const MIME_TYPES = {
+const MIME_TYPES: Record<string, string> = {
   '.html': 'text/html',
   '.js': 'application/javascript',
   '.css': 'text/css',
@@ -39,10 +39,11 @@ const MIME_TYPES = {
 };
 
 /** Minimal static file server for the built landing dist. */
-function startServer() {
+function startServer(): Promise<Server> {
   return new Promise((resolve) => {
-    const server = createServer((req, res) => {
-      let filePath = join(DIST, req.url === '/' ? 'index.html' : req.url);
+    const server = createServer((req: IncomingMessage, res: ServerResponse) => {
+      const url = req.url ?? '/';
+      let filePath = join(DIST, url === '/' ? 'index.html' : url);
 
       // If path is a directory, try index.html inside it
       if (!extname(filePath) && existsSync(join(filePath, 'index.html'))) {
@@ -69,7 +70,7 @@ function startServer() {
   });
 }
 
-async function prerender() {
+async function prerender(): Promise<void> {
   console.log(`Prerendering ${ROUTES.length} landing pages...`);
 
   const server = await startServer();
@@ -106,7 +107,7 @@ async function prerender() {
   console.log('Prerendering complete!');
 }
 
-prerender().catch((err) => {
+prerender().catch((err: unknown) => {
   console.error('Prerender failed:', err);
   // Don't fail the build — noscript content is the fallback
   process.exit(0);

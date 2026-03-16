@@ -490,7 +490,8 @@ function generateRoundsWithRetry(
     if (bestScore[0] === 0 && bestScore[1] <= 1 && bestScore[2] === 0 && bestScore[3] <= 1) break;
   } while (performance.now() < deadline);
 
-  return bestResult!;
+  // do-while guarantees at least one iteration, so bestResult is always assigned
+  return bestResult as ScheduleResult;
 }
 
 function validateCrossGroupSetup(players: Player[], config: TournamentConfig): string[] {

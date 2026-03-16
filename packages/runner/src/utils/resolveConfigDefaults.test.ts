@@ -23,16 +23,35 @@ describe('resolveConfigDefaults', () => {
     it('resolves default points when set to 0', () => {
       const config = makeConfig({ pointsPerMatch: 0 });
       const resolved = resolveConfigDefaults(config, 8);
-      expect(resolved.pointsPerMatch).toBeGreaterThanOrEqual(16);
-      expect(resolved.pointsPerMatch).toBeLessThanOrEqual(30);
+      expect(resolved.pointsPerMatch).toBe(18);
+      expect(resolved.maxRounds).toBe(10);
     });
 
-    it('default points are between 16 and 30', () => {
+    it('resolves correct points for each player count', () => {
+      const expected: Record<number, { pts: number; rounds: number }> = {
+        4: { pts: 18, rounds: 10 },
+        5: { pts: 18, rounds: 10 },
+        6: { pts: 20, rounds: 9 },
+        7: { pts: 28, rounds: 7 },
+        8: { pts: 18, rounds: 10 },
+        9: { pts: 20, rounds: 9 },
+        10: { pts: 18, rounds: 10 },
+        11: { pts: 18, rounds: 10 },
+        12: { pts: 20, rounds: 9 },
+        13: { pts: 18, rounds: 10 },
+        14: { pts: 28, rounds: 7 },
+        15: { pts: 18, rounds: 10 },
+        16: { pts: 24, rounds: 8 },
+        17: { pts: 18, rounds: 10 },
+        18: { pts: 20, rounds: 9 },
+        19: { pts: 18, rounds: 10 },
+        20: { pts: 18, rounds: 10 },
+      };
       for (let n = 4; n <= 20; n++) {
         const config = makeConfig({ pointsPerMatch: 0 });
         const resolved = resolveConfigDefaults(config, n);
-        expect(resolved.pointsPerMatch).toBeGreaterThanOrEqual(16);
-        expect(resolved.pointsPerMatch).toBeLessThanOrEqual(30);
+        expect(resolved.pointsPerMatch).toBe(expected[n].pts);
+        expect(resolved.maxRounds).toBe(expected[n].rounds);
       }
     });
   });
@@ -47,17 +66,20 @@ describe('resolveConfigDefaults', () => {
     it('calculates default maxRounds based on player count', () => {
       const config = makeConfig({ maxRounds: null });
       const resolved = resolveConfigDefaults(config, 8);
-      expect(resolved.maxRounds).toBeGreaterThan(0);
+      expect(resolved.maxRounds).toBe(10);
     });
 
-    it('returns more rounds for more players (proportional courts)', () => {
-      // Use proportional courts so sit-out constraints don't dominate
+    it('returns correct values for different court/player combos', () => {
       const small = resolveConfigDefaults(makeConfig({ maxRounds: null }), 4);
+      expect(small.maxRounds).toBe(10);
+      expect(small.pointsPerMatch).toBe(18);
+
       const large = resolveConfigDefaults(makeConfig({
         maxRounds: null,
         courts: [{ id: 'c1', name: 'C1' }, { id: 'c2', name: 'C2' }, { id: 'c3', name: 'C3' }, { id: 'c4', name: 'C4' }],
       }), 16);
-      expect(large.maxRounds!).toBeGreaterThanOrEqual(small.maxRounds!);
+      expect(large.maxRounds).toBe(10);
+      expect(large.pointsPerMatch).toBe(18);
     });
   });
 
@@ -90,24 +112,26 @@ describe('resolveConfigDefaults', () => {
       expect(resolved.pointsPerMatch).toBe(resolvedExplicit.pointsPerMatch);
     });
 
-    it('allows more rounds with longer duration', () => {
+    it('scales rounds with duration', () => {
       const short = resolveConfigDefaults(makeConfig({ targetDuration: 60 }), 8);
-      const long = resolveConfigDefaults(makeConfig({ targetDuration: 180 }), 8);
-      expect(long.maxRounds!).toBeGreaterThanOrEqual(short.maxRounds!);
-    });
+      expect(short.maxRounds).toBe(4);
+      expect(short.pointsPerMatch).toBe(24);
 
-    it('reduces rounds for shorter duration', () => {
       const standard = resolveConfigDefaults(makeConfig({ targetDuration: 120 }), 8);
-      const short = resolveConfigDefaults(makeConfig({ targetDuration: 60 }), 8);
-      expect(short.maxRounds!).toBeLessThanOrEqual(standard.maxRounds!);
+      expect(standard.maxRounds).toBe(10);
+      expect(standard.pointsPerMatch).toBe(18);
+
+      const long = resolveConfigDefaults(makeConfig({ targetDuration: 180 }), 8);
+      expect(long.maxRounds).toBe(12);
+      expect(long.pointsPerMatch).toBe(24);
     });
   });
 
   describe('edge cases', () => {
     it('handles 4 players (minimum)', () => {
       const resolved = resolveConfigDefaults(makeConfig(), 4);
-      expect(resolved.maxRounds).toBeGreaterThan(0);
-      expect(resolved.pointsPerMatch).toBeGreaterThan(0);
+      expect(resolved.maxRounds).toBe(10);
+      expect(resolved.pointsPerMatch).toBe(18);
     });
 
     it('handles large player count', () => {
@@ -115,8 +139,8 @@ describe('resolveConfigDefaults', () => {
         courts: Array.from({ length: 5 }, (_, i) => ({ id: `c${i}`, name: `C${i}` })),
       });
       const resolved = resolveConfigDefaults(config, 20);
-      expect(resolved.maxRounds).toBeGreaterThan(0);
-      expect(resolved.pointsPerMatch).toBeGreaterThan(0);
+      expect(resolved.maxRounds).toBe(10);
+      expect(resolved.pointsPerMatch).toBe(18);
     });
 
     it('handles 2 courts with 8 players', () => {
@@ -126,15 +150,15 @@ describe('resolveConfigDefaults', () => {
         maxRounds: null,
       });
       const resolved = resolveConfigDefaults(config, 8);
-      expect(resolved.maxRounds).toBeGreaterThan(0);
+      expect(resolved.maxRounds).toBe(10);
+      expect(resolved.pointsPerMatch).toBe(18);
     });
 
     it('handles 0 players (playersPerRound = 0)', () => {
       const config = makeConfig({ pointsPerMatch: 0, maxRounds: null });
       const resolved = resolveConfigDefaults(config, 0);
-      // Should not crash, should return valid config
-      expect(resolved.maxRounds).toBeGreaterThanOrEqual(1);
-      expect(resolved.pointsPerMatch).toBeGreaterThanOrEqual(16);
+      expect(resolved.maxRounds).toBe(10);
+      expect(resolved.pointsPerMatch).toBe(18);
     });
 
     it('handles explicit maxRounds of 0 (effectiveRounds = 0)', () => {
@@ -153,31 +177,63 @@ describe('resolveConfigDefaults', () => {
 
     it('fills 120 min target for 6 players on 1 court', () => {
       const resolved = resolveConfigDefaults(makeConfig({ targetDuration: 120 }), 6);
+      expect(resolved.pointsPerMatch).toBe(20);
+      expect(resolved.maxRounds).toBe(9);
       const est = estimateMinutes(resolved);
-      expect(est).toBeGreaterThanOrEqual(100);
-      expect(est).toBeLessThanOrEqual(120);
+      expect(est).toBe(117); // 9 * (20*0.5+3) = 9 * 13 = 117
     });
 
     it('fills 180 min target for 6 players on 1 court', () => {
       const resolved = resolveConfigDefaults(makeConfig({ targetDuration: 180 }), 6);
+      expect(resolved.pointsPerMatch).toBe(18);
+      expect(resolved.maxRounds).toBe(15);
       const est = estimateMinutes(resolved);
-      expect(est).toBeGreaterThanOrEqual(160);
-      expect(est).toBeLessThanOrEqual(180);
+      expect(est).toBe(180); // 15 * (18*0.5+3) = 15 * 12 = 180
     });
 
     it('fills 90 min target for 10 players on 1 court', () => {
       const resolved = resolveConfigDefaults(makeConfig({ targetDuration: 90 }), 10);
+      expect(resolved.pointsPerMatch).toBe(30);
+      expect(resolved.maxRounds).toBe(5);
       const est = estimateMinutes(resolved);
-      expect(est).toBeGreaterThanOrEqual(75);
-      expect(est).toBeLessThanOrEqual(90);
+      expect(est).toBe(90); // 5 * (30*0.5+3) = 5 * 18 = 90
     });
 
     it('does not exceed target duration', () => {
+      const expected: Record<string, { pts: number; rounds: number }> = {
+        '60-4': { pts: 18, rounds: 5 },
+        '60-5': { pts: 18, rounds: 5 },
+        '60-6': { pts: 18, rounds: 5 },
+        '60-8': { pts: 24, rounds: 4 },
+        '60-10': { pts: 18, rounds: 5 },
+        '60-12': { pts: 18, rounds: 5 },
+        '90-4': { pts: 24, rounds: 6 },
+        '90-5': { pts: 30, rounds: 5 },
+        '90-6': { pts: 24, rounds: 6 },
+        '90-8': { pts: 24, rounds: 6 },
+        '90-10': { pts: 30, rounds: 5 },
+        '90-12': { pts: 24, rounds: 6 },
+        '120-4': { pts: 18, rounds: 10 },
+        '120-5': { pts: 18, rounds: 10 },
+        '120-6': { pts: 20, rounds: 9 },
+        '120-8': { pts: 18, rounds: 10 },
+        '120-10': { pts: 18, rounds: 10 },
+        '120-12': { pts: 20, rounds: 9 },
+        '180-4': { pts: 18, rounds: 15 },
+        '180-5': { pts: 18, rounds: 15 },
+        '180-6': { pts: 18, rounds: 15 },
+        '180-8': { pts: 24, rounds: 12 },
+        '180-10': { pts: 18, rounds: 15 },
+        '180-12': { pts: 18, rounds: 15 },
+      };
       for (const duration of [60, 90, 120, 180]) {
         for (const players of [4, 5, 6, 8, 10, 12]) {
+          const key = `${duration}-${players}`;
           const resolved = resolveConfigDefaults(makeConfig({ targetDuration: duration }), players);
+          expect(resolved.pointsPerMatch).toBe(expected[key].pts);
+          expect(resolved.maxRounds).toBe(expected[key].rounds);
           const est = estimateMinutes(resolved);
-          expect(est).toBeLessThanOrEqual(duration + 3); // allow 1 round of rounding slack
+          expect(est).toBeLessThanOrEqual(duration + 3);
         }
       }
     });
@@ -188,6 +244,8 @@ describe('resolveConfigDefaults', () => {
       // 5 players, 1 court → 1 sits out per round → fair at multiples of 5
       const config = makeConfig({ maxRounds: null });
       const resolved = resolveConfigDefaults(config, 5);
+      expect(resolved.maxRounds).toBe(10); // multiple of 5
+      expect(resolved.pointsPerMatch).toBe(18);
       const info = computeSitOutInfo(5, 1, resolved.maxRounds!);
       expect(info.isEqual).toBe(true);
     });
@@ -196,6 +254,8 @@ describe('resolveConfigDefaults', () => {
       // 6 players, 1 court → 2 sit out per round → fair at multiples of 3
       const config = makeConfig({ maxRounds: null });
       const resolved = resolveConfigDefaults(config, 6);
+      expect(resolved.maxRounds).toBe(9); // multiple of 3
+      expect(resolved.pointsPerMatch).toBe(20);
       const info = computeSitOutInfo(6, 1, resolved.maxRounds!);
       expect(info.isEqual).toBe(true);
     });
@@ -203,6 +263,8 @@ describe('resolveConfigDefaults', () => {
     it('does not nudge when no sit-outs (4 players, 1 court)', () => {
       const config = makeConfig({ maxRounds: null });
       const resolved = resolveConfigDefaults(config, 4);
+      expect(resolved.maxRounds).toBe(10);
+      expect(resolved.pointsPerMatch).toBe(18);
       const info = computeSitOutInfo(4, 1, resolved.maxRounds!);
       expect(info.isEqual).toBe(true);
       expect(info.sitOutsPerRound).toBe(0);
@@ -243,8 +305,8 @@ describe('resolveConfigDefaults', () => {
     it('derives both when neither rounds nor minutesPerRound is set', () => {
       const config = makeConfig({ scoringMode: 'timed', maxRounds: null, targetDuration: 120 });
       const resolved = resolveConfigDefaults(config, 8);
-      expect(resolved.maxRounds).toBeGreaterThanOrEqual(1);
-      expect(resolved.minutesPerRound).toBeGreaterThanOrEqual(1);
+      expect(resolved.maxRounds).toBe(6);
+      expect(resolved.minutesPerRound).toBe(20);
       expect(resolved.scoringMode).toBe('timed');
     });
 
@@ -261,6 +323,7 @@ describe('resolveConfigDefaults', () => {
       const config = makeConfig({ scoringMode: 'timed', maxRounds: null, targetDuration: 120 });
       const resolved = resolveConfigDefaults(config, 12, 3);
       expect(resolved.maxRounds).toBe(3);
+      expect(resolved.minutesPerRound).toBe(40);
     });
   });
 
@@ -270,6 +333,8 @@ describe('resolveConfigDefaults', () => {
       const config = makeConfig({ maxRounds: null, pointsPerMatch: 0, targetDuration: 120 });
       const resolved = resolveConfigDefaults(config, 16, 4);
       expect(resolved.maxRounds).toBe(3);
+      expect(resolved.pointsPerMatch).toBe(9);
+      expect(resolved.scoringMode).toBe('games');
     });
 
     it('does not override explicit maxRounds even with clubs', () => {
@@ -292,7 +357,8 @@ describe('resolveConfigDefaults', () => {
       };
       const resolved = resolveConfigDefaults(config, 4);
       expect(resolved.scoringMode).toBe('games');
-      expect(resolved.pointsPerMatch).toBeLessThanOrEqual(16);
+      expect(resolved.pointsPerMatch).toBe(16);
+      expect(resolved.maxRounds).toBe(2);
     });
 
     it('does not switch when scoringMode is explicitly set to points', () => {
@@ -306,6 +372,8 @@ describe('resolveConfigDefaults', () => {
       };
       const resolved = resolveConfigDefaults(config, 4);
       expect(resolved.scoringMode).toBe('points');
+      expect(resolved.pointsPerMatch).toBe(32);
+      expect(resolved.maxRounds).toBe(2);
     });
   });
 
@@ -319,7 +387,8 @@ describe('resolveConfigDefaults', () => {
         targetDuration: 60, // short duration → would push points down
       };
       const resolved = resolveConfigDefaults(config, 8);
-      expect(resolved.pointsPerMatch).toBeGreaterThanOrEqual(12);
+      expect(resolved.pointsPerMatch).toBe(12);
+      expect(resolved.maxRounds).toBe(20);
     });
   });
 });

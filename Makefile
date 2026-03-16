@@ -12,7 +12,7 @@ build:
 	npm -w @padel/runner run build
 	npm -w @padel/planner run build
 	npm -w @padel/landing run build
-	node scripts/prerender.mjs
+	npx tsx scripts/prerender.ts
 
 unit-test:
 	npm test --workspaces --if-present

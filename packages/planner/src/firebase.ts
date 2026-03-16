@@ -2,6 +2,25 @@ import { initializeApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, signInAnonymously, GoogleAuthProvider, linkWithPopup, linkWithRedirect, signInWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult, type Auth } from 'firebase/auth';
 import { getDatabase, type Database } from 'firebase/database';
 
+const requiredEnvVars = [
+  'VITE_FIREBASE_API_KEY',
+  'VITE_FIREBASE_PROJECT_ID',
+  'VITE_FIREBASE_DATABASE_URL',
+] as const;
+
+const optionalEnvVars = ['VITE_FIREBASE_AUTH_DOMAIN'] as const;
+
+const allEnvVars = [...requiredEnvVars, ...optionalEnvVars];
+const presentVars = allEnvVars.filter((key) => import.meta.env[key]);
+const missingRequired = requiredEnvVars.filter((key) => !import.meta.env[key]);
+
+if (presentVars.length > 0 && missingRequired.length > 0) {
+  console.error(
+    `[Firebase] Incomplete config — missing: ${missingRequired.join(', ')}. ` +
+      'The app will run without Firebase features.',
+  );
+}
+
 const config = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -9,7 +28,7 @@ const config = {
   databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
 };
 
-export const firebaseConfigured = Boolean(config.apiKey && config.projectId && config.databaseURL);
+export const firebaseConfigured = missingRequired.length === 0;
 
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;

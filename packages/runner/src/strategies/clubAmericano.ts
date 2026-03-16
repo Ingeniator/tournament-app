@@ -180,7 +180,8 @@ export const clubAmericanoStrategy: TournamentStrategy = (() => {
         if (bestScore[0] === 0 && bestScore[1] <= 1) break;
       }
 
-      return bestResult!;
+      // for-loop always runs (attempts=5), so bestResult is always assigned
+      return bestResult as ScheduleResult;
     },
 
     generateAdditionalRounds({ config, existingRounds, count, excludePlayerIds, tournament }): ScheduleResult {
