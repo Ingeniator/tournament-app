@@ -115,7 +115,7 @@ export function usePlanner(): PlannerContextValue {
     setScreen: tournament.setScreen,
     tournament: tournament.tournament,
     tournamentLoading: tournament.tournamentLoading,
-    dataError: tournament.dataError,
+    dataError: tournament.dataError || player.playersError,
     organizerName: tournament.organizerName,
     createTournament: tournament.createTournament,
     importTournament: tournament.importTournament,

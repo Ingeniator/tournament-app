@@ -75,7 +75,7 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
   };
 
   const handleAddPlayer = () => {
-    if (mode.type !== 'adding') return;
+    if (mode.type !== 'adding' || tournament.phase !== 'in-progress') return;
     const trimmed = mode.name.trim();
     if (!trimmed) return;
     const group = formatHasGroups(tournament.config.format) ? mode.group : undefined;
@@ -85,6 +85,7 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
   };
 
   const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
+    if (tournament.phase !== 'in-progress') return;
     const text = e.clipboardData.getData('text');
     if (!text.includes('\n') && !text.includes(',')) return;
     e.preventDefault();

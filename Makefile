@@ -31,9 +31,8 @@ deploy-build: build unit-test
 clean:
 	rm -rf dist packages/common/dist packages/common/tsconfig.tsbuildinfo packages/runner/dist packages/planner/dist packages/landing/dist
 
-test:
-	npm -w @padel/runner run test
-	npx playwright test
+test: unit-test e2e
+	@echo "Running tests..."
 
 e2e:
 	npx playwright test
@@ -55,6 +54,8 @@ coverage: coverage-unit coverage-e2e
 release:
 	@if [ -z "$(VERSION)" ]; then echo "Usage: make release VERSION=X.Y.Z"; exit 1; fi
 	@if git rev-parse "$(VERSION)" >/dev/null 2>&1; then echo "Tag $(VERSION) already exists"; exit 1; fi
+	@if ! git diff --quiet HEAD 2>/dev/null; then echo "Error: uncommitted changes. Commit or stash first."; exit 1; fi
+	@if [ "$$(git branch --show-current)" != "main" ]; then echo "Warning: not on main branch (on $$(git branch --show-current))"; fi
 	@echo "Running build..."
 	$(MAKE) build
 	@echo "Running unit tests..."

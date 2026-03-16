@@ -11,23 +11,24 @@ interface ShareSectionProps {
   showToast: (msg: string) => void;
 }
 
+function deriveDelegateMode(tournament: PlannerTournament): string {
+  if (tournament.startDelegateId) return `player:${tournament.startDelegateId}`;
+  if (tournament.startDelegateTelegram) return 'telegram';
+  return 'me';
+}
+
 export function ShareSection({ tournament, players, uid, updateTournament, showToast }: ShareSectionProps) {
   const { t, locale } = useTranslation();
-  const [delegateMode, setDelegateMode] = useState<string>('me');
-  const [tgDelegateInput, setTgDelegateInput] = useState('');
-  const delegateSyncedRef = useRef(false);
+  const [delegateMode, setDelegateMode] = useState<string>(() => deriveDelegateMode(tournament));
+  const [tgDelegateInput, setTgDelegateInput] = useState(() => tournament.startDelegateTelegram ?? '');
+  const userEditedRef = useRef(false);
 
-  // Sync delegate UI state when tournament data loads from Firebase
+  // Re-sync from Firebase when tournament data changes, unless user has edited locally
   useEffect(() => {
-    if (delegateSyncedRef.current) return;
-    delegateSyncedRef.current = true;
-    if (tournament.startDelegateId) {
-      setDelegateMode(`player:${tournament.startDelegateId}`);
-    } else if (tournament.startDelegateTelegram) {
-      setDelegateMode('telegram');
-      setTgDelegateInput(tournament.startDelegateTelegram);
-    }
-  }, [tournament]);
+    if (userEditedRef.current) return;
+    setDelegateMode(deriveDelegateMode(tournament));
+    setTgDelegateInput(tournament.startDelegateTelegram ?? '');
+  }, [tournament.startDelegateId, tournament.startDelegateTelegram]);
 
   const botName = import.meta.env.VITE_TELEGRAM_BOT_NAME as string | undefined;
   const isTelegram = !!window.Telegram?.WebApp?.initData;
@@ -70,6 +71,7 @@ export function ShareSection({ tournament, players, uid, updateTournament, showT
         value={delegateMode}
         onChange={e => {
           const val = e.target.value;
+          userEditedRef.current = true;
           setDelegateMode(val);
           if (val === 'me') {
             updateTournament({ startDelegateId: undefined, startDelegateTelegram: undefined });

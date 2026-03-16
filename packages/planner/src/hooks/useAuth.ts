@@ -8,6 +8,9 @@ const BASE_DELAY_MS = 1000;
 
 export function useAuth() {
   const { t } = useTranslation();
+  const tRef = useRef(t);
+  useEffect(() => { tRef.current = t; });
+
   const [uid, setUid] = useState<string | null>(null);
   const [loading, setLoading] = useState(firebaseConfigured && !!auth);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -24,7 +27,7 @@ export function useAuth() {
           const delay = BASE_DELAY_MS * 2 ** (retryCount.current - 1);
           retryTimer.current = setTimeout(attemptSignIn, delay);
         } else {
-          setAuthError(t('auth.connectionFailed'));
+          setAuthError(tRef.current('auth.connectionFailed'));
           setLoading(false);
         }
       });

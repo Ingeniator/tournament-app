@@ -91,6 +91,9 @@ function startServer(): Promise<Server> {
 
 async function prerender(): Promise<void> {
   const routes = discoverRoutes(DIST);
+  if (routes.length === 0) {
+    throw new Error(`No routes found in ${DIST}. Did the landing build produce output?`);
+  }
   console.log(`Prerendering ${routes.length} landing pages...`);
 
   const server = await startServer();
@@ -128,6 +131,7 @@ async function prerender(): Promise<void> {
 }
 
 prerender().catch((err: unknown) => {
-  console.error('Prerender failed:', err);
-  process.exit(1);
+  console.error('⚠ PRERENDER FAILED — pages will use client-side rendering only:', err);
+  // Don't fail the build: noscript content + client-side hydration is the fallback.
+  // CI can grep for "PRERENDER FAILED" to detect this condition.
 });
