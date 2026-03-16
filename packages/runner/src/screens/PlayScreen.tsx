@@ -1,23 +1,26 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useTournament } from '../hooks/useTournament';
 import { useStandings } from '../hooks/useStandings';
 import { useClubStandings } from '../hooks/useClubStandings';
 import { useNominations } from '../hooks/useNominations';
+import { useTournamentMeta } from '../hooks/useTournamentMeta';
+import { usePlayProgress } from '../hooks/usePlayProgress';
+import { useRoundCompletion } from '../hooks/useRoundCompletion';
+import { useNominationLayout } from '../hooks/useNominationLayout';
 import { RoundCard } from '../components/rounds/RoundCard';
 import { MatchConfigProvider, type MatchConfig } from '../components/rounds/MatchConfigContext';
-import { StandingsTable, type GroupInfo, type RankLabelInfo } from '../components/standings/StandingsTable';
+import { StandingsTable } from '../components/standings/StandingsTable';
 import { ClubStandingsTable } from '../components/standings/ClubStandingsTable';
 import { NominationCard } from '../components/nominations/NominationCard';
 import { Carousel } from '../components/carousel/Carousel';
-import { buildRankGroups, RankResultsCard } from '../components/standings/RankResultsCard';
+import { RankResultsCard } from '../components/standings/RankResultsCard';
 import { CeremonyScreen } from '../components/ceremony/CeremonyScreen';
 import { useShareText } from '../hooks/useShareText';
 import { copyToClipboard } from '../utils/clipboard';
 import { shareStandingsImage, type ShareableItem } from '../utils/standingsImage';
 import { ref, push, set } from 'firebase/database';
 import { auth, db, firebaseConfigured } from '../firebase';
-import { Button, getClubColor, FeedbackModal, Modal, SupportOverlay, Toast, useToast, useTranslation, formatHasGroups, formatHasClubs, shortLabel, buildRankLabelMap, nameOf } from '@padel/common';
-import { getStrategy } from '../strategies';
+import { Button, FeedbackModal, Modal, SupportOverlay, Toast, useToast, useTranslation, nameOf } from '@padel/common';
 import { MaldicionesRulesModal } from '../components/maldiciones/MaldicionesRulesModal';
 import { CURSE_CARDS } from '../data/curseCards';
 import styles from './PlayScreen.module.css';
@@ -28,77 +31,10 @@ export function PlayScreen() {
   const standings = useStandings(tournament);
   const clubStandings = useClubStandings(tournament, standings);
   const nominations = useNominations(tournament, standings);
-  const plannedGames = useMemo(() => {
-    if (!tournament) return new Map<string, number>();
-    const map = new Map<string, number>();
-    for (const p of tournament.players) map.set(p.id, 0);
-    for (const round of tournament.rounds) {
-      for (const match of round.matches) {
-        if (match.score) continue;
-        for (const id of [...match.team1, ...match.team2]) {
-          map.set(id, (map.get(id) ?? 0) + 1);
-        }
-      }
-    }
-    // For team formats, standings entries use team IDs — aggregate player counts per team
-    if (tournament.teams) {
-      for (const team of tournament.teams) {
-        const count = Math.max(map.get(team.player1Id) ?? 0, map.get(team.player2Id) ?? 0);
-        map.set(team.id, count);
-      }
-    }
-    return map;
-  }, [tournament]);
-  const groupInfo = useMemo<GroupInfo | undefined>(() => {
-    if (!tournament || !formatHasGroups(tournament.config.format)) return undefined;
-    const map = new Map<string, 'A' | 'B'>();
-    for (const p of tournament.players) {
-      if (p.group) map.set(p.id, p.group);
-    }
-    if (map.size === 0) return undefined;
-    const labels: [string, string] = [
-      tournament.config.groupLabels?.[0] || 'A',
-      tournament.config.groupLabels?.[1] || 'B',
-    ];
-    return { labels, map };
-  }, [tournament]);
-  const isClubFormat = tournament != null && formatHasClubs(tournament.config.format);
-  const clubColorMap = useMemo(() => {
-    const map = new Map<string, string>();
-    (tournament?.clubs ?? []).forEach((c, i) => map.set(c.id, getClubColor(c, i)));
-    return map;
-  }, [tournament?.clubs]);
-  const clubInfo = useMemo(() => {
-    if (!isClubFormat || !tournament?.clubs?.length || !tournament?.teams?.length) return undefined;
-    const playerClubMap = new Map<string, string>();
-    for (const p of tournament.players) {
-      if (p.clubId) playerClubMap.set(p.id, p.clubId);
-    }
-    // Map team IDs to club IDs
-    const teamClubMap = new Map<string, string>();
-    for (const team of tournament.teams) {
-      const clubId = playerClubMap.get(team.player1Id) ?? playerClubMap.get(team.player2Id);
-      if (clubId) teamClubMap.set(team.id, clubId);
-    }
-    const clubNameMap = new Map<string, string>();
-    for (const club of tournament.clubs) clubNameMap.set(club.id, club.name);
-    return { teamClubMap, clubNameMap, clubColorMap };
-  }, [tournament, isClubFormat, clubColorMap]);
-  const rankLabelInfo = useMemo<RankLabelInfo | undefined>(() => {
-    if (!tournament || tournament.config.format !== 'club-ranked') return undefined;
-    const rankLabels = tournament.config.rankLabels;
-    if (!rankLabels?.length || !tournament.teams?.length || !tournament.clubs?.length) return undefined;
-    const labelMap = buildRankLabelMap(
-      tournament.teams,
-      tournament.clubs,
-      rankLabels,
-      (id) => tournament.players.find(p => p.id === id)?.rankSlot,
-      (id) => tournament.players.find(p => p.id === id)?.clubId,
-      shortLabel,
-    );
-    return labelMap.size > 0 ? { labelMap } : undefined;
-  }, [tournament]);
-  const rankGroups = useMemo(() => tournament ? buildRankGroups(tournament) : [], [tournament]);
+  const { plannedGames, groupInfo, isClubFormat, clubColorMap, clubInfo, rankLabelInfo, rankGroups } = useTournamentMeta(tournament);
+  const { totalMatches, scoredMatches, scoredRounds, plannedRounds, activeRound, prevRound, nextRound } = usePlayProgress(tournament);
+  const { roundCompleteNum, setRoundCompleteNum } = useRoundCompletion(activeRound, tournament?.rounds);
+  const { nomMinHeight, setNomRef } = useNominationLayout(nominations);
   const { buildMessengerText } = useShareText(tournament, standings, nominations);
   const [showStandings, setShowStandings] = useState(false);
   const [standingsTab, setStandingsTab] = useState<'pairs' | 'clubs'>('pairs');
@@ -107,44 +43,6 @@ export function PlayScreen() {
   const [showMaldicionesRules, setShowMaldicionesRules] = useState(false);
   const [roundsExpanded, setRoundsExpanded] = useState(false);
   const { toastMessage, showToast } = useToast();
-  const [roundCompleteNum, setRoundCompleteNum] = useState<number | null>(null);
-  const prevActiveRoundIdRef = useRef<string | null>(null);
-
-  const strategy = tournament ? getStrategy(tournament.config.format) : null;
-  const totalMatches = tournament?.rounds.reduce((n, r) => n + r.matches.length, 0) ?? 0;
-  const scoredMatches = tournament?.rounds.reduce(
-    (n, r) => n + r.matches.filter(m => m.score).length, 0
-  ) ?? 0;
-  const scoredRounds = tournament?.rounds.filter(r => r.matches.every(m => m.score)).length ?? 0;
-  const plannedRounds = tournament
-    ? (strategy?.isDynamic
-        ? (tournament.config.maxRounds ?? tournament.players.length - 1)
-        : tournament.rounds.length)
-    : 0;
-
-  // Find active round: first round with any unscored matches
-  const activeRoundIndex = tournament?.rounds.findIndex(r => r.matches.some(m => !m.score)) ?? -1;
-  const activeRound = tournament && activeRoundIndex >= 0 ? tournament.rounds[activeRoundIndex] : null;
-  const prevRound = tournament && activeRoundIndex > 0 ? tournament.rounds[activeRoundIndex - 1] : null;
-  const nextRound = tournament && activeRoundIndex >= 0 && activeRoundIndex + 1 < tournament.rounds.length
-    ? tournament.rounds[activeRoundIndex + 1]
-    : null;
-
-  // Detect round completion: when active round changes, show interstitial
-  useEffect(() => {
-    const prevId = prevActiveRoundIdRef.current;
-    const curId = activeRound?.id ?? null;
-
-    if (prevId !== null && curId !== null && prevId !== curId) {
-      // Active round advanced — previous round was just completed
-      const completedRound = tournament?.rounds.find(r => r.id === prevId);
-      if (completedRound) {
-        setRoundCompleteNum(completedRound.roundNumber);
-      }
-    }
-
-    prevActiveRoundIdRef.current = curId;
-  }, [activeRound?.id, tournament?.rounds]);
 
   const name = (id: string) => nameOf(tournament?.players ?? [], id);
 
@@ -160,27 +58,6 @@ export function PlayScreen() {
     maldicionesHands: tournament?.maldicionesHands,
     teams: tournament?.teams,
   }), [tournament?.players, tournament?.config.courts, tournament?.config.pointsPerMatch, tournament?.config.scoringMode, tournament?.config.format, maldicionesEnabled, tournament?.maldicionesHands, tournament?.teams]);
-
-  // Equalize nomination card heights
-  const nomCardRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [nomMinHeight, setNomMinHeight] = useState(0);
-  const setNomRef = useCallback((index: number) => (el: HTMLDivElement | null) => {
-    nomCardRefs.current[index] = el;
-  }, []);
-
-  useEffect(() => {
-    if (nominations.length === 0) return;
-    // Reset height to measure natural sizes
-    setNomMinHeight(0);
-    requestAnimationFrame(() => {
-      const heights = nomCardRefs.current
-        .filter((el): el is HTMLDivElement => el !== null)
-        .map(el => el.scrollHeight);
-      if (heights.length > 0) {
-        setNomMinHeight(Math.max(...heights));
-      }
-    });
-  }, [nominations]);
 
   const [previewImages, setPreviewImages] = useState<string[] | null>(null);
 
@@ -289,12 +166,12 @@ export function PlayScreen() {
             <summary className={styles.roundDetailsSummary}>{t('play.roundResults')}</summary>
             <div className={styles.roundResultsList}>
               {tournament.rounds.map(round => {
-                const scoredMatches = round.matches.filter(m => m.score);
-                if (scoredMatches.length === 0) return null;
+                const scoredMatchesInRound = round.matches.filter(m => m.score);
+                if (scoredMatchesInRound.length === 0) return null;
                 return (
                   <div key={round.id} className={styles.roundResultGroup}>
                     <div className={styles.roundResultTitle}>{t('play.roundNum', { num: round.roundNumber })}</div>
-                    {scoredMatches.map(match => {
+                    {scoredMatchesInRound.map(match => {
                       const courtLabel = tournament.config.courts.find(c => c.id === match.courtId)?.name ?? match.courtId;
                       const s = match.score!;
                       const t1Won = s.team1Points > s.team2Points;

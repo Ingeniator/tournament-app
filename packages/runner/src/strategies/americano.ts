@@ -1,7 +1,7 @@
 import type { TournamentStrategy, ScheduleResult } from './types';
 import type { Player, TournamentConfig, Round, Match, Tournament } from '@padel/common';
 import { generateId } from '@padel/common';
-import { shuffle, partnerKey, commonValidateSetup, commonValidateScore, calculateCompetitorStandings, calculateIndividualStandings, seedFromRounds, selectSitOuts, scoreSchedule } from './shared';
+import { shuffle, partnerKey, commonValidateSetup, commonValidateScore, calculateCompetitorStandings, calculateIndividualStandings, seedFromRounds, selectSitOuts, scoreSchedule, scorePairing } from './shared';
 import { getBaseline, instantiateBaseline } from './baselines';
 
 type Pairing = [[string, string], [string, string]];
@@ -18,27 +18,6 @@ function getPairingsForGroup(group: string[]): Pairing[] {
     [[a, c], [b, d]],
     [[a, d], [b, c]],
   ];
-}
-
-/**
- * Score a pairing. Uses sum-of-squares for opponent counts to penalize imbalance:
- * e.g. [2,0,0,0]→4 vs [1,1,0,0]→2, so the balanced option wins.
- * Partner repeats heavily penalized (×100) to keep them dominant.
- */
-function scorePairing(
-  p1: [string, string],
-  p2: [string, string],
-  partnerCounts: Map<string, number>,
-  opponentCounts: Map<string, number>
-): number {
-  const partnerScore =
-    (partnerCounts.get(partnerKey(p1[0], p1[1])) ?? 0) +
-    (partnerCounts.get(partnerKey(p2[0], p2[1])) ?? 0);
-  const o1 = opponentCounts.get(partnerKey(p1[0], p2[0])) ?? 0;
-  const o2 = opponentCounts.get(partnerKey(p1[0], p2[1])) ?? 0;
-  const o3 = opponentCounts.get(partnerKey(p1[1], p2[0])) ?? 0;
-  const o4 = opponentCounts.get(partnerKey(p1[1], p2[1])) ?? 0;
-  return partnerScore * 100 + o1 * o1 + o2 * o2 + o3 * o3 + o4 * o4;
 }
 
 /** Returns all permutations of indices [0..n-1] */

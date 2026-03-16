@@ -1,7 +1,7 @@
 import type { TournamentStrategy } from './types';
 import type { Player, TournamentConfig, Round, Match, Tournament, Team, Club } from '@padel/common';
 import { generateId } from '@padel/common';
-import { shuffle, partnerKey, commonValidateScore, calculateCompetitorStandings, findTeamByPair, teamKey } from './shared';
+import { shuffle, commonValidateScore, calculateCompetitorStandings, findTeamByPair, teamKey, scorePairing } from './shared';
 
 /**
  * Shared infrastructure for all club formats.
@@ -11,25 +11,7 @@ import { shuffle, partnerKey, commonValidateScore, calculateCompetitorStandings,
 
 export type MatchMode = 'random' | 'standings' | 'slots';
 
-/**
- * Score a candidate pairing within a court of 4.
- * Lower is better: penalize partner repeats heavily, opponent repeats quadratically.
- */
-export function scorePairing(
-  p1: [string, string],
-  p2: [string, string],
-  partnerCounts: Map<string, number>,
-  opponentCounts: Map<string, number>,
-): number {
-  const partnerScore =
-    (partnerCounts.get(partnerKey(p1[0], p1[1])) ?? 0) +
-    (partnerCounts.get(partnerKey(p2[0], p2[1])) ?? 0);
-  const o1 = opponentCounts.get(partnerKey(p1[0], p2[0])) ?? 0;
-  const o2 = opponentCounts.get(partnerKey(p1[0], p2[1])) ?? 0;
-  const o3 = opponentCounts.get(partnerKey(p1[1], p2[0])) ?? 0;
-  const o4 = opponentCounts.get(partnerKey(p1[1], p2[1])) ?? 0;
-  return partnerScore * 100 + o1 * o1 + o2 * o2 + o3 * o3 + o4 * o4;
-}
+export { scorePairing } from './shared';
 
 export interface CourtAssignment {
   clubA: [string, string];

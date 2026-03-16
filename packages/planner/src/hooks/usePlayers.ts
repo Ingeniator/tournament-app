@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ref, get, set, update, onValue } from 'firebase/database';
+import { ref, get, set, update, onValue, runTransaction } from 'firebase/database';
 import type { PlannerRegistration } from '@padel/common';
 import { generateId } from '@padel/common';
 import { db } from '../firebase';
@@ -43,14 +43,6 @@ export function usePlayers(tournamentId: string | null) {
   const registerPlayer = useCallback(async (name: string, uid: string, telegramUsername?: string, extras?: { group?: 'A' | 'B'; clubId?: string; rankSlot?: number }) => {
     if (!tournamentId || !db) return;
 
-    // Prevent duplicate: skip if this UID is already registered
-    const existing = await get(ref(db, `tournaments/${tournamentId}/players/${uid}`));
-    if (existing.exists()) return;
-
-    // Prevent duplicate: skip if same Telegram user registered under a
-    // different UID (happens when WebView storage is cleared between sessions)
-    if (telegramUsername && players.some(p => p.telegramUsername === telegramUsername)) return;
-
     const playerData = {
       name,
       timestamp: Date.now(),
@@ -60,17 +52,47 @@ export function usePlayers(tournamentId: string | null) {
       ...(extras?.rankSlot != null ? { rankSlot: extras.rankSlot } : {}),
     };
 
-    // Atomic write: player record + per-device index + per-person index (if Telegram)
-    const updates: Record<string, unknown> = {
-      [`tournaments/${tournamentId}/players/${uid}`]: playerData,
-      [`users/${uid}/registrations/${tournamentId}`]: true,
-    };
     if (telegramUsername) {
-      updates[`telegramUsers/${telegramUsername}/registrations/${tournamentId}`] = true;
-      updates[`telegramUsers/${telegramUsername}/currentUid`] = uid;
+      // Use a transaction on the telegram index to atomically prevent
+      // duplicate registrations from the same Telegram user (even across
+      // different UIDs / cleared WebView storage).
+      const tgRef = ref(db, `telegramUsers/${telegramUsername}/registrations/${tournamentId}`);
+      const { committed } = await runTransaction(tgRef, (current) => {
+        if (current !== null) return; // already registered — abort
+        return true;
+      });
+      if (!committed) return; // duplicate telegram user — skip
+
+      // Transaction succeeded — now write player data atomically.
+      // Use the player node transaction to guard the UID as well.
+      const playerRef = ref(db, `tournaments/${tournamentId}/players/${uid}`);
+      const playerTx = await runTransaction(playerRef, (current) => {
+        if (current !== null) return; // UID already registered — abort
+        return playerData;
+      });
+      if (!playerTx.committed) {
+        // UID was already taken; roll back the telegram index claim
+        await set(tgRef, null);
+        return;
+      }
+
+      // Write remaining indexes (non-conflicting, safe as plain writes)
+      await update(ref(db), {
+        [`users/${uid}/registrations/${tournamentId}`]: true,
+        [`telegramUsers/${telegramUsername}/currentUid`]: uid,
+      });
+    } else {
+      // No telegram username — only guard against duplicate UID
+      const playerRef = ref(db, `tournaments/${tournamentId}/players/${uid}`);
+      const { committed } = await runTransaction(playerRef, (current) => {
+        if (current !== null) return; // already registered — abort
+        return playerData;
+      });
+      if (!committed) return;
+
+      await set(ref(db, `users/${uid}/registrations/${tournamentId}`), true);
     }
-    await update(ref(db), updates);
-  }, [tournamentId, players]);
+  }, [tournamentId]);
 
   const removePlayer = useCallback(async (playerId: string) => {
     if (!tournamentId || !db) return;
