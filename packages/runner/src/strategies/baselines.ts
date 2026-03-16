@@ -58,7 +58,7 @@ const BASELINES: Record<string, BaselineTemplate> = {
   '12:3': {
     players: 12,
     courts: 3,
-    score: [0, 0, 0, 2],
+    score: [0, 2, 0, 3],
     rounds: [
       { matches: [[[0,1], [10,11], 0], [[2,3], [8,9], 1], [[4,5], [6,7], 2]], sitOuts: [] },
       { matches: [[[0,11], [3,8], 2], [[1,10], [5,6], 1], [[2,9], [4,7], 0]], sitOuts: [] },

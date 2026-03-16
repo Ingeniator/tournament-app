@@ -466,7 +466,9 @@ function generateRoundsWithRetry(
           const score = scoreSchedule(rounds);
           bestResult = { rounds, warnings: [] };
           bestScore = score;
-          if (score[0] === 0 && score[1] <= 1 && score[2] === 0 && score[3] <= 1) {
+          // Accept baseline if it matches or beats its precomputed quality
+          if (score[0] === 0 && score[2] === 0 &&
+              score[1] <= baseline.score[1] && score[3] <= baseline.score[3]) {
             return bestResult;
           }
         }

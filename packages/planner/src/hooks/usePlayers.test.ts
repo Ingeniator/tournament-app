@@ -64,6 +64,15 @@ const mockOnValue = vi.fn((_refObj: unknown, callback: (snapshot: unknown) => vo
   callback({ val: () => null });
   return vi.fn(); // unsubscribe
 });
+const mockRunTransaction = vi.fn(async (refObj: { _path: string }, updateFn: (current: unknown) => unknown) => {
+  const current = getNestedValue(refObj._path);
+  const newValue = updateFn(current ?? null);
+  if (newValue === undefined) {
+    return { committed: false };
+  }
+  setNestedValue(refObj._path, newValue);
+  return { committed: true };
+});
 
 vi.mock('firebase/database', () => ({
   ref: (...args: unknown[]) => mockRef(...args),
@@ -71,6 +80,7 @@ vi.mock('firebase/database', () => ({
   set: (...args: unknown[]) => mockSet(...args),
   update: (...args: unknown[]) => mockUpdate(...args),
   onValue: (...args: unknown[]) => mockOnValue(...args),
+  runTransaction: (...args: unknown[]) => mockRunTransaction(...args),
 }));
 
 vi.mock('../firebase', () => ({
@@ -96,19 +106,23 @@ describe('usePlayers', () => {
         await result.current.registerPlayer('Alice', 'uid1');
       });
 
-      // Should have used atomic multi-path update
-      expect(mockUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({ _path: '' }),
-        expect.objectContaining({
-          'tournaments/t1/players/uid1': expect.objectContaining({ name: 'Alice' }),
-          'users/uid1/registrations/t1': true,
-        })
+      // Transaction on player ref to guard against duplicate UID
+      expect(mockRunTransaction).toHaveBeenCalledWith(
+        expect.objectContaining({ _path: 'tournaments/t1/players/uid1' }),
+        expect.any(Function),
+      );
+      // Player data written via transaction
+      expect(store).toHaveProperty('tournaments.t1.players.uid1');
+      expect((store as Record<string, unknown>).tournaments).toHaveProperty('t1');
+
+      // User registration written via set
+      expect(mockSet).toHaveBeenCalledWith(
+        expect.objectContaining({ _path: 'users/uid1/registrations/t1' }),
+        true,
       );
 
       // Should NOT include telegramUsers paths
-      const updateArg = mockUpdate.mock.calls[0][1];
-      const keys = Object.keys(updateArg);
-      expect(keys.some(k => k.startsWith('telegramUsers/'))).toBe(false);
+      expect(mockRunTransaction).toHaveBeenCalledTimes(1);
     });
 
     it('writes 4 paths for Telegram users', async () => {
@@ -118,16 +132,24 @@ describe('usePlayers', () => {
         await result.current.registerPlayer('Alice', 'uid1', 'alice_tg');
       });
 
-      const updateArg = mockUpdate.mock.calls[0][1];
-      expect(updateArg).toEqual(expect.objectContaining({
-        'tournaments/t1/players/uid1': expect.objectContaining({
-          name: 'Alice',
-          telegramUsername: 'alice_tg',
+      // Transaction on telegram index first
+      expect(mockRunTransaction).toHaveBeenCalledWith(
+        expect.objectContaining({ _path: 'telegramUsers/alice_tg/registrations/t1' }),
+        expect.any(Function),
+      );
+      // Transaction on player ref second
+      expect(mockRunTransaction).toHaveBeenCalledWith(
+        expect.objectContaining({ _path: 'tournaments/t1/players/uid1' }),
+        expect.any(Function),
+      );
+      // Remaining indexes via update
+      expect(mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ _path: '' }),
+        expect.objectContaining({
+          'users/uid1/registrations/t1': true,
+          'telegramUsers/alice_tg/currentUid': 'uid1',
         }),
-        'users/uid1/registrations/t1': true,
-        'telegramUsers/alice_tg/registrations/t1': true,
-        'telegramUsers/alice_tg/currentUid': 'uid1',
-      }));
+      );
     });
 
     it('skips registration when UID already exists', async () => {
@@ -141,7 +163,10 @@ describe('usePlayers', () => {
         await result.current.registerPlayer('Alice', 'uid1');
       });
 
-      // update should NOT have been called (only get was called to check existence)
+      // Transaction was called but should not have committed (UID exists)
+      expect(mockRunTransaction).toHaveBeenCalledTimes(1);
+      // set/update should NOT have been called since transaction aborted
+      expect(mockSet).not.toHaveBeenCalled();
       expect(mockUpdate).not.toHaveBeenCalled();
     });
   });

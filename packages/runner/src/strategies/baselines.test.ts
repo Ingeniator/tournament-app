@@ -76,6 +76,7 @@ describe('baselines', () => {
 
   describe.each([
     { p: 10, c: 2, rounds: 9,  maxOppSpread: 2 },
+    { p: 12, c: 3, rounds: 11, maxOppSpread: 3 },
     { p: 14, c: 3, rounds: 14, maxOppSpread: 3 },
     { p: 16, c: 4, rounds: 15, maxOppSpread: 4 },
     { p: 20, c: 4, rounds: 19, maxOppSpread: 3 },
