@@ -191,7 +191,7 @@ export const teamMexicanoStrategy: TournamentStrategy = {
     return { rounds, warnings };
   },
 
-  generateAdditionalRounds(_players: Player[], config: TournamentConfig, existingRounds: Round[], count: number, excludePlayerIds?: string[], _timeBudgetMs?: number, tournament?: Tournament): ScheduleResult {
+  generateAdditionalRounds({ config, existingRounds, count, excludePlayerIds, tournament }): ScheduleResult {
     const allTeams = tournament?.teams ?? [];
     const excludeSet = new Set(excludePlayerIds ?? []);
     const activeTeams = excludeSet.size > 0

@@ -167,6 +167,7 @@ const en: Translations = {
   'standings.gp': 'GP',
   'standings.wtl': 'W-T-L',
   'standings.diff': '+/-',
+  'standings.tableCaption': 'Tournament standings',
 
   // PlayerStats
   'playerStats.empty': 'No scored matches yet',

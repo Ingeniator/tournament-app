@@ -106,7 +106,7 @@ describe('mexicano strategy', () => {
       const config = makeConfig(2);
       const initial = mexicanoStrategy.generateSchedule(players, config);
       const scored = scoreAllMatches(initial.rounds);
-      const { rounds } = mexicanoStrategy.generateAdditionalRounds(players, config, scored, 2);
+      const { rounds } = mexicanoStrategy.generateAdditionalRounds({ players, config, existingRounds: scored, count: 2 });
       expect(rounds.length).toBe(2);
     });
 
@@ -115,7 +115,7 @@ describe('mexicano strategy', () => {
       const config = makeConfig(2);
       const initial = mexicanoStrategy.generateSchedule(players, config);
       const scored = scoreAllMatches(initial.rounds);
-      const { rounds } = mexicanoStrategy.generateAdditionalRounds(players, config, scored, 1);
+      const { rounds } = mexicanoStrategy.generateAdditionalRounds({ players, config, existingRounds: scored, count: 1 });
       // Just verify it produces valid rounds
       expect(rounds[0].matches.length).toBe(2);
       const allPlayers = rounds[0].matches.flatMap(m => [...m.team1, ...m.team2]);
@@ -125,9 +125,7 @@ describe('mexicano strategy', () => {
     it('handles excluded player ids', () => {
       const players = makePlayers(8);
       const config = makeConfig(2);
-      const { rounds } = mexicanoStrategy.generateAdditionalRounds(
-        players, config, [], 1, ['p1', 'p2']
-      );
+      const { rounds } = mexicanoStrategy.generateAdditionalRounds({ players, config, existingRounds: [], count: 1, excludePlayerIds: ['p1', 'p2'] });
       const allPlayerIds = rounds[0].matches.flatMap(m => [...m.team1, ...m.team2]);
       expect(allPlayerIds).not.toContain('p1');
       expect(allPlayerIds).not.toContain('p2');
@@ -147,7 +145,7 @@ describe('mexicano strategy', () => {
         }],
         sitOuts: [] as string[],
       };
-      const { rounds } = mexicanoStrategy.generateAdditionalRounds(players, config, [r1], 1);
+      const { rounds } = mexicanoStrategy.generateAdditionalRounds({ players, config, existingRounds: [r1], count: 1 });
       // Verify it produced a valid match
       expect(rounds[0].matches.length).toBe(1);
       const match = rounds[0].matches[0];
@@ -173,7 +171,7 @@ describe('mexicano strategy', () => {
       // Run many times — at least once the pairing should differ from R1
       let sawDifferentPairing = false;
       for (let i = 0; i < 20; i++) {
-        const { rounds } = mexicanoStrategy.generateAdditionalRounds(players, config, [r1], 1);
+        const { rounds } = mexicanoStrategy.generateAdditionalRounds({ players, config, existingRounds: [r1], count: 1 });
         const m = rounds[0].matches[0];
         const r1Team1 = new Set(r1.matches[0].team1);
         const r2Team1 = new Set(m.team1);
@@ -192,7 +190,7 @@ describe('mexicano strategy', () => {
     it('returns empty rounds when not enough players', () => {
       const players = makePlayers(3);
       const config = makeConfig(1);
-      const { rounds } = mexicanoStrategy.generateAdditionalRounds(players, config, [], 1);
+      const { rounds } = mexicanoStrategy.generateAdditionalRounds({ players, config, existingRounds: [], count: 1 });
       expect(rounds.length).toBe(0);
     });
   });

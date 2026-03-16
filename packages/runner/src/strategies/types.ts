@@ -5,12 +5,22 @@ export interface ScheduleResult {
   warnings: string[];
 }
 
+export interface AdditionalRoundsOptions {
+  players: Player[];
+  config: TournamentConfig;
+  existingRounds: Round[];
+  count: number;
+  excludePlayerIds?: string[];
+  timeBudgetMs?: number;
+  tournament?: Tournament;
+}
+
 export interface TournamentStrategy {
   isDynamic: boolean;
   hasFixedPartners: boolean;
   getCompetitors(tournament: Tournament): Competitor[];
   generateSchedule(players: Player[], config: TournamentConfig, tournament?: Tournament): ScheduleResult;
-  generateAdditionalRounds(players: Player[], config: TournamentConfig, existingRounds: Round[], count: number, excludePlayerIds?: string[], timeBudgetMs?: number, tournament?: Tournament): ScheduleResult;
+  generateAdditionalRounds(options: AdditionalRoundsOptions): ScheduleResult;
   calculateStandings(tournament: Tournament): StandingsEntry[];
   validateSetup(players: Player[], config: TournamentConfig): string[];
   validateWarnings?(players: Player[], config: TournamentConfig): string[];

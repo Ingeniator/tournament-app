@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
-import { Button, Card, Toast, useToast, useTranslation } from '@padel/common';
+import { useState, useMemo, useRef } from 'react';
+import { Button, Card, Toast, useToast, useTranslation, useClickOutside } from '@padel/common';
 import { useEvent } from '../hooks/useEvent';
 import { useEventTournaments } from '../hooks/useEventTournaments';
 import type { EventTournamentInfo } from '../hooks/useEventTournaments';
@@ -50,16 +50,7 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
   const [exportOpen, setExportOpen] = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!exportOpen) return;
-    const handleClick = (e: MouseEvent) => {
-      if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
-        setExportOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [exportOpen]);
+  useClickOutside(exportRef, exportOpen, () => setExportOpen(false));
 
   if (loading || !event) {
     return (

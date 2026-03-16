@@ -109,7 +109,7 @@ export function LogScreen({ onNavigate }: LogScreenProps) {
     setOptimizeElapsed(0);
 
     while (!ctrl.cancelled && performance.now() - start < maxMs) {
-      const result = strategy.generateAdditionalRounds(active, tournament.config, scored, count, excl, chunkMs);
+      const result = strategy.generateAdditionalRounds({ players: active, config: tournament.config, existingRounds: scored, count, excludePlayerIds: excl, timeBudgetMs: chunkMs });
       const score = scoreSchedule([...scored, ...result.rounds]);
 
       const isBetter = score.some((v, i) => {

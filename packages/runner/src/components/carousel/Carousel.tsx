@@ -81,8 +81,33 @@ export function Carousel({ children }: CarouselProps) {
     }
   };
 
+  const goToSlide = useCallback((direction: 'prev' | 'next') => {
+    const newIndex = direction === 'next'
+      ? (activeIndex + 1) % count
+      : (activeIndex - 1 + count) % count;
+    handleDotClick(newIndex);
+  }, [activeIndex, count]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (count <= 1) return;
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      goToSlide('prev');
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      goToSlide('next');
+    }
+  }, [count, goToSlide]);
+
   return (
-    <div className={styles.wrapper}>
+    <div
+      className={styles.wrapper}
+      tabIndex={0}
+      role="region"
+      aria-roledescription="carousel"
+      aria-label={`Slide ${activeIndex + 1} of ${count}`}
+      onKeyDown={handleKeyDown}
+    >
       <div className={styles.track} ref={scrollRef}>
         {slides.map((child, i) => (
           <div className={styles.slide} key={i}>

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import type { MatchScore } from '@padel/common';
 import { useTranslation } from '@padel/common';
 import styles from './ScoreInput.module.css';
@@ -139,6 +139,27 @@ export function ScoreInput({ score, pointsPerMatch, scoringMode, onSave, onClear
   const gridStart = isTimed ? gridPage * TIMED_PAGE_SIZE : 0;
   const gridCount = isTimed ? TIMED_PAGE_SIZE : pointsPerMatch + 1;
 
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  const handleGridKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    const grid = gridRef.current;
+    if (!grid) return;
+    const buttons = Array.from(grid.querySelectorAll('button')) as HTMLButtonElement[];
+    const idx = buttons.indexOf(e.target as HTMLButtonElement);
+    if (idx === -1) return;
+
+    let next = -1;
+    if (e.key === 'ArrowRight') next = Math.min(idx + 1, buttons.length - 1);
+    else if (e.key === 'ArrowLeft') next = Math.max(idx - 1, 0);
+    else if (e.key === 'ArrowDown') next = Math.min(idx + 4, buttons.length - 1);
+    else if (e.key === 'ArrowUp') next = Math.max(idx - 4, 0);
+
+    if (next !== -1 && next !== idx) {
+      e.preventDefault();
+      buttons[next].focus();
+    }
+  }, []);
+
   return (
     <div className={styles.root} data-picking={pickingSide ?? undefined}>
       <div className={styles.display}>
@@ -179,7 +200,7 @@ export function ScoreInput({ score, pointsPerMatch, scoringMode, onSave, onClear
               </button>
             </div>
           )}
-          <div className={styles.grid}>
+          <div className={styles.grid} ref={gridRef} role="grid" onKeyDown={handleGridKeyDown}>
             {Array.from({ length: gridCount }, (_, i) => {
               const cellValue = gridStart + i;
               return (

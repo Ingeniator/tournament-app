@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { ref, push, set } from 'firebase/database';
-import { Button, Card, SkinPicker, FeedbackModal, AppFooter, useTranslation } from '@padel/common';
+import { Button, Card, SkinPicker, FeedbackModal, AppFooter, useTranslation, useClickOutside } from '@padel/common';
 import type { TournamentSummary } from '@padel/common';
 import { usePlanner } from '../state/PlannerContext';
 import { auth, db } from '../firebase';
@@ -63,16 +63,7 @@ export function HomeScreen() {
   const importRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (!importOpen) return;
-    const handleClick = (e: MouseEvent) => {
-      if (importRef.current && !importRef.current.contains(e.target as Node)) {
-        setImportOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [importOpen]);
+  useClickOutside(importRef, importOpen, () => setImportOpen(false));
 
   const handleCreate = async () => {
     if (!name.trim()) return;

@@ -1,4 +1,4 @@
-import { useState, useMemo, type Dispatch, type ClipboardEvent } from 'react';
+import { useReducer, useMemo, type Dispatch, type ClipboardEvent } from 'react';
 import type { Tournament } from '@padel/common';
 import { Button, Card, NO_COLOR, getClubColor, useTranslation, parsePlayerList, formatHasGroups, formatHasClubs } from '@padel/common';
 import type { TournamentAction } from '../../state/actions';
@@ -10,16 +10,39 @@ interface PlayerListProps {
   showToast: (msg: string) => void;
 }
 
+type EditMode =
+  | { type: 'idle' }
+  | { type: 'editing'; playerId: string; name: string; group: 'A' | 'B' }
+  | { type: 'replacing'; playerId: string; name: string }
+  | { type: 'adding'; name: string; group: 'A' | 'B' };
+
+function editReducer(state: EditMode, action:
+  | { type: 'START_EDIT'; playerId: string; name: string; group: 'A' | 'B' }
+  | { type: 'SET_EDIT_NAME'; name: string }
+  | { type: 'SET_EDIT_GROUP'; group: 'A' | 'B' }
+  | { type: 'START_REPLACE'; playerId: string }
+  | { type: 'SET_REPLACE_NAME'; name: string }
+  | { type: 'START_ADD' }
+  | { type: 'SET_ADD_NAME'; name: string }
+  | { type: 'SET_ADD_GROUP'; group: 'A' | 'B' }
+  | { type: 'CANCEL' }
+): EditMode {
+  switch (action.type) {
+    case 'START_EDIT': return { type: 'editing', playerId: action.playerId, name: action.name, group: action.group };
+    case 'SET_EDIT_NAME': return state.type === 'editing' ? { ...state, name: action.name } : state;
+    case 'SET_EDIT_GROUP': return state.type === 'editing' ? { ...state, group: action.group } : state;
+    case 'START_REPLACE': return { type: 'replacing', playerId: action.playerId, name: '' };
+    case 'SET_REPLACE_NAME': return state.type === 'replacing' ? { ...state, name: action.name } : state;
+    case 'START_ADD': return { type: 'adding', name: '', group: 'A' };
+    case 'SET_ADD_NAME': return state.type === 'adding' ? { ...state, name: action.name } : state;
+    case 'SET_ADD_GROUP': return state.type === 'adding' ? { ...state, group: action.group } : state;
+    case 'CANCEL': return { type: 'idle' };
+  }
+}
+
 export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps) {
   const { t } = useTranslation();
-  const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
-  const [editPlayerName, setEditPlayerName] = useState('');
-  const [editPlayerGroup, setEditPlayerGroup] = useState<'A' | 'B'>('A');
-  const [replacingPlayerId, setReplacingPlayerId] = useState<string | null>(null);
-  const [replacePlayerName, setReplacePlayerName] = useState('');
-  const [addPlayerName, setAddPlayerName] = useState('');
-  const [addPlayerGroup, setAddPlayerGroup] = useState<'A' | 'B'>('A');
-  const [showAddPlayer, setShowAddPlayer] = useState(false);
+  const [mode, editDispatch] = useReducer(editReducer, { type: 'idle' } as EditMode);
 
   const isMixicano = formatHasGroups(tournament.config.format);
 
@@ -34,29 +57,30 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
   }, [tournament, isMixicano, t]);
 
   const handleRenameSave = (playerId: string) => {
-    const trimmed = editPlayerName.trim();
+    if (mode.type !== 'editing') return;
+    const trimmed = mode.name.trim();
     if (trimmed && trimmed !== tournament.players.find(p => p.id === playerId)?.name) {
       dispatch({ type: 'UPDATE_PLAYER', payload: { playerId, name: trimmed } });
     }
-    setEditingPlayerId(null);
+    editDispatch({ type: 'CANCEL' });
   };
 
   const handleReplacePlayer = (oldPlayerId: string) => {
-    const trimmed = replacePlayerName.trim();
+    if (mode.type !== 'replacing') return;
+    const trimmed = mode.name.trim();
     if (!trimmed) return;
     dispatch({ type: 'REPLACE_PLAYER', payload: { oldPlayerId, newPlayerName: trimmed } });
-    setReplacingPlayerId(null);
-    setReplacePlayerName('');
+    editDispatch({ type: 'CANCEL' });
     showToast(t('settings.playerReplaced'));
   };
 
   const handleAddPlayer = () => {
-    const trimmed = addPlayerName.trim();
+    if (mode.type !== 'adding') return;
+    const trimmed = mode.name.trim();
     if (!trimmed) return;
-    const group = formatHasGroups(tournament.config.format) ? addPlayerGroup : undefined;
+    const group = formatHasGroups(tournament.config.format) ? mode.group : undefined;
     dispatch({ type: 'ADD_PLAYER_LIVE', payload: { name: trimmed, group } });
-    setAddPlayerName('');
-    setShowAddPlayer(false);
+    editDispatch({ type: 'CANCEL' });
     showToast(t('settings.playerAdded'));
   };
 
@@ -69,8 +93,7 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
     for (const name of names) {
       dispatch({ type: 'ADD_PLAYER_LIVE', payload: { name } });
     }
-    setAddPlayerName('');
-    setShowAddPlayer(false);
+    editDispatch({ type: 'CANCEL' });
     showToast(t('settings.playerAdded'));
   };
 
@@ -79,8 +102,8 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
       <h3 className={styles.sectionTitle}>{t('settings.playersTitle', { count: tournament.players.length })}</h3>
       <div className={styles.playerList}>
         {tournament.players.map((player, i) => {
-          const isEditing = editingPlayerId === player.id;
-          const isReplacing = replacingPlayerId === player.id;
+          const isEditing = mode.type === 'editing' && mode.playerId === player.id;
+          const isReplacing = mode.type === 'replacing' && mode.playerId === player.id;
 
           return (
             <div key={player.id} className={styles.playerItem}>
@@ -91,11 +114,11 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
                   <input
                     className={styles.editInput}
                     type="text"
-                    value={editPlayerName}
-                    onChange={e => setEditPlayerName(e.target.value)}
+                    value={mode.type === 'editing' ? mode.name : ''}
+                    onChange={e => editDispatch({ type: 'SET_EDIT_NAME', name: e.target.value })}
                     onKeyDown={e => {
                       if (e.key === 'Enter') handleRenameSave(player.id);
-                      if (e.key === 'Escape') setEditingPlayerId(null);
+                      if (e.key === 'Escape') editDispatch({ type: 'CANCEL' });
                     }}
                     onBlur={() => handleRenameSave(player.id)}
                     autoFocus
@@ -103,10 +126,10 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
                   {isMixicano && (
                     <div className={styles.groupSelector}>
                       <button
-                        className={`${styles.groupBtn} ${editPlayerGroup === 'A' ? styles.groupBtnActive : ''}`}
+                        className={`${styles.groupBtn} ${(mode.type === 'editing' ? mode.group : 'A') === 'A' ? styles.groupBtnActive : ''}`}
                         onMouseDown={e => e.preventDefault()}
                         onClick={() => {
-                          setEditPlayerGroup('A');
+                          editDispatch({ type: 'SET_EDIT_GROUP', group: 'A' });
                           if (player.group !== 'A') {
                             dispatch({ type: 'SET_PLAYER_GROUP', payload: { playerId: player.id, group: 'A' } });
                           }
@@ -115,10 +138,10 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
                         {tournament.config.groupLabels?.[0] || t('config.groupLabelAPlaceholder')}
                       </button>
                       <button
-                        className={`${styles.groupBtn} ${editPlayerGroup === 'B' ? styles.groupBtnActive : ''}`}
+                        className={`${styles.groupBtn} ${(mode.type === 'editing' ? mode.group : 'A') === 'B' ? styles.groupBtnActive : ''}`}
                         onMouseDown={e => e.preventDefault()}
                         onClick={() => {
-                          setEditPlayerGroup('B');
+                          editDispatch({ type: 'SET_EDIT_GROUP', group: 'B' });
                           if (player.group !== 'B') {
                             dispatch({ type: 'SET_PLAYER_GROUP', payload: { playerId: player.id, group: 'B' } });
                           }
@@ -152,9 +175,7 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
                       className={styles.replaceBtn}
                       onMouseDown={e => e.preventDefault()}
                       onClick={() => {
-                        setEditingPlayerId(null);
-                        setReplacingPlayerId(player.id);
-                        setReplacePlayerName('');
+                        editDispatch({ type: 'START_REPLACE', playerId: player.id });
                       }}
                     >
                       {t('settings.replaceWith')}
@@ -169,20 +190,20 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
                   <input
                     className={styles.editInput}
                     type="text"
-                    value={replacePlayerName}
+                    value={mode.type === 'replacing' ? mode.name : ''}
                     placeholder={t('settings.newPlayerNamePlaceholder')}
-                    onChange={e => setReplacePlayerName(e.target.value)}
+                    onChange={e => editDispatch({ type: 'SET_REPLACE_NAME', name: e.target.value })}
                     onKeyDown={e => {
                       if (e.key === 'Enter') handleReplacePlayer(player.id);
-                      if (e.key === 'Escape') setReplacingPlayerId(null);
+                      if (e.key === 'Escape') editDispatch({ type: 'CANCEL' });
                     }}
                     autoFocus
                   />
                   <div className={styles.replaceActions}>
-                    <Button size="small" onClick={() => handleReplacePlayer(player.id)} disabled={!replacePlayerName.trim()}>
+                    <Button size="small" onClick={() => handleReplacePlayer(player.id)} disabled={!(mode.type === 'replacing' && mode.name.trim())}>
                       {t('settings.replace')}
                     </Button>
-                    <Button size="small" variant="ghost" onClick={() => setReplacingPlayerId(null)}>
+                    <Button size="small" variant="ghost" onClick={() => editDispatch({ type: 'CANCEL' })}>
                       {t('settings.cancel')}
                     </Button>
                   </div>
@@ -193,8 +214,8 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
                   {...(tournament.phase !== 'completed' ? {
                     role: 'button' as const,
                     tabIndex: 0,
-                    onClick: () => { setEditPlayerName(player.name); setEditPlayerGroup(player.group ?? 'A'); setEditingPlayerId(player.id); },
-                    onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setEditPlayerName(player.name); setEditPlayerGroup(player.group ?? 'A'); setEditingPlayerId(player.id); } },
+                    onClick: () => { editDispatch({ type: 'START_EDIT', playerId: player.id, name: player.name, group: player.group ?? 'A' }); },
+                    onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); editDispatch({ type: 'START_EDIT', playerId: player.id, name: player.name, group: player.group ?? 'A' }); } },
                   } : {})}
                 >
                   <span className={`${styles.playerName} ${player.unavailable ? styles.playerInactive : ''}`}>
@@ -227,17 +248,17 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
         })}
       </div>
 
-      {tournament.phase === 'completed' ? null : showAddPlayer ? (
+      {tournament.phase === 'completed' ? null : mode.type === 'adding' ? (
         <div className={styles.addPlayerPanel}>
           <input
             className={styles.editInput}
             type="text"
             placeholder={t('settings.newPlayerPlaceholder')}
-            value={addPlayerName}
-            onChange={e => setAddPlayerName(e.target.value)}
+            value={mode.type === 'adding' ? mode.name : ''}
+            onChange={e => editDispatch({ type: 'SET_ADD_NAME', name: e.target.value })}
             onKeyDown={e => {
               if (e.key === 'Enter') handleAddPlayer();
-              if (e.key === 'Escape') setShowAddPlayer(false);
+              if (e.key === 'Escape') editDispatch({ type: 'CANCEL' });
             }}
             onPaste={handlePaste}
             autoFocus
@@ -245,24 +266,24 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
           {formatHasGroups(tournament.config.format) && (
             <div className={styles.groupSelector}>
               <button
-                className={`${styles.groupBtn} ${addPlayerGroup === 'A' ? styles.groupBtnActive : ''}`}
-                onClick={() => setAddPlayerGroup('A')}
+                className={`${styles.groupBtn} ${(mode.type === 'adding' ? mode.group : 'A') === 'A' ? styles.groupBtnActive : ''}`}
+                onClick={() => editDispatch({ type: 'SET_ADD_GROUP', group: 'A' })}
               >
                 {tournament.config.groupLabels?.[0] || t('config.groupLabelAPlaceholder')}
               </button>
               <button
-                className={`${styles.groupBtn} ${addPlayerGroup === 'B' ? styles.groupBtnActive : ''}`}
-                onClick={() => setAddPlayerGroup('B')}
+                className={`${styles.groupBtn} ${(mode.type === 'adding' ? mode.group : 'A') === 'B' ? styles.groupBtnActive : ''}`}
+                onClick={() => editDispatch({ type: 'SET_ADD_GROUP', group: 'B' })}
               >
                 {tournament.config.groupLabels?.[1] || t('config.groupLabelBPlaceholder')}
               </button>
             </div>
           )}
           <div className={styles.addPlayerActions}>
-            <Button size="small" onClick={handleAddPlayer} disabled={!addPlayerName.trim()}>
+            <Button size="small" onClick={handleAddPlayer} disabled={!(mode.type === 'adding' && mode.name.trim())}>
               {t('settings.add')}
             </Button>
-            <Button size="small" variant="ghost" onClick={() => setShowAddPlayer(false)}>
+            <Button size="small" variant="ghost" onClick={() => editDispatch({ type: 'CANCEL' })}>
               {t('settings.cancel')}
             </Button>
           </div>
@@ -272,7 +293,7 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
           variant="secondary"
           size="small"
           fullWidth
-          onClick={() => { setShowAddPlayer(true); setAddPlayerGroup('A'); }}
+          onClick={() => { editDispatch({ type: 'START_ADD' }); }}
           style={{ marginTop: 'var(--space-sm)' }}
         >
           {t('settings.addPlayer')}

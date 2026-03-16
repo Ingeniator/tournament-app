@@ -574,7 +574,7 @@ function buildAmericanoStrategy(crossGroupMode: boolean): TournamentStrategy {
       return generateRoundsWithRetry(players, config, totalRounds, 1, new Map(), new Map(), gamesPlayed, new Map(), new Set(), lastSitOutRound, 500);
     },
 
-    generateAdditionalRounds(players: Player[], config: TournamentConfig, existingRounds: Round[], count: number, excludePlayerIds?: string[], timeBudgetMs?: number, tournament?: Tournament): ScheduleResult {
+    generateAdditionalRounds({ players, config, existingRounds, count, excludePlayerIds, timeBudgetMs, tournament }): ScheduleResult {
       const activePlayers = excludePlayerIds?.length
         ? players.filter(p => !excludePlayerIds.includes(p.id))
         : players;

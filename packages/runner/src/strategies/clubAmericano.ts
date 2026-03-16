@@ -2,7 +2,7 @@ import type { TournamentStrategy, ScheduleResult } from './types';
 import type { Player, TournamentConfig, Round, Match, Tournament, Club } from '@padel/common';
 import { generateId } from '@padel/common';
 import { shuffle, partnerKey, commonValidateScore, seedFromRounds, calculateCompetitorStandings, scoreSchedule } from './shared';
-import { generateClubFixtures, clubIndividualValidateSetup, clubValidateWarnings } from './clubShared';
+import { generateClubFixtures, clubIndividualValidateSetup, clubValidateWarnings, assignCourtsRandom } from './clubShared';
 
 /**
  * Club Americano: random partners within club, random opponents from other clubs.
@@ -12,85 +12,6 @@ import { generateClubFixtures, clubIndividualValidateSetup, clubValidateWarnings
  * players from both clubs are randomly grouped into courts of 4 (2 from each club),
  * then within each court the best pairing is chosen to minimize partner repeats.
  */
-
-/**
- * Score a candidate pairing within a court of 4.
- * Lower is better: penalize partner repeats heavily, opponent repeats quadratically.
- */
-function scorePairing(
-  p1: [string, string],
-  p2: [string, string],
-  partnerCounts: Map<string, number>,
-  opponentCounts: Map<string, number>,
-): number {
-  const partnerScore =
-    (partnerCounts.get(partnerKey(p1[0], p1[1])) ?? 0) +
-    (partnerCounts.get(partnerKey(p2[0], p2[1])) ?? 0);
-  const o1 = opponentCounts.get(partnerKey(p1[0], p2[0])) ?? 0;
-  const o2 = opponentCounts.get(partnerKey(p1[0], p2[1])) ?? 0;
-  const o3 = opponentCounts.get(partnerKey(p1[1], p2[0])) ?? 0;
-  const o4 = opponentCounts.get(partnerKey(p1[1], p2[1])) ?? 0;
-  return partnerScore * 100 + o1 * o1 + o2 * o2 + o3 * o3 + o4 * o4;
-}
-
-interface CourtAssignment {
-  clubA: [string, string];
-  clubB: [string, string];
-}
-
-/**
- * Given players from two clubs, create court assignments.
- * Each court has 2 players from club A and 2 from club B.
- */
-function assignCourts(
-  clubAPlayers: string[],
-  clubBPlayers: string[],
-  numCourts: number,
-  partnerCounts: Map<string, number>,
-  opponentCounts: Map<string, number>,
-  gamesPlayed: Map<string, number>,
-): { courts: CourtAssignment[]; sitOutA: string[]; sitOutB: string[] } {
-  const playersPerClub = numCourts * 2;
-
-  // Sort by games played (desc) so those who've played most sit out first
-  const sortByGames = (ids: string[]) =>
-    [...ids].sort((a, b) => (gamesPlayed.get(b) ?? 0) - (gamesPlayed.get(a) ?? 0));
-  const sortedA = sortByGames(clubAPlayers);
-  const sortedB = sortByGames(clubBPlayers);
-  const sitOutA = sortedA.slice(0, sortedA.length - playersPerClub);
-  const sitOutB = sortedB.slice(0, sortedB.length - playersPerClub);
-  const activeA = sortedA.slice(sortedA.length - playersPerClub);
-  const activeB = sortedB.slice(sortedB.length - playersPerClub);
-
-  // Try multiple random arrangements and pick the best
-  const maxAttempts = numCourts <= 2 ? 100 : 200;
-  let bestCourts: CourtAssignment[] = [];
-  let bestScore = Infinity;
-
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const shuffledA = shuffle(activeA);
-    const shuffledB = shuffle(activeB);
-    const courts: CourtAssignment[] = [];
-    let totalScore = 0;
-
-    for (let i = 0; i < numCourts; i++) {
-      const a: [string, string] = [shuffledA[i * 2], shuffledA[i * 2 + 1]];
-      const b: [string, string] = [shuffledB[i * 2], shuffledB[i * 2 + 1]];
-      courts.push({ clubA: a, clubB: b });
-
-      // Score: partner repeats (same-club pairs) + opponent balance
-      totalScore += scorePairing(a, b, partnerCounts, opponentCounts);
-    }
-
-    if (totalScore < bestScore) {
-      bestScore = totalScore;
-      bestCourts = courts;
-      if (totalScore === 0) break;
-    }
-  }
-
-  return { courts: bestCourts, sitOutA, sitOutB };
-}
 
 function generateClubAmericanoRound(
   clubs: Club[],
@@ -136,7 +57,7 @@ function generateClubAmericanoRound(
       continue;
     }
 
-    const { courts, sitOutA, sitOutB } = assignCourts(
+    const { courts, sitOutA, sitOutB } = assignCourtsRandom(
       clubAPlayers, clubBPlayers, maxCourtsForFixture,
       partnerCounts, opponentCounts, gamesPlayed,
     );
@@ -262,15 +183,7 @@ export const clubAmericanoStrategy: TournamentStrategy = (() => {
       return bestResult!;
     },
 
-    generateAdditionalRounds(
-      _players: Player[],
-      config: TournamentConfig,
-      existingRounds: Round[],
-      count: number,
-      excludePlayerIds?: string[],
-      _timeBudgetMs?: number,
-      tournament?: Tournament,
-    ): ScheduleResult {
+    generateAdditionalRounds({ config, existingRounds, count, excludePlayerIds, tournament }): ScheduleResult {
       const clubs = tournament?.clubs ?? [];
       const players = tournament?.players ?? [];
 

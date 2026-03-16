@@ -263,9 +263,7 @@ describe('clubRanked strategy', () => {
       const tournament = makeTournament(players, teams, config, clubs);
       const initial = clubRankedStrategy.generateSchedule(players, config, tournament);
       const scored = scoreRounds(initial.rounds, 11, 10);
-      const { rounds } = clubRankedStrategy.generateAdditionalRounds(
-        players, config, scored, 2, undefined, undefined, tournament,
-      );
+      const { rounds } = clubRankedStrategy.generateAdditionalRounds({ players, config, existingRounds: scored, count: 2, tournament });
       expect(rounds).toHaveLength(2);
     });
 
@@ -274,9 +272,7 @@ describe('clubRanked strategy', () => {
       const tournament = makeTournament(players, teams, config, clubs);
       const initial = clubRankedStrategy.generateSchedule(players, config, tournament);
       const scored = scoreRounds(initial.rounds, 11, 10);
-      const { rounds } = clubRankedStrategy.generateAdditionalRounds(
-        players, config, scored, 1, undefined, undefined, tournament,
-      );
+      const { rounds } = clubRankedStrategy.generateAdditionalRounds({ players, config, existingRounds: scored, count: 1, tournament });
       expect(rounds[0].roundNumber).toBe(initial.rounds.length + 1);
     });
   });

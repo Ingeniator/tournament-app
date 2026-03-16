@@ -54,6 +54,17 @@
   transform: scale(1.3);
 }
 
+.dot:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .dotActive {
   background-color: var(--color-accent);
+}
+
+.wrapper:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }

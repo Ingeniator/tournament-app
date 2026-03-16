@@ -276,9 +276,7 @@ describe('teamAmericano strategy', () => {
       const tournament = makeTournament(players, teams, config);
       const initial = teamAmericanoStrategy.generateSchedule(players, config, tournament);
       const scored = scoreRounds(initial.rounds, 11, 10);
-      const { rounds } = teamAmericanoStrategy.generateAdditionalRounds(
-        players, config, scored, 2, undefined, undefined, tournament,
-      );
+      const { rounds } = teamAmericanoStrategy.generateAdditionalRounds({ players, config, existingRounds: scored, count: 2, tournament });
       expect(rounds).toHaveLength(2);
     });
 
@@ -289,9 +287,7 @@ describe('teamAmericano strategy', () => {
       const tournament = makeTournament(players, teams, config);
       const initial = teamAmericanoStrategy.generateSchedule(players, config, tournament);
       const scored = scoreRounds(initial.rounds, 11, 10);
-      const { rounds } = teamAmericanoStrategy.generateAdditionalRounds(
-        players, config, scored, 1, undefined, undefined, tournament,
-      );
+      const { rounds } = teamAmericanoStrategy.generateAdditionalRounds({ players, config, existingRounds: scored, count: 1, tournament });
       expect(rounds[0].roundNumber).toBe(2);
     });
 
@@ -299,9 +295,7 @@ describe('teamAmericano strategy', () => {
       const players = makePlayers(4);
       const config = makeConfig(1);
       const tournament = makeTournament(players, [], config);
-      const { rounds } = teamAmericanoStrategy.generateAdditionalRounds(
-        players, config, [], 1, undefined, undefined, tournament,
-      );
+      const { rounds } = teamAmericanoStrategy.generateAdditionalRounds({ players, config, existingRounds: [], count: 1, tournament });
       expect(rounds).toHaveLength(0);
     });
   });
@@ -657,9 +651,7 @@ describe('teamAmericano strategy', () => {
 
       // Mark p1 as unavailable → exclude team t1
       const excludeIds = ['p1'];
-      const { rounds } = teamAmericanoStrategy.generateAdditionalRounds(
-        players.filter(p => p.id !== 'p1'), config, scored, 2, excludeIds, undefined, tournament,
-      );
+      const { rounds } = teamAmericanoStrategy.generateAdditionalRounds({ players: players.filter(p => p.id !== 'p1'), config, existingRounds: scored, count: 2, excludePlayerIds: excludeIds, tournament });
       expect(rounds.length).toBe(2);
       // No match should contain p1 or p2 (t1's players)
       for (const round of rounds) {
@@ -720,9 +712,7 @@ describe('teamAmericano strategy', () => {
       const scored = scoreRounds(initial.rounds, 11, 10);
 
       // Exclude both teams
-      const { rounds, warnings } = teamAmericanoStrategy.generateAdditionalRounds(
-        [], config, scored, 1, ['p1', 'p3'], undefined, tournament,
-      );
+      const { rounds, warnings } = teamAmericanoStrategy.generateAdditionalRounds({ players: [], config, existingRounds: scored, count: 1, excludePlayerIds: ['p1', 'p3'], tournament });
       expect(rounds).toHaveLength(0);
       expect(warnings.some(w => w.includes('Not enough active teams'))).toBe(true);
     });

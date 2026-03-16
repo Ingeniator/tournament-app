@@ -167,6 +167,7 @@ const es: Translations = {
   'standings.gp': 'PJ',
   'standings.wtl': 'V-E-D',
   'standings.diff': '+/-',
+  'standings.tableCaption': 'Clasificación del torneo',
 
   // PlayerStats
   'playerStats.empty': 'A\u00fan no hay partidos puntuados',
@@ -382,7 +383,7 @@ const es: Translations = {
   'format.mexicanoDesc': 'Parejas rotativas, rivales por clasificación',
   'format.mixicano': 'Mixicano',
   'format.mixicanoDesc': 'Parejas entre grupos, rivales por clasificación',
-  'format.kingOfTheCourt': 'King of the Court',
+  'format.kingOfTheCourt': 'Rey de la Pista',
   'format.kingOfTheCourtDesc': 'Sistema de ascenso/descenso de pista',
   'format.teamAmericano': 'Team Americano',
   'format.teamAmericanoDesc': 'Equipos fijos, rivales aleatorios',

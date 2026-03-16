@@ -347,7 +347,7 @@ function buildMexicanoStrategy(crossGroupMode: boolean): TournamentStrategy {
       return generateMexicanoRounds(players, config, [], 1);
     },
 
-    generateAdditionalRounds(players: Player[], config: TournamentConfig, existingRounds: Round[], count: number, excludePlayerIds?: string[]): ScheduleResult {
+    generateAdditionalRounds({ players, config, existingRounds, count, excludePlayerIds }): ScheduleResult {
       return generateMexicanoRounds(players, config, existingRounds, count, excludePlayerIds);
     },
   };

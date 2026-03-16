@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import type { Team, Club, TournamentFormat } from '@padel/common';
 import type { PlannerRegistration } from '@padel/common';
-import { Modal, Button, NO_COLOR, CLUB_COLORS, getClubColor, shortLabel, formatHasGroups, formatHasClubs, useTranslation, deduplicateNames, generateId } from '@padel/common';
+import { Modal, Button, NO_COLOR, CLUB_COLORS, getClubColor, shortLabel, formatHasGroups, formatHasClubs, useTranslation, deduplicateNames, generateId, buildRankLabelMap } from '@padel/common';
 import { createTeams, createCrossGroupTeams, createClubTeams } from '@padel/common';
 import styles from './TeamPairingModal.module.css';
 
@@ -153,40 +153,15 @@ export function TeamPairingModal({ open, players, format, clubs, rankLabels, onS
 
   // Compute slot label per team from players' actual rankSlot (with suffix for duplicates)
   const teamSlotLabel = useMemo(() => {
-    if (!isSlotMode || !rankLabels?.length) return new Map<string, string>();
-    const labels = new Map<string, string>();
-    const playerRankOf = (id: string) => players.find(p => p.id === id)?.rankSlot;
-    // Count occurrences of each rank per club to add suffixes
-    const clubRankCount = new Map<string, Map<number, number>>(); // clubId → rank → count
-    if (teamsByClub && clubs) {
-      for (const club of clubs) {
-        const rankCounts = new Map<number, number>();
-        clubRankCount.set(club.id, rankCounts);
-        for (const team of teamsByClub.get(club.id) ?? []) {
-          const rank = playerRankOf(team.player1Id) ?? playerRankOf(team.player2Id);
-          if (rank != null) {
-            rankCounts.set(rank, (rankCounts.get(rank) ?? 0) + 1);
-          }
-        }
-      }
-    }
-    // Second pass: assign labels with suffix when rank appears more than once in a club
-    if (teamsByClub && clubs) {
-      for (const club of clubs) {
-        const seen = new Map<number, number>(); // rank → occurrence index
-        for (const team of teamsByClub.get(club.id) ?? []) {
-          const rank = playerRankOf(team.player1Id) ?? playerRankOf(team.player2Id);
-          if (rank != null && rankLabels[rank]) {
-            const base = shortLabel(rankLabels[rank]);
-            const totalForRank = clubRankCount.get(club.id)?.get(rank) ?? 1;
-            const idx = (seen.get(rank) ?? 0) + 1;
-            seen.set(rank, idx);
-            labels.set(team.id, totalForRank > 1 ? `${base} [${idx}]` : base);
-          }
-        }
-      }
-    }
-    return labels;
+    if (!isSlotMode || !rankLabels?.length || !teamsByClub || !clubs) return new Map<string, string>();
+    return buildRankLabelMap(
+      [...teamsByClub.values()].flat(),
+      clubs,
+      rankLabels,
+      (id) => players.find(p => p.id === id)?.rankSlot,
+      (id) => players.find(p => p.id === id)?.clubId,
+      shortLabel,
+    );
   }, [isSlotMode, rankLabels, teamsByClub, clubs, players]);
 
   const displayName = useCallback((id: string) =>

@@ -167,6 +167,7 @@ const sr: Translations = {
   'standings.gp': 'OU',
   'standings.wtl': 'P-N-I',
   'standings.diff': '+/-',
+  'standings.tableCaption': 'Табела турнира',
 
   // PlayerStats
   'playerStats.empty': 'Još nema bodovanih mečeva',
@@ -382,7 +383,7 @@ const sr: Translations = {
   'format.mexicanoDesc': 'Rotirajući partneri, protivnici po tabeli',
   'format.mixicano': 'Mixicano',
   'format.mixicanoDesc': 'Parovi iz grupa, protivnici po tabeli',
-  'format.kingOfTheCourt': 'King of the Court',
+  'format.kingOfTheCourt': 'Kralj Terena',
   'format.kingOfTheCourtDesc': 'Sistem promocije/degradacije terena',
   'format.teamAmericano': 'Team Americano',
   'format.teamAmericanoDesc': 'Fiksni timovi, nasumični protivnici',
@@ -392,7 +393,7 @@ const sr: Translations = {
   'format.mixedTeamAmericanoDesc': 'Мешовити фиксни тимови, насумични противници',
   'format.mixedTeamMexicano': 'Мешовити Тим Мексикано',
   'format.mixedTeamMexicanoDesc': 'Мешовити фиксни тимови, противници по рангу',
-  'format.mixedKingOfTheCourt': 'Мешовити King of the Court',
+  'format.mixedKingOfTheCourt': 'Мешовити Краљ Терена',
   'format.mixedKingOfTheCourtDesc': 'Мешовити парови, промоција/испадање терена',
   'format.clubAmericano': 'Klupski Americano',
   'format.clubAmericanoDesc': 'Nasumični partneri u klubu, međuklupski mečevi',

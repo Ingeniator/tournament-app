@@ -1,5 +1,5 @@
 import type { Round, MatchScore } from '@padel/common';
-import { useTranslation } from '@padel/common';
+import { useTranslation, nameOf } from '@padel/common';
 import { useMatchConfig } from './MatchConfigContext';
 import { MatchCard } from './MatchCard';
 import styles from './RoundCard.module.css';
@@ -20,7 +20,7 @@ interface RoundCardProps {
 export function RoundCard({ round, readOnly, editingMatchId, onStartEdit, onTapUnscored, onScore, onClear, onCast, onEscudo, onVeto }: RoundCardProps) {
   const { players } = useMatchConfig();
   const { t } = useTranslation();
-  const name = (id: string) => players.find(p => p.id === id)?.name ?? '?';
+  const name = (id: string) => nameOf(players, id);
   const scoredCount = round.matches.filter(m => m.score).length;
   const allScored = scoredCount === round.matches.length;
 

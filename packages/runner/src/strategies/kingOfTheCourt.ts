@@ -602,7 +602,7 @@ function buildKOTCStrategy(crossGroupMode: boolean): TournamentStrategy {
       return generateKOTCRounds(players, config, [], 1);
     },
 
-    generateAdditionalRounds(players: Player[], config: TournamentConfig, existingRounds: Round[], count: number, excludePlayerIds?: string[]): ScheduleResult {
+    generateAdditionalRounds({ players, config, existingRounds, count, excludePlayerIds }): ScheduleResult {
       return generateKOTCRounds(players, config, existingRounds, count, excludePlayerIds);
     },
   };

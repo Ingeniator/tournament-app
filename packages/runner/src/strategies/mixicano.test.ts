@@ -228,7 +228,7 @@ describe('mixicano strategy', () => {
       const config = makeConfig(2);
       const initial = mixicanoStrategy.generateSchedule(players, config);
       const scored = scoreAllMatches(initial.rounds);
-      const { rounds } = mixicanoStrategy.generateAdditionalRounds(players, config, scored, 3);
+      const { rounds } = mixicanoStrategy.generateAdditionalRounds({ players, config, existingRounds: scored, count: 3 });
       expect(rounds).toHaveLength(3);
     });
 
@@ -237,7 +237,7 @@ describe('mixicano strategy', () => {
       const config = makeConfig(2);
       const initial = mixicanoStrategy.generateSchedule(players, config);
       const scored = scoreAllMatches(initial.rounds);
-      const { rounds } = mixicanoStrategy.generateAdditionalRounds(players, config, scored, 1);
+      const { rounds } = mixicanoStrategy.generateAdditionalRounds({ players, config, existingRounds: scored, count: 1 });
       expect(rounds[0].matches).toHaveLength(2);
       assertCrossGroupPartners(players, rounds);
     });
@@ -247,16 +247,14 @@ describe('mixicano strategy', () => {
       const config = makeConfig(2);
       const initial = mixicanoStrategy.generateSchedule(players, config);
       const scored = scoreAllMatches(initial.rounds);
-      const { rounds } = mixicanoStrategy.generateAdditionalRounds(players, config, scored, 5);
+      const { rounds } = mixicanoStrategy.generateAdditionalRounds({ players, config, existingRounds: scored, count: 5 });
       assertCrossGroupPartners(players, rounds);
     });
 
     it('handles excluded player ids', () => {
       const players = makePlayers(4, 4);
       const config = makeConfig(1);
-      const { rounds } = mixicanoStrategy.generateAdditionalRounds(
-        players, config, [], 1, ['a1', 'b1'],
-      );
+      const { rounds } = mixicanoStrategy.generateAdditionalRounds({ players, config, existingRounds: [], count: 1, excludePlayerIds: ['a1', 'b1'] });
       const allPlayerIds = rounds[0].matches.flatMap(m => [...m.team1, ...m.team2]);
       expect(allPlayerIds).not.toContain('a1');
       expect(allPlayerIds).not.toContain('b1');
@@ -267,7 +265,7 @@ describe('mixicano strategy', () => {
       const config = makeConfig(2);
       const initial = mixicanoStrategy.generateSchedule(players, config);
       const scored = scoreAllMatches(initial.rounds);
-      const { rounds } = mixicanoStrategy.generateAdditionalRounds(players, config, scored, 2);
+      const { rounds } = mixicanoStrategy.generateAdditionalRounds({ players, config, existingRounds: scored, count: 2 });
       expect(rounds[0].roundNumber).toBe(2);
       expect(rounds[1].roundNumber).toBe(3);
     });
@@ -276,9 +274,7 @@ describe('mixicano strategy', () => {
       const players = makePlayers(2, 2);
       const config = makeConfig(1);
       // Exclude both B players — only 2 A players left, not enough for match
-      const { rounds } = mixicanoStrategy.generateAdditionalRounds(
-        players, config, [], 1, ['b1', 'b2'],
-      );
+      const { rounds } = mixicanoStrategy.generateAdditionalRounds({ players, config, existingRounds: [], count: 1, excludePlayerIds: ['b1', 'b2'] });
       expect(rounds).toHaveLength(0);
     });
   });

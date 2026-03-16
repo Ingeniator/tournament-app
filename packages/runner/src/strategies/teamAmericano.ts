@@ -173,7 +173,7 @@ export const teamAmericanoStrategy: TournamentStrategy = {
     return generateTeamRounds(teams, config, totalRounds, 1, new Map(), gamesPlayed, lastSitOutRound);
   },
 
-  generateAdditionalRounds(_players: Player[], config: TournamentConfig, existingRounds: Round[], count: number, excludePlayerIds?: string[], _timeBudgetMs?: number, tournament?: Tournament): ScheduleResult {
+  generateAdditionalRounds({ config, existingRounds, count, excludePlayerIds, tournament }): ScheduleResult {
     const allTeams = tournament?.teams ?? [];
     // Filter out teams where any player is excluded (unavailable)
     const excludeSet = new Set(excludePlayerIds ?? []);

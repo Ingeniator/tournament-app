@@ -17,8 +17,6 @@ const it: Translations = {
   'home.loadFile': 'Importa da File',
   'home.clipboardError': 'Impossibile leggere gli appunti. Prova a incollare manualmente o a caricare un file.',
   'home.deleteConfirm': 'Eliminare questo torneo? Non si pu\u00f2 annullare.',
-  'home.sendFeedback': 'Invia feedback',
-
   // Footer & Options
   'footer.freeOpenSource': 'Gratuito e open source',
   'footer.madeWithCare': 'Fatto con cura',
@@ -169,6 +167,7 @@ const it: Translations = {
   'standings.gp': 'PG',
   'standings.wtl': 'V-P-S',
   'standings.diff': '+/-',
+  'standings.tableCaption': 'Classifica del torneo',
 
   // PlayerStats
   'playerStats.empty': 'Nessuna partita registrata',
@@ -384,7 +383,7 @@ const it: Translations = {
   'format.mexicanoDesc': 'Partner a rotazione, avversari per classifica',
   'format.mixicano': 'Mixicano',
   'format.mixicanoDesc': 'Coppie tra gruppi, avversari per classifica',
-  'format.kingOfTheCourt': 'King of the Court',
+  'format.kingOfTheCourt': 'Re del Campo',
   'format.kingOfTheCourtDesc': 'Sistema di promozione/retrocessione del campo',
   'format.teamAmericano': 'Team Americano',
   'format.teamAmericanoDesc': 'Squadre fisse, avversari casuali',
@@ -394,7 +393,7 @@ const it: Translations = {
   'format.mixedTeamAmericanoDesc': 'Squadre fisse miste, avversari casuali',
   'format.mixedTeamMexicano': 'Team Mexicano Misto',
   'format.mixedTeamMexicanoDesc': 'Squadre fisse miste, avversari per classifica',
-  'format.mixedKingOfTheCourt': 'King of the Court Misto',
+  'format.mixedKingOfTheCourt': 'Re del Campo Misto',
   'format.mixedKingOfTheCourtDesc': 'Coppie miste, promozione/retrocessione di campo',
   'format.clubAmericano': 'Club Americano',
   'format.clubAmericanoDesc': 'Partner casuali nel club, partite inter-club',

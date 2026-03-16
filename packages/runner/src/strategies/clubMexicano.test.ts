@@ -167,9 +167,7 @@ describe('clubMexicano strategy (individual)', () => {
       const initial = clubMexicanoStrategy.generateSchedule(players, config, tournament);
       const scored = scoreRounds(initial.rounds, 13, 8);
       const tournamentWithRounds = makeTournament(players, config, clubs, scored);
-      const { rounds } = clubMexicanoStrategy.generateAdditionalRounds(
-        players, config, scored, 1, undefined, undefined, tournamentWithRounds,
-      );
+      const { rounds } = clubMexicanoStrategy.generateAdditionalRounds({ players, config, existingRounds: scored, count: 1, tournament: tournamentWithRounds });
       expect(rounds).toHaveLength(1);
     });
 
@@ -179,9 +177,7 @@ describe('clubMexicano strategy (individual)', () => {
       const initial = clubMexicanoStrategy.generateSchedule(players, config, tournament);
       const scored = scoreRounds(initial.rounds, 13, 8);
       const tournamentWithRounds = makeTournament(players, config, clubs, scored);
-      const { rounds } = clubMexicanoStrategy.generateAdditionalRounds(
-        players, config, scored, 1, undefined, undefined, tournamentWithRounds,
-      );
+      const { rounds } = clubMexicanoStrategy.generateAdditionalRounds({ players, config, existingRounds: scored, count: 1, tournament: tournamentWithRounds });
 
       const playerClubMap = new Map<string, string>();
       for (const p of players) {

@@ -36,6 +36,7 @@ export const StandingsTable = memo(function StandingsTable({ standings, plannedG
   return (
     <div className={styles.wrapper}>
     <table className={styles.table}>
+      <caption className={styles.srOnly}>{t('standings.tableCaption')}</caption>
       <thead>
         <tr>
           <th>{t('standings.name')}</th>

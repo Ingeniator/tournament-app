@@ -167,6 +167,7 @@ const fr: Translations = {
   'standings.gp': 'MJ',
   'standings.wtl': 'V-N-D',
   'standings.diff': '+/-',
+  'standings.tableCaption': 'Classement du tournoi',
 
   // PlayerStats
   'playerStats.empty': 'Aucun match noté',
@@ -382,7 +383,7 @@ const fr: Translations = {
   'format.mexicanoDesc': 'Partenaires rotatifs, adversaires par classement',
   'format.mixicano': 'Mixicano',
   'format.mixicanoDesc': 'Paires inter-groupes, adversaires par classement',
-  'format.kingOfTheCourt': 'King of the Court',
+  'format.kingOfTheCourt': 'Roi du Terrain',
   'format.kingOfTheCourtDesc': 'Système de promotion/relégation de terrain',
   'format.teamAmericano': 'Team Americano',
   'format.teamAmericanoDesc': 'Équipes fixes, adversaires aléatoires',
@@ -392,7 +393,7 @@ const fr: Translations = {
   'format.mixedTeamAmericanoDesc': 'Équipes fixes mixtes, adversaires aléatoires',
   'format.mixedTeamMexicano': 'Team Mexicano Mixte',
   'format.mixedTeamMexicanoDesc': 'Équipes fixes mixtes, adversaires par classement',
-  'format.mixedKingOfTheCourt': 'King of the Court Mixte',
+  'format.mixedKingOfTheCourt': 'Roi du Terrain Mixte',
   'format.mixedKingOfTheCourtDesc': 'Paires mixtes, promotion/relégation de terrain',
   'format.clubAmericano': 'Club Americano',
   'format.clubAmericanoDesc': 'Partenaires aléatoires au sein du club, matchs inter-club',

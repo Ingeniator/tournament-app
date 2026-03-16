@@ -193,9 +193,7 @@ describe('clubAmericano strategy (individual)', () => {
       const tournament = makeTournament(players, config, clubs);
       const initial = clubAmericanoStrategy.generateSchedule(players, config, tournament);
       const scored = scoreRounds(initial.rounds, 11, 10);
-      const { rounds } = clubAmericanoStrategy.generateAdditionalRounds(
-        players, config, scored, 2, undefined, undefined, tournament,
-      );
+      const { rounds } = clubAmericanoStrategy.generateAdditionalRounds({ players, config, existingRounds: scored, count: 2, tournament });
       expect(rounds).toHaveLength(2);
     });
   });
@@ -288,9 +286,7 @@ describe('clubAmericano strategy (individual)', () => {
       expect(winners[0].totalPoints).toBeGreaterThan(losers[0].totalPoints);
 
       // Add another round
-      const { rounds: extraRounds } = clubAmericanoStrategy.generateAdditionalRounds(
-        players, config, scored, 1, undefined, undefined, tournamentWithRounds,
-      );
+      const { rounds: extraRounds } = clubAmericanoStrategy.generateAdditionalRounds({ players, config, existingRounds: scored, count: 1, tournament: tournamentWithRounds });
       expect(extraRounds).toHaveLength(1);
       expect(extraRounds[0].matches).toHaveLength(1);
     });
@@ -357,9 +353,7 @@ describe('clubAmericano strategy (individual)', () => {
       expect(standings.filter(s => s.matchesLost === 1)).toHaveLength(2);
 
       // Step 4: Add another round
-      const { rounds: round2 } = clubAmericanoStrategy.generateAdditionalRounds(
-        players, config, scored, 1, undefined, undefined, withRounds,
-      );
+      const { rounds: round2 } = clubAmericanoStrategy.generateAdditionalRounds({ players, config, existingRounds: scored, count: 1, tournament: withRounds });
       expect(round2).toHaveLength(1);
       expect(round2[0].matches).toHaveLength(1);
 

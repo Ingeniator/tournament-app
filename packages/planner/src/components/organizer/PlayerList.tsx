@@ -1,5 +1,5 @@
-import { useState, useRef, useMemo, useEffect, useCallback, type ClipboardEvent, type ReactNode } from 'react';
-import { Button, Card, NO_COLOR, getClubColor, getRankColor, shortLabel, Modal, useTranslation, formatHasGroups, formatHasClubs, formatHasFixedPartners } from '@padel/common';
+import { useState, useRef, useMemo, useCallback, type ClipboardEvent, type ReactNode } from 'react';
+import { Button, Card, NO_COLOR, getClubColor, getRankColor, shortLabel, Modal, useTranslation, useClickOutside, formatHasGroups, formatHasClubs, formatHasFixedPartners } from '@padel/common';
 import type { PlannerRegistration, TournamentFormat, Club } from '@padel/common';
 import { parsePlayerList } from '@padel/common';
 import type { PartnerRejection, PartnerConstraints } from '../../utils/partnerLogic';
@@ -48,16 +48,7 @@ export function PlayerList({ players, capacity, addPlayer, bulkAddPlayers, remov
 
   const closeMenu = useCallback(() => setOpenMenuId(null), []);
 
-  useEffect(() => {
-    if (!openMenuId) return;
-    const handleClick = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        closeMenu();
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [openMenuId, closeMenu]);
+  useClickOutside(menuRef, !!openMenuId, closeMenu);
   const NEW_PLAYER_VALUE = '__new__';
   const [aliasDraft, setAliasDraft] = useState('');
   const [linkDraft, setLinkDraft] = useState('');

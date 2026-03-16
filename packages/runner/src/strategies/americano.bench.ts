@@ -56,7 +56,7 @@ describe('generateAdditionalRounds (from mid-tournament)', () => {
   const scored8 = initial8.slice(0, 3);
 
   bench('8p / 2c / +4r (from 3 scored)', () => {
-    americanoStrategy.generateAdditionalRounds(players8, config8, scored8, 4);
+    americanoStrategy.generateAdditionalRounds({ players: players8, config: config8, existingRounds: scored8, count: 4 });
   }, { iterations: 10, warmupIterations: 1 });
 
   const players12 = makePlayers(12);
@@ -65,6 +65,6 @@ describe('generateAdditionalRounds (from mid-tournament)', () => {
   const scored12 = initial12.slice(0, 5);
 
   bench('12p / 3c / +6r (from 5 scored)', () => {
-    americanoStrategy.generateAdditionalRounds(players12, config12, scored12, 6);
+    americanoStrategy.generateAdditionalRounds({ players: players12, config: config12, existingRounds: scored12, count: 6 });
   }, { iterations: 10, warmupIterations: 1 });
 });

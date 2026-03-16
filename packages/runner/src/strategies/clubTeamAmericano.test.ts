@@ -182,9 +182,7 @@ describe('clubTeamAmericano strategy', () => {
       const tournament = makeTournament(players, teams, config, clubs);
       const initial = clubTeamAmericanoStrategy.generateSchedule(players, config, tournament);
       const scored = scoreRounds(initial.rounds, 11, 10);
-      const { rounds } = clubTeamAmericanoStrategy.generateAdditionalRounds(
-        players, config, scored, 2, undefined, undefined, tournament,
-      );
+      const { rounds } = clubTeamAmericanoStrategy.generateAdditionalRounds({ players, config, existingRounds: scored, count: 2, tournament });
       expect(rounds).toHaveLength(2);
     });
   });

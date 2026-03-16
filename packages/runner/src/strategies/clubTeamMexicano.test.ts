@@ -176,9 +176,7 @@ describe('clubTeamMexicano strategy', () => {
       const tournament = makeTournament(players, teams, config, clubs);
       const initial = clubTeamMexicanoStrategy.generateSchedule(players, config, tournament);
       const scored = scoreRounds(initial.rounds, 11, 10);
-      const { rounds } = clubTeamMexicanoStrategy.generateAdditionalRounds(
-        players, config, scored, 1, undefined, undefined, tournament,
-      );
+      const { rounds } = clubTeamMexicanoStrategy.generateAdditionalRounds({ players, config, existingRounds: scored, count: 1, tournament });
       expect(rounds[0].roundNumber).toBe(2);
     });
 
@@ -191,9 +189,7 @@ describe('clubTeamMexicano strategy', () => {
 
       for (let i = 1; i < 3; i++) {
         const t = makeTournament(players, teams, config, clubs, allRounds);
-        const { rounds } = clubTeamMexicanoStrategy.generateAdditionalRounds(
-          players, config, allRounds, 1, undefined, undefined, t,
-        );
+        const { rounds } = clubTeamMexicanoStrategy.generateAdditionalRounds({ players, config, existingRounds: allRounds, count: 1, tournament: t });
         allRounds = [...allRounds, ...scoreRounds(rounds, 11, 10)];
       }
 
@@ -230,9 +226,7 @@ describe('clubTeamMexicano strategy', () => {
       }];
 
       const tournament = makeTournament(players, teams, config, clubs, rounds);
-      const { rounds: newRounds } = clubTeamMexicanoStrategy.generateAdditionalRounds(
-        players, config, rounds, 1, undefined, undefined, tournament,
-      );
+      const { rounds: newRounds } = clubTeamMexicanoStrategy.generateAdditionalRounds({ players, config, existingRounds: rounds, count: 1, tournament });
 
       expect(newRounds).toHaveLength(1);
       expect(newRounds[0].matches.length).toBeGreaterThan(0);
@@ -245,9 +239,7 @@ describe('clubTeamMexicano strategy', () => {
       const scored = scoreRounds(initial.rounds, 11, 10);
 
       const excludeIds = players.map(p => p.id);
-      const { rounds, warnings } = clubTeamMexicanoStrategy.generateAdditionalRounds(
-        [], config, scored, 1, excludeIds, undefined, tournament,
-      );
+      const { rounds, warnings } = clubTeamMexicanoStrategy.generateAdditionalRounds({ players: [], config, existingRounds: scored, count: 1, excludePlayerIds: excludeIds, tournament });
       expect(rounds).toHaveLength(0);
       expect(warnings.some(w => w.includes('Not enough'))).toBe(true);
     });
@@ -260,9 +252,7 @@ describe('clubTeamMexicano strategy', () => {
 
       for (let i = 1; i < 3; i++) {
         const t = makeTournament(players, teams, config, clubs, allRounds);
-        const { rounds } = clubTeamMexicanoStrategy.generateAdditionalRounds(
-          players, config, allRounds, 1, undefined, undefined, t,
-        );
+        const { rounds } = clubTeamMexicanoStrategy.generateAdditionalRounds({ players, config, existingRounds: allRounds, count: 1, tournament: t });
         allRounds = [...allRounds, ...scoreRounds(rounds, 11, 10)];
       }
 

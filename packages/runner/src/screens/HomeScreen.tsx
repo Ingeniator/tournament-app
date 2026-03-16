@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { ref, push, set } from 'firebase/database';
 import { useTournament } from '../hooks/useTournament';
 import { useRunnerTheme } from '../state/ThemeContext';
 import { validateImport } from '../utils/importExport';
 import { auth, db } from '../firebase';
-import { Button, FeedbackModal, AppFooter, SkinPicker, useTranslation } from '@padel/common';
+import { Button, FeedbackModal, AppFooter, SkinPicker, useTranslation, useClickOutside } from '@padel/common';
 import styles from './HomeScreen.module.css';
 
 export function HomeScreen() {
@@ -65,16 +65,7 @@ export function HomeScreen() {
   };
 
 
-  useEffect(() => {
-    if (!importOpen) return;
-    const handleClick = (e: MouseEvent) => {
-      if (importRef.current && !importRef.current.contains(e.target as Node)) {
-        setImportOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [importOpen]);
+  useClickOutside(importRef, importOpen, () => setImportOpen(false));
 
   const hasSaved = tournament !== null;
 

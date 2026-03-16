@@ -17,7 +17,7 @@ function regenerateUnscoredRounds(
   const strategy = getStrategy(config.format);
   const active = players.filter(p => !p.unavailable);
   const excludeIds = players.filter(p => p.unavailable).map(p => p.id);
-  const { rounds: regen } = strategy.generateAdditionalRounds(active, config, scored, dropped, excludeIds, timeBudgetMs, state);
+  const { rounds: regen } = strategy.generateAdditionalRounds({ players: active, config, existingRounds: scored, count: dropped, excludePlayerIds: excludeIds, timeBudgetMs, tournament: state });
   return [...scored, ...regen];
 }
 
@@ -251,15 +251,13 @@ export function tournamentReducer(
     case 'ADD_ROUNDS': {
       if (!state || (state.phase !== 'in-progress' && state.phase !== 'completed')) return state;
       const addStrategy = getStrategy(state.config.format);
-      const { rounds: newRounds } = addStrategy.generateAdditionalRounds(
-        state.players,
-        state.config,
-        state.rounds,
-        action.payload.count,
-        undefined,
-        undefined,
-        state
-      );
+      const { rounds: newRounds } = addStrategy.generateAdditionalRounds({
+        players: state.players,
+        config: state.config,
+        existingRounds: state.rounds,
+        count: action.payload.count,
+        tournament: state,
+      });
 
       // Deal maldiciones if enabled and not dealt yet
       let addMaldHands = state.maldicionesHands;
@@ -309,7 +307,7 @@ export function tournamentReducer(
           const active = updatedPlayers.filter(p => !p.unavailable);
           const excl = updatedPlayers.filter(p => p.unavailable).map(p => p.id);
           const updatedState = { ...state, rounds: updatedRounds, teams: updatedTeams };
-          const { rounds: next } = strategy.generateAdditionalRounds(active, state.config, updatedRounds, 1, excl, undefined, updatedState);
+          const { rounds: next } = strategy.generateAdditionalRounds({ players: active, config: state.config, existingRounds: updatedRounds, count: 1, excludePlayerIds: excl, tournament: updatedState });
           return { ...updatedState, rounds: [...updatedRounds, ...next], updatedAt: Date.now() };
         }
       }
@@ -375,7 +373,7 @@ export function tournamentReducer(
       const strat = getStrategy(state.config.format);
       const excl = state.players.filter(p => p.unavailable).map(p => p.id);
       const actv = state.players.filter(p => !p.unavailable);
-      const { rounds: extra } = strat.generateAdditionalRounds(actv, state.config, state.rounds, addCount, excl, undefined, state);
+      const { rounds: extra } = strat.generateAdditionalRounds({ players: actv, config: state.config, existingRounds: state.rounds, count: addCount, excludePlayerIds: excl, tournament: state });
       return { ...state, rounds: [...state.rounds, ...extra], updatedAt: Date.now() };
     }
 

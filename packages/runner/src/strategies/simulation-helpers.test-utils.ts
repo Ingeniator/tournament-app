@@ -290,9 +290,9 @@ export function simulateDynamic(
 
   for (let i = 1; i < numRounds; i++) {
     const currentTournament: Tournament = { ...baseTournament, rounds: allRounds };
-    const { rounds: newRounds } = strategy.generateAdditionalRounds(
-      players, config, allRounds, 1, undefined, undefined, currentTournament,
-    );
+    const { rounds: newRounds } = strategy.generateAdditionalRounds({
+      players, config, existingRounds: allRounds, count: 1, tournament: currentTournament,
+    });
     if (newRounds.length === 0) break;
     allRounds.push(...scoreDeterministic(newRounds, config.pointsPerMatch));
   }

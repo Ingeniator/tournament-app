@@ -62,6 +62,10 @@ vi.mock('@padel/common', () => ({
   formatHasGroups: (format: string) => format === 'mixicano' || format === 'mixed-americano',
   formatHasClubs: (format: string) => ['club-americano', 'club-ranked', 'club-team-americano', 'club-team-mexicano'].includes(format),
   getClubColor: () => '#888',
+  nameOf: (players: Array<{ id: string; name: string }>, id: string) =>
+    players.find((p: { id: string; name: string }) => p.id === id)?.name ?? '?',
+  shortLabel: (label: string) => label,
+  buildRankLabelMap: () => new Map(),
 }));
 
 vi.mock('../components/rounds/RoundCard', () => ({
@@ -403,13 +407,15 @@ describe('PlayScreen', () => {
 
     it('renders tournament name in completed header', () => {
       renderWithTournament(makeCompletedTournament());
-      expect(screen.getByText('Test Tournament')).toBeTruthy();
+      // Name appears in both visible header and hidden share card
+      expect(screen.getAllByText('Test Tournament').length).toBeGreaterThan(0);
     });
 
     it('renders standings table in carousel', () => {
       renderWithTournament(makeCompletedTournament());
       expect(screen.getByTestId('carousel')).toBeTruthy();
-      expect(screen.getByTestId('standings-table')).toBeTruthy();
+      // Standings table appears in both carousel and hidden share card
+      expect(screen.getAllByTestId('standings-table').length).toBeGreaterThan(0);
     });
 
     it('renders Share Image button', () => {

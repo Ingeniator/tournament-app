@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
+import { useClickOutside } from '../hooks/useClickOutside';
 import { THEME_SKINS, type SkinId, type ThemeSkin } from '../hooks/useTheme';
 import styles from './SkinPicker.module.css';
 
@@ -25,16 +26,7 @@ export function SkinPicker({ skin, onSelect }: SkinPickerProps) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
+  useClickOutside(wrapperRef, open, () => setOpen(false));
 
   const handleSelect = (id: SkinId) => {
     onSelect(id);

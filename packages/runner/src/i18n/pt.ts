@@ -17,8 +17,6 @@ const pt: Translations = {
   'home.loadFile': 'Importar de Ficheiro',
   'home.clipboardError': 'Não foi possível ler a área de transferência. Tente colar manualmente ou carregar um ficheiro.',
   'home.deleteConfirm': 'Eliminar este torneio? Esta ação não pode ser revertida.',
-  'home.sendFeedback': 'Enviar feedback',
-
   // Footer & Options
   'footer.freeOpenSource': 'Gratuito e open source',
   'footer.madeWithCare': 'Feito com cuidado',
@@ -169,6 +167,7 @@ const pt: Translations = {
   'standings.gp': 'JJ',
   'standings.wtl': 'V-E-D',
   'standings.diff': '+/-',
+  'standings.tableCaption': 'Classificação do torneio',
 
   // PlayerStats
   'playerStats.empty': 'Ainda sem jogos pontuados',
@@ -384,7 +383,7 @@ const pt: Translations = {
   'format.mexicanoDesc': 'Parceiros rotativos, adversários por classificação',
   'format.mixicano': 'Mixicano',
   'format.mixicanoDesc': 'Duplas entre grupos, adversários por classificação',
-  'format.kingOfTheCourt': 'King of the Court',
+  'format.kingOfTheCourt': 'Rei do Campo',
   'format.kingOfTheCourtDesc': 'Sistema de promoção/rebaixamento de quadra',
   'format.teamAmericano': 'Team Americano',
   'format.teamAmericanoDesc': 'Equipes fixas, adversários aleatórios',
@@ -394,7 +393,7 @@ const pt: Translations = {
   'format.mixedTeamAmericanoDesc': 'Times fixos mistos, adversários aleatórios',
   'format.mixedTeamMexicano': 'Team Mexicano Misto',
   'format.mixedTeamMexicanoDesc': 'Times fixos mistos, adversários por classificação',
-  'format.mixedKingOfTheCourt': 'King of the Court Misto',
+  'format.mixedKingOfTheCourt': 'Rei do Campo Misto',
   'format.mixedKingOfTheCourtDesc': 'Duplas mistas, promoção/rebaixamento de quadra',
   'format.clubAmericano': 'Club Americano',
   'format.clubAmericanoDesc': 'Parceiros aleatórios no clube, jogos interclube',

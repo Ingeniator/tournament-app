@@ -11,6 +11,8 @@ vi.mock('@padel/common', () => ({
       return key;
     },
   }),
+  nameOf: (players: Array<{ id: string; name: string }>, id: string) =>
+    players.find((p: { id: string; name: string }) => p.id === id)?.name ?? '?',
 }));
 
 vi.mock('./MatchCard', () => ({

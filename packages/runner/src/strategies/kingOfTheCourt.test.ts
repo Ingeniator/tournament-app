@@ -523,9 +523,7 @@ describe('kingOfTheCourt generateAdditionalRounds', () => {
   it('generates requested number of additional rounds', () => {
     const { rounds: initial } = kingOfTheCourtStrategy.generateSchedule(players, config);
     const scored = scoreRound(initial[0], [[15, 9], [15, 9]]);
-    const { rounds } = kingOfTheCourtStrategy.generateAdditionalRounds(
-      players, config, [scored], 2,
-    );
+    const { rounds } = kingOfTheCourtStrategy.generateAdditionalRounds({ players, config, existingRounds: [scored], count: 2 });
     expect(rounds).toHaveLength(2);
     expect(rounds[0].roundNumber).toBe(2);
     expect(rounds[1].roundNumber).toBe(3);
@@ -551,9 +549,7 @@ describe('kingOfTheCourt generateAdditionalRounds', () => {
       sitOuts: [],
     };
 
-    const { rounds } = kingOfTheCourtStrategy.generateAdditionalRounds(
-      players, config, [round1], 1,
-    );
+    const { rounds } = kingOfTheCourtStrategy.generateAdditionalRounds({ players, config, existingRounds: [round1], count: 1 });
 
     expect(rounds).toHaveLength(1);
     const round2 = rounds[0];
@@ -590,9 +586,7 @@ describe('kingOfTheCourt generateAdditionalRounds', () => {
       sitOuts: [],
     };
 
-    const { rounds } = kingOfTheCourtStrategy.generateAdditionalRounds(
-      players, config, [round1], 1,
-    );
+    const { rounds } = kingOfTheCourtStrategy.generateAdditionalRounds({ players, config, existingRounds: [round1], count: 1 });
     const kingMatch = rounds[0].matches.find(m => m.courtId === 'c1')!;
     const kingPlayers = [...kingMatch.team1, ...kingMatch.team2];
 
@@ -624,9 +618,7 @@ describe('kingOfTheCourt generateAdditionalRounds', () => {
       sitOuts: [],
     };
 
-    const { rounds } = kingOfTheCourtStrategy.generateAdditionalRounds(
-      players, config, [round1], 1,
-    );
+    const { rounds } = kingOfTheCourtStrategy.generateAdditionalRounds({ players, config, existingRounds: [round1], count: 1 });
     const kingMatch = rounds[0].matches.find(m => m.courtId === 'c1')!;
     const kingPlayers = [...kingMatch.team1, ...kingMatch.team2];
 
@@ -654,9 +646,7 @@ describe('kingOfTheCourt generateAdditionalRounds', () => {
       sitOuts: [],
     };
 
-    const { rounds } = kingOfTheCourtStrategy.generateAdditionalRounds(
-      players, config, [round1], 1,
-    );
+    const { rounds } = kingOfTheCourtStrategy.generateAdditionalRounds({ players, config, existingRounds: [round1], count: 1 });
     const lowerMatch = rounds[0].matches.find(m => m.courtId === 'c2')!;
     const lowerPlayers = [...lowerMatch.team1, ...lowerMatch.team2];
 
@@ -688,9 +678,7 @@ describe('kingOfTheCourt generateAdditionalRounds', () => {
       sitOuts: [],
     };
 
-    const { rounds } = kingOfTheCourtStrategy.generateAdditionalRounds(
-      players, config, [round1], 1,
-    );
+    const { rounds } = kingOfTheCourtStrategy.generateAdditionalRounds({ players, config, existingRounds: [round1], count: 1 });
 
     // After promotion: king court = [p1, p2, p5, p6]
     // Standings: p1=21, p2=21, p5=20, p6=20 (with court bonus for c1)
@@ -711,9 +699,7 @@ describe('kingOfTheCourt generateAdditionalRounds', () => {
     const { rounds: initial } = kingOfTheCourtStrategy.generateSchedule(players, config);
     const scored = scoreRound(initial[0], [[15, 9], [15, 9]]);
 
-    const { rounds } = kingOfTheCourtStrategy.generateAdditionalRounds(
-      players, config, [scored], 1, ['p7', 'p8'],
-    );
+    const { rounds } = kingOfTheCourtStrategy.generateAdditionalRounds({ players, config, existingRounds: [scored], count: 1, excludePlayerIds: ['p7', 'p8'] });
 
     const round = rounds[0];
     const allPlayerIds = round.matches.flatMap(m => [...m.team1, ...m.team2]);
@@ -741,9 +727,7 @@ describe('kingOfTheCourt generateAdditionalRounds', () => {
     };
 
     // Should not throw
-    const { rounds } = kingOfTheCourtStrategy.generateAdditionalRounds(
-      players, config, [round1], 1,
-    );
+    const { rounds } = kingOfTheCourtStrategy.generateAdditionalRounds({ players, config, existingRounds: [round1], count: 1 });
     expect(rounds).toHaveLength(1);
     expect(rounds[0].matches).toHaveLength(2);
   });
@@ -779,9 +763,7 @@ describe('kingOfTheCourt 3-court promotion/relegation', () => {
       sitOuts: [],
     };
 
-    const { rounds } = kingOfTheCourtStrategy.generateAdditionalRounds(
-      players, config, [round1], 1,
-    );
+    const { rounds } = kingOfTheCourtStrategy.generateAdditionalRounds({ players, config, existingRounds: [round1], count: 1 });
     const round2 = rounds[0];
 
     const kingPlayers = new Set(

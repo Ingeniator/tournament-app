@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { ref, push, set } from 'firebase/database';
 import { useTournament } from '../hooks/useTournament';
 import { EditableField } from '../components/settings/EditableField';
@@ -8,7 +8,7 @@ import { copyToClipboard } from '../utils/clipboard';
 import { exportTournament, exportTournamentToFile, validateImport } from '../utils/importExport';
 import { auth, db } from '../firebase';
 import { computeSitOutInfo } from '@padel/common';
-import { Button, Card, FeedbackModal, AppFooter, Toast, useToast, useTranslation } from '@padel/common';
+import { Button, Card, FeedbackModal, AppFooter, Toast, useToast, useTranslation, useClickOutside } from '@padel/common';
 import styles from './SettingsScreen.module.css';
 
 export function SettingsScreen() {
@@ -82,20 +82,8 @@ export function SettingsScreen() {
     }
   };
 
-  useEffect(() => {
-    const open = exportOpen || importOpen;
-    if (!open) return;
-    const handleClick = (e: MouseEvent) => {
-      if (exportOpen && exportRef.current && !exportRef.current.contains(e.target as Node)) {
-        setExportOpen(false);
-      }
-      if (importOpen && importRef.current && !importRef.current.contains(e.target as Node)) {
-        setImportOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [exportOpen, importOpen]);
+  useClickOutside(exportRef, exportOpen, () => setExportOpen(false));
+  useClickOutside(importRef, importOpen, () => setImportOpen(false));
 
   return (
     <div className={styles.container}>

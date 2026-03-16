@@ -279,7 +279,7 @@ describe('americano distribution', () => {
     it('additional rounds respect existing partner history', () => {
       const { rounds: initial } = americanoStrategy.generateSchedule(players, config);
       const scored = initial.slice(0, 3);
-      const { rounds: additional } = americanoStrategy.generateAdditionalRounds(players, config, scored, 4);
+      const { rounds: additional } = americanoStrategy.generateAdditionalRounds({ players, config, existingRounds: scored, count: 4 });
 
       // Combine and check overall quality
       const allRounds = [...scored, ...additional];
@@ -343,9 +343,7 @@ describe('americano distribution', () => {
 
       for (let i = 0; i < trials; i++) {
         // With standings
-        const { rounds: adaptive } = americanoStrategy.generateAdditionalRounds(
-          players, config, scoredRounds, 1, undefined, undefined, tournament
-        );
+        const { rounds: adaptive } = americanoStrategy.generateAdditionalRounds({ players, config, existingRounds: scoredRounds, count: 1, tournament });
         for (const match of adaptive[0].matches) {
           const allIds = [...match.team1, ...match.team2];
           const ranks = allIds.map(id => parseInt(id.replace('p', '')));
@@ -353,9 +351,7 @@ describe('americano distribution', () => {
         }
 
         // Without standings (no tournament passed)
-        const { rounds: noStandings } = americanoStrategy.generateAdditionalRounds(
-          players, config, scoredRounds, 1
-        );
+        const { rounds: noStandings } = americanoStrategy.generateAdditionalRounds({ players, config, existingRounds: scoredRounds, count: 1 });
         for (const match of noStandings[0].matches) {
           const allIds = [...match.team1, ...match.team2];
           const ranks = allIds.map(id => parseInt(id.replace('p', '')));
@@ -373,9 +369,7 @@ describe('americano distribution', () => {
       const scoredRounds = scoreRoundsWithRanking(initialRounds.slice(0, 5));
       const tournament = makeTournament(scoredRounds);
 
-      const { rounds: adaptive } = americanoStrategy.generateAdditionalRounds(
-        players, config, scoredRounds, 2, undefined, undefined, tournament
-      );
+      const { rounds: adaptive } = americanoStrategy.generateAdditionalRounds({ players, config, existingRounds: scoredRounds, count: 2, tournament });
 
       const allRounds = [...scoredRounds, ...adaptive];
       const stats = analyzeSchedule(players, config, allRounds);
@@ -388,9 +382,7 @@ describe('americano distribution', () => {
       const scoredRounds = scoreRoundsWithRanking(initialRounds.slice(0, 3));
 
       // Should not throw when tournament is not passed
-      const { rounds: additional } = americanoStrategy.generateAdditionalRounds(
-        players, config, scoredRounds, 2
-      );
+      const { rounds: additional } = americanoStrategy.generateAdditionalRounds({ players, config, existingRounds: scoredRounds, count: 2 });
       expect(additional).toHaveLength(2);
     });
   });
