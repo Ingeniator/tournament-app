@@ -25,6 +25,7 @@ const es: Translations = {
   'home.noTournamentsCreated': 'Aún no has creado ningún torneo',
   'home.registeredTournaments': 'Torneos Registrados',
   'home.noTournamentsJoined': 'Aún no te has unido a ningún torneo',
+  'home.listingsError': 'No se pudieron cargar los torneos. Verifica tu conexión.',
   'home.tournamentNotFound': 'Torneo no encontrado',
   'home.failedCreate': 'Error al crear el torneo',
   'home.expired': 'Expirado',

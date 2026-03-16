@@ -91,7 +91,7 @@ function makeTournament(overrides: Partial<Tournament> = {}): Tournament {
 
 function renderHome(tournament: Tournament | null = null, dispatch = vi.fn()) {
   const result = render(
-    <TournamentContext.Provider value={{ tournament, dispatch, saveError: false }}>
+    <TournamentContext.Provider value={{ tournament, dispatch, saveError: false, syncError: false }}>
       <HomeScreen />
     </TournamentContext.Provider>,
   );

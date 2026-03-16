@@ -142,6 +142,7 @@ const sr: Translations = {
   'settings.tournamentImported': 'Turnir uvezen!',
   'settings.newPlayerNamePlaceholder': 'Ime novog igrača',
   'settings.storageWarning': 'Nije moguće sačuvati — skladište je možda puno. Vaš napredak može biti izgubljen ako zatvorite ovu stranicu.',
+  'settings.syncWarning': 'Nije moguće sinhronizovati rezultate turnira sa serverom. Rezultati su sačuvani lokalno.',
   'settings.groupWarning': 'Grupe su nejednake ({a} vs {b}) — manje raznovrsnosti u mečevima',
 
   // BottomNav

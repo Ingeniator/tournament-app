@@ -16,6 +16,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     return loaded;
   });
   const [saveError, setSaveError] = useState(false);
+  const [syncError, setSyncError] = useState(false);
   const prevPhaseRef = useRef(tournament?.phase);
 
   useEffect(() => {
@@ -34,18 +35,22 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       tournament.plannerTournamentId &&
       db
     ) {
+      setSyncError(false);
       signIn().then(async () => {
         const base = `tournaments/${tournament.plannerTournamentId}`;
         await update(ref(db!), {
           [`${base}/runnerData`]: tournament,
           [`${base}/completedAt`]: Date.now(),
         });
-      }).catch(() => {});
+      }).catch((e) => {
+        console.warn('[sync] Failed to write completion to Firebase:', e);
+        setSyncError(true);
+      });
     }
   }, [tournament?.phase, tournament?.plannerTournamentId]);
 
   return (
-    <TournamentContext.Provider value={{ tournament, dispatch, saveError }}>
+    <TournamentContext.Provider value={{ tournament, dispatch, saveError, syncError }}>
       {children}
     </TournamentContext.Provider>
   );

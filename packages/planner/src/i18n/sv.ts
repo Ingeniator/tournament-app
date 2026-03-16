@@ -25,6 +25,7 @@ const sv: Translations = {
   'home.noTournamentsCreated': 'Inga turneringar skapade ännu',
   'home.registeredTournaments': 'Registrerade Turneringar',
   'home.noTournamentsJoined': 'Inga turneringar anslutna ännu',
+  'home.listingsError': 'Kunde inte ladda turneringar. Kontrollera din anslutning.',
   'home.tournamentNotFound': 'Turnering hittades inte',
   'home.failedCreate': 'Kunde inte skapa turnering',
   'home.expired': 'Utgången',

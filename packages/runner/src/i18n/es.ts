@@ -142,6 +142,7 @@ const es: Translations = {
   'settings.tournamentImported': '\u00a1Torneo importado!',
   'settings.newPlayerNamePlaceholder': 'Nombre del nuevo jugador',
   'settings.storageWarning': 'No se pudo guardar \u2014 el almacenamiento puede estar lleno. Tu progreso podr\u00eda perderse si cierras esta p\u00e1gina.',
+  'settings.syncWarning': 'No se pudieron sincronizar los resultados del torneo con el servidor. Los resultados se guardaron localmente.',
   'settings.groupWarning': 'Grupos desiguales ({a} vs {b}) — menos variedad en los emparejamientos',
 
   // BottomNav

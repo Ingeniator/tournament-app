@@ -25,6 +25,7 @@ const sr: Translations = {
   'home.noTournamentsCreated': 'Još nema kreiranih turnira',
   'home.registeredTournaments': 'Registrovani Turniri',
   'home.noTournamentsJoined': 'Još nema pridruženih turnira',
+  'home.listingsError': 'Nije moguće učitati turnire. Proverite vezu.',
   'home.tournamentNotFound': 'Turnir nije pronađen',
   'home.failedCreate': 'Kreiranje turnira neuspešno',
   'home.expired': 'Istekao',

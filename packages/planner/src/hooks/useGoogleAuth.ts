@@ -29,6 +29,9 @@ export function useGoogleAuth(uid: string | null) {
       get(ref(db, `users/${oldUid}/registrations`)),
     ]);
 
+    // Build a single atomic update for all claim sweep writes
+    const sweepUpdates: Record<string, unknown> = {};
+
     // Sweep organized tournaments
     const organized = organizedSnap.val() as Record<string, boolean> | null;
     if (organized) {
@@ -36,9 +39,9 @@ export function useGoogleAuth(uid: string | null) {
         const organizerSnap = await get(ref(db, `tournaments/${tournamentId}/organizerId`));
         if (!organizerSnap.exists() || organizerSnap.val() !== oldUid) continue;
 
-        await set(ref(db, `tournaments/${tournamentId}/organizerId`), newUid);
-        await set(ref(db, `users/${oldUid}/organized/${tournamentId}`), null);
-        await set(ref(db, `users/${newUid}/organized/${tournamentId}`), true);
+        sweepUpdates[`tournaments/${tournamentId}/organizerId`] = newUid;
+        sweepUpdates[`users/${oldUid}/organized/${tournamentId}`] = null;
+        sweepUpdates[`users/${newUid}/organized/${tournamentId}`] = true;
       }
     }
 
@@ -53,13 +56,15 @@ export function useGoogleAuth(uid: string | null) {
         const newPlayerSnap = await get(ref(db, `tournaments/${tournamentId}/players/${newUid}`));
         if (newPlayerSnap.exists()) continue;
 
-        await update(ref(db), {
-          [`tournaments/${tournamentId}/players/${oldUid}`]: null,
-          [`tournaments/${tournamentId}/players/${newUid}`]: playerData,
-        });
-        await set(ref(db, `users/${oldUid}/registrations/${tournamentId}`), null);
-        await set(ref(db, `users/${newUid}/registrations/${tournamentId}`), true);
+        sweepUpdates[`tournaments/${tournamentId}/players/${oldUid}`] = null;
+        sweepUpdates[`tournaments/${tournamentId}/players/${newUid}`] = playerData;
+        sweepUpdates[`users/${oldUid}/registrations/${tournamentId}`] = null;
+        sweepUpdates[`users/${newUid}/registrations/${tournamentId}`] = true;
       }
+    }
+
+    if (Object.keys(sweepUpdates).length > 0) {
+      await update(ref(db), sweepUpdates);
     }
 
     // Copy profile name if new user doesn't have one

@@ -16,7 +16,7 @@ import { IOSInstallBanner } from './components/IOSInstallBanner';
 import { UpdatePrompt } from './components/UpdatePrompt';
 
 function AppContent() {
-  const { tournament, dispatch, saveError } = useTournament();
+  const { tournament, dispatch, saveError, syncError } = useTournament();
   const { t } = useTranslation();
   const { skin, setSkin } = useRunnerTheme();
   const [activeTab, setActiveTab] = useState<TabId>(() => {
@@ -51,6 +51,11 @@ function AppContent() {
       {saveError && (
         <div style={{ background: 'var(--color-warning)', color: '#fff', textAlign: 'center', padding: '6px 12px', fontSize: '13px' }}>
           {t('settings.storageWarning')}
+        </div>
+      )}
+      {syncError && (
+        <div style={{ background: 'var(--color-warning)', color: '#fff', textAlign: 'center', padding: '6px 12px', fontSize: '13px' }}>
+          {t('settings.syncWarning')}
         </div>
       )}
       <AppShell

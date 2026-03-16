@@ -69,6 +69,8 @@ export interface PlannerContextValue {
   linkGoogle: () => Promise<void>;
   googleLinking: boolean;
   chatRoomLoading: boolean;
+  listingsError: string | null;
+  playersError: string | null;
   skin: SkinId;
   setSkin: (skin: SkinId) => void;
   myEvents: PadelEventSummary[];
@@ -129,6 +131,7 @@ export function usePlanner(): PlannerContextValue {
     listingsLoading: tournament.listingsLoading,
     chatRoomTournaments: tournament.chatRoomTournaments,
     chatRoomLoading: tournament.chatRoomLoading,
+    listingsError: tournament.listingsError,
     // Player
     players: player.players,
     isRegistered: player.isRegistered,
@@ -146,6 +149,7 @@ export function usePlanner(): PlannerContextValue {
     updatePlayerRank: player.updatePlayerRank,
     updatePlayerPartner: player.updatePlayerPartner,
     updateCaptainApproval: player.updateCaptainApproval,
+    playersError: player.playersError,
     // Event
     myEvents: event.myEvents,
     visitedEvents: event.visitedEvents,

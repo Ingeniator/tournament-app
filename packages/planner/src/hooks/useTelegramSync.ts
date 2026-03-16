@@ -56,14 +56,12 @@ export function useTelegramSync(uid: string | null, telegramUsername: string | u
           const newPlayerSnap = await get(ref(db, `tournaments/${tournamentId}/players/${uid}`));
           if (newPlayerSnap.exists()) continue;
 
-          // Move player and registration index separately to avoid
-          // cross-node permission issues with atomic multi-path updates
           await update(ref(db), {
             [`tournaments/${tournamentId}/players/${currentUid}`]: null,
             [`tournaments/${tournamentId}/players/${uid}`]: { ...playerData, telegramUsername },
+            [`users/${currentUid}/registrations/${tournamentId}`]: null,
+            [`users/${uid}/registrations/${tournamentId}`]: true,
           });
-          await set(ref(db, `users/${currentUid}/registrations/${tournamentId}`), null);
-          await set(ref(db, `users/${uid}/registrations/${tournamentId}`), true);
         }
       }
 
@@ -78,10 +76,11 @@ export function useTelegramSync(uid: string | null, telegramUsername: string | u
           const tournamentSnap = await get(ref(db, `tournaments/${tournamentId}/organizerId`));
           if (!tournamentSnap.exists() || tournamentSnap.val() !== currentUid) continue;
 
-          // Transfer organizer ownership and move organized index
-          await set(ref(db, `tournaments/${tournamentId}/organizerId`), uid);
-          await set(ref(db, `users/${currentUid}/organized/${tournamentId}`), null);
-          await set(ref(db, `users/${uid}/organized/${tournamentId}`), true);
+          await update(ref(db), {
+            [`tournaments/${tournamentId}/organizerId`]: uid,
+            [`users/${currentUid}/organized/${tournamentId}`]: null,
+            [`users/${uid}/organized/${tournamentId}`]: true,
+          });
         }
       }
 

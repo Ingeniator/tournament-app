@@ -34,6 +34,7 @@ export interface TournamentContextValue {
   myTournaments: TournamentSummary[];
   registeredTournaments: TournamentSummary[];
   listingsLoading: boolean;
+  listingsError: string | null;
   chatRoomTournaments: TournamentSummary[];
   chatRoomLoading: boolean;
 }
@@ -64,11 +65,12 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     undoComplete,
   } = usePlannerTournament(tournamentId);
 
-  const { tournaments: myTournaments, loading: myLoading } = useMyTournaments(uid);
-  const { tournaments: registeredTournaments, loading: regLoading } = useRegisteredTournaments(uid);
+  const { tournaments: myTournaments, loading: myLoading, error: myError } = useMyTournaments(uid);
+  const { tournaments: registeredTournaments, loading: regLoading, error: regError } = useRegisteredTournaments(uid);
   const { tournaments: chatRoomTournaments, loading: chatRoomLoading } = useChatRoomTournaments(chatInstance);
 
   const listingsLoading = myLoading || regLoading;
+  const listingsError = myError || regError || null;
 
   // Wrap updateTournament to sync name/date changes to chat room entries
   const wrappedUpdateTournament = useCallback(async (updates: Parameters<typeof updateTournament>[0]) => {
@@ -186,6 +188,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       myTournaments,
       registeredTournaments,
       listingsLoading,
+      listingsError,
       chatRoomTournaments,
       chatRoomLoading,
     }}>

@@ -36,7 +36,7 @@ export function HomeScreen() {
   const {
     createTournament, importTournament, importEvent, loadByCode, loadEventByCode, setScreen,
     userName, userNameLoading, updateUserName,
-    myTournaments, registeredTournaments, listingsLoading,
+    myTournaments, registeredTournaments, listingsLoading, listingsError,
     chatRoomTournaments, chatRoomLoading,
     openTournament, deleteTournamentById, skin, setSkin,
     myEvents, visitedEvents, eventsLoading, setActiveEventId,
@@ -316,6 +316,14 @@ export function HomeScreen() {
 
       {mode === 'player' ? (
         <>
+          {/* Listings error */}
+          {listingsError && (
+            <Card>
+              <p className={styles.error}>{t('home.listingsError')}</p>
+              <Button variant="ghost" size="small" onClick={() => window.location.reload()}>{t('app.retry')}</Button>
+            </Card>
+          )}
+
           {/* Registered Tournaments */}
           {!listingsLoading && (
             <Card>
@@ -435,6 +443,14 @@ export function HomeScreen() {
                   {savingName ? t('home.saving') : t('home.save')}
                 </Button>
               </div>
+            </Card>
+          )}
+
+          {/* Listings error */}
+          {listingsError && (
+            <Card>
+              <p className={styles.error}>{t('home.listingsError')}</p>
+              <Button variant="ghost" size="small" onClick={() => window.location.reload()}>{t('app.retry')}</Button>
             </Card>
           )}
 

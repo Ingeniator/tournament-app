@@ -6,10 +6,12 @@ export interface TournamentContextValue {
   tournament: Tournament | null;
   dispatch: React.Dispatch<TournamentAction>;
   saveError: boolean;
+  syncError: boolean;
 }
 
 export const TournamentContext = createContext<TournamentContextValue>({
   tournament: null,
   dispatch: () => {},
   saveError: false,
+  syncError: false,
 });

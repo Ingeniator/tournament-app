@@ -170,7 +170,7 @@ function makeTournament(overrides: Partial<Tournament> = {}): Tournament {
 
 function renderWithTournament(tournament: Tournament | null, dispatch = vi.fn()) {
   const result = render(
-    <TournamentContext.Provider value={{ tournament, dispatch, saveError: false }}>
+    <TournamentContext.Provider value={{ tournament, dispatch, saveError: false, syncError: false }}>
       <PlayScreen />
     </TournamentContext.Provider>,
   );
@@ -497,7 +497,7 @@ describe('PlayScreen', () => {
       });
       const dispatch = vi.fn();
       const { rerender } = render(
-        <TournamentContext.Provider value={{ tournament: tournament1, dispatch, saveError: false }}>
+        <TournamentContext.Provider value={{ tournament: tournament1, dispatch, saveError: false, syncError: false }}>
           <PlayScreen />
         </TournamentContext.Provider>,
       );
@@ -507,7 +507,7 @@ describe('PlayScreen', () => {
         rounds: [makeRound(1, true), makeRound(2, false)],
       });
       rerender(
-        <TournamentContext.Provider value={{ tournament: tournament2, dispatch, saveError: false }}>
+        <TournamentContext.Provider value={{ tournament: tournament2, dispatch, saveError: false, syncError: false }}>
           <PlayScreen />
         </TournamentContext.Provider>,
       );
@@ -522,7 +522,7 @@ describe('PlayScreen', () => {
       });
       const dispatch = vi.fn();
       const { rerender } = render(
-        <TournamentContext.Provider value={{ tournament: tournament1, dispatch, saveError: false }}>
+        <TournamentContext.Provider value={{ tournament: tournament1, dispatch, saveError: false, syncError: false }}>
           <PlayScreen />
         </TournamentContext.Provider>,
       );
@@ -531,7 +531,7 @@ describe('PlayScreen', () => {
         rounds: [makeRound(1, true), makeRound(2, false)],
       });
       rerender(
-        <TournamentContext.Provider value={{ tournament: tournament2, dispatch, saveError: false }}>
+        <TournamentContext.Provider value={{ tournament: tournament2, dispatch, saveError: false, syncError: false }}>
           <PlayScreen />
         </TournamentContext.Provider>,
       );
@@ -547,7 +547,7 @@ describe('PlayScreen', () => {
       });
       const dispatch = vi.fn();
       const { rerender } = render(
-        <TournamentContext.Provider value={{ tournament: tournament1, dispatch, saveError: false }}>
+        <TournamentContext.Provider value={{ tournament: tournament1, dispatch, saveError: false, syncError: false }}>
           <PlayScreen />
         </TournamentContext.Provider>,
       );
@@ -556,7 +556,7 @@ describe('PlayScreen', () => {
         rounds: [makeRound(1, true), makeRound(2, false)],
       });
       rerender(
-        <TournamentContext.Provider value={{ tournament: tournament2, dispatch, saveError: false }}>
+        <TournamentContext.Provider value={{ tournament: tournament2, dispatch, saveError: false, syncError: false }}>
           <PlayScreen />
         </TournamentContext.Provider>,
       );

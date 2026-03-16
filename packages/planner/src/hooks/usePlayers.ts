@@ -274,17 +274,15 @@ export function usePlayers(tournamentId: string | null) {
     const existing = await get(ref(db, `tournaments/${tournamentId}/players/${newUid}`));
     if (existing.exists()) return;
 
-    // Move player record atomically (delete orphan + create under real UID)
+    // Move player record + set up indexes atomically
     // Clear addedByPartner — the player has claimed their spot
     const { addedByPartner: _, ...cleanData } = playerData;
     await update(ref(db), {
       [`tournaments/${tournamentId}/players/${orphanId}`]: null,
       [`tournaments/${tournamentId}/players/${newUid}`]: { ...cleanData, telegramUsername },
+      [`users/${newUid}/registrations/${tournamentId}`]: true,
+      [`telegramUsers/${telegramUsername}/registrations/${tournamentId}`]: true,
     });
-
-    // Set up indexes separately to avoid cross-node permission issues
-    await set(ref(db, `users/${newUid}/registrations/${tournamentId}`), true);
-    await set(ref(db, `telegramUsers/${telegramUsername}/registrations/${tournamentId}`), true);
   }, [tournamentId]);
 
   const updateCaptainApproval = useCallback(async (playerId: string, approved: boolean) => {

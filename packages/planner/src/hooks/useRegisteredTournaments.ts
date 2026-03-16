@@ -61,8 +61,8 @@ export function useRegisteredTournaments(uid: string | null) {
           const orgName = nameSnap.exists() ? (nameSnap.val() as string) : undefined;
           results.push(toSummary(id, t, orgName, typeof data.completedAt === 'number' ? data.completedAt : null));
         }));
-      } catch {
-        // Network or permission error — show whatever we have
+      } catch (e) {
+        console.warn('[useRegisteredTournaments] Failed to fetch tournament details:', e);
       }
 
       // Skip if a newer listener call has started (re-entrant from remove())

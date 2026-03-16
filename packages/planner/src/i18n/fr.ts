@@ -25,6 +25,7 @@ const fr: Translations = {
   'home.noTournamentsCreated': 'Aucun tournoi créé',
   'home.registeredTournaments': 'Tournois Inscrits',
   'home.noTournamentsJoined': 'Aucun tournoi rejoint',
+  'home.listingsError': 'Impossible de charger les tournois. Vérifiez votre connexion.',
   'home.tournamentNotFound': 'Tournoi introuvable',
   'home.failedCreate': 'Échec de la création du tournoi',
   'home.expired': 'Expiré',

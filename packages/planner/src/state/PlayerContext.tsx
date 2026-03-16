@@ -22,6 +22,7 @@ export interface PlayerContextValue {
   updatePlayerRank: (playerId: string, rankSlot: number | null) => Promise<void>;
   updatePlayerPartner: (playerId: string, partnerName: string | null, partnerTelegram: string | null, constraints?: PartnerConstraints) => Promise<PartnerRejection | null>;
   updateCaptainApproval: (playerId: string, approved: boolean) => Promise<void>;
+  playersError: string | null;
 }
 
 const PlayerCtx = createContext<PlayerContextValue>(null!);
@@ -111,6 +112,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       updatePlayerRank,
       updatePlayerPartner,
       updateCaptainApproval,
+      playersError,
     }}>
       {children}
     </PlayerCtx.Provider>

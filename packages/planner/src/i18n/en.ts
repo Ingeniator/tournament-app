@@ -25,6 +25,7 @@ const en: Translations = {
   'home.noTournamentsCreated': 'No tournaments created yet',
   'home.registeredTournaments': 'Registered Tournaments',
   'home.noTournamentsJoined': 'No tournaments joined yet',
+  'home.listingsError': 'Could not load tournaments. Please check your connection.',
   'home.tournamentNotFound': 'Tournament not found',
   'home.failedCreate': 'Failed to create tournament',
   'home.expired': 'Expired',

@@ -51,8 +51,8 @@ export function useMyTournaments(uid: string | null) {
           const data = tSnap.val();
           results.push(toSummary(id, data as PlannerTournament, typeof data.completedAt === 'number' ? data.completedAt : null));
         }));
-      } catch {
-        // Network or permission error — show whatever we have
+      } catch (e) {
+        console.warn('[useMyTournaments] Failed to fetch tournament details:', e);
       }
 
       // Skip if a newer listener call has started (re-entrant from remove())

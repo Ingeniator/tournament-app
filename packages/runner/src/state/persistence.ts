@@ -43,6 +43,7 @@ export function loadTournament(): Tournament | null {
     const tournament = migrateClubFormat(raw);
     return { ...tournament, players: deduplicateNames(tournament.players) };
   } catch {
+    console.warn('[persistence] Failed to load tournament from localStorage');
     return null;
   }
 }
@@ -55,7 +56,7 @@ export function saveUIState(uiState: UIState): void {
   try {
     localStorage.setItem(UI_STATE_KEY, JSON.stringify(uiState));
   } catch {
-    // silently fail
+    console.warn('[persistence] localStorage write failed');
   }
 }
 
@@ -73,7 +74,7 @@ export function saveSkin(skin: SkinId): void {
   try {
     localStorage.setItem(SKIN_KEY, skin);
   } catch {
-    // silently fail
+    console.warn('[persistence] localStorage write failed');
   }
 }
 
@@ -94,7 +95,7 @@ export function dismissIOSInstall(): void {
   try {
     localStorage.setItem(IOS_INSTALL_DISMISSED_KEY, String(Date.now()));
   } catch {
-    // silently fail
+    console.warn('[persistence] localStorage write failed');
   }
 }
 

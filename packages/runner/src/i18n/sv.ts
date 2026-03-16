@@ -142,6 +142,7 @@ const sv: Translations = {
   'settings.tournamentImported': 'Turnering importerad!',
   'settings.newPlayerNamePlaceholder': 'Nytt spelarnamn',
   'settings.storageWarning': 'Kunde inte spara — lagringsutrymmet kan vara fullt. Dina framsteg kan gå förlorade om du stänger denna sida.',
+  'settings.syncWarning': 'Kunde inte synkronisera turneringsresultat till servern. Resultaten sparas lokalt.',
   'settings.groupWarning': 'Grupperna är ojämna ({a} vs {b}) — mindre variation i matcherna',
 
   // BottomNav

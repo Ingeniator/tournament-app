@@ -129,7 +129,7 @@ function makeTournament(overrides: Partial<Tournament> = {}): Tournament {
 
 function renderLog(tournament: Tournament | null = makeTournament(), dispatch = vi.fn(), onNavigate = vi.fn()) {
   const result = render(
-    <TournamentContext.Provider value={{ tournament, dispatch, saveError: false }}>
+    <TournamentContext.Provider value={{ tournament, dispatch, saveError: false, syncError: false }}>
       <LogScreen onNavigate={onNavigate} />
     </TournamentContext.Provider>,
   );
