@@ -205,12 +205,12 @@ describe('usePlayers', () => {
         await result.current.registerPlayer('Alice', 'uid1', 'alice_tg');
       });
 
-      // Telegram transaction committed, but UID transaction aborted
-      expect(mockRunTransaction).toHaveBeenCalledTimes(2);
-      // Rollback: set telegram index to null
-      expect(mockSet).toHaveBeenCalledWith(
+      // Telegram transaction committed, UID transaction aborted, rollback transaction
+      expect(mockRunTransaction).toHaveBeenCalledTimes(3);
+      // Rollback via transaction (not plain set) to avoid deleting concurrent claims
+      expect(mockRunTransaction).toHaveBeenLastCalledWith(
         expect.objectContaining({ _path: 'telegramUsers/alice_tg/registrations/t1' }),
-        null,
+        expect.any(Function),
       );
       // Should NOT write remaining indexes
       expect(mockUpdate).not.toHaveBeenCalled();

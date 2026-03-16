@@ -1,7 +1,7 @@
 import { memo, useState } from 'react';
 import type { Match, MatchScore } from '@padel/common';
 import { useTranslation } from '@padel/common';
-import { useMatchConfig } from './MatchConfigContext';
+import { useMatchConfig, useMaldicionesConfig } from './MatchConfigContext';
 import { ScoreInput } from './ScoreInput';
 import { CurseLabel } from '../maldiciones/CurseLabel';
 import { CurseCardPicker } from '../maldiciones/CurseCardPicker';
@@ -21,7 +21,8 @@ interface MatchCardProps {
 }
 
 export const MatchCard = memo(function MatchCard({ match, readOnly, onScore, onClear, onTapScore, onCast, onEscudo, onVeto }: MatchCardProps) {
-  const { players, courts, pointsPerMatch, scoringMode, format, maldicionesEnabled, maldicionesHands, teams } = useMatchConfig();
+  const { players, courts, pointsPerMatch, scoringMode, format, maldicionesEnabled, teams } = useMatchConfig();
+  const { maldicionesHands } = useMaldicionesConfig();
   const { t } = useTranslation();
   const [pickingSide, setPickingSide] = useState<'team1' | 'team2' | null>(null);
 

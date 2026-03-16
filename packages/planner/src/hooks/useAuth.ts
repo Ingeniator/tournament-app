@@ -38,6 +38,11 @@ export function useAuth() {
         setAuthError(null);
         setLoading(false);
       } else {
+        // Reset retry count for each new sign-in cycle so transient
+        // failures across multiple null→retry cycles don't accumulate
+        retryCount.current = 0;
+        clearTimeout(retryTimer.current);
+        setAuthError(null);
         attemptSignIn();
       }
     });

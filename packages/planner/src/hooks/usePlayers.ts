@@ -71,8 +71,12 @@ export function usePlayers(tournamentId: string | null) {
         return playerData;
       });
       if (!playerTx.committed) {
-        // UID was already taken; roll back the telegram index claim
-        await set(tgRef, null);
+        // UID was already taken; roll back the telegram index claim via transaction
+        // to avoid deleting a concurrent claim by another user
+        await runTransaction(tgRef, (current) => {
+          if (current !== true) return; // abort: already changed by someone else
+          return null;
+        });
         return;
       }
 

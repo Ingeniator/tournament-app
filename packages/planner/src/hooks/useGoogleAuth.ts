@@ -35,15 +35,16 @@ export function useGoogleAuth(uid: string | null) {
     const organized = organizedSnap.val() as Record<string, boolean> | null;
     if (organized) {
       for (const tournamentId of Object.keys(organized)) {
-        await runTransaction(ref(db, `tournaments/${tournamentId}/organizerId`), (current) => {
+        const { committed } = await runTransaction(ref(db, `tournaments/${tournamentId}/organizerId`), (current) => {
           if (current !== oldUid) return; // abort: not owned by old user
           return newUid;
         });
-        // Move index entries regardless — idempotent deletes are safe
-        await update(ref(db), {
-          [`users/${oldUid}/organized/${tournamentId}`]: null,
-          [`users/${newUid}/organized/${tournamentId}`]: true,
-        });
+        if (committed) {
+          await update(ref(db), {
+            [`users/${oldUid}/organized/${tournamentId}`]: null,
+            [`users/${newUid}/organized/${tournamentId}`]: true,
+          });
+        }
       }
     }
 
@@ -89,7 +90,9 @@ export function useGoogleAuth(uid: string | null) {
         const result = await getGoogleRedirectResult();
         if (!result || cancelled) return;
 
-        // Redirect completed — store google email
+        // Redirect completed — refresh token so auth.token.email is populated,
+        // then store google email (rules validate against auth.token.email)
+        await result.user.getIdToken(true);
         const email = result.user.providerData.find(p => p.providerId === 'google.com')?.email;
         if (email && db) {
           await set(ref(db, `users/${result.user.uid}/googleEmail`), email);
@@ -134,6 +137,8 @@ export function useGoogleAuth(uid: string | null) {
       const result = await linkWithGoogle();
       // linkWithRedirect returns void (page navigates away), so only popup gets here
       if (result) {
+        // Refresh token so auth.token.email is populated for security rules
+        await auth.currentUser?.getIdToken(true);
         const email = auth.currentUser?.providerData.find(p => p.providerId === 'google.com')?.email;
         if (email && db) {
           await set(ref(db, `users/${uid}/googleEmail`), email);

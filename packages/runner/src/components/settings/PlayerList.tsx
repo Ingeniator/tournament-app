@@ -90,8 +90,9 @@ export function PlayerList({ tournament, dispatch, showToast }: PlayerListProps)
     e.preventDefault();
     const names = parsePlayerList(text);
     if (names.length === 0) return;
+    const group = mode.type === 'adding' && formatHasGroups(tournament.config.format) ? mode.group : undefined;
     for (const name of names) {
-      dispatch({ type: 'ADD_PLAYER_LIVE', payload: { name } });
+      dispatch({ type: 'ADD_PLAYER_LIVE', payload: { name, group } });
     }
     editDispatch({ type: 'CANCEL' });
     showToast(t('settings.playerAdded'));

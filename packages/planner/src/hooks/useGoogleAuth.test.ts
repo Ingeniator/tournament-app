@@ -46,7 +46,7 @@ function makeSnapshot(path: string) {
 // Hoisted mocks — vi.hoisted ensures these are available inside vi.mock factories
 // ---------------------------------------------------------------------------
 const mocks = vi.hoisted(() => {
-  type MockUser = { uid: string; providerData: Array<{ providerId: string; email?: string }> };
+  type MockUser = { uid: string; providerData: Array<{ providerId: string; email?: string }>; getIdToken: () => Promise<string> };
   const authObj = { currentUser: null as MockUser | null };
   return {
     authObj,
@@ -77,6 +77,15 @@ const mockUpdate = vi.fn(async (refObj: { _path: string }, updates: Record<strin
     }
   }
 });
+const mockRunTransaction = vi.fn(async (refObj: { _path: string }, updateFn: (current: unknown) => unknown) => {
+  const current = getNestedValue(refObj._path) ?? null;
+  const result = updateFn(current);
+  if (result === undefined) {
+    return { committed: false, snapshot: makeSnapshot(refObj._path) };
+  }
+  setNestedValue(refObj._path, result);
+  return { committed: true, snapshot: makeSnapshot(refObj._path) };
+});
 
 vi.mock('@padel/common', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -87,6 +96,7 @@ vi.mock('firebase/database', () => ({
   get: (...args: unknown[]) => mockGet(...args),
   set: (...args: unknown[]) => mockSet(...args),
   update: (...args: unknown[]) => mockUpdate(...args),
+  runTransaction: (...args: unknown[]) => mockRunTransaction(...args),
 }));
 
 vi.mock('../firebase', () => ({
@@ -108,7 +118,7 @@ vi.mock('firebase/auth', () => ({
 // Helpers
 // ---------------------------------------------------------------------------
 function setCurrentUser(uid: string, providers: Array<{ providerId: string; email?: string }> = []) {
-  mocks.authObj.currentUser = { uid, providerData: providers };
+  mocks.authObj.currentUser = { uid, providerData: providers, getIdToken: vi.fn().mockResolvedValue('mock-token') };
 }
 
 function clearCurrentUser() {
@@ -424,10 +434,9 @@ describe('useGoogleAuth', () => {
         setCurrentUser('google-uid', [{ providerId: 'google.com', email: 'u@g.com' }]);
       });
 
-      // Make the get call for organized tournaments succeed, but the subsequent
-      // set call (to update organizerId) fail with a network timeout
-      const originalMockSet = mockSet.getMockImplementation()!;
-      mockSet.mockRejectedValueOnce(new Error('network timeout'));
+      // Make the organized tournament transaction fail with a network timeout
+      const originalMockRunTx = mockRunTransaction.getMockImplementation()!;
+      mockRunTransaction.mockRejectedValueOnce(new Error('network timeout'));
 
       const { result } = renderHook(() => useGoogleAuth('anon-uid'));
 
@@ -440,8 +449,8 @@ describe('useGoogleAuth', () => {
       expect(result.current.linking).toBe(false);
       expect(result.current.error).toBe('auth.googleSignInFailed');
 
-      // Restore original set implementation for other tests
-      mockSet.mockImplementation(originalMockSet);
+      // Restore original runTransaction implementation for other tests
+      mockRunTransaction.mockImplementation(originalMockRunTx);
     });
 
     it('skips already-owned tournaments during claim sweep', async () => {
@@ -518,6 +527,7 @@ describe('useGoogleAuth', () => {
         user: {
           uid: 'google-uid',
           providerData: [{ providerId: 'google.com', email: 'redir@gmail.com' }],
+          getIdToken: vi.fn().mockResolvedValue('mock-token'),
         },
       });
 
@@ -574,6 +584,7 @@ describe('useGoogleAuth', () => {
         user: {
           uid: 'same-uid',
           providerData: [{ providerId: 'google.com', email: 'u@g.com' }],
+          getIdToken: vi.fn().mockResolvedValue('mock-token'),
         },
       });
 

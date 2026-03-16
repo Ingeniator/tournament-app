@@ -13,7 +13,7 @@
 import { chromium } from 'playwright';
 import { createServer, type IncomingMessage, type ServerResponse, type Server } from 'http';
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'fs';
-import { join, extname, relative } from 'path';
+import { join, extname, relative, resolve as resolvePath } from 'path';
 
 const DIST = join(import.meta.dirname, '..', 'packages', 'landing', 'dist');
 const PORT = 4173;
@@ -55,7 +55,14 @@ function startServer(): Promise<Server> {
   return new Promise((resolve) => {
     const server = createServer((req: IncomingMessage, res: ServerResponse) => {
       const url = req.url ?? '/';
-      let filePath = join(DIST, url === '/' ? 'index.html' : url);
+      let filePath = resolvePath(DIST, url === '/' ? 'index.html' : `.${url}`);
+
+      // Prevent path traversal outside DIST
+      if (!filePath.startsWith(DIST)) {
+        res.writeHead(403);
+        res.end('Forbidden');
+        return;
+      }
 
       // If path is a directory, try index.html inside it
       if (!extname(filePath) && existsSync(join(filePath, 'index.html'))) {

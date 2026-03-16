@@ -306,10 +306,14 @@ function buildMexicanoStrategy(crossGroupMode: boolean): TournamentStrategy {
       // In cross-group mode, rank by average points per match to normalize
       // for unequal group sizes (smaller group plays more, sits out less)
       if (crossGroupMode && isCrossGroup(tournament.players)) {
+        // Compare averages using cross-multiplication to avoid floating-point issues:
+        // a.totalPoints / a.matchesPlayed vs b.totalPoints / b.matchesPlayed
+        // becomes a.totalPoints * b.matchesPlayed vs b.totalPoints * a.matchesPlayed
+        const crossAvg = (e: typeof entries[0]) => ({ pts: e.totalPoints, mp: e.matchesPlayed || 1 });
         entries.sort((a, b) => {
-          const avgA = a.matchesPlayed > 0 ? a.totalPoints / a.matchesPlayed : 0;
-          const avgB = b.matchesPlayed > 0 ? b.totalPoints / b.matchesPlayed : 0;
-          if (avgB !== avgA) return avgB - avgA;
+          const ca = crossAvg(a), cb = crossAvg(b);
+          const diff = cb.pts * ca.mp - ca.pts * cb.mp;
+          if (diff !== 0) return diff;
           if (b.pointDiff !== a.pointDiff) return b.pointDiff - a.pointDiff;
           if (b.matchesWon !== a.matchesWon) return b.matchesWon - a.matchesWon;
           return a.playerName.localeCompare(b.playerName);
@@ -319,10 +323,10 @@ function buildMexicanoStrategy(crossGroupMode: boolean): TournamentStrategy {
             entry.rank = 1;
           } else {
             const prev = entries[i - 1];
-            const avgCur = entry.matchesPlayed > 0 ? entry.totalPoints / entry.matchesPlayed : 0;
-            const avgPrev = prev.matchesPlayed > 0 ? prev.totalPoints / prev.matchesPlayed : 0;
+            const ce = crossAvg(entry), cp = crossAvg(prev);
+            const avgEqual = ce.pts * cp.mp === cp.pts * ce.mp;
             if (
-              avgCur === avgPrev &&
+              avgEqual &&
               entry.pointDiff === prev.pointDiff &&
               entry.matchesWon === prev.matchesWon
             ) {

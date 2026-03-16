@@ -8,7 +8,7 @@ import { usePlayProgress } from '../hooks/usePlayProgress';
 import { useRoundCompletion } from '../hooks/useRoundCompletion';
 import { useNominationLayout } from '../hooks/useNominationLayout';
 import { RoundCard } from '../components/rounds/RoundCard';
-import { MatchConfigProvider, type MatchConfig } from '../components/rounds/MatchConfigContext';
+import { MatchConfigProvider, type MatchConfig, type MaldicionesConfig } from '../components/rounds/MatchConfigContext';
 import { StandingsTable } from '../components/standings/StandingsTable';
 import { ClubStandingsTable } from '../components/standings/ClubStandingsTable';
 import { NominationCard } from '../components/nominations/NominationCard';
@@ -55,9 +55,12 @@ export function PlayScreen() {
     scoringMode: tournament?.config.scoringMode,
     format: tournament?.config.format,
     maldicionesEnabled,
-    maldicionesHands: tournament?.maldicionesHands,
     teams: tournament?.teams,
-  }), [tournament?.players, tournament?.config.courts, tournament?.config.pointsPerMatch, tournament?.config.scoringMode, tournament?.config.format, maldicionesEnabled, tournament?.maldicionesHands, tournament?.teams]);
+  }), [tournament?.players, tournament?.config.courts, tournament?.config.pointsPerMatch, tournament?.config.scoringMode, tournament?.config.format, maldicionesEnabled, tournament?.teams]);
+
+  const maldicionesConfig = useMemo<MaldicionesConfig>(() => ({
+    maldicionesHands: tournament?.maldicionesHands,
+  }), [tournament?.maldicionesHands]);
 
   const [previewImages, setPreviewImages] = useState<string[] | null>(null);
 
@@ -307,7 +310,7 @@ export function PlayScreen() {
   }
 
   return (
-    <MatchConfigProvider config={matchConfig}>
+    <MatchConfigProvider config={matchConfig} maldiciones={maldicionesConfig}>
     <div className={styles.container}>
       {/* Progress line */}
       <div className={styles.progress}>

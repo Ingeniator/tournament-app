@@ -61,7 +61,8 @@ release:
 	npm test --workspaces --if-present
 	@echo "Running e2e tests..."
 	npx playwright test
-	@echo "All tests passed. Tagging $(VERSION)..."
+	@echo "All tests passed. Pushing branch and tagging $(VERSION)..."
+	git push origin HEAD
 	git tag "$(VERSION)"
 	git push origin "$(VERSION)"
 	@echo "Released $(VERSION)"
