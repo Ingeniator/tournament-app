@@ -412,6 +412,11 @@ const sv: Translations = {
   'app.firebaseRequired': 'Firebase-konfiguration Krävs',
   'app.firebaseInstructions': 'Skapa en .env-fil i packages/planner/ med din Firebase-konfiguration.',
   'app.firebaseSeeExample': 'Se .env.example för nödvändiga variabler.',
+
+  // Auth errors
+  'auth.connectionFailed': 'Kunde inte ansluta. Kontrollera din internetanslutning och försök igen.',
+  'auth.googleSignInFailed': 'Kunde inte logga in med Google',
+  'auth.googleLinkFailed': 'Kunde inte länka Google-kontot',
 };
 
 export default sv;

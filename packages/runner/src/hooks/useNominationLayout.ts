@@ -12,7 +12,7 @@ export function useNominationLayout(nominations: Nomination[]) {
   useEffect(() => {
     if (nominations.length === 0) return;
     setNomMinHeight(0);
-    requestAnimationFrame(() => {
+    const rafId = requestAnimationFrame(() => {
       const heights = nomCardRefs.current
         .filter((el): el is HTMLDivElement => el !== null)
         .map(el => el.scrollHeight);
@@ -20,6 +20,7 @@ export function useNominationLayout(nominations: Nomination[]) {
         setNomMinHeight(Math.max(...heights));
       }
     });
+    return () => cancelAnimationFrame(rafId);
   }, [nominations]);
 
   return { nomMinHeight, setNomRef };

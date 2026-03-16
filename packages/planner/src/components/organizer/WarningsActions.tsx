@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { Button, useTranslation, formatHasGroups } from '@padel/common';
+import { useState, useRef, useCallback } from 'react';
+import { Button, useTranslation, formatHasGroups, useClickOutside } from '@padel/common';
 import type { PlannerTournament, PlannerRegistration } from '@padel/common';
 import styles from '../../screens/OrganizerScreen.module.css';
 
@@ -26,17 +26,8 @@ export function WarningsActions({
   const { t } = useTranslation();
   const [exportOpen, setExportOpen] = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!exportOpen) return;
-    const handleClick = (e: MouseEvent) => {
-      if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
-        setExportOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [exportOpen]);
+  const closeExport = useCallback(() => setExportOpen(false), []);
+  useClickOutside(exportRef, exportOpen, closeExport);
 
   return (
     <>

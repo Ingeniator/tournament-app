@@ -1,5 +1,72 @@
 # Release Notes
 
+## v0.8.0
+
+### New Features
+
+#### Sign in with Google
+  - Users can sign in with Google or link Google to existing anonymous accounts
+  - Claim sweep migrates tournament data from anonymous UID to Google UID
+  - Profile name synced from Google account
+
+#### Runner Direct Play Mode
+  - SetupScreen and TeamPairingScreen removed entirely — all tournaments launch directly into play
+  - Any tournament loaded in setup/team-pairing phase is auto-promoted to in-progress with schedule generation on load
+
+#### 20+ New Landing Pages (SEO)
+  - Player count guides: Americano/Mexicano for 8, 12, 16 players
+  - Comparison pages: Americano vs Mexicano, Round Robin vs Americano
+  - Feature pages: Organize, Features, Planner, Score Tracker, Balanced Matches, Beginners
+  - Social/community: Social Padel Events, Inter-Club
+  - Spanish translations: `/es/americano`, `/es/mexicano`, `/es/formatos`, `/es/organizar-torneo-padel`
+  - Full sitemap and robots.txt added
+
+#### King of the Court Landing Page
+  - Dedicated content page for King of the Court format
+
+### Improvements
+
+#### Planner Architecture Refactoring
+  - Monolithic PlannerContext split into 4 focused contexts: AuthContext, TournamentContext, PlayerContext, EventContext
+  - OrganizerScreen decomposed into sub-components: FormatSection, MatchSettingsSection, CourtsSection, DetailsSection, WhenWhereSection, ShareSection, WarningsActions, CompletedView, CollapsibleSection
+  - Player registration now uses Firebase transactions (prevents duplicate registrations)
+  - Telegram sync consolidated from sequential `set()` calls to atomic `update()`
+
+#### Runner Code Quality
+  - `scorePairing` deduplicated from 3 strategies into shared module
+  - `assignCourtsRandom` moved to `clubShared.ts`
+  - `generateAdditionalRounds` API changed from positional args to named options object
+  - Match config extracted into `MatchConfigContext` (reduces prop drilling)
+  - PlayScreen decomposed into hooks: `usePlayProgress`, `useRoundCompletion`, `useNominationLayout`, `useTournamentMeta`
+  - Shared `useClickOutside` hook extracted to `@padel/common`
+  - New 12:3 baseline (12 players, 3 courts, 11 rounds)
+
+#### Auth Resilience
+  - Firebase anonymous auth with exponential backoff retry
+  - `useStartGuard` now async — prevents launch when Firebase write fails
+  - COOP header (`same-origin-allow-popups`) for Google Sign-In popup flow
+
+#### i18n
+  - All 7 languages updated with Google auth, sync warning, and new UI keys
+
+### Bug Fixes
+
+  - Fixed Telegram image sharing broken on mobile browsers (open-in-browser flow)
+  - Fixed rank pairing logic
+  - Fixed null crash in maldiciones hand card count (`team1Hand!` → `team1Hand?.cardIds.length ?? 0`)
+  - Fixed COOP header issue blocking Google Sign-In popup flow
+  - Fixed start delegation for planner tournaments
+
+### Technical
+
+  - Extensive new test coverage: 40+ new test files across planner and runner
+  - Coverage thresholds added: planner 15%, runner 40%, common 30%
+  - New e2e tests: accessibility, maldiciones, planner flows (create, events, home, join, launch, partner-linking, start-delegation), staging smoke tests
+  - `vitest.config.ts` added at root with workspace coverage configuration
+  - Prerender script converted from `.mjs` to `.ts`
+  - Makefile `release` target added (runs tests + e2e before tagging)
+  - Dead code removed: SetupScreen, TeamPairingScreen, PlayerInput, TournamentConfigForm, ClubSection, and 14 related action types from reducer
+
 ## v0.7.0
 
 ### New Features

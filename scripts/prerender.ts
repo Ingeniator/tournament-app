@@ -12,21 +12,33 @@
 
 import { chromium } from 'playwright';
 import { createServer, type IncomingMessage, type ServerResponse, type Server } from 'http';
-import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { join, extname } from 'path';
+import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'fs';
+import { join, extname, relative } from 'path';
 
 const DIST = join(import.meta.dirname, '..', 'packages', 'landing', 'dist');
 const PORT = 4173;
 
-const ROUTES = [
-  '/',
-  '/formats',
-  '/americano',
-  '/mexicano',
-  '/awards',
-  '/maldiciones',
-  '/club',
-] as const;
+/** Auto-discover routes by finding all index.html files in the dist directory. */
+function discoverRoutes(dir: string): string[] {
+  const routes: string[] = [];
+
+  function walk(current: string) {
+    for (const entry of readdirSync(current)) {
+      const full = join(current, entry);
+      if (statSync(full).isDirectory()) {
+        // Skip asset directories that don't contain pages
+        if (entry === 'assets') continue;
+        walk(full);
+      } else if (entry === 'index.html') {
+        const rel = relative(dir, current);
+        routes.push(rel === '' ? '/' : `/${rel}`);
+      }
+    }
+  }
+
+  walk(dir);
+  return routes.sort();
+}
 
 const MIME_TYPES: Record<string, string> = {
   '.html': 'text/html',
@@ -71,13 +83,14 @@ function startServer(): Promise<Server> {
 }
 
 async function prerender(): Promise<void> {
-  console.log(`Prerendering ${ROUTES.length} landing pages...`);
+  const routes = discoverRoutes(DIST);
+  console.log(`Prerendering ${routes.length} landing pages...`);
 
   const server = await startServer();
   const browser = await chromium.launch();
 
   try {
-    for (const route of ROUTES) {
+    for (const route of routes) {
       const page = await browser.newPage();
       const url = `http://localhost:${PORT}${route}`;
 
@@ -109,6 +122,5 @@ async function prerender(): Promise<void> {
 
 prerender().catch((err: unknown) => {
   console.error('Prerender failed:', err);
-  // Don't fail the build — noscript content is the fallback
-  process.exit(0);
+  process.exit(1);
 });

@@ -55,6 +55,8 @@ coverage: coverage-unit coverage-e2e
 release:
 	@if [ -z "$(VERSION)" ]; then echo "Usage: make release VERSION=X.Y.Z"; exit 1; fi
 	@if git rev-parse "$(VERSION)" >/dev/null 2>&1; then echo "Tag $(VERSION) already exists"; exit 1; fi
+	@echo "Running build..."
+	$(MAKE) build
 	@echo "Running unit tests..."
 	npm test --workspaces --if-present
 	@echo "Running e2e tests..."

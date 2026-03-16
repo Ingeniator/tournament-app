@@ -414,6 +414,11 @@ const sr: Translations = {
   'app.firebaseRequired': 'Firebase Podešavanje Potrebno',
   'app.firebaseInstructions': 'Kreirajte .env fajl u packages/planner/ sa vašom Firebase konfiguracijom.',
   'app.firebaseSeeExample': 'Pogledajte .env.example za potrebne varijable.',
+
+  // Auth errors
+  'auth.connectionFailed': 'Nije moguće povezati se. Proverite internet vezu i pokušajte ponovo.',
+  'auth.googleSignInFailed': 'Prijava sa Google nalogom nije uspela',
+  'auth.googleLinkFailed': 'Povezivanje sa Google nalogom nije uspelo',
 };
 
 export default sr;

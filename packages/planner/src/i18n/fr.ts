@@ -414,6 +414,11 @@ const fr: Translations = {
   'app.firebaseRequired': 'Configuration Firebase Requise',
   'app.firebaseInstructions': 'Créez un fichier .env dans packages/planner/ avec votre configuration Firebase.',
   'app.firebaseSeeExample': 'Voir .env.example pour les variables requises.',
+
+  // Auth errors
+  'auth.connectionFailed': 'Impossible de se connecter. Vérifiez votre connexion internet et réessayez.',
+  'auth.googleSignInFailed': 'Échec de la connexion avec Google',
+  'auth.googleLinkFailed': 'Échec de la liaison du compte Google',
 };
 
 export default fr;

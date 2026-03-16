@@ -73,20 +73,20 @@ export function Carousel({ children }: CarouselProps) {
     };
   }, [count]);
 
-  const handleDotClick = (realIndex: number) => {
+  const handleDotClick = useCallback((realIndex: number) => {
     if (count <= 1) {
       scrollToIndex(realIndex);
     } else {
       scrollToIndex(realIndex + 1); // offset by 1 for clone
     }
-  };
+  }, [count, scrollToIndex]);
 
   const goToSlide = useCallback((direction: 'prev' | 'next') => {
     const newIndex = direction === 'next'
       ? (activeIndex + 1) % count
       : (activeIndex - 1 + count) % count;
     handleDotClick(newIndex);
-  }, [activeIndex, count]);
+  }, [activeIndex, count, handleDotClick]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (count <= 1) return;

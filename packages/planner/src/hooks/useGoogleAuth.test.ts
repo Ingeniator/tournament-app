@@ -78,6 +78,10 @@ const mockUpdate = vi.fn(async (refObj: { _path: string }, updates: Record<strin
   }
 });
 
+vi.mock('@padel/common', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}));
+
 vi.mock('firebase/database', () => ({
   ref: (...args: unknown[]) => mockRef(...args),
   get: (...args: unknown[]) => mockGet(...args),
@@ -283,7 +287,7 @@ describe('useGoogleAuth', () => {
       });
 
       expect(result.current.linking).toBe(false);
-      expect(result.current.error).toBe('Failed to link Google account');
+      expect(result.current.error).toBe('auth.googleLinkFailed');
     });
   });
 
@@ -434,7 +438,7 @@ describe('useGoogleAuth', () => {
       // The error from claimSweep propagates to the catch block in linkGoogle
       // which sets the sign-in error
       expect(result.current.linking).toBe(false);
-      expect(result.current.error).toBe('Failed to sign in with Google');
+      expect(result.current.error).toBe('auth.googleSignInFailed');
 
       // Restore original set implementation for other tests
       mockSet.mockImplementation(originalMockSet);

@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
+import { useTranslation } from '@padel/common';
 import { auth, signIn, firebaseConfigured } from '../firebase';
 
 const MAX_RETRIES = 5;
 const BASE_DELAY_MS = 1000;
 
 export function useAuth() {
+  const { t } = useTranslation();
   const [uid, setUid] = useState<string | null>(null);
   const [loading, setLoading] = useState(firebaseConfigured && !!auth);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -22,7 +24,7 @@ export function useAuth() {
           const delay = BASE_DELAY_MS * 2 ** (retryCount.current - 1);
           retryTimer.current = setTimeout(attemptSignIn, delay);
         } else {
-          setAuthError('Could not connect. Check your internet and try again.');
+          setAuthError(t('auth.connectionFailed'));
           setLoading(false);
         }
       });

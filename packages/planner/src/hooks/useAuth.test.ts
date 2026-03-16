@@ -6,6 +6,10 @@ import { useAuth } from './useAuth';
 let authCallback: ((user: { uid: string } | null) => void) | null = null;
 const mockSignIn = vi.fn().mockResolvedValue(undefined);
 
+vi.mock('@padel/common', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}));
+
 vi.mock('firebase/auth', () => ({
   onAuthStateChanged: vi.fn((_auth: unknown, callback: (user: unknown) => void) => {
     authCallback = callback;
@@ -76,7 +80,7 @@ describe('useAuth', () => {
       });
     }
 
-    expect(result.current.authError).toBe('Could not connect. Check your internet and try again.');
+    expect(result.current.authError).toBe('auth.connectionFailed');
     expect(result.current.loading).toBe(false);
   });
 

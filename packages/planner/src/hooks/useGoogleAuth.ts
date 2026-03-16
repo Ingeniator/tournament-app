@@ -1,24 +1,26 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { GoogleAuthProvider } from 'firebase/auth';
-import { ref, get, set, update } from 'firebase/database';
+import { ref, get, set, update, runTransaction } from 'firebase/database';
+import { useTranslation } from '@padel/common';
 import { auth, db, linkWithGoogle, signInWithGoogleCredential, signInWithGoogle, getGoogleRedirectResult } from '../firebase';
 
 const PRE_LINK_UID_KEY = 'google-link-pre-uid';
 
 export function useGoogleAuth(uid: string | null) {
+  const { t } = useTranslation();
   const [linking, setLinking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isGoogleLinked = useMemo(() => {
     if (!auth?.currentUser) return false;
     return auth.currentUser.providerData.some(p => p.providerId === 'google.com');
-  }, [uid]); // re-check when uid changes (user switches)
+  }, [uid, linking]); // re-check when uid changes or linking completes
 
   const googleEmail = useMemo(() => {
     if (!auth?.currentUser) return null;
     const google = auth.currentUser.providerData.find(p => p.providerId === 'google.com');
     return google?.email ?? null;
-  }, [uid]);
+  }, [uid, linking]);
 
   const claimSweep = useCallback(async (oldUid: string, newUid: string) => {
     if (!db || oldUid === newUid) return;
@@ -29,51 +31,51 @@ export function useGoogleAuth(uid: string | null) {
       get(ref(db, `users/${oldUid}/registrations`)),
     ]);
 
-    // Build a single atomic update for all claim sweep writes
-    const sweepUpdates: Record<string, unknown> = {};
-
-    // Sweep organized tournaments
+    // Sweep organized tournaments using transactions
     const organized = organizedSnap.val() as Record<string, boolean> | null;
     if (organized) {
       for (const tournamentId of Object.keys(organized)) {
-        const organizerSnap = await get(ref(db, `tournaments/${tournamentId}/organizerId`));
-        if (!organizerSnap.exists() || organizerSnap.val() !== oldUid) continue;
-
-        sweepUpdates[`tournaments/${tournamentId}/organizerId`] = newUid;
-        sweepUpdates[`users/${oldUid}/organized/${tournamentId}`] = null;
-        sweepUpdates[`users/${newUid}/organized/${tournamentId}`] = true;
+        await runTransaction(ref(db, `tournaments/${tournamentId}/organizerId`), (current) => {
+          if (current !== oldUid) return; // abort: not owned by old user
+          return newUid;
+        });
+        // Move index entries regardless — idempotent deletes are safe
+        await update(ref(db), {
+          [`users/${oldUid}/organized/${tournamentId}`]: null,
+          [`users/${newUid}/organized/${tournamentId}`]: true,
+        });
       }
     }
 
-    // Sweep registrations
+    // Sweep registrations using transactions
     const registrations = registrationsSnap.val() as Record<string, boolean> | null;
     if (registrations) {
       for (const tournamentId of Object.keys(registrations)) {
-        const playerSnap = await get(ref(db, `tournaments/${tournamentId}/players/${oldUid}`));
-        if (!playerSnap.exists()) continue;
-
-        const playerData = playerSnap.val();
-        const newPlayerSnap = await get(ref(db, `tournaments/${tournamentId}/players/${newUid}`));
-        if (newPlayerSnap.exists()) continue;
-
-        sweepUpdates[`tournaments/${tournamentId}/players/${oldUid}`] = null;
-        sweepUpdates[`tournaments/${tournamentId}/players/${newUid}`] = playerData;
-        sweepUpdates[`users/${oldUid}/registrations/${tournamentId}`] = null;
-        sweepUpdates[`users/${newUid}/registrations/${tournamentId}`] = true;
+        const playersRef = ref(db, `tournaments/${tournamentId}/players`);
+        const { committed } = await runTransaction(playersRef, (players) => {
+          if (!players || !players[oldUid]) return; // abort: no old player data
+          if (players[newUid]) return; // abort: new uid already registered
+          players[newUid] = players[oldUid];
+          delete players[oldUid];
+          return players;
+        });
+        if (committed) {
+          await update(ref(db), {
+            [`users/${oldUid}/registrations/${tournamentId}`]: null,
+            [`users/${newUid}/registrations/${tournamentId}`]: true,
+          });
+        }
       }
     }
 
-    if (Object.keys(sweepUpdates).length > 0) {
-      await update(ref(db), sweepUpdates);
-    }
-
     // Copy profile name if new user doesn't have one
-    const [oldNameSnap, newNameSnap] = await Promise.all([
-      get(ref(db, `users/${oldUid}/name`)),
-      get(ref(db, `users/${newUid}/name`)),
-    ]);
-    if (oldNameSnap.exists() && !newNameSnap.exists()) {
-      await set(ref(db, `users/${newUid}/name`), oldNameSnap.val());
+    const oldNameSnap = await get(ref(db, `users/${oldUid}/name`));
+    if (oldNameSnap.exists()) {
+      // Transaction ensures we don't overwrite if newUid got a name concurrently
+      await runTransaction(ref(db, `users/${newUid}/name`), (currentName) => {
+        if (currentName) return; // abort: already has a name
+        return oldNameSnap.val();
+      });
     }
   }, []);
 
@@ -162,7 +164,7 @@ export function useGoogleAuth(uid: string | null) {
           sessionStorage.removeItem(PRE_LINK_UID_KEY);
         } catch (signInErr) {
           console.error('Google sign-in failed:', signInErr);
-          setError('Failed to sign in with Google');
+          setError(t('auth.googleSignInFailed'));
           sessionStorage.removeItem(PRE_LINK_UID_KEY);
           setLinking(false);
           return;
@@ -174,7 +176,7 @@ export function useGoogleAuth(uid: string | null) {
         return;
       } else {
         console.error('Google link failed:', err);
-        setError('Failed to link Google account');
+        setError(t('auth.googleLinkFailed'));
         sessionStorage.removeItem(PRE_LINK_UID_KEY);
         setLinking(false);
         return;
