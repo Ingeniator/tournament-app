@@ -76,7 +76,7 @@
 .card {
   aspect-ratio: 2.5 / 3.5;
   border-radius: 10px;
-  background: #f5f0e8;
+  background: #f8f6f1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -105,7 +105,7 @@
   margin-top: 10px;
   padding: 5px 8px 4px;
   background: #1a1a1a;
-  color: #f5f0e8;
+  color: #f8f6f1;
   font-size: 12px;
   font-weight: 900;
   text-transform: uppercase;
@@ -115,75 +115,103 @@
   clip-path: polygon(4% 0%, 96% 0%, 100% 50%, 96% 100%, 4% 100%, 0% 50%);
 }
 
-.tierIndicator {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+.tierDots {
+  display: inline-flex;
+  gap: 3px;
   margin-left: 6px;
   vertical-align: middle;
-  border: 1.5px solid #f5f0e8;
+}
+
+.tierDotFilled {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f8f6f1;
+}
+
+.tierDotEmpty {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1.5px solid #f8f6f1;
+  background: transparent;
   box-sizing: border-box;
 }
 
-/* Green = empty circle */
-.tierEmpty {
-  background: transparent;
+/* ── Attitude line ── */
+.cardAttitude {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #1a1a1a;
+  padding: 4px 0 2px;
+  border-bottom: 1.5px solid #ccc;
+  width: 80%;
+  text-align: center;
 }
 
-/* Yellow = half filled */
-.tierHalf {
-  background: linear-gradient(to right, #f5f0e8 50%, transparent 50%);
+/* ── Card body content ── */
+.cardBody {
+  flex: 1;
+  width: 80%;
+  padding: 4px 0 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-height: 0;
+  overflow: hidden;
 }
 
-/* Red = fully filled */
-.tierFull {
-  background: #f5f0e8;
+.cardEmojiInline {
+  font-size: 22px;
+  line-height: 1;
+  text-align: center;
+  margin: 2px 0 1px;
 }
 
-/* ── Emoji illustration area ── */
+.sectionLabel {
+  font-size: 7px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #999;
+  margin-top: 4px;
+  text-align: left;
+}
+
+.sectionText {
+  font-size: 9px;
+  line-height: 1.3;
+  color: #1a1a1a;
+  font-weight: 600;
+  text-align: left;
+}
+
+.rulesList {
+  margin: 0;
+  padding-left: 12px;
+  font-size: 9px;
+  line-height: 1.3;
+  color: #1a1a1a;
+  text-align: left;
+}
+
+.rulesList li {
+  margin-bottom: 0;
+}
+
+/* ── Emoji (for shield card) ── */
 .cardEmoji {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 52px;
+  font-size: 42px;
   line-height: 1;
   min-height: 0;
-}
-
-/* ── Bottom text section ── */
-.cardBottom {
-  width: 100%;
-  border-top: 2px solid #1a1a1a;
-  padding: 6px 10px 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.cardSubtitle {
-  font-size: 13px;
-  font-weight: 800;
-  color: #1a1a1a;
-  letter-spacing: -0.01em;
-}
-
-.cardDivider {
-  width: 60%;
-  height: 1px;
-  background: #1a1a1a;
-  opacity: 0.3;
-  margin: 2px 0;
-}
-
-.cardEffect {
-  font-size: 9px;
-  line-height: 1.35;
-  color: #333;
-  padding: 0 2px;
-  max-width: 95%;
 }
 
 /* ── Punch zone ── */
@@ -233,13 +261,13 @@
 
 .punchCircles {
   display: flex;
-  gap: 14px;
+  gap: 20px;
   align-items: center;
 }
 
 .punchCircle {
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: 3px solid #1a1a1a;
   display: flex;
@@ -258,7 +286,7 @@
 }
 
 .punchIcon {
-  font-size: 22px;
+  font-size: 16px;
   line-height: 1;
   color: #1a1a1a;
   position: relative;
@@ -285,9 +313,6 @@
 }
 
 /* ── Shield Card variant ── */
-.cardShield .cardBanner {
-  background: #1e40af;
-}
 
 /* ══════════════════
    Card Backs
@@ -361,6 +386,7 @@
 
   .cardGrid {
     grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: calc((100vh - 8px) / 3);
     gap: 4px;
     margin: 0;
     page-break-inside: avoid;
@@ -369,14 +395,15 @@
   .card,
   .cardBack {
     border-radius: 6px;
-    aspect-ratio: 2.5 / 3.5;
+    aspect-ratio: auto;
+    height: 100%;
     page-break-inside: avoid;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
   .card {
-    background: #f5f0e8 !important;
+    background: #f8f6f1 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }

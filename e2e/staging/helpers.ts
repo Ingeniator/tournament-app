@@ -8,16 +8,18 @@ const FB_TIMEOUT = 30_000;
  * Staging builds may be slower — uses extended timeouts and retries.
  */
 export async function waitForHome(page: Page) {
-  for (let attempt = 0; attempt < 5; attempt++) {
+  for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      await page.getByRole('heading', { name: 'Tournament Planner' }).waitFor({ timeout: FB_TIMEOUT });
+      await page.getByRole('heading', { name: 'Tournament Planner' }).waitFor({ timeout: 15_000 });
       break;
     } catch {
       const retryBtn = page.getByRole('button', { name: 'Retry' });
       if (await retryBtn.isVisible().catch(() => false)) {
         await retryBtn.click();
-      } else if (attempt === 4) {
-        throw new Error('Home screen did not load after 5 attempts');
+      } else if (attempt === 2) {
+        // Last resort: full page reload
+        await page.reload();
+        await page.getByRole('heading', { name: 'Tournament Planner' }).waitFor({ timeout: FB_TIMEOUT });
       }
     }
   }

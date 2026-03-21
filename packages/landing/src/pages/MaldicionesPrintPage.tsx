@@ -1,54 +1,43 @@
+import { CURSE_CARD_CONTENT, SHIELD_CARD_CONTENT } from '@padel/common';
+import type { CurseCardContent } from '@padel/common';
 import styles from './MaldicionesPrintPage.module.css';
 
-interface CardData {
-  emoji: string;
-  name: string;
-  subtitle: string;
-  effect: string;
-}
+const greenCards = CURSE_CARD_CONTENT.filter(c => c.tier === 'green');
+const yellowCards = CURSE_CARD_CONTENT.filter(c => c.tier === 'yellow');
+const redCards = CURSE_CARD_CONTENT.filter(c => c.tier === 'red');
 
-const greenCards: CardData[] = [
-  { emoji: '🤐', name: 'Los Mudos', subtitle: 'Silent Round', effect: 'No talking allowed. Communicate using gestures only.' },
-  { emoji: '🪞', name: 'El Espejo', subtitle: 'Mirror Match', effect: 'Swap positions with your partner for the whole match.' },
-  { emoji: '🐢', name: 'Cámara Lenta', subtitle: 'Slow Motion', effect: 'No smashes or overheads allowed.' },
-  { emoji: '🦠', name: 'El Pegajoso', subtitle: 'Stuck in Place', effect: 'Stay on your half of the court. No crossing.' },
-  { emoji: '🐟', name: 'Memoria de Pez', subtitle: 'Goldfish Memory', effect: 'Say the score before every serve. Forget = penalty point!' },
-  { emoji: '🤝', name: 'Choca Esos Cinco', subtitle: 'High Five!', effect: 'High-five after every point. Won or lost.' },
-];
-
-const yellowCards: CardData[] = [
-  { emoji: '✋', name: 'Mano Muerta', subtitle: 'Dead Hand', effect: 'Backhand only. No forehands allowed.' },
-  { emoji: '👨‍🤝‍👦', name: 'Gigante y Enano', subtitle: 'Locked Positions', effect: 'One at the net, one at the back. No switching.' },
-  { emoji: '👻', name: 'El Fantasma', subtitle: 'The Ghost', effect: 'No volleys at the net. Let the ball bounce first.' },
-  { emoji: '🚫', name: 'Sin Bandeja', subtitle: 'No Bandeja', effect: 'No bandeja or vibora. Flat shots or lobs only.' },
-  { emoji: '↩️', name: 'Solo de Ida', subtitle: 'One Way Only', effect: 'Underhand serve for the entire match.' },
-  { emoji: '🎯', name: 'La Diana', subtitle: 'Alternate Hits', effect: 'Same player cannot hit two balls in a row.' },
-];
-
-const redCards: CardData[] = [
-  { emoji: '🧑', name: 'El Solo', subtitle: 'The Loner', effect: 'Partner sits out the first 3 points. 1v2!' },
-  { emoji: '🔄', name: 'Al Revés', subtitle: 'Wrong Hand', effect: 'Play with your non-dominant hand.' },
-  { emoji: '🎡', name: 'La Ruleta', subtitle: 'The Roulette', effect: 'Rotate positions clockwise every 3 points.' },
-  { emoji: '🎾', name: 'Mini Pala', subtitle: 'Short Grip', effect: 'Grip the racket by the head.' },
-  { emoji: '⚡', name: 'Relámpago', subtitle: 'Lightning', effect: 'Give opponents a 2-point head start!' },
-  { emoji: '🎲', name: 'Doble o Nada', subtitle: 'Double or Nothing', effect: 'Points against you count double!' },
-];
-
-function PrintCard({ card, tier }: { card: CardData; tier: 'green' | 'yellow' | 'red' }) {
-  const tierIcon = tier === 'green' ? styles.tierEmpty : tier === 'yellow' ? styles.tierHalf : styles.tierFull;
+function PrintCard({ card }: { card: CurseCardContent }) {
+  const filled = card.tier === 'green' ? 1 : card.tier === 'yellow' ? 2 : 3;
   return (
     <div className={styles.card}>
       <div className={styles.cardInner}>
         <div className={styles.cardBanner}>
           {card.name}
-          <span className={`${styles.tierIndicator} ${tierIcon}`} />
+          <span className={styles.tierDots}>
+            {[0, 1, 2].map(i => (
+              <span key={i} className={i < filled ? styles.tierDotFilled : styles.tierDotEmpty} />
+            ))}
+          </span>
         </div>
-        <div className={styles.cardEmoji}>{card.emoji}</div>
-        <div className={styles.cardBottom}>
-          <div className={styles.cardSubtitle}>{card.subtitle}</div>
-          <div className={styles.cardDivider} />
-          <div className={styles.cardEffect}>{card.effect}</div>
+        <div className={styles.cardAttitude}>{card.attitude}</div>
+
+        <div className={styles.cardBody}>
+          <div className={styles.cardEmojiInline}>{card.emoji}</div>
+          <div className={styles.sectionLabel}>HOW IT WORKS</div>
+          <div className={styles.sectionText}>{card.howItWorks}</div>
+
+          <div className={styles.sectionLabel}>RULES</div>
+          <ul className={styles.rulesList}>
+            {card.rules.map((r, i) => <li key={i}>{r}</li>)}
+          </ul>
+
+          <div className={styles.sectionLabel}>NO EXCEPTIONS</div>
+          <div className={styles.sectionText}>{card.noExceptions}</div>
+
+          <div className={styles.sectionLabel}>PENALTY</div>
+          <div className={styles.sectionText}>{card.penalty}</div>
         </div>
+
         <div className={styles.punchZone}>
           <div className={styles.punchRibbon}>PUNCH FEEDBACK HERE</div>
           <div className={styles.punchCircles}>
@@ -74,18 +63,24 @@ function PrintCard({ card, tier }: { card: CardData; tier: 'green' | 'yellow' | 
 }
 
 function ShieldCard() {
+  const s = SHIELD_CARD_CONTENT;
   return (
     <div className={`${styles.card} ${styles.cardShield}`}>
       <div className={styles.cardInner}>
-        <div className={styles.cardBanner}>
-          Escudo
+        <div className={styles.cardBanner}>{s.name}</div>
+        <div className={styles.cardAttitude}>{s.attitude}</div>
+
+        <div className={styles.cardBody}>
+          <div className={styles.cardEmojiInline}>{s.emoji}</div>
+          <div className={styles.sectionLabel}>HOW IT WORKS</div>
+          <div className={styles.sectionText}>{s.howItWorks}</div>
+
+          <div className={styles.sectionLabel}>RULES</div>
+          <ul className={styles.rulesList}>
+            {s.rules.map((r, i) => <li key={i}>{r}</li>)}
+          </ul>
         </div>
-        <div className={styles.cardEmoji}>🛡️</div>
-        <div className={styles.cardBottom}>
-          <div className={styles.cardSubtitle}>Shield</div>
-          <div className={styles.cardDivider} />
-          <div className={styles.cardEffect}>Block one curse. One per team per tournament.</div>
-        </div>
+
         <div className={styles.cardFooter}>
           <span className={styles.footerLine} />
           <span>padelday.net</span>
@@ -117,7 +112,7 @@ export function MaldicionesPrintPage() {
         <h1>🎭 Maldiciones del Padel — Print & Play</h1>
         <p>
           Print these cards, cut along the borders, and bring the curse card game to your next tournament.
-          Print card fronts on one side and backs on the other for a professional feel.
+          Use double-sided printing — fronts and backs are paired on consecutive pages.
         </p>
         <button className={styles.printButton} onClick={() => window.print()}>
           🖨️ Print Cards
@@ -127,7 +122,7 @@ export function MaldicionesPrintPage() {
       <div className={styles.instructions}>
         <h3>How to Play</h3>
         <ol>
-          <li>Print this page (fronts) and optionally the backs page on the reverse side.</li>
+          <li>Print with double-sided (flip on short edge) — fronts and backs are paired.</li>
           <li>Cut out each card along the borders.</li>
           <li>Separate cards by tier: Green (easy), Yellow (medium), Red (extreme).</li>
           <li>Give each team a hand of cards at the start — we recommend <strong>1 card per 3 rounds</strong>.</li>
@@ -138,23 +133,44 @@ export function MaldicionesPrintPage() {
         </ol>
       </div>
 
-      {/* ── Card Fronts ── */}
+      {/* ── Page 1: Green Fronts ── */}
       <h2 className={styles.sectionTitle}>Green Tier — Lite ({greenCards.length} cards)</h2>
       <div className={styles.cardGrid}>
-        {greenCards.map(c => <PrintCard key={c.name} card={c} tier="green" />)}
+        {greenCards.map(c => <PrintCard key={c.id} card={c} />)}
       </div>
 
-      <h2 className={styles.sectionTitle}>Yellow Tier — Medium ({yellowCards.length} cards)</h2>
+      {/* ── Page 2: Green Backs ── */}
+      <h2 className={`${styles.sectionTitle} ${styles.pageBreak}`}>Green Tier — Backs</h2>
       <div className={styles.cardGrid}>
-        {yellowCards.map(c => <PrintCard key={c.name} card={c} tier="yellow" />)}
+        {greenCards.map((_, i) => <CardBack key={i} />)}
       </div>
 
-      <h2 className={styles.sectionTitle}>Red Tier — Hardcore ({redCards.length} cards)</h2>
+      {/* ── Page 3: Yellow Fronts ── */}
+      <h2 className={`${styles.sectionTitle} ${styles.pageBreak}`}>Yellow Tier — Medium ({yellowCards.length} cards)</h2>
       <div className={styles.cardGrid}>
-        {redCards.map(c => <PrintCard key={c.name} card={c} tier="red" />)}
+        {yellowCards.map(c => <PrintCard key={c.id} card={c} />)}
       </div>
 
-      <h2 className={styles.sectionTitle}>Shield Cards (print 1 per team)</h2>
+      {/* ── Page 4: Yellow Backs ── */}
+      <h2 className={`${styles.sectionTitle} ${styles.pageBreak}`}>Yellow Tier — Backs</h2>
+      <div className={styles.cardGrid}>
+        {yellowCards.map((_, i) => <CardBack key={i} />)}
+      </div>
+
+      {/* ── Page 5: Red Fronts ── */}
+      <h2 className={`${styles.sectionTitle} ${styles.pageBreak}`}>Red Tier — Hardcore ({redCards.length} cards)</h2>
+      <div className={styles.cardGrid}>
+        {redCards.map(c => <PrintCard key={c.id} card={c} />)}
+      </div>
+
+      {/* ── Page 6: Red Backs ── */}
+      <h2 className={`${styles.sectionTitle} ${styles.pageBreak}`}>Red Tier — Backs</h2>
+      <div className={styles.cardGrid}>
+        {redCards.map((_, i) => <CardBack key={i} />)}
+      </div>
+
+      {/* ── Page 7: Shield Fronts ── */}
+      <h2 className={`${styles.sectionTitle} ${styles.pageBreak}`}>Shield Cards (print 1 per team)</h2>
       <div className={styles.cardGrid}>
         <ShieldCard />
         <ShieldCard />
@@ -167,12 +183,7 @@ export function MaldicionesPrintPage() {
         <ShieldCard />
       </div>
 
-      {/* ── Card Backs ── */}
-      <h2 className={`${styles.sectionTitle} ${styles.pageBreak}`}>Card Backs (print on reverse side)</h2>
-      <div className={styles.cardGrid}>
-        {[...greenCards, ...yellowCards, ...redCards].map((_, i) => <CardBack key={i} />)}
-      </div>
-
+      {/* ── Page 8: Shield Backs ── */}
       <h2 className={`${styles.sectionTitle} ${styles.pageBreak}`}>Shield Card Backs</h2>
       <div className={`${styles.cardGrid} ${styles.cardGridShieldBacks}`}>
         <CardBack shield />

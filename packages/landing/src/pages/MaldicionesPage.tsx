@@ -1,37 +1,14 @@
 import { useState } from 'react';
-import { AppFooter, FeedbackModal } from '@padel/common';
+import { AppFooter, FeedbackModal, CURSE_CARD_CONTENT } from '@padel/common';
 import styles from './Article.module.css';
 
 interface Props {
   onFeedback: (message: string) => Promise<void>;
 }
 
-const greenCards = [
-  { emoji: '🤐', name: 'Los Mudos', subtitle: 'No talking', effect: 'Target team cannot communicate verbally during the entire match. Hand signals only!' },
-  { emoji: '🪞', name: 'El Espejo', subtitle: 'Swap sides', effect: 'Target player must swap positions with their partner for the whole match.' },
-  { emoji: '🐢', name: 'Cámara Lenta', subtitle: 'No smashes', effect: 'Target player cannot hit smashes or overheads during the match.' },
-  { emoji: '🤎', name: 'El Pegajoso', subtitle: 'Stay in half', effect: 'Target player must stay on their half of the court — no crossing.' },
-  { emoji: '🐟', name: 'Memoria de Pez', subtitle: 'Announce score', effect: 'Target team must say the score out loud before every serve. Forgetting = point penalty!' },
-  { emoji: '🤝', name: 'Choca Esos Cinco', subtitle: 'High five always', effect: 'Target team must high-five after every single point, won or lost.' },
-];
-
-const yellowCards = [
-  { emoji: '✋', name: 'Mano Muerta', subtitle: 'Backhand only', effect: 'Target player can only hit backhands for the entire match. No forehands!' },
-  { emoji: '👨‍🤝‍👦', name: 'Gigante y Enano', subtitle: 'Locked positions', effect: 'Target team is locked: one at the net, one at the back. No switching!' },
-  { emoji: '👻', name: 'El Fantasma', subtitle: 'No volleys', effect: 'Target player cannot hit volleys at the net. Must let the ball bounce first.' },
-  { emoji: '🚫', name: 'Sin Bandeja', subtitle: 'No bandeja shots', effect: 'Target player cannot hit bandeja or vibora shots. Only flat shots or lobs!' },
-  { emoji: '↩️', name: 'Solo de Ida', subtitle: 'Underhand serve', effect: 'Target player must serve underhand for the entire match.' },
-  { emoji: '🎯', name: 'La Diana', subtitle: 'Alternate hits', effect: 'Target team must alternate shots — the same player cannot hit two consecutive balls.' },
-];
-
-const redCards = [
-  { emoji: '🧑', name: 'El Solo', subtitle: '1v2 start', effect: 'Target player\'s partner must sit out the first 3 points. 1v2 to start!' },
-  { emoji: '🔄', name: 'Al Revés', subtitle: 'Wrong hand', effect: 'Target player must play with their non-dominant hand for the entire match.' },
-  { emoji: '🎡', name: 'La Ruleta', subtitle: 'Rotate positions', effect: 'Target team must physically rotate positions clockwise every 3 points.' },
-  { emoji: '🎾', name: 'Mini Pala', subtitle: 'Short grip', effect: 'Target player must grip the racket by the head (short grip) for the entire match.' },
-  { emoji: '⚡', name: 'Relámpago', subtitle: '2-point handicap', effect: 'Casting team gives opponents a 2-point head start. High risk, high reward!' },
-  { emoji: '🎲', name: 'Doble o Nada', subtitle: 'Double points', effect: 'Every point scored against the cursed team counts as 2 points. One bad rally and you\'re toast!' },
-];
+const greenCards = CURSE_CARD_CONTENT.filter(c => c.tier === 'green');
+const yellowCards = CURSE_CARD_CONTENT.filter(c => c.tier === 'yellow');
+const redCards = CURSE_CARD_CONTENT.filter(c => c.tier === 'red');
 
 function CardSection({ title, color, cards }: { title: string; color: string; cards: typeof greenCards }) {
   return (
@@ -42,8 +19,8 @@ function CardSection({ title, color, cards }: { title: string; color: string; ca
           <div key={c.name} className={styles.card} style={{ borderLeftColor: color, borderLeftWidth: 3 }}>
             <div className={styles.cardEmoji}>{c.emoji}</div>
             <div className={styles.cardName}>{c.name}</div>
-            <div className={styles.cardDesc}>{c.subtitle}</div>
-            <div className={styles.curseEffect}>{c.effect}</div>
+            <div className={styles.cardDesc}>{c.attitude}</div>
+            <div className={styles.curseEffect}>{c.howItWorks}</div>
           </div>
         ))}
       </div>

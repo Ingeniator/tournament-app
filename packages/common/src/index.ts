@@ -15,6 +15,8 @@ export type {
 export type { StandingsEntry, ClubStandingsEntry } from './types/standings';
 export type { AwardTier, Nomination } from './types/nomination';
 export type { ChaosLevel, CardTier, CurseCard, MatchCurse, MaldicionesHands } from './types/maldiciones';
+export { CURSE_CARD_CONTENT, SHIELD_CARD_CONTENT } from './data/curseCardContent';
+export type { CurseCardContent, ShieldCardContent } from './data/curseCardContent';
 export type { Supporter, GroupedSupporter } from './types/supporter';
 export type { PlannerTournament, PlannerRegistration, TournamentSummary, TournamentStartInfo } from './types/planner';
 export type { PadelEvent, EventTournamentLink, PadelEventSummary, PadelEventStatus, EventStandingEntry, EventClubStandingEntry } from './types/event';
