@@ -27,7 +27,7 @@ build:
 	npm -w @padel/runner run build & npm -w @padel/planner run build & npm -w @padel/landing run build & wait
 	npx tsx scripts/prerender.ts
 
-deploy-build: build unit-test
+deploy-build: build smoke-test
 	rm -rf dist
 	mkdir -p dist/play dist/plan
 	cp -r packages/runner/dist/. dist/play/
@@ -38,6 +38,11 @@ deploy-build: build unit-test
 	cp public/_headers dist/_headers
 
 # --- Testing ---
+
+smoke-test:
+	npx -w @padel/common vitest run --exclude '**/*.simulation.test.*' --testTimeout=5000
+	npx -w @padel/runner vitest run --exclude '**/*.simulation.test.*' --testTimeout=5000
+	npx -w @padel/planner vitest run --exclude '**/*.simulation.test.*' --testTimeout=5000
 
 unit-test:
 	npm test --workspaces --if-present

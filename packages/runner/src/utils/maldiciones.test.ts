@@ -10,6 +10,9 @@ describe('dealMaldicionesHands', () => {
   const hardcorePool = getCardsForChaosLevel('hardcore').length;
   const allValidIds = getCardsForChaosLevel('hardcore').map(c => c.id);
   const greenIds = getCardsForChaosLevel('lite').map(c => c.id);
+  const yellowIds = getCardsForChaosLevel('hardcore')
+    .filter(c => c.tier === 'yellow')
+    .map(c => c.id);
   const redIds = getCardsForChaosLevel('hardcore')
     .filter(c => c.tier === 'red')
     .map(c => c.id);
@@ -56,22 +59,26 @@ describe('dealMaldicionesHands', () => {
     }
   });
 
-  it('medium chaos level deals green + yellow cards', () => {
+  it('medium chaos level deals green + yellow cards, no red', () => {
     const hands = dealMaldicionesHands(teamIds, 'medium', 9);
     for (const id of teamIds) {
       for (const cardId of hands[id].cardIds) {
         expect(redIds).not.toContain(cardId);
+        expect([...greenIds, ...yellowIds]).toContain(cardId);
       }
     }
   });
 
-  it('hardcore chaos level can deal red cards', () => {
-    // With enough iterations, hardcore should include red cards
-    const manyTeams = Array.from({ length: 50 }, (_, i) => `t${i}`);
-    const hands = dealMaldicionesHands(manyTeams, 'hardcore', 30);
-    const allCards = Object.values(hands).flatMap(h => h.cardIds);
-    const hasRed = allCards.some(c => redIds.includes(c));
-    expect(hasRed).toBe(true);
+  it('hardcore chaos level deals one card from each tier', () => {
+    // With 9 rounds = 3 cards per team, hardcore gets 1 green + 1 yellow + 1 red
+    const hands = dealMaldicionesHands(teamIds, 'hardcore', 9);
+    for (const id of teamIds) {
+      const cards = hands[id].cardIds;
+      expect(cards.length).toBe(3);
+      expect(greenIds).toContain(cards[0]);
+      expect(yellowIds).toContain(cards[1]);
+      expect(redIds).toContain(cards[2]);
+    }
   });
 
   it('card IDs are valid curse card IDs', () => {
