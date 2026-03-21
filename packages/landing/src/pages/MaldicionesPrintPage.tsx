@@ -18,7 +18,6 @@ function PrintCard({ card }: { card: CurseCardContent }) {
         <div className={styles.cardAttitude}>{card.attitude}</div>
 
         <div className={styles.cardBody}>
-          <div className={styles.cardEmojiInline}>{card.emoji}</div>
           <div className={styles.sectionLabel}>HOW IT WORKS</div>
           <div className={styles.sectionText}>{card.howItWorks}</div>
 
@@ -59,7 +58,6 @@ function ShieldCard({ shield }: { shield: ShieldCardContent }) {
         <div className={styles.cardAttitude}>{shield.attitude}</div>
 
         <div className={styles.cardBody}>
-          <div className={styles.cardEmojiInline}>{shield.emoji}</div>
           <div className={styles.sectionLabel}>HOW IT WORKS</div>
           <div className={styles.sectionText}>{shield.howItWorks}</div>
 
