@@ -30,6 +30,7 @@ const redCards = [
   { emoji: '🎡', name: 'La Ruleta', subtitle: 'Rotate positions', effect: 'Target team must physically rotate positions clockwise every 3 points.' },
   { emoji: '🎾', name: 'Mini Pala', subtitle: 'Short grip', effect: 'Target player must grip the racket by the head (short grip) for the entire match.' },
   { emoji: '⚡', name: 'Relámpago', subtitle: '2-point handicap', effect: 'Casting team gives opponents a 2-point head start. High risk, high reward!' },
+  { emoji: '🎲', name: 'Doble o Nada', subtitle: 'Double points', effect: 'Every point scored against the cursed team counts as 2 points. One bad rally and you\'re toast!' },
 ];
 
 function CardSection({ title, color, cards }: { title: string; color: string; cards: typeof greenCards }) {
@@ -61,12 +62,12 @@ export function MaldicionesPage({ onFeedback }: Props) {
       <article className={styles.article}>
         <h1>Maldiciones del Padel — Curse Cards Party Mode</h1>
         <p className={styles.lead}>
-          Add chaos to your tournament with 17 curse cards across 3 difficulty tiers. Before each match, the winning team from the previous round can cast a curse on their opponents — adding hilarious constraints that change how padel is played.
+          Add chaos to your tournament with 18 curse cards across 3 difficulty tiers. Each team receives a hand of cards at the start and can cast one curse per match to disrupt their opponents — adding hilarious constraints that change how padel is played.
         </p>
 
         <h2>What Are Maldiciones?</h2>
         <p>
-          Maldiciones ("curses" in Spanish) is an optional party mode that adds curse cards to any tournament format. After winning a match, the winning team draws a random curse card and can cast it on their next opponents. Curses add physical or strategic constraints — like playing backhand-only, not being allowed to talk, or starting 1v2.
+          Maldiciones ("curses" in Spanish) is an optional party mode that adds curse cards to any tournament format. At tournament start, each team is dealt a hand of random curse cards. Before any match is scored, a team can play one card to impose a physical or strategic constraint on an opponent — like playing backhand-only, not being allowed to talk, or having points count double against you. Each team also gets one shield to block a curse, making shield management part of the strategy.
         </p>
 
         <h2>3 Chaos Levels</h2>
@@ -74,7 +75,7 @@ export function MaldicionesPage({ onFeedback }: Props) {
         <ul>
           <li><strong>Lite</strong> — Green cards only (6 cards). Fun but mild constraints.</li>
           <li><strong>Medium</strong> — Green + Yellow (12 cards). Real challenge, great for regular groups.</li>
-          <li><strong>Hardcore</strong> — All 17 cards including Red. Absolute chaos. Not for the faint-hearted.</li>
+          <li><strong>Hardcore</strong> — All 18 cards including Red. Absolute chaos. Not for the faint-hearted.</li>
         </ul>
 
         <h2>Card Catalog</h2>
@@ -102,6 +103,14 @@ export function MaldicionesPage({ onFeedback }: Props) {
           <li><strong>☠️ El Maldito</strong> — Most cursed pair (2+ curses)</li>
           <li><strong>🔄 Karma</strong> — Cast curses that backfired (lost after cursing)</li>
         </ul>
+
+        <h2>Print & Play</h2>
+        <p>
+          Want physical cards for your tournament? Print our ready-to-cut card templates and bring Maldiciones to the court as a real board game. Each card includes the emoji, name, tier color, and effect — just print, cut, and deal.
+        </p>
+        <p>
+          <a className={styles.ctaButton} href="/maldiciones/print">Print Card Templates →</a>
+        </p>
 
         <div className={styles.cta}>
           <p>Add curse cards to your next tournament — no signup needed.</p>

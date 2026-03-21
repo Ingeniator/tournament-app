@@ -368,6 +368,9 @@ const it: Translations = {
   'curse.relampago.subtitle': 'Fulmine',
   'curse.relampago.desc': 'Avversari partono con 2 punti di vantaggio',
   'curse.relampago.details': 'La squadra lancia dà 2 punti di vantaggio agli avversari. Alto rischio, alta ricompensa!',
+  'curse.dobleONada.subtitle': 'Doppio o Niente',
+  'curse.dobleONada.desc': 'I punti contro la squadra maledetta contano doppio',
+  'curse.dobleONada.details': 'Ogni punto segnato contro la squadra maledetta conta come 2 punti. Posta alta — uno scambio sbagliato e sei fuori!',
 
   // FormatPicker
   'format.browseMode': 'Sfoglia',

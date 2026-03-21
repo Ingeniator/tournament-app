@@ -10,6 +10,7 @@ const AmericanoPage = lazy(() => import('./pages/AmericanoPage').then(m => ({ de
 const MexicanoPage = lazy(() => import('./pages/MexicanoPage').then(m => ({ default: m.MexicanoPage })));
 const AwardsPage = lazy(() => import('./pages/AwardsPage').then(m => ({ default: m.AwardsPage })));
 const MaldicionesPage = lazy(() => import('./pages/MaldicionesPage').then(m => ({ default: m.MaldicionesPage })));
+const MaldicionesPrintPage = lazy(() => import('./pages/MaldicionesPrintPage').then(m => ({ default: m.MaldicionesPrintPage })));
 const ClubPage = lazy(() => import('./pages/ClubPage').then(m => ({ default: m.ClubPage })));
 const OrganizePage = lazy(() => import('./pages/OrganizePage').then(m => ({ default: m.OrganizePage })));
 const WhichFormatPage = lazy(() => import('./pages/WhichFormatPage').then(m => ({ default: m.WhichFormatPage })));
@@ -174,6 +175,8 @@ function AppContent() {
       return <Suspense fallback={null}><AwardsPage onFeedback={handleFeedback} /></Suspense>;
     case '/maldiciones':
       return <Suspense fallback={null}><MaldicionesPage onFeedback={handleFeedback} /></Suspense>;
+    case '/maldiciones/print':
+      return <Suspense fallback={null}><MaldicionesPrintPage /></Suspense>;
     case '/club':
       return <Suspense fallback={null}><ClubPage onFeedback={handleFeedback} /></Suspense>;
     case '/organize':

@@ -108,6 +108,12 @@ export const CURSE_CARDS: CurseCard[] = [
     description: 'curse.relampago.desc',
     details: 'curse.relampago.details',
   },
+  {
+    id: 'doble-o-nada', tier: 'red', emoji: '\uD83C\uDFB2', name: 'Doble o Nada',
+    subtitle: 'curse.dobleONada.subtitle',
+    description: 'curse.dobleONada.desc',
+    details: 'curse.dobleONada.details',
+  },
 ];
 
 export function getCardsForChaosLevel(level: ChaosLevel): CurseCard[] {

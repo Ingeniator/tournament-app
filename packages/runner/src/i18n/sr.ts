@@ -368,6 +368,9 @@ const sr: Translations = {
   'curse.relampago.subtitle': 'Munja',
   'curse.relampago.desc': 'Protivnici počinju sa 2 poena prednosti',
   'curse.relampago.details': 'Tim bacač daje protivnicima 2 poena prednosti. Visok rizik, visoka nagrada!',
+  'curse.dobleONada.subtitle': 'Duplo ili Ništa',
+  'curse.dobleONada.desc': 'Poeni protiv prokletog tima broje duplo',
+  'curse.dobleONada.details': 'Svaki poen postignut protiv prokletog tima broji kao 2 poena. Visoki ulozi — jedan loš razmena i gotovo je!',
 
   // FormatPicker
   'format.browseMode': 'Pregled',

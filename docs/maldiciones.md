@@ -28,7 +28,7 @@ maldiciones?: { enabled: boolean; chaosLevel: ChaosLevel }
 |-------|----------------|
 | Lite | Green only (6 cards) |
 | Medium | Green + Yellow (12 cards) |
-| Hardcore | All cards (17 cards) |
+| Hardcore | All cards (18 cards) |
 
 ## Card Dealing
 
@@ -100,6 +100,7 @@ Card names are kept in Spanish as brand names. Descriptions and details are tran
 | 🎡 | La Ruleta | Target team must rotate positions (clockwise) every 3 points |
 | 🎾 | Mini Pala | Target player must grip the racket by the head (short grip) |
 | ⚡ | Relampago | Casting team gives opponents a 2-point head start. High risk intimidation! |
+| 🎲 | Doble o Nada | Every point scored against the cursed team counts as 2 points |
 
 ## Shield Mechanic
 

@@ -368,6 +368,9 @@ const es: Translations = {
   'curse.relampago.subtitle': 'Relámpago',
   'curse.relampago.desc': 'Rivales empiezan con 2 puntos de ventaja',
   'curse.relampago.details': 'El equipo lanzador da 2 puntos de ventaja a los rivales. ¡Alto riesgo, alta recompensa!',
+  'curse.dobleONada.subtitle': 'Doble o Nada',
+  'curse.dobleONada.desc': 'Puntos contra el equipo maldito cuentan doble',
+  'curse.dobleONada.details': 'Cada punto anotado contra el equipo maldito cuenta como 2 puntos. ¡Altas apuestas — un mal rally y estás frito!',
 
   // FormatPicker
   'format.browseMode': 'Explorar',

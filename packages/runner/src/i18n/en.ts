@@ -368,6 +368,9 @@ const en: Translations = {
   'curse.relampago.subtitle': 'Lightning',
   'curse.relampago.desc': 'Opponents start with 2 point lead',
   'curse.relampago.details': 'Casting team gives opponents a 2-point head start. High risk, high reward intimidation!',
+  'curse.dobleONada.subtitle': 'Double or Nothing',
+  'curse.dobleONada.desc': 'Points against cursed team count double',
+  'curse.dobleONada.details': 'Every point scored against the cursed team counts as 2 points. High stakes — one bad rally and you\'re toast!',
 
   // FormatPicker
   'format.browseMode': 'Browse',

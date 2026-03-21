@@ -368,6 +368,9 @@ const sv: Translations = {
   'curse.relampago.subtitle': 'Blixten',
   'curse.relampago.desc': 'Motståndarna börjar med 2 poängs ledning',
   'curse.relampago.details': 'Kastarlaget ger motståndarna 2 poängs försprång. Hög risk, hög belöning!',
+  'curse.dobleONada.subtitle': 'Dubbelt eller Inget',
+  'curse.dobleONada.desc': 'Poäng mot det förbannade laget räknas dubbelt',
+  'curse.dobleONada.details': 'Varje poäng mot det förbannade laget räknas som 2 poäng. Höga insatser — ett dåligt rally och det är kört!',
 
   // FormatPicker
   'format.browseMode': 'Bläddra',

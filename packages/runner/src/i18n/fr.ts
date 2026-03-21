@@ -368,6 +368,9 @@ const fr: Translations = {
   'curse.relampago.subtitle': 'Éclair',
   'curse.relampago.desc': 'Adversaires commencent avec 2 points d\'avance',
   'curse.relampago.details': 'L\'équipe lanceuse donne 2 points d\'avance aux adversaires. Haut risque, haute récompense !',
+  'curse.dobleONada.subtitle': 'Quitte ou Double',
+  'curse.dobleONada.desc': 'Les points contre l\'équipe maudite comptent double',
+  'curse.dobleONada.details': 'Chaque point marqué contre l\'équipe maudite compte pour 2. Enjeux élevés — un mauvais échange et c\'est fini !',
 
   // FormatPicker
   'format.browseMode': 'Parcourir',
