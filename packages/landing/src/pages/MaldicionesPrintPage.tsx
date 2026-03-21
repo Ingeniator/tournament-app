@@ -1,10 +1,6 @@
-import { CURSE_CARD_CONTENT, SHIELD_CARD_CONTENT } from '@padel/common';
-import type { CurseCardContent } from '@padel/common';
+import { CURSE_CARD_CONTENT, SHIELD_CARDS } from '@padel/common';
+import type { CurseCardContent, ShieldCardContent } from '@padel/common';
 import styles from './MaldicionesPrintPage.module.css';
-
-const greenCards = CURSE_CARD_CONTENT.filter(c => c.tier === 'green');
-const yellowCards = CURSE_CARD_CONTENT.filter(c => c.tier === 'yellow');
-const redCards = CURSE_CARD_CONTENT.filter(c => c.tier === 'red');
 
 function PrintCard({ card }: { card: CurseCardContent }) {
   const filled = card.tier === 'green' ? 1 : card.tier === 'yellow' ? 2 : 3;
@@ -62,25 +58,60 @@ function PrintCard({ card }: { card: CurseCardContent }) {
   );
 }
 
-function ShieldCard() {
-  const s = SHIELD_CARD_CONTENT;
+function ShieldCard({ shield }: { shield: ShieldCardContent }) {
   return (
     <div className={`${styles.card} ${styles.cardShield}`}>
       <div className={styles.cardInner}>
-        <div className={styles.cardBanner}>{s.name}</div>
-        <div className={styles.cardAttitude}>{s.attitude}</div>
+        <div className={styles.cardBanner}>{shield.name}</div>
+        <div className={styles.cardAttitude}>{shield.attitude}</div>
 
         <div className={styles.cardBody}>
-          <div className={styles.cardEmojiInline}>{s.emoji}</div>
+          <div className={styles.cardEmojiInline}>{shield.emoji}</div>
           <div className={styles.sectionLabel}>HOW IT WORKS</div>
-          <div className={styles.sectionText}>{s.howItWorks}</div>
+          <div className={styles.sectionText}>{shield.howItWorks}</div>
 
           <div className={styles.sectionLabel}>RULES</div>
           <ul className={styles.rulesList}>
-            {s.rules.map((r, i) => <li key={i}>{r}</li>)}
+            {shield.rules.map((r, i) => <li key={i}>{r}</li>)}
           </ul>
         </div>
 
+        <div className={styles.cardFooter}>
+          <span className={styles.footerLine} />
+          <span>padelday.net</span>
+          <span className={styles.footerLine} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BlankCard() {
+  return (
+    <div className={styles.card}>
+      <div className={styles.cardInner}>
+        <div className={styles.cardBanner}>YOUR CURSE</div>
+        <div className={styles.cardAttitude}>Write Your Own</div>
+        <div className={styles.cardBody}>
+          <div className={styles.sectionLabel}>HOW IT WORKS</div>
+          <div className={styles.blankLine} />
+          <div className={styles.blankLine} />
+          <div className={styles.sectionLabel}>RULES</div>
+          <div className={styles.blankLine} />
+          <div className={styles.blankLine} />
+          <div className={styles.sectionLabel}>NO EXCEPTIONS</div>
+          <div className={styles.blankLine} />
+          <div className={styles.sectionLabel}>PENALTY</div>
+          <div className={styles.blankLine} />
+        </div>
+        <div className={styles.punchZone}>
+          <div className={styles.punchRibbon}>PUNCH FEEDBACK HERE</div>
+          <div className={styles.punchCircles}>
+            <div className={styles.punchCircle}><span className={styles.punchIcon}>✕</span></div>
+            <div className={styles.punchCircle}><span className={styles.punchIcon}>●</span></div>
+            <div className={styles.punchCircle}><span className={styles.punchIcon}>★</span></div>
+          </div>
+        </div>
         <div className={styles.cardFooter}>
           <span className={styles.footerLine} />
           <span>padelday.net</span>
@@ -127,74 +158,55 @@ export function MaldicionesPrintPage() {
           <li>Separate cards by tier: Green (easy), Yellow (medium), Red (extreme).</li>
           <li>Give each team a hand of cards at the start — we recommend <strong>1 card per 3 rounds</strong>.</li>
           <li>Give each team <strong>one Shield card</strong>.</li>
+          <li>Players can trade cards within their team at any time.</li>
           <li>Before a match is scored, a team can play one curse card on an opponent.</li>
           <li>The opponent can block with their shield (both are consumed) or accept the curse.</li>
           <li>The cursed player/team must follow the card's constraint for the entire match!</li>
         </ol>
       </div>
 
-      {/* ── Page 1: Green Fronts ── */}
-      <h2 className={styles.sectionTitle}>Green Tier — Lite ({greenCards.length} cards)</h2>
-      <div className={styles.cardGrid}>
-        {greenCards.map(c => <PrintCard key={c.id} card={c} />)}
-      </div>
+      {/* ── Curse Cards: 4 pages of 9, front/back paired ── */}
+      {(() => {
+        const allCards = [...CURSE_CARD_CONTENT.map(c => c), null]; // null = blank
+        const pages: (CurseCardContent | null)[][] = [];
+        for (let i = 0; i < allCards.length; i += 9) {
+          pages.push(allCards.slice(i, i + 9));
+        }
+        return pages.map((page, pi) => (
+          <div key={pi}>
+            {/* Front */}
+            <h2 className={`${styles.sectionTitle} ${pi > 0 ? styles.pageBreak : ''}`}>
+              Curse Cards — Page {pi + 1} Fronts
+            </h2>
+            <div className={styles.cardGrid}>
+              {page.map((c, ci) => c
+                ? <PrintCard key={c.id} card={c} />
+                : <BlankCard key={`blank-${ci}`} />
+              )}
+            </div>
+            {/* Back */}
+            <h2 className={`${styles.sectionTitle} ${styles.pageBreak}`}>
+              Curse Cards — Page {pi + 1} Backs
+            </h2>
+            <div className={styles.cardGrid}>
+              {page.map((_, ci) => <CardBack key={`back-${pi}-${ci}`} />)}
+            </div>
+          </div>
+        ));
+      })()}
 
-      {/* ── Page 2: Green Backs ── */}
-      <h2 className={`${styles.sectionTitle} ${styles.pageBreak}`}>Green Tier — Backs</h2>
-      <div className={styles.cardGrid}>
-        {greenCards.map((_, i) => <CardBack key={i} />)}
-      </div>
-
-      {/* ── Page 3: Yellow Fronts ── */}
-      <h2 className={`${styles.sectionTitle} ${styles.pageBreak}`}>Yellow Tier — Medium ({yellowCards.length} cards)</h2>
-      <div className={styles.cardGrid}>
-        {yellowCards.map(c => <PrintCard key={c.id} card={c} />)}
-      </div>
-
-      {/* ── Page 4: Yellow Backs ── */}
-      <h2 className={`${styles.sectionTitle} ${styles.pageBreak}`}>Yellow Tier — Backs</h2>
-      <div className={styles.cardGrid}>
-        {yellowCards.map((_, i) => <CardBack key={i} />)}
-      </div>
-
-      {/* ── Page 5: Red Fronts ── */}
-      <h2 className={`${styles.sectionTitle} ${styles.pageBreak}`}>Red Tier — Hardcore ({redCards.length} cards)</h2>
-      <div className={styles.cardGrid}>
-        {redCards.map(c => <PrintCard key={c.id} card={c} />)}
-      </div>
-
-      {/* ── Page 6: Red Backs ── */}
-      <h2 className={`${styles.sectionTitle} ${styles.pageBreak}`}>Red Tier — Backs</h2>
-      <div className={styles.cardGrid}>
-        {redCards.map((_, i) => <CardBack key={i} />)}
-      </div>
-
-      {/* ── Page 7: Shield Fronts ── */}
+      {/* ── Shield Fronts ── */}
       <h2 className={`${styles.sectionTitle} ${styles.pageBreak}`}>Shield Cards (print 1 per team)</h2>
       <div className={styles.cardGrid}>
-        <ShieldCard />
-        <ShieldCard />
-        <ShieldCard />
-        <ShieldCard />
-        <ShieldCard />
-        <ShieldCard />
-        <ShieldCard />
-        <ShieldCard />
-        <ShieldCard />
+        {SHIELD_CARDS.map(s => [0, 1, 2].map(i => (
+          <ShieldCard key={`${s.id}-${i}`} shield={s} />
+        )))}
       </div>
 
-      {/* ── Page 8: Shield Backs ── */}
+      {/* ── Shield Backs ── */}
       <h2 className={`${styles.sectionTitle} ${styles.pageBreak}`}>Shield Card Backs</h2>
       <div className={`${styles.cardGrid} ${styles.cardGridShieldBacks}`}>
-        <CardBack shield />
-        <CardBack shield />
-        <CardBack shield />
-        <CardBack shield />
-        <CardBack shield />
-        <CardBack shield />
-        <CardBack shield />
-        <CardBack shield />
-        <CardBack shield />
+        {Array.from({ length: 9 }, (_, i) => <CardBack key={i} shield />)}
       </div>
     </div>
   );
