@@ -7,7 +7,6 @@ describe('dealMaldicionesHands', () => {
 
   // Derive pool sizes from actual card data
   const greenPool = getCardsForChaosLevel('lite').length;
-  const mediumPool = getCardsForChaosLevel('medium').length;
   const hardcorePool = getCardsForChaosLevel('hardcore').length;
   const allValidIds = getCardsForChaosLevel('hardcore').map(c => c.id);
   const greenIds = getCardsForChaosLevel('lite').map(c => c.id);
