@@ -10,12 +10,6 @@ function shuffleArray<T>(arr: T[]): T[] {
   return a;
 }
 
-function pickOneFromTier(tier: string): string {
-  const pool = CURSE_CARDS.filter(c => c.tier === tier);
-  const shuffled = shuffleArray(pool);
-  return shuffled[0].id;
-}
-
 export function dealMaldicionesHands(
   teamIds: string[],
   chaosLevel: ChaosLevel,
