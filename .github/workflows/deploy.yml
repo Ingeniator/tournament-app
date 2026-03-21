@@ -9,14 +9,48 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  smoke-test:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+
     - uses: actions/setup-node@v4
       with:
         node-version: 20
         cache: npm
+
     - run: npm ci
-    - run: npx -w @padel/common tsc -b
-    - run: make smoke-test
+
+    - name: Build common package
+      run: npx -w @padel/common tsc -b
+
+    - name: Smoke tests
+      run: make smoke-test
+
+    - name: Build all packages (parallel)
+      run: |
+        npm -w @padel/runner run build &
+        npm -w @padel/planner run build &
+        npm -w @padel/landing run build &
+        wait
+
+    - name: Prerender landing pages
+      run: npx playwright install chromium --with-deps && npx tsx scripts/prerender.ts
+
+    - name: Assemble dist
+      run: |
+        rm -rf dist
+        mkdir -p dist/play dist/plan
+        cp -r packages/runner/dist/. dist/play/
+        cp -r packages/planner/dist/. dist/plan/
+        cp -r packages/landing/dist/. dist/
+        cp public/robots.txt dist/robots.txt
+        cp public/sitemap.xml dist/sitemap.xml
+        cp public/_headers dist/_headers
+
+    - name: Deploy to Cloudflare Pages
+      uses: cloudflare/wrangler-action@v3
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        command: pages deploy dist --project-name=${{ secrets.CLOUDFLARE_PROJECT_NAME || 'padelday' }}

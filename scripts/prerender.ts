@@ -100,7 +100,8 @@ async function prerender(): Promise<void> {
   const browser = await chromium.launch();
 
   try {
-    for (const route of routes) {
+    // Prerender all routes in parallel for speed
+    await Promise.all(routes.map(async (route) => {
       const page = await browser.newPage();
       const url = `http://localhost:${PORT}${route}`;
 
@@ -121,7 +122,7 @@ async function prerender(): Promise<void> {
       console.log(`  ✓ ${route} → ${outFile.replace(DIST, 'dist')}`);
 
       await page.close();
-    }
+    }));
   } finally {
     await browser.close();
     server.close();

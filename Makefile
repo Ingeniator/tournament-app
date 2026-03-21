@@ -40,9 +40,10 @@ deploy-build: build
 # --- Testing ---
 
 smoke-test:
-	npx -w @padel/common vitest run --exclude '**/*.simulation.test.*' --testTimeout=5000
-	npx -w @padel/runner vitest run --exclude '**/*.simulation.test.*' --testTimeout=5000
-	npx -w @padel/planner vitest run --exclude '**/*.simulation.test.*' --testTimeout=5000
+	npx -w @padel/common vitest run --exclude '**/*.simulation.test.*' --testTimeout=5000 & \
+	npx -w @padel/runner vitest run --exclude '**/*.simulation.test.*' --testTimeout=5000 & \
+	npx -w @padel/planner vitest run --exclude '**/*.simulation.test.*' --testTimeout=5000 & \
+	wait
 
 unit-test:
 	npm test --workspaces --if-present
