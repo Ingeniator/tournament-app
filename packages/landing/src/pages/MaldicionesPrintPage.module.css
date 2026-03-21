@@ -431,38 +431,7 @@
   }
 
   /* Scale up text for print legibility */
-  .cardBanner {
-    font-size: 11pt;
-    padding: 6px 10px 5px;
-  }
-
-  .cardAttitude {
-    font-size: 9pt;
-    padding: 5px 0 3px;
-  }
-
-  .cardBody {
-    gap: 1pt;
-  }
-
-  .sectionLabel {
-    font-size: 7pt;
-    margin-top: 5pt;
-  }
-
-  .sectionText {
-    font-size: 8.5pt;
-    line-height: 1.35;
-  }
-
-  .rulesList {
-    font-size: 8.5pt;
-    line-height: 1.35;
-  }
-
-  .cardFooter {
-    font-size: 6pt;
-  }
+  /* Don't override screen sizes — they already look right */
 
   .pageBreak {
     page-break-before: always;

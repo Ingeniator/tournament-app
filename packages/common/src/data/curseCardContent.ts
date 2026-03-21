@@ -52,14 +52,14 @@ export const CURSE_CARD_CONTENT: CurseCardContent[] = [
     penalty: 'Point goes to opponent',
   },
   {
-    id: 'memoria-de-pez', tier: 'green', emoji: '🐟', name: 'Memoria de Pez', attitude: "Don't Forget",
+    id: 'memoria-de-pez', tier: 'green', emoji: '🐟', name: 'Memoria Pez', attitude: "Don't Forget",
     howItWorks: 'Say the score before every serve.',
     rules: ['Must call score clearly', 'Every single serve'],
     noExceptions: 'Missed or wrong score = violation',
     penalty: 'Point goes to opponent',
   },
   {
-    id: 'high-five', tier: 'green', emoji: '🤝', name: 'Choca Esos Cinco', attitude: 'Respect the Game',
+    id: 'high-five', tier: 'green', emoji: '🤝', name: 'Choca Cinco', attitude: 'Respect the Game',
     howItWorks: 'High-five after every point.',
     rules: ['Both players must do it', 'Win or lose'],
     noExceptions: 'Skipped high-five = violation',
@@ -90,7 +90,7 @@ export const CURSE_CARD_CONTENT: CurseCardContent[] = [
     penalty: 'Point goes to opponent',
   },
   {
-    id: 'gigante-y-enano', tier: 'yellow', emoji: '👨‍🤝‍👦', name: 'Gigante y Enano', attitude: 'No Switching',
+    id: 'gigante-y-enano', tier: 'yellow', emoji: '👨‍🤝‍👦', name: 'Gigante Enano', attitude: 'No Switching',
     howItWorks: 'One at net, one at baseline.',
     rules: ['Positions are fixed', 'No switching during play'],
     noExceptions: 'Any position change = violation',
@@ -133,7 +133,7 @@ export const CURSE_CARD_CONTENT: CurseCardContent[] = [
     penalty: 'Point goes to opponent',
   },
   {
-    id: 'puppet-master', tier: 'yellow', emoji: '🎭', name: 'Puppet Master', attitude: 'Follow Orders',
+    id: 'puppet-master', tier: 'yellow', emoji: '🎭', name: 'El Títere', attitude: 'Follow Orders',
     howItWorks: 'One player calls every shot for their partner.',
     rules: ['Partner must shout direction before each hit', 'Player cannot decide on their own', 'No shot without a command'],
     noExceptions: 'Hitting without command = violation',
@@ -198,7 +198,7 @@ export const CURSE_CARD_CONTENT: CurseCardContent[] = [
     penalty: 'None — it\'s the curse itself',
   },
   {
-    id: 'invisible-rope', tier: 'yellow', emoji: '🪢', name: 'Invisible Rope', attitude: 'Stay Together',
+    id: 'invisible-rope', tier: 'yellow', emoji: '🪢', name: 'La Cuerda', attitude: 'Stay Together',
     howItWorks: 'Players must stay within 3 meters of each other.',
     rules: ['Both players move as a unit', 'Max ~3m apart at all times'],
     noExceptions: 'Too far apart = violation',
@@ -240,14 +240,14 @@ export const CURSE_CARD_CONTENT: CurseCardContent[] = [
     penalty: 'Point goes to opponent',
   },
   {
-    id: 'sudden-death', tier: 'red', emoji: '⏳', name: 'Sudden Death', attitude: 'Every Point Counts',
+    id: 'sudden-death', tier: 'red', emoji: '⏳', name: 'Muerte Súbita', attitude: 'Every Point Counts',
     howItWorks: 'Golden point mode. Last point wins the match.',
     rules: ['Score doesn\'t matter', 'When organizer calls time — last point decides', 'Winner gets max score, loser gets zero'],
     noExceptions: 'N/A — automatic',
     penalty: 'None — it\'s the curse itself',
   },
   {
-    id: 'double-trouble', tier: 'red', emoji: '💣', name: 'Double Trouble', attitude: 'No Shield Allowed',
+    id: 'double-trouble', tier: 'red', emoji: '💣', name: 'Doble Bomba', attitude: 'No Shield Allowed',
     howItWorks: 'Play 2 curse cards at once. Shield is blocked.',
     rules: ['Pick any 2 cards from your hand', 'Both apply simultaneously', 'Opponent cannot use shield'],
     noExceptions: 'N/A — shield is disabled',
@@ -283,7 +283,7 @@ export const SHIELD_CARDS: ShieldCardContent[] = [
     rules: ['Play when a curse is cast on you', 'Both curse and shield are consumed', 'Cannot be recovered'],
   },
   {
-    id: 'reverse-shield', emoji: '🔀', name: 'Reverse Shield', attitude: 'Right Back at You',
+    id: 'reverse-shield', emoji: '🔀', name: 'Escudo Rev.', attitude: 'Right Back at You',
     howItWorks: 'Block a curse and reflect it on the caster.',
     rules: ['Blocks the curse completely', 'Curse applies to the caster instead', 'Both shield and curse are consumed'],
   },

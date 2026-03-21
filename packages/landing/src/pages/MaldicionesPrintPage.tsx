@@ -18,6 +18,7 @@ function PrintCard({ card }: { card: CurseCardContent }) {
         <div className={styles.cardAttitude}>{card.attitude}</div>
 
         <div className={styles.cardBody}>
+          <div className={styles.cardEmojiInline}>{card.emoji}</div>
           <div className={styles.sectionLabel}>HOW IT WORKS</div>
           <div className={styles.sectionText}>{card.howItWorks}</div>
 
@@ -31,6 +32,14 @@ function PrintCard({ card }: { card: CurseCardContent }) {
 
           <div className={styles.sectionLabel}>PENALTY</div>
           <div className={styles.sectionText}>{card.penalty}</div>
+        </div>
+        <div className={styles.punchZone}>
+          <div className={styles.punchRibbon}>PUNCH FEEDBACK HERE</div>
+          <div className={styles.punchCircles}>
+            <div className={styles.punchCircle}><span className={styles.punchIcon}>✕</span></div>
+            <div className={styles.punchCircle}><span className={styles.punchIcon}>●</span></div>
+            <div className={styles.punchCircle}><span className={styles.punchIcon}>★</span></div>
+          </div>
         </div>
         <div className={styles.cardFooter}>
           <span className={styles.footerLine} />
@@ -50,6 +59,7 @@ function ShieldCard({ shield }: { shield: ShieldCardContent }) {
         <div className={styles.cardAttitude}>{shield.attitude}</div>
 
         <div className={styles.cardBody}>
+          <div className={styles.cardEmojiInline}>{shield.emoji}</div>
           <div className={styles.sectionLabel}>HOW IT WORKS</div>
           <div className={styles.sectionText}>{shield.howItWorks}</div>
 
@@ -86,6 +96,14 @@ function BlankCard() {
           <div className={styles.blankLine} />
           <div className={styles.sectionLabel}>PENALTY</div>
           <div className={styles.blankLine} />
+        </div>
+        <div className={styles.punchZone}>
+          <div className={styles.punchRibbon}>PUNCH FEEDBACK HERE</div>
+          <div className={styles.punchCircles}>
+            <div className={styles.punchCircle}><span className={styles.punchIcon}>✕</span></div>
+            <div className={styles.punchCircle}><span className={styles.punchIcon}>●</span></div>
+            <div className={styles.punchCircle}><span className={styles.punchIcon}>★</span></div>
+          </div>
         </div>
         <div className={styles.cardFooter}>
           <span className={styles.footerLine} />
