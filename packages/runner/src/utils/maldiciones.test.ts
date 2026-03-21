@@ -1,8 +1,19 @@
 import { describe, it, expect } from 'vitest';
 import { dealMaldicionesHands } from './maldiciones';
+import { getCardsForChaosLevel } from '../data/curseCards';
 
 describe('dealMaldicionesHands', () => {
   const teamIds = ['team1', 'team2', 'team3'];
+
+  // Derive pool sizes from actual card data
+  const greenPool = getCardsForChaosLevel('lite').length;
+  const mediumPool = getCardsForChaosLevel('medium').length;
+  const hardcorePool = getCardsForChaosLevel('hardcore').length;
+  const allValidIds = getCardsForChaosLevel('hardcore').map(c => c.id);
+  const greenIds = getCardsForChaosLevel('lite').map(c => c.id);
+  const redIds = getCardsForChaosLevel('hardcore')
+    .filter(c => c.tier === 'red')
+    .map(c => c.id);
 
   it('deals cards to all teams', () => {
     const hands = dealMaldicionesHands(teamIds, 'medium', 6);
@@ -39,7 +50,6 @@ describe('dealMaldicionesHands', () => {
 
   it('lite chaos level only deals green cards', () => {
     const hands = dealMaldicionesHands(teamIds, 'lite', 9);
-    const greenIds = ['los-mudos', 'el-espejo', 'slow-motion', 'el-pegajoso', 'memoria-de-pez', 'high-five'];
     for (const id of teamIds) {
       for (const cardId of hands[id].cardIds) {
         expect(greenIds).toContain(cardId);
@@ -49,7 +59,6 @@ describe('dealMaldicionesHands', () => {
 
   it('medium chaos level deals green + yellow cards', () => {
     const hands = dealMaldicionesHands(teamIds, 'medium', 9);
-    const redIds = ['el-solo', 'reversi', 'la-ruleta', 'mini-pala', 'relampago'];
     for (const id of teamIds) {
       for (const cardId of hands[id].cardIds) {
         expect(redIds).not.toContain(cardId);
@@ -59,26 +68,18 @@ describe('dealMaldicionesHands', () => {
 
   it('hardcore chaos level can deal red cards', () => {
     // With enough iterations, hardcore should include red cards
-    // Use many teams and rounds to increase probability
     const manyTeams = Array.from({ length: 50 }, (_, i) => `t${i}`);
     const hands = dealMaldicionesHands(manyTeams, 'hardcore', 30);
     const allCards = Object.values(hands).flatMap(h => h.cardIds);
-    const redIds = ['el-solo', 'reversi', 'la-ruleta', 'mini-pala', 'relampago'];
-    // At least one red card should appear across 50 teams × 10 cards
     const hasRed = allCards.some(c => redIds.includes(c));
     expect(hasRed).toBe(true);
   });
 
   it('card IDs are valid curse card IDs', () => {
     const hands = dealMaldicionesHands(teamIds, 'hardcore', 9);
-    const validIds = [
-      'los-mudos', 'el-espejo', 'slow-motion', 'el-pegajoso', 'memoria-de-pez', 'high-five',
-      'mano-muerta', 'gigante-y-enano', 'el-fantasma', 'sin-bandeja', 'solo-de-ida', 'la-diana',
-      'el-solo', 'reversi', 'la-ruleta', 'mini-pala', 'relampago',
-    ];
     for (const id of teamIds) {
       for (const cardId of hands[id].cardIds) {
-        expect(validIds).toContain(cardId);
+        expect(allValidIds).toContain(cardId);
       }
     }
   });
@@ -89,35 +90,29 @@ describe('dealMaldicionesHands', () => {
   });
 
   it('cards dealt — lite chaos deals fewer cards per team', () => {
-    // When cardsPerTeam exceeds the lite pool size (6 green cards),
-    // lite hands are capped at the pool size while larger pools yield more.
+    // When cardsPerTeam exceeds the pool size, hands are capped at pool size.
     const bigRounds = 60; // cardsPerTeam = floor(60/3) = 20
     const liteHands = dealMaldicionesHands(teamIds, 'lite', bigRounds);
     const mediumHands = dealMaldicionesHands(teamIds, 'medium', bigRounds);
 
     for (const id of teamIds) {
-      // lite pool = 6 green cards → slice(0,20) gives at most 6
-      expect(liteHands[id].cardIds.length).toBeLessThanOrEqual(6);
-      // medium pool = 12 cards (green + yellow) → yields more than lite
+      expect(liteHands[id].cardIds.length).toBeLessThanOrEqual(greenPool);
       expect(mediumHands[id].cardIds.length).toBeGreaterThan(liteHands[id].cardIds.length);
     }
   });
 
   it('cards dealt — hardcore chaos deals more cards per team', () => {
-    // With a high round count the hardcore pool (17 cards) yields
-    // more dealt cards than the lite pool (6 cards).
     const bigRounds = 60; // cardsPerTeam = floor(60/3) = 20
     const liteHands = dealMaldicionesHands(teamIds, 'lite', bigRounds);
     const hardcoreHands = dealMaldicionesHands(teamIds, 'hardcore', bigRounds);
 
     for (const id of teamIds) {
-      expect(hardcoreHands[id].cardIds.length).toBeLessThanOrEqual(17);
+      expect(hardcoreHands[id].cardIds.length).toBeLessThanOrEqual(hardcorePool);
       expect(hardcoreHands[id].cardIds.length).toBeGreaterThan(liteHands[id].cardIds.length);
     }
   });
 
   it('card hands are unique — no duplicate card IDs within a single hand', () => {
-    // Run multiple times to account for shuffle randomness
     for (let run = 0; run < 10; run++) {
       const hands = dealMaldicionesHands(teamIds, 'hardcore', 9);
       for (const id of teamIds) {

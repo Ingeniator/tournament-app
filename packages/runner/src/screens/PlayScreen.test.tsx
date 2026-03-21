@@ -18,7 +18,8 @@ vi.mock('firebase/database', () => ({
   set: vi.fn(),
 }));
 
-vi.mock('@padel/common', () => ({
+vi.mock('@padel/common', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@padel/common')>()),
   useTranslation: () => ({
     t: (key: string, params?: Record<string, string | number>) => {
       if (key === 'play.progress') return `Round ${params?.current}/${params?.total} · ${params?.scored}/${params?.totalMatches} scored`;

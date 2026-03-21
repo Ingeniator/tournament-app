@@ -3,7 +3,8 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import type { Match, Player, Court } from '@padel/common';
 
-vi.mock('@padel/common', () => ({
+vi.mock('@padel/common', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@padel/common')>()),
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 
