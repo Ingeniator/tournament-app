@@ -378,6 +378,10 @@
 
 /* ── Print Styles ── */
 @media print {
+  @page {
+    margin: 10mm;
+  }
+
   .screen {
     max-width: none;
     padding: 0;
