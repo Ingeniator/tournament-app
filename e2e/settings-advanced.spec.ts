@@ -1,14 +1,27 @@
 import { test, expect } from '@playwright/test';
 import {
-  clearState,
   createTournament,
-  addPlayers,
-  generateSchedule,
   createInProgressTournament,
   navigateToTab,
   scoreMatch,
   dismissInterstitial,
 } from './helpers';
+
+const EIGHT_PLAYERS = [
+  { id: 'p1', name: 'Alice' },
+  { id: 'p2', name: 'Bob' },
+  { id: 'p3', name: 'Charlie' },
+  { id: 'p4', name: 'Diana' },
+  { id: 'p5', name: 'Eve' },
+  { id: 'p6', name: 'Frank' },
+  { id: 'p7', name: 'Grace' },
+  { id: 'p8', name: 'Hank' },
+];
+
+const TWO_COURTS = [
+  { id: 'c1', name: 'Court 1' },
+  { id: 'c2', name: 'Court 2' },
+];
 
 test.describe('Settings Advanced', () => {
   test.beforeEach(async ({ page }) => {
@@ -87,73 +100,53 @@ test.describe('Settings Advanced', () => {
   });
 
   test('disable court mid-tournament', async ({ page }) => {
-    // First need 8 players + 2 courts
-    await page.goto('/');
-    await clearState(page);
-    await createTournament(page);
-    await addPlayers(page, ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Hank']);
-    // Set 2 courts
-    const roundsInput = page.locator('#config-rounds');
-    await roundsInput.fill('3');
-    await page.evaluate(() => {
-      const raw = localStorage.getItem('padel-tournament-v1');
-      if (!raw) return;
-      const t = JSON.parse(raw);
-      t.config.courts.push({ id: 'c2', name: 'Court 2' });
-      localStorage.setItem('padel-tournament-v1', JSON.stringify(t));
+    test.setTimeout(15_000);
+    // Create 8-player 2-court tournament
+    await createTournament(page, {
+      players: EIGHT_PLAYERS,
+      courts: TWO_COURTS,
+      maxRounds: 3,
     });
-    await page.reload();
-    await generateSchedule(page);
     await navigateToTab(page, 'Settings');
 
-    // Click court name to enter edit mode
-    await page.getByText('Court 2').click();
-    // Toggle availability
-    await page.getByText('Available', { exact: true }).click();
+    // Click court button to enter edit mode
+    await page.getByRole('button', { name: 'Court 2' }).click();
+    // Toggle availability — checkbox is visually hidden, dispatch click via JS
+    await page.getByRole('checkbox', { name: 'Available' }).first().dispatchEvent('click');
     // Court 2 should now show as unavailable
-    await expect(page.getByText(/unavailable/i).or(page.locator('[class*="unavailable"]'))).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('checkbox', { name: 'Unavailable' })).toBeAttached({ timeout: 5000 });
   });
 
   test('re-enable disabled court', async ({ page }) => {
-    // Same setup as disable court test - 8 players, 2 courts
-    await page.goto('/');
-    await clearState(page);
-    await createTournament(page);
-    await addPlayers(page, ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Hank']);
-    const roundsInput = page.locator('#config-rounds');
-    await roundsInput.fill('3');
-    await page.evaluate(() => {
-      const raw = localStorage.getItem('padel-tournament-v1');
-      if (!raw) return;
-      const t = JSON.parse(raw);
-      t.config.courts.push({ id: 'c2', name: 'Court 2' });
-      localStorage.setItem('padel-tournament-v1', JSON.stringify(t));
+    test.setTimeout(15_000);
+    // Create 8-player 2-court tournament
+    await createTournament(page, {
+      players: EIGHT_PLAYERS,
+      courts: TWO_COURTS,
+      maxRounds: 3,
     });
-    await page.reload();
-    await generateSchedule(page);
     await navigateToTab(page, 'Settings');
 
     // Disable Court 2
-    await page.getByText('Court 2').click();
-    await page.getByText('Available', { exact: true }).click();
-    await expect(page.getByText(/unavailable/i).or(page.locator('[class*="unavailable"]'))).toBeVisible({ timeout: 5000 });
+    await page.getByRole('button', { name: 'Court 2' }).click();
+    await page.getByRole('checkbox', { name: 'Available' }).first().dispatchEvent('click');
+    await expect(page.getByRole('checkbox', { name: 'Unavailable' })).toBeAttached({ timeout: 5000 });
 
-    // Re-enable Court 2
-    await page.getByText('Court 2').click();
-    const toggleBtn = page.getByText('Available', { exact: true }).or(page.getByText(/unavailable/i));
-    await toggleBtn.click();
+    // Re-enable Court 2 — toggle the checkbox back
+    await page.getByRole('checkbox', { name: 'Unavailable' }).dispatchEvent('click');
+    await expect(page.getByRole('checkbox', { name: 'Available' }).first()).toBeAttached({ timeout: 5000 });
   });
 
   test('replace player mid-tournament', async ({ page }) => {
     // Click on a player name to open edit mode
     await page.getByText('Alice').click();
 
-    // Look for Replace with... option
-    const replaceText = page.getByText('Replace with...');
-    await expect(replaceText).toBeVisible({ timeout: 5000 });
+    // Click "Replace with..." to expand the replacement input
+    await page.getByRole('button', { name: 'Replace with...' }).click();
 
     // Fill replacement name
     const replaceInput = page.getByPlaceholder('Player name');
+    await replaceInput.waitFor({ timeout: 5000 });
     await replaceInput.fill('Replacement');
     await page.getByRole('button', { name: 'Replace' }).click();
 

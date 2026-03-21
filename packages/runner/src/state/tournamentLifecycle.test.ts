@@ -27,11 +27,6 @@ function makePlayers(count: number): Player[] {
   }));
 }
 
-/** Dispatch a sequence of actions, returning the final state */
-function dispatchAll(initial: Tournament | null, actions: Parameters<typeof tournamentReducer>[1][]): Tournament | null {
-  return actions.reduce((state, action) => tournamentReducer(state, action), initial);
-}
-
 /** Score all matches in a round with a simple score */
 function scoreRound(state: Tournament, roundIndex: number, score: MatchScore = { team1Points: 16, team2Points: 8 }): Tournament {
   let s = state;
@@ -138,7 +133,7 @@ describe('Tournament lifecycle integration', () => {
       // 7. CEREMONY
       state = tournamentReducer(state, {
         type: 'COMPLETE_CEREMONY',
-        payload: { nominations: [{ award: 'MVP', playerId: 'p1' }] },
+        payload: { nominations: [{ id: 'mvp', title: 'MVP', emoji: '🏆', description: 'Most Valuable', playerNames: ['Player 1'], stat: '42 pts' }] },
       })!;
       expect(state.ceremonyCompleted).toBe(true);
       expect(state.nominations).toHaveLength(1);

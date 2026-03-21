@@ -1,58 +1,40 @@
 import { test, expect } from '@playwright/test';
 import {
-  clearState,
   createTournament,
-  addEightPlayers,
-  addPlayers,
-  selectFormat,
-  generateSchedule,
-  navigateToTab,
   scoreAllMatches,
   scoreMatch,
   dismissInterstitial,
 } from './helpers';
 
+const EIGHT_PLAYERS = [
+  { id: 'p1', name: 'Alice' },
+  { id: 'p2', name: 'Bob' },
+  { id: 'p3', name: 'Charlie' },
+  { id: 'p4', name: 'Diana' },
+  { id: 'p5', name: 'Eve' },
+  { id: 'p6', name: 'Frank' },
+  { id: 'p7', name: 'Grace' },
+  { id: 'p8', name: 'Henry' },
+];
+
+const TWO_COURTS = [
+  { id: 'c1', name: 'Court 1' },
+  { id: 'c2', name: 'Court 2' },
+];
+
 test.describe('King of the Court Flow', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await clearState(page);
-    await createTournament(page);
-    await addEightPlayers(page);
-    await selectFormat(page, 'king-of-the-court');
+    await createTournament(page, {
+      format: 'king-of-the-court',
+      players: EIGHT_PLAYERS,
+      courts: TWO_COURTS,
+      maxRounds: 3,
+    });
   });
 
-  test('requires at least 8 players', async ({ page }) => {
-    // Start fresh with fewer players
-    await clearState(page);
-    await createTournament(page);
-    await addPlayers(page, ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank']);
-    await selectFormat(page, 'king-of-the-court');
-
-    // Generate Schedule should be disabled due to validation
-    await expect(page.getByRole('button', { name: 'Generate Schedule' })).toBeDisabled();
-    await expect(page.getByText('at least 8 players')).toBeVisible();
-  });
-
-  test('auto-adds second court when selecting KoTC', async ({ page }) => {
-    // KoTC requires at least 2 courts — the app should auto-add one
-    const courtInputs = page.locator('input[aria-label^="Court"]');
-    await expect(courtInputs).toHaveCount(2);
-  });
-
-  test('shows court bonus labels', async ({ page }) => {
-    // KoTC shows bonus points per court position
-    await expect(page.getByText('+1')).toBeVisible();
-    await expect(page.getByText('+0')).toBeVisible();
-  });
-
-  test('full lifecycle: generate → score all rounds → finish', async ({ page }) => {
-    // Cap rounds to 3 for speed
-    const roundsInput = page.locator('#config-rounds');
-    await roundsInput.fill('3');
-
-    await generateSchedule(page);
-
-    // Dynamic format lands on Play tab directly
+  test('full lifecycle: score all rounds → finish', async ({ page }) => {
+    // Score all matches across all rounds
     await scoreAllMatches(page);
 
     // Finish
@@ -72,11 +54,6 @@ test.describe('King of the Court Flow', () => {
   });
 
   test('standings update after scoring', async ({ page }) => {
-    const roundsInput = page.locator('#config-rounds');
-    await roundsInput.fill('3');
-
-    await generateSchedule(page);
-
     await scoreMatch(page);
     await dismissInterstitial(page);
 
@@ -88,8 +65,6 @@ test.describe('King of the Court Flow', () => {
   });
 
   test('dynamic round generation after scoring', async ({ page }) => {
-    await generateSchedule(page);
-
     // Score all matches in round 1
     await scoreMatch(page);
     await dismissInterstitial(page);
@@ -107,11 +82,6 @@ test.describe('King of the Court Flow', () => {
   });
 
   test('persists across reload', async ({ page }) => {
-    const roundsInput = page.locator('#config-rounds');
-    await roundsInput.fill('3');
-
-    await generateSchedule(page);
-
     await expect(page.getByRole('heading', { name: 'Round 1' })).toBeVisible();
 
     await page.reload();

@@ -138,7 +138,7 @@ test.describe('Maldiciones del Padel', () => {
     await expect(page.getByText('Medium (green + yellow)')).toBeVisible();
 
     // Should show card catalog
-    await expect(page.getByText('Green')).toBeVisible();
+    await expect(page.getByText('Green').first()).toBeVisible();
   });
 
   test('completed tournament shows maldiciones awards', async ({ page }) => {

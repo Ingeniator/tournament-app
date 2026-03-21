@@ -1,9 +1,6 @@
 import { test, expect } from '@playwright/test';
 import {
   clearState,
-  createTournament,
-  addFourPlayers,
-  generateSchedule,
   createInProgressTournament,
   navigateToTab,
   scoreMatch,
@@ -158,39 +155,9 @@ test.describe('Empty tournament states', () => {
     await clearState(page);
   });
 
-  test('home screen with no tournaments shows plan ahead', async ({ page }) => {
-    await expect(page.getByRole('button', { name: 'Plan Ahead' })).toBeVisible();
+  test('home screen with no tournaments shows setup play', async ({ page }) => {
+    await expect(page.getByRole('button', { name: 'Setup Play' })).toBeVisible();
     await expect(page.getByRole('heading', { name: /Round/ })).not.toBeVisible();
-  });
-
-  test('setup screen with zero players shows disabled generate button', async ({ page }) => {
-    await createTournament(page);
-
-    const generateBtn = page.getByRole('button', { name: 'Generate Schedule' });
-    await expect(generateBtn).toBeVisible();
-    await expect(generateBtn).toBeDisabled();
-  });
-
-  test('setup screen with fewer than 4 players disables generate', async ({ page }) => {
-    await createTournament(page);
-    await page.getByPlaceholder('Player name').fill('Alice');
-    await page.getByRole('button', { name: 'Add' }).click();
-    await page.getByPlaceholder('Player name').fill('Bob');
-    await page.getByRole('button', { name: 'Add' }).click();
-
-    const generateBtn = page.getByRole('button', { name: 'Generate Schedule' });
-    await expect(generateBtn).toBeDisabled();
-  });
-
-  test('adding empty player name is not allowed', async ({ page }) => {
-    await createTournament(page);
-
-    // The Add button should be disabled when the input is empty
-    const addBtn = page.getByRole('button', { name: 'Add' });
-    await expect(addBtn).toBeDisabled();
-
-    // Player count should remain at 0
-    await expect(page.getByText('0 player(s) added')).toBeVisible();
   });
 });
 
@@ -203,15 +170,12 @@ test.describe('Back-button / hash navigation', () => {
   test('URL hash updates on screen transitions', async ({ page }) => {
     await expect(page).toHaveURL(/#home/);
 
-    await createTournament(page);
-    await expect(page).toHaveURL(/#setup/);
-
-    await addFourPlayers(page);
-    await generateSchedule(page);
-    await expect(page).toHaveURL(/#log/);
-
-    await navigateToTab(page, 'Play');
+    await createInProgressTournament(page);
+    // After creating tournament, default tab is play
     await expect(page).toHaveURL(/#play/);
+
+    await navigateToTab(page, 'Log');
+    await expect(page).toHaveURL(/#log/);
   });
 
   test('browser back button does not break app state', async ({ page }) => {

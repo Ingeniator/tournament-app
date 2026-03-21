@@ -1,23 +1,38 @@
 import { test, expect } from '@playwright/test';
 import {
-  createTeamAmericanoSetup,
-  closeOverlay,
+  createTournament,
   navigateToTab,
   scoreAllMatches,
   scoreMatch,
   dismissInterstitial,
 } from './helpers';
 
+const SIX_PLAYERS = [
+  { id: 'p1', name: 'Alice' },
+  { id: 'p2', name: 'Bob' },
+  { id: 'p3', name: 'Charlie' },
+  { id: 'p4', name: 'Diana' },
+  { id: 'p5', name: 'Eve' },
+  { id: 'p6', name: 'Frank' },
+];
+
+const THREE_TEAMS = [
+  { id: 'team1', player1Id: 'p1', player2Id: 'p2' },
+  { id: 'team2', player1Id: 'p3', player2Id: 'p4' },
+  { id: 'team3', player1Id: 'p5', player2Id: 'p6' },
+];
+
 test.describe('Team Americano Flow', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await createTeamAmericanoSetup(page);
+    await createTournament(page, {
+      format: 'team-americano',
+      players: SIX_PLAYERS,
+      teams: THREE_TEAMS,
+    });
   });
 
-  test('full lifecycle: setup → score → complete', async ({ page }) => {
-    await page.getByRole('button', { name: 'Start Tournament' }).click();
-    await closeOverlay(page);
-
+  test('full lifecycle: score → complete', async ({ page }) => {
     await navigateToTab(page, 'Play');
     await scoreAllMatches(page);
 
@@ -36,25 +51,7 @@ test.describe('Team Americano Flow', () => {
     await expect(page.getByRole('button', { name: 'Share Results as Text' })).toBeVisible();
   });
 
-  test('standings show custom team names', async ({ page }) => {
-    // Fill the first team name input (placeholder is dynamic player names)
-    const firstTeamInput = page.locator('[class*="teamNameInput"]').first();
-    await firstTeamInput.fill('The Aces');
-
-    await page.getByRole('button', { name: 'Start Tournament' }).click();
-    await closeOverlay(page);
-
-    await navigateToTab(page, 'Play');
-    await page.getByRole('button', { name: 'Standings' }).click();
-
-    await expect(page.getByText('The Aces')).toBeVisible();
-    await expect(page).toHaveScreenshot('team-americano-standings.png');
-  });
-
   test('scoring updates standings', async ({ page }) => {
-    await page.getByRole('button', { name: 'Start Tournament' }).click();
-    await closeOverlay(page);
-
     await navigateToTab(page, 'Play');
     await scoreMatch(page);
     await dismissInterstitial(page);
@@ -67,9 +64,6 @@ test.describe('Team Americano Flow', () => {
   });
 
   test('persists across reload', async ({ page }) => {
-    await page.getByRole('button', { name: 'Start Tournament' }).click();
-    await closeOverlay(page);
-
     await navigateToTab(page, 'Play');
     await expect(page.getByRole('heading', { name: 'Round 1' })).toBeVisible();
 

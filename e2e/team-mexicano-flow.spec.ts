@@ -1,24 +1,38 @@
 import { test, expect } from '@playwright/test';
 import {
-  createTeamMexicanoSetup,
-  closeOverlay,
-  navigateToTab,
+  createTournament,
   scoreAllMatches,
   scoreMatch,
   dismissInterstitial,
 } from './helpers';
 
+const SIX_PLAYERS = [
+  { id: 'p1', name: 'Alice' },
+  { id: 'p2', name: 'Bob' },
+  { id: 'p3', name: 'Charlie' },
+  { id: 'p4', name: 'Diana' },
+  { id: 'p5', name: 'Eve' },
+  { id: 'p6', name: 'Frank' },
+];
+
+const THREE_TEAMS = [
+  { id: 'team1', player1Id: 'p1', player2Id: 'p2' },
+  { id: 'team2', player1Id: 'p3', player2Id: 'p4' },
+  { id: 'team3', player1Id: 'p5', player2Id: 'p6' },
+];
+
 test.describe('Team Mexicano Flow', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await createTeamMexicanoSetup(page);
+    await createTournament(page, {
+      format: 'team-mexicano',
+      players: SIX_PLAYERS,
+      teams: THREE_TEAMS,
+    });
   });
 
-  test('full lifecycle: setup → score → complete', async ({ page }) => {
-    await page.getByRole('button', { name: 'Start Tournament' }).click();
-    try { await closeOverlay(page); } catch { /* no overlay */ }
-
-    // Team Mexicano is dynamic — lands on Play tab
+  test('full lifecycle: score → complete', async ({ page }) => {
+    // Team Mexicano is dynamic — score all rounds
     await scoreAllMatches(page);
 
     page.on('dialog', dialog => dialog.accept());
@@ -37,9 +51,6 @@ test.describe('Team Mexicano Flow', () => {
   });
 
   test('standings show team names', async ({ page }) => {
-    await page.getByRole('button', { name: 'Start Tournament' }).click();
-    try { await closeOverlay(page); } catch { /* no overlay */ }
-
     await scoreMatch(page);
     await dismissInterstitial(page);
 
@@ -51,9 +62,6 @@ test.describe('Team Mexicano Flow', () => {
   });
 
   test('dynamic round generation after scoring', async ({ page }) => {
-    await page.getByRole('button', { name: 'Start Tournament' }).click();
-    try { await closeOverlay(page); } catch { /* no overlay */ }
-
     // Score all matches in round 1 — Team Mexicano auto-generates next round
     await scoreMatch(page);
     await dismissInterstitial(page);
@@ -63,26 +71,7 @@ test.describe('Team Mexicano Flow', () => {
     await expect(page.getByRole('heading', { name: 'Round 2' })).toBeVisible();
   });
 
-  test('custom team names in standings', async ({ page }) => {
-    // Rename first team
-    const firstTeamInput = page.locator('[class*="teamNameInput"]').first();
-    await firstTeamInput.fill('Los Lobos');
-
-    await page.getByRole('button', { name: 'Start Tournament' }).click();
-    try { await closeOverlay(page); } catch { /* no overlay */ }
-
-    await scoreMatch(page);
-    await dismissInterstitial(page);
-
-    await page.getByRole('button', { name: 'Standings' }).click();
-
-    await expect(page.getByText('Los Lobos')).toBeVisible();
-  });
-
   test('persists across reload', async ({ page }) => {
-    await page.getByRole('button', { name: 'Start Tournament' }).click();
-    try { await closeOverlay(page); } catch { /* no overlay */ }
-
     await expect(page.getByRole('heading', { name: 'Round 1' })).toBeVisible();
 
     await page.reload();

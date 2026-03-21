@@ -14,7 +14,7 @@ test.describe('Completed Tournament', () => {
 
   test('shows final standings table', async ({ page }) => {
     // Completed view should show standings with column headers
-    await expect(page.getByRole('columnheader', { name: '#' }).first()).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Name' }).first()).toBeVisible();
     await expect(page.getByRole('columnheader', { name: 'Pts' }).first()).toBeVisible();
     await expect(page).toHaveScreenshot('completed-standings.png');
   });

@@ -31,8 +31,8 @@ const sr: Translations = {
   'home.expired': 'Istekao',
   'home.completed': 'Završen',
   'home.groupTournaments': 'Turniri Grupe',
-  'home.playerMode': 'Igrač',
-  'home.organizerMode': 'Organizator',
+  'home.playerMode': 'Igraj',
+  'home.organizerMode': 'Organizuj',
   'home.joinNotFound': 'Nije pronađen turnir niti događaj sa ovim kodom',
   'home.myEvents': 'Moji Događaji',
 

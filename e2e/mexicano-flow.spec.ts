@@ -1,10 +1,6 @@
 import { test, expect } from '@playwright/test';
 import {
-  clearState,
   createTournament,
-  addFourPlayers,
-  selectFormat,
-  generateSchedule,
   navigateToTab,
   scoreAllMatches,
   scoreMatch,
@@ -14,16 +10,10 @@ import {
 test.describe('Mexicano Flow', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await clearState(page);
-    await createTournament(page);
-    await addFourPlayers(page);
-    await selectFormat(page, 'mexicano');
-    // Verify format was actually changed — the Mexicano preset row should be selected
-    await expect(page.locator('input[name="format-preset"]:checked')).toBeVisible();
+    await createTournament(page, { format: 'mexicano' });
   });
 
-  test('full lifecycle: generate → score all rounds → finish', async ({ page }) => {
-    await generateSchedule(page);
+  test('full lifecycle: score all rounds → finish', async ({ page }) => {
     await navigateToTab(page, 'Play');
 
     // Mexicano auto-generates the next round when all matches are scored,
@@ -47,7 +37,6 @@ test.describe('Mexicano Flow', () => {
   });
 
   test('standings update after scoring', async ({ page }) => {
-    await generateSchedule(page);
     await navigateToTab(page, 'Play');
 
     await scoreMatch(page);
@@ -61,7 +50,6 @@ test.describe('Mexicano Flow', () => {
   });
 
   test('dynamic round generation after scoring', async ({ page }) => {
-    await generateSchedule(page);
     await navigateToTab(page, 'Play');
 
     // Score the single match in round 1 — Mexicano auto-generates the next round

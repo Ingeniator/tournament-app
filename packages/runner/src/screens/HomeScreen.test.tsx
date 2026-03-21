@@ -186,7 +186,7 @@ describe('HomeScreen', () => {
 
     it('dispatches LOAD_TOURNAMENT on valid clipboard import', async () => {
       const imported = makeTournament({ name: 'Imported' });
-      vi.mocked(validateImport).mockReturnValue({ tournament: imported });
+      vi.mocked(validateImport).mockReturnValue({ tournament: imported, error: null });
       Object.assign(navigator, {
         clipboard: { readText: vi.fn().mockResolvedValue('{}') },
       });

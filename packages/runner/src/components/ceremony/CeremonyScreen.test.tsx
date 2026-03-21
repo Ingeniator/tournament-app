@@ -27,7 +27,6 @@ function makeNomination(overrides: Partial<Nomination> = {}): Nomination {
     title: 'Best Scorer',
     emoji: '🏆',
     description: 'Most points scored',
-    playerIds: ['p1'],
     playerNames: ['Player 1'],
     stat: '42 points',
     ...overrides,

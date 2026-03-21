@@ -9,7 +9,7 @@ test.describe('Log Screen', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await createInProgressTournament(page);
-    // createInProgressTournament ends on Log tab after closing stats overlay
+    await navigateToTab(page, 'Log');
   });
 
   test('displays all round cards', async ({ page }) => {

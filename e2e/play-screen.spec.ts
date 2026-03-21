@@ -2,14 +2,28 @@ import { test, expect } from '@playwright/test';
 import {
   clearState,
   createTournament,
-  addPlayers,
-  generateSchedule,
   createInProgressTournament,
   navigateToTab,
   scoreMatch,
   scoreAllMatches,
   dismissInterstitial,
 } from './helpers';
+
+const EIGHT_PLAYERS = [
+  { id: 'p1', name: 'Alice' },
+  { id: 'p2', name: 'Bob' },
+  { id: 'p3', name: 'Charlie' },
+  { id: 'p4', name: 'Diana' },
+  { id: 'p5', name: 'Eve' },
+  { id: 'p6', name: 'Frank' },
+  { id: 'p7', name: 'Grace' },
+  { id: 'p8', name: 'Henry' },
+];
+
+const TWO_COURTS = [
+  { id: 'c1', name: 'Court 1' },
+  { id: 'c2', name: 'Court 2' },
+];
 
 test.describe('Play Screen', () => {
   test.beforeEach(async ({ page }) => {
@@ -93,11 +107,7 @@ test.describe('Play Screen', () => {
   test('clear button resets scored match', async ({ page }) => {
     // Need multiple matches per round so a scored match stays in the active round.
     // Create a fresh 8-player tournament with 2 courts (2 matches per round).
-    await clearState(page);
-    await createTournament(page);
-    await addPlayers(page, ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry']);
-    await page.getByRole('button', { name: '+ Add court' }).click();
-    await generateSchedule(page);
+    await createTournament(page, { players: EIGHT_PLAYERS, courts: TWO_COURTS });
     await navigateToTab(page, 'Play');
 
     // Score one match — the round still has another unscored match so it stays active
@@ -124,11 +134,7 @@ test.describe('Play Screen', () => {
 
   test('edit previously scored match', async ({ page }) => {
     // Need multiple matches per round so a scored match stays in the active round.
-    await clearState(page);
-    await createTournament(page);
-    await addPlayers(page, ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry']);
-    await page.getByRole('button', { name: '+ Add court' }).click();
-    await generateSchedule(page);
+    await createTournament(page, { players: EIGHT_PLAYERS, courts: TWO_COURTS });
     await navigateToTab(page, 'Play');
 
     // Score one match with 15 points
@@ -137,8 +143,8 @@ test.describe('Play Screen', () => {
     // The scored match should display "15" and "9"
     await expect(page.getByText(/15\s*:\s*9/)).toBeVisible();
 
-    // Tap the "Edit score" button to re-open the picker
-    await page.getByRole('button', { name: 'Edit score' }).first().click();
+    // Tap the scored value to re-open the picker
+    await page.getByRole('button', { name: '15' }).first().click();
 
     // The picker should open — click Clear to reset the score
     await page.getByRole('button', { name: 'Clear' }).click();

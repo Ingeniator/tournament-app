@@ -31,8 +31,8 @@ const sv: Translations = {
   'home.expired': 'Utgången',
   'home.completed': 'Avslutad',
   'home.groupTournaments': 'Gruppturneringar',
-  'home.playerMode': 'Spelare',
-  'home.organizerMode': 'Arrangör',
+  'home.playerMode': 'Spela',
+  'home.organizerMode': 'Organisera',
   'home.joinNotFound': 'Ingen turnering eller evenemang hittades med denna kod',
   'home.myEvents': 'Mina Evenemang',
 

@@ -35,13 +35,13 @@ test.describe('Staging Smoke Tests', () => {
 
   test.describe('Auth & Home', () => {
     test('anonymous auth completes and home screen loads', async ({ page }) => {
-      await page.goto('/');
+      await page.goto('/plan');
       await waitForHome(page);
       await expect(page.getByRole('heading', { name: 'Tournament Planner' })).toBeVisible();
     });
 
     test('can set profile name', async ({ page }) => {
-      await page.goto('/');
+      await page.goto('/plan');
       await waitForHome(page);
       await setProfileName(page, `Smoke ${Date.now()}`);
       await expect(page.getByText('Logged in as')).toBeVisible();
@@ -50,7 +50,7 @@ test.describe('Staging Smoke Tests', () => {
 
   test.describe('Tournament CRUD', () => {
     test('create tournament, add players, verify, delete', async ({ page }) => {
-      await page.goto('/');
+      await page.goto('/plan');
       await waitForHome(page);
       await setProfileName(page, `Smoke ${Date.now()}`);
 
@@ -74,7 +74,7 @@ test.describe('Staging Smoke Tests', () => {
     });
 
     test('tournament persists after page reload', async ({ page }) => {
-      await page.goto('/');
+      await page.goto('/plan');
       await waitForHome(page);
       await setProfileName(page, `Smoke ${Date.now()}`);
 
@@ -84,6 +84,9 @@ test.describe('Staging Smoke Tests', () => {
       // Reload page completely
       await page.reload();
       await waitForHome(page);
+
+      // Switch to Organizer mode to see "My Tournaments"
+      await page.getByRole('button', { name: 'Organizer' }).click();
 
       // Tournament should still be in the list
       await expect(page.getByText(name)).toBeVisible({ timeout: 20_000 });
@@ -99,7 +102,7 @@ test.describe('Staging Smoke Tests', () => {
 
   test.describe('Join Flow (multi-user)', () => {
     test('player joins tournament by code and registers', async ({ page, context }) => {
-      await page.goto('/');
+      await page.goto('/plan');
       await waitForHome(page);
       await setProfileName(page, `Organizer ${Date.now()}`);
 
@@ -108,7 +111,7 @@ test.describe('Staging Smoke Tests', () => {
 
       // Second browser tab = different anonymous user
       const playerPage = await context.newPage();
-      await playerPage.goto('/');
+      await playerPage.goto('/plan');
       await waitForHome(playerPage);
       await setProfileName(playerPage, `Player ${Date.now()}`);
 
@@ -130,7 +133,7 @@ test.describe('Staging Smoke Tests', () => {
     });
 
     test('join via ?code= deep link', async ({ page }) => {
-      await page.goto('/');
+      await page.goto('/plan');
       await waitForHome(page);
       await setProfileName(page, `Organizer ${Date.now()}`);
 
@@ -138,34 +141,35 @@ test.describe('Staging Smoke Tests', () => {
       const code = await getShareCode(page);
 
       // Navigate to deep link
-      await page.goto(`/?code=${code}`);
+      await page.goto(`/plan?code=${code}`);
 
       // Should land on join screen
       await expect(page.getByRole('heading', { name })).toBeVisible({ timeout: 20_000 });
 
-      // Clean up
+      // Clean up — switch to Organizer mode to see created tournaments
       await goBack(page);
+      await page.getByRole('button', { name: 'Organizer' }).click();
       await openTournamentByName(page, name);
       await expect(page.getByText(/Players \(/)).toBeVisible({ timeout: 20_000 });
       await deleteTournament(page);
     });
 
     test('invalid code shows error', async ({ page }) => {
-      await page.goto('/');
+      await page.goto('/plan');
       await waitForHome(page);
 
       await page.getByRole('button', { name: 'Join with Code' }).click();
-      const codeInput = page.getByLabel('Tournament join code');
+      const codeInput = page.getByLabel('Join code');
       await codeInput.fill('ZZZZZZ');
       await page.getByRole('button', { name: 'Join' }).click();
 
-      await expect(page.getByText(/not found/i)).toBeVisible({ timeout: 20_000 });
+      await expect(page.getByText(/No tournament or event found/i)).toBeVisible({ timeout: 20_000 });
     });
   });
 
   test.describe('Player Registration', () => {
     test('cancel and re-confirm participation', async ({ page }) => {
-      await page.goto('/');
+      await page.goto('/plan');
       await waitForHome(page);
       await setProfileName(page, `Organizer ${Date.now()}`);
 
@@ -185,8 +189,11 @@ test.describe('Staging Smoke Tests', () => {
       await page.getByRole('button', { name: 'Confirm participation' }).click();
       await expect(page.getByText("You're confirmed!")).toBeVisible({ timeout: 10_000 });
 
-      // Clean up
-      await goBack(page);
+      // Clean up — go to home, switch to Organizer mode, open and delete
+      await page.goto('/plan');
+      await waitForHome(page);
+      const orgBtn = page.getByRole('button', { name: 'Organizer' });
+      if (await orgBtn.isVisible().catch(() => false)) await orgBtn.click();
       await openTournamentByName(page, name);
       await expect(page.getByText(/Players \(/)).toBeVisible({ timeout: 20_000 });
       await deleteTournament(page);
@@ -195,7 +202,7 @@ test.describe('Staging Smoke Tests', () => {
 
   test.describe('Events', () => {
     test('create event, link tournament, verify, delete', async ({ page }) => {
-      await page.goto('/');
+      await page.goto('/plan');
       await waitForHome(page);
       await setProfileName(page, `Organizer ${Date.now()}`);
 
@@ -210,51 +217,57 @@ test.describe('Staging Smoke Tests', () => {
       // Link tournament by code
       const codeInput = page.getByPlaceholder('Tournament code');
       await codeInput.fill(code);
-      await page.getByRole('button', { name: 'Link' }).click();
+      await page.getByRole('button', { name: 'Link', exact: true }).first().click();
       await expect(page.getByText('Tournament linked!')).toBeVisible({ timeout: 20_000 });
 
       // Tournament should appear in the event
       await expect(page.getByText(tournamentName)).toBeVisible({ timeout: 10_000 });
 
       // Event share code should exist
-      const eventCode = page.locator('[class*="code"]').filter({ hasText: /^[A-Z2-9]{6}$/ });
+      const eventCode = page.locator('[class*="code"]').filter({ hasText: /^[A-Z2-9]{6}$/ }).first();
       await expect(eventCode).toBeVisible();
 
       // Clean up event
       await deleteEvent(page);
 
-      // Clean up tournament
+      // Clean up tournament — switch to Organizer mode
+      await page.getByRole('button', { name: 'Organizer' }).click();
       await openTournamentByName(page, tournamentName);
       await expect(page.getByText(/Players \(/)).toBeVisible({ timeout: 20_000 });
       await deleteTournament(page);
     });
 
     test('join event by code', async ({ page }) => {
-      await page.goto('/');
+      await page.goto('/plan');
       await waitForHome(page);
       await setProfileName(page, `Organizer ${Date.now()}`);
 
       const eventName = await createEvent(page);
 
       // Get event code
-      const codeEl = page.locator('[class*="code"]').filter({ hasText: /^[A-Z2-9]{6}$/ });
+      const codeEl = page.locator('[class*="code"]').filter({ hasText: /^[A-Z2-9]{6}$/ }).first();
       const eventCode = await codeEl.textContent();
 
       // Go back and join by code
       await page.getByLabel('Back').click();
       await waitForHome(page);
 
+      // Switch to Player mode for Join button
+      const playerBtn = page.getByRole('button', { name: 'Player' });
+      if (await playerBtn.isVisible().catch(() => false)) await playerBtn.click();
       await page.getByRole('button', { name: 'Join with Code' }).click();
-      const codeInput = page.getByLabel('Tournament join code');
+      const codeInput = page.getByLabel('Join code');
       await codeInput.fill(eventCode!);
       await page.getByRole('button', { name: 'Join' }).click();
 
       // Should see event
       await expect(page.getByText(eventName)).toBeVisible({ timeout: 20_000 });
 
-      // Clean up
+      // Clean up — switch to Organizer mode to see events
       await page.getByLabel('Back').click();
       await waitForHome(page);
+      const orgBtn = page.getByRole('button', { name: 'Organizer' });
+      if (await orgBtn.isVisible().catch(() => false)) await orgBtn.click();
       await page.getByText(eventName).first().click();
       await expect(page.getByText(eventName)).toBeVisible({ timeout: 20_000 });
       await deleteEvent(page);
@@ -263,7 +276,7 @@ test.describe('Staging Smoke Tests', () => {
 
   test.describe('Format & Config', () => {
     test('configure format and courts', async ({ page }) => {
-      await page.goto('/');
+      await page.goto('/plan');
       await waitForHome(page);
       await setProfileName(page, `Organizer ${Date.now()}`);
 
@@ -285,7 +298,7 @@ test.describe('Staging Smoke Tests', () => {
     });
 
     test('start delegation selector works', async ({ page }) => {
-      await page.goto('/');
+      await page.goto('/plan');
       await waitForHome(page);
       await setProfileName(page, `Organizer ${Date.now()}`);
 
@@ -316,7 +329,7 @@ test.describe('Staging Smoke Tests', () => {
 
   test.describe('Real-time Sync', () => {
     test('organizer sees player registration in real-time', async ({ page, context }) => {
-      await page.goto('/');
+      await page.goto('/plan');
       await waitForHome(page);
       await setProfileName(page, `Organizer ${Date.now()}`);
 
@@ -325,7 +338,7 @@ test.describe('Staging Smoke Tests', () => {
 
       // Player opens second tab
       const playerPage = await context.newPage();
-      await playerPage.goto('/');
+      await playerPage.goto('/plan');
       await waitForHome(playerPage);
       await setProfileName(playerPage, `Player ${Date.now()}`);
       await joinByCode(playerPage, code);
@@ -357,7 +370,7 @@ test.describe('Staging Smoke Tests', () => {
       // --- Organizer context ---
       const orgCtx = await browser.newContext();
       const orgPage = await orgCtx.newPage();
-      await orgPage.goto('/');
+      await orgPage.goto('/plan');
       await waitForHome(orgPage);
       await setProfileName(orgPage, `Organizer ${Date.now()}`);
 
@@ -373,7 +386,7 @@ test.describe('Staging Smoke Tests', () => {
       // --- Player context (different UID) ---
       const playerCtx = await browser.newContext();
       const playerPage = await playerCtx.newPage();
-      await playerPage.goto('/');
+      await playerPage.goto('/plan');
       await waitForHome(playerPage);
       await setProfileName(playerPage, `Delegate ${Date.now()}`);
 
@@ -411,7 +424,7 @@ test.describe('Staging Smoke Tests', () => {
       // --- Organizer context ---
       const orgCtx = await browser.newContext();
       const orgPage = await orgCtx.newPage();
-      await orgPage.goto('/');
+      await orgPage.goto('/plan');
       await waitForHome(orgPage);
       await setProfileName(orgPage, `Organizer ${Date.now()}`);
 
@@ -421,7 +434,7 @@ test.describe('Staging Smoke Tests', () => {
       // --- Random player context (different UID) ---
       const playerCtx = await browser.newContext();
       const playerPage = await playerCtx.newPage();
-      await playerPage.goto('/');
+      await playerPage.goto('/plan');
       await waitForHome(playerPage);
       await setProfileName(playerPage, `RandomPlayer ${Date.now()}`);
 
@@ -444,7 +457,7 @@ test.describe('Staging Smoke Tests', () => {
       // --- Organizer context ---
       const orgCtx = await browser.newContext();
       const orgPage = await orgCtx.newPage();
-      await orgPage.goto('/');
+      await orgPage.goto('/plan');
       await waitForHome(orgPage);
       await setProfileName(orgPage, `Organizer ${Date.now()}`);
 
@@ -454,7 +467,7 @@ test.describe('Staging Smoke Tests', () => {
       // --- Player context (different UID) ---
       const playerCtx = await browser.newContext();
       const playerPage = await playerCtx.newPage();
-      await playerPage.goto('/');
+      await playerPage.goto('/plan');
       await waitForHome(playerPage);
       await setProfileName(playerPage, `Other ${Date.now()}`);
 
@@ -476,7 +489,7 @@ test.describe('Staging Smoke Tests', () => {
       // --- Organizer creates tournament with capacity 4 (1 court) ---
       const orgCtx = await browser.newContext();
       const orgPage = await orgCtx.newPage();
-      await orgPage.goto('/');
+      await orgPage.goto('/plan');
       await waitForHome(orgPage);
       await setProfileName(orgPage, `Organizer ${Date.now()}`);
 
@@ -490,7 +503,7 @@ test.describe('Staging Smoke Tests', () => {
       for (const pname of playerNames) {
         const ctx = await browser.newContext();
         const pg = await ctx.newPage();
-        await pg.goto('/');
+        await pg.goto('/plan');
         await waitForHome(pg);
         await setProfileName(pg, `${pname} ${Date.now()}`);
         await joinByCode(pg, code);
@@ -527,7 +540,7 @@ test.describe('Staging Smoke Tests', () => {
       // --- Organizer creates team format tournament ---
       const orgCtx = await browser.newContext();
       const orgPage = await orgCtx.newPage();
-      await orgPage.goto('/');
+      await orgPage.goto('/plan');
       await waitForHome(orgPage);
       await setProfileName(orgPage, `Organizer ${Date.now()}`);
 
@@ -543,7 +556,7 @@ test.describe('Staging Smoke Tests', () => {
       // --- Player A registers ---
       const ctxA = await browser.newContext();
       const pageA = await ctxA.newPage();
-      await pageA.goto('/');
+      await pageA.goto('/plan');
       await waitForHome(pageA);
       await setProfileName(pageA, `PlayerA ${Date.now()}`);
       await joinByCode(pageA, code);
@@ -552,7 +565,7 @@ test.describe('Staging Smoke Tests', () => {
       // --- Player B registers ---
       const ctxB = await browser.newContext();
       const pageB = await ctxB.newPage();
-      await pageB.goto('/');
+      await pageB.goto('/plan');
       await waitForHome(pageB);
       await setProfileName(pageB, `PlayerB ${Date.now()}`);
       await joinByCode(pageB, code);
@@ -594,7 +607,7 @@ test.describe('Staging Smoke Tests', () => {
       // --- Organizer creates event ---
       const orgCtx = await browser.newContext();
       const orgPage = await orgCtx.newPage();
-      await orgPage.goto('/');
+      await orgPage.goto('/plan');
       await waitForHome(orgPage);
       await setProfileName(orgPage, `Organizer ${Date.now()}`);
 
@@ -607,12 +620,12 @@ test.describe('Staging Smoke Tests', () => {
       // --- Other user joins event ---
       const otherCtx = await browser.newContext();
       const otherPage = await otherCtx.newPage();
-      await otherPage.goto('/');
+      await otherPage.goto('/plan');
       await waitForHome(otherPage);
       await setProfileName(otherPage, `Other ${Date.now()}`);
 
       await otherPage.getByRole('button', { name: 'Join with Code' }).click();
-      const codeInput = otherPage.getByLabel('Tournament join code');
+      const codeInput = otherPage.getByLabel('Join code');
       await codeInput.fill(eventCode!);
       await otherPage.getByRole('button', { name: 'Join' }).click();
       await expect(otherPage.getByText(eventName)).toBeVisible({ timeout: 20_000 });
@@ -634,7 +647,7 @@ test.describe('Staging Smoke Tests', () => {
       // --- Organizer creates tournament with 4 players ---
       const orgCtx = await browser.newContext();
       const orgPage = await orgCtx.newPage();
-      await orgPage.goto('/');
+      await orgPage.goto('/plan');
       await waitForHome(orgPage);
       const orgName = `Organizer ${Date.now()}`;
       await setProfileName(orgPage, orgName);
@@ -660,7 +673,7 @@ test.describe('Staging Smoke Tests', () => {
       // Simulate: second person has the tournament open from before
       const org2Ctx = await browser.newContext();
       const org2Page = await org2Ctx.newPage();
-      await org2Page.goto('/');
+      await org2Page.goto('/plan');
       await waitForHome(org2Page);
       await setProfileName(org2Page, `SecondUser ${Date.now()}`);
 
@@ -678,8 +691,9 @@ test.describe('Staging Smoke Tests', () => {
       await org2Ctx.close();
 
       // Go back to organizer page — navigate to home to delete
-      await orgPage.goto('/');
+      await orgPage.goto('/plan');
       await waitForHome(orgPage);
+      await orgPage.getByRole('button', { name: 'Organizer' }).click();
       await openTournamentByName(orgPage, name);
       await expect(orgPage.getByText(/Players \(/)).toBeVisible({ timeout: 20_000 });
       await deleteTournament(orgPage);

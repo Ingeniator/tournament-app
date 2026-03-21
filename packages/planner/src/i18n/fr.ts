@@ -31,8 +31,8 @@ const fr: Translations = {
   'home.expired': 'Expiré',
   'home.completed': 'Terminé',
   'home.groupTournaments': 'Tournois du Groupe',
-  'home.playerMode': 'Joueur',
-  'home.organizerMode': 'Organisateur',
+  'home.playerMode': 'Jouer',
+  'home.organizerMode': 'Organiser',
   'home.joinNotFound': 'Aucun tournoi ou événement trouvé avec ce code',
   'home.myEvents': 'Mes Événements',
 

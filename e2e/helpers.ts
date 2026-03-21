@@ -7,55 +7,65 @@ export async function clearState(page: Page) {
   await page.getByRole('heading', { name: 'Tournament Manager' }).waitFor();
 }
 
-/** Create a new tournament via localStorage and reload into setup screen. */
-export async function createTournament(page: Page) {
-  await page.evaluate(() => {
+interface TournamentOptions {
+  name?: string;
+  players?: Array<{ id: string; name: string; group?: string; clubId?: string; rankSlot?: number }>;
+  format?: string;
+  courts?: Array<{ id: string; name: string }>;
+  maxRounds?: number | null;
+  pointsPerMatch?: number;
+  teams?: Array<{ id: string; player1Id: string; player2Id: string }>;
+  scoringMode?: string;
+  targetDuration?: number;
+}
+
+/**
+ * Create a tournament by seeding localStorage and reloading.
+ * The app auto-generates the schedule from setup phase on load.
+ * Ends on the Play tab in in-progress state.
+ */
+export async function createTournament(page: Page, options?: TournamentOptions) {
+  const opts = options ?? {};
+  await page.evaluate((o) => {
+    localStorage.clear();
     const id = Math.random().toString(36).slice(2, 10);
     const now = Date.now();
-    const tournament = {
+    const config: Record<string, unknown> = {
+      format: o.format ?? 'americano',
+      pointsPerMatch: o.pointsPerMatch ?? 24,
+      courts: o.courts ?? [{ id: 'c1', name: 'Court 1' }],
+      maxRounds: o.maxRounds ?? null,
+    };
+    if (o.scoringMode) config.scoringMode = o.scoringMode;
+    if (o.targetDuration) config.targetDuration = o.targetDuration;
+
+    const tournament: Record<string, unknown> = {
       id,
-      name: 'Test Cup',
-      config: {
-        format: 'americano',
-        pointsPerMatch: 24,
-        courts: [{ id: 'c1', name: 'Court 1' }],
-        maxRounds: null,
-      },
+      name: o.name ?? 'Test Cup',
+      config,
       phase: 'setup',
-      players: [],
+      players: o.players ?? [
+        { id: 'p1', name: 'Alice' },
+        { id: 'p2', name: 'Bob' },
+        { id: 'p3', name: 'Charlie' },
+        { id: 'p4', name: 'Diana' },
+      ],
       rounds: [],
       createdAt: now,
       updatedAt: now,
     };
+    if (o.teams) tournament.teams = o.teams;
     localStorage.setItem('padel-tournament-v1', JSON.stringify(tournament));
-  });
+  }, opts);
+
   await page.reload();
-  await page.getByPlaceholder('Tournament name').waitFor();
+  // App auto-generates schedule from setup phase, lands on in-progress view
+  await page.locator('nav').getByRole('button', { name: 'Play' }).waitFor();
 }
 
-/** Add a single player by name in the setup screen. */
-export async function addPlayer(page: Page, name: string) {
-  await page.getByPlaceholder('Player name').fill(name);
-  await page.getByRole('button', { name: 'Add' }).click();
-}
-
-/** Add four standard players. */
-export async function addFourPlayers(page: Page) {
-  for (const name of ['Alice', 'Bob', 'Charlie', 'Diana']) {
-    await addPlayer(page, name);
-  }
-}
-
-/** Click "Generate Schedule" and close the Statistics overlay if it appears. */
-export async function generateSchedule(page: Page) {
-  await page.getByRole('button', { name: 'Generate Schedule' }).click();
-  // After generating, the app switches to Log tab and may auto-open Statistics overlay.
-  // Some formats (e.g. Mexicano) don't show the overlay, so handle both cases.
-  try {
-    await closeOverlay(page);
-  } catch {
-    // No overlay appeared
-  }
+/** Navigate to a tab using the bottom navigation. */
+export async function navigateToTab(page: Page, tab: 'Play' | 'Log' | 'Settings') {
+  await page.locator('nav').getByRole('button', { name: tab }).click();
 }
 
 /** Close any open modal/overlay by clicking the ✕ button. */
@@ -64,11 +74,6 @@ export async function closeOverlay(page: Page) {
   await closeBtn.waitFor({ timeout: 5000 });
   await closeBtn.click();
   await closeBtn.waitFor({ state: 'hidden' });
-}
-
-/** Navigate to a tab using the bottom navigation. */
-export async function navigateToTab(page: Page, tab: 'Play' | 'Log' | 'Settings') {
-  await page.getByRole('button', { name: tab }).click();
 }
 
 /**
@@ -120,113 +125,6 @@ export async function scoreAllMatchesInRound(page: Page, team1Score = 15) {
 }
 
 /**
- * Create a full in-progress tournament: new play → 4 players → generate schedule.
- * Ends on the Log tab with the stats overlay closed.
- */
-export async function createInProgressTournament(page: Page) {
-  await clearState(page);
-  await createTournament(page);
-  await addFourPlayers(page);
-  await generateSchedule(page);
-}
-
-/**
- * Get the count of players shown in the setup screen footer.
- */
-export async function getPlayerCount(page: Page): Promise<string> {
-  return await page.locator('text=/\\d+ player\\(s\\) added/').textContent() ?? '';
-}
-
-/**
- * Verify a text is visible on the page.
- */
-export async function expectVisible(page: Page, text: string) {
-  await expect(page.getByText(text, { exact: false })).toBeVisible();
-}
-
-/** Add N players by name. */
-export async function addPlayers(page: Page, names: string[]) {
-  for (const name of names) {
-    await addPlayer(page, name);
-  }
-}
-
-/** Select a tournament format from the FormatPicker radio list. */
-export async function selectFormat(
-  page: Page,
-  format: 'americano' | 'team-americano' | 'mexicano' | 'mixicano' | 'king-of-the-court' | 'team-mexicano',
-) {
-  const labels: Record<string, string> = {
-    'americano': 'Americano',
-    'team-americano': 'Team Americano',
-    'mexicano': 'Mexicano',
-    'mixicano': 'Mixicano',
-    'king-of-the-court': 'King of the Court',
-    'team-mexicano': 'Team Mexicano',
-  };
-  const label = labels[format];
-  // Click the exact preset name span — this selects the parent label's radio.
-  await page.getByText(label, { exact: true }).click();
-}
-
-/**
- * Add eight standard players (needed for King of the Court which requires 8+).
- */
-export async function addEightPlayers(page: Page) {
-  for (const name of ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry']) {
-    await addPlayer(page, name);
-  }
-}
-
-/**
- * Assign group A/B to players for cross-group formats (mixicano, etc.).
- * Default group labels are "Left Side" / "Right Side" from i18n placeholders.
- * Uses the "Remove {name}" button to locate the correct player row.
- */
-export async function assignGroups(page: Page, groupANames: string[], groupBNames: string[]) {
-  for (const name of groupANames) {
-    const removeBtn = page.getByRole('button', { name: `Remove ${name}` });
-    const rightSection = removeBtn.locator('..');
-    await rightSection.getByRole('button', { name: 'Left Side' }).click();
-  }
-  for (const name of groupBNames) {
-    const removeBtn = page.getByRole('button', { name: `Remove ${name}` });
-    const rightSection = removeBtn.locator('..');
-    await rightSection.getByRole('button', { name: 'Right Side' }).click();
-  }
-}
-
-/**
- * Create a team-mexicano setup: clear state → create tournament → add 6 players
- * → select team-mexicano format → click "Set up Teams".
- * Lands on the team-pairing screen.
- */
-export async function createTeamMexicanoSetup(page: Page) {
-  await clearState(page);
-  await createTournament(page);
-  await addPlayers(page, ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank']);
-  await selectFormat(page, 'team-mexicano');
-  await page.getByRole('button', { name: 'Set up Teams' }).click();
-  // Wait for team pairing screen
-  await page.getByRole('heading', { name: 'Teams' }).waitFor();
-}
-
-/**
- * Create a team-americano setup: clear state → create tournament → add 6 players
- * → select team-americano format → click "Set up Teams".
- * Lands on the team-pairing screen.
- */
-export async function createTeamAmericanoSetup(page: Page) {
-  await clearState(page);
-  await createTournament(page);
-  await addPlayers(page, ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank']);
-  await selectFormat(page, 'team-americano');
-  await page.getByRole('button', { name: 'Set up Teams' }).click();
-  // Wait for team pairing screen
-  await page.getByRole('heading', { name: 'Teams' }).waitFor();
-}
-
-/**
  * Score all matches across all rounds until "All rounds scored!" is visible.
  * Must be on the Play tab. Handles interstitials between rounds.
  */
@@ -258,19 +156,19 @@ export async function scoreAllMatches(page: Page, team1Score = 15) {
 }
 
 /**
+ * Create a full in-progress tournament: 4 players, americano format.
+ * Ends on the Play tab.
+ */
+export async function createInProgressTournament(page: Page) {
+  await createTournament(page);
+}
+
+/**
  * Create a completed tournament: in-progress → score all matches → finish.
- * Uses 3 rounds to keep the setup fast. Ends on the Play tab in completed state.
+ * Uses maxRounds=3 to keep the setup fast. Ends on the Play tab in completed state.
  */
 export async function createCompletedTournament(page: Page) {
-  await clearState(page);
-  await createTournament(page);
-  await addFourPlayers(page);
-
-  // Cap rounds to 3 so scoring finishes quickly
-  const roundsInput = page.locator('#config-rounds');
-  await roundsInput.fill('3');
-
-  await generateSchedule(page);
+  await createTournament(page, { maxRounds: 3 });
   await navigateToTab(page, 'Play');
   await scoreAllMatches(page);
 
@@ -292,13 +190,20 @@ export async function createCompletedTournament(page: Page) {
 }
 
 /**
+ * Verify a text is visible on the page.
+ */
+export async function expectVisible(page: Page, text: string) {
+  await expect(page.getByText(text, { exact: false })).toBeVisible();
+}
+
+/**
  * Create a maldiciones-enabled team-americano tournament via localStorage.
- * 6 players, 1 court, 3 rounds, maldiciones with medium chaos level.
+ * 4 players, 1 court, maldiciones with medium chaos level.
  * Returns on the Play tab with maldiciones UI active.
  */
 export async function createMaldicionesTournament(page: Page) {
-  await clearState(page);
   await page.evaluate(() => {
+    localStorage.clear();
     const id = Math.random().toString(36).slice(2, 10);
     const now = Date.now();
     const players = [

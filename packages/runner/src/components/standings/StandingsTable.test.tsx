@@ -57,13 +57,14 @@ describe('StandingsTable', () => {
       makeEntry({ playerId: 'p4', playerName: 'Dave', rank: 4 }),
     ];
     const { container } = render(<StandingsTable standings={entries} />);
-    const rankLines = container.querySelectorAll('[class*="rankLine"]');
-    expect(rankLines[0].className).toContain('rank1');
-    expect(rankLines[1].className).toContain('rank2');
-    expect(rankLines[2].className).toContain('rank3');
-    expect(rankLines[3].className).not.toContain('rank1');
-    expect(rankLines[3].className).not.toContain('rank2');
-    expect(rankLines[3].className).not.toContain('rank3');
+    const rankCells = container.querySelectorAll('[class*="rank"]');
+    const rankTds = Array.from(rankCells).filter(el => el.tagName === 'TD');
+    expect(rankTds[0].className).toContain('rank1');
+    expect(rankTds[1].className).toContain('rank2');
+    expect(rankTds[2].className).toContain('rank3');
+    expect(rankTds[3].className).not.toContain('rank1');
+    expect(rankTds[3].className).not.toContain('rank2');
+    expect(rankTds[3].className).not.toContain('rank3');
   });
 
   it('shows + prefix for positive diffs', () => {

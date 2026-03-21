@@ -116,7 +116,7 @@ function makeRound(num: number, scored: boolean) {
     id: `r${num}`,
     roundNumber: num,
     matches: [
-      { id: `m${num}-1`, courtId: 'c1', team1: ['p1', 'p2'], team2: ['p3', 'p4'], score: scored ? { team1Points: 15, team2Points: 9 } : null },
+      { id: `m${num}-1`, courtId: 'c1', team1: ['p1', 'p2'] as [string, string], team2: ['p3', 'p4'] as [string, string], score: scored ? { team1Points: 15, team2Points: 9 } : null },
     ],
     sitOuts: [] as string[],
   };
@@ -230,7 +230,7 @@ describe('SettingsScreen', () => {
 
     it('dispatches LOAD_TOURNAMENT on valid clipboard import', async () => {
       const imported = makeTournament({ name: 'Imported' });
-      vi.mocked(validateImport).mockReturnValue({ tournament: imported });
+      vi.mocked(validateImport).mockReturnValue({ tournament: imported, error: null });
       vi.spyOn(window, 'confirm').mockReturnValue(true);
       Object.assign(navigator, {
         clipboard: { readText: vi.fn().mockResolvedValue('{}') },

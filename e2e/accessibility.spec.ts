@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { clearState, createTournament, addFourPlayers, generateSchedule, navigateToTab } from './helpers';
+import { clearState, createTournament, navigateToTab } from './helpers';
 
 // Note: These tests check basic accessibility patterns.
 // For full axe-core audits, install @axe-core/playwright.
@@ -16,30 +16,9 @@ test.describe('Accessibility Smoke', () => {
     expect(count).toBeGreaterThan(0);
   });
 
-  test('setup screen has accessible form elements', async ({ page }) => {
-    await page.goto('/');
-    await clearState(page);
-    await createTournament(page);
-
-    // Input should have placeholder (acts as label)
-    const playerInput = page.getByPlaceholder('Player name');
-    await expect(playerInput).toBeVisible();
-
-    // Add button should be accessible
-    await expect(page.getByRole('button', { name: 'Add' })).toBeVisible();
-
-    // Format radio buttons should be present
-    const radios = page.locator('input[type="radio"]');
-    const radioCount = await radios.count();
-    expect(radioCount).toBeGreaterThan(0);
-  });
-
   test('play screen has accessible score buttons', async ({ page }) => {
     await page.goto('/');
-    await clearState(page);
     await createTournament(page);
-    await addFourPlayers(page);
-    await generateSchedule(page);
     await navigateToTab(page, 'Play');
 
     // Score buttons should be accessible (role=button, name="–")
