@@ -9,7 +9,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
+  smoke-test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -18,8 +18,5 @@ jobs:
         node-version: 20
         cache: npm
     - run: npm ci
-    - run: make deploy-build
-    - uses: actions/upload-artifact@v4
-      with:
-        name: dist
-        path: dist
+    - run: npx -w @padel/common tsc -b
+    - run: make smoke-test

@@ -25,10 +25,9 @@ install:
 build:
 	npx -w @padel/common tsc -b
 	npm -w @padel/runner run build & npm -w @padel/planner run build & npm -w @padel/landing run build & wait
-	npx playwright install --with-deps chromium
 	npx tsx scripts/prerender.ts
 
-deploy-build: build smoke-test
+deploy-build: build
 	rm -rf dist
 	mkdir -p dist/play dist/plan
 	cp -r packages/runner/dist/. dist/play/
