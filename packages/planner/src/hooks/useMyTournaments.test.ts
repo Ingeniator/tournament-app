@@ -194,10 +194,9 @@ describe('useMyTournaments', () => {
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
+        expect(result.current.error).toBeNull();
+        expect(result.current.tournaments).toHaveLength(1);
       });
-
-      expect(result.current.error).toBeNull();
-      expect(result.current.tournaments).toHaveLength(1);
     });
   });
 });
