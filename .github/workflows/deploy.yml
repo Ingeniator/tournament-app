@@ -2,21 +2,41 @@ name: Deploy to Cloudflare Pages
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, staging ]
 
 concurrency:
-  group: pages
+  group: pages-${{ github.ref_name }}
   cancel-in-progress: true
 
 jobs:
-  smoke-test:
+  build-and-deploy:
     runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
       with:
         node-version: 20
         cache: npm
+
     - run: npm ci
-    - run: npx -w @padel/common tsc -b
-    - run: make smoke-test
+
+    - run: npx playwright install --with-deps chromium
+
+    - name: Build
+      env:
+        VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+        VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+        VITE_FIREBASE_DATABASE_URL: ${{ secrets.VITE_FIREBASE_DATABASE_URL }}
+        VITE_TELEGRAM_BOT_NAME: ${{ secrets.VITE_TELEGRAM_BOT_NAME }}
+      run: make deploy-build
+
+    - name: Smoke tests
+      run: make smoke-test
+
+    - name: Deploy to Cloudflare Pages
+      uses: cloudflare/wrangler-action@v3
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        command: pages deploy dist --project-name=tournament-app --branch=${{ github.ref_name }}
