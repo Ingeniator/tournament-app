@@ -1,5 +1,5 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app';
-import { getAuth, signInAnonymously, GoogleAuthProvider, linkWithPopup, linkWithRedirect, signInWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult, type Auth } from 'firebase/auth';
+import { getAuth, connectAuthEmulator, signInAnonymously, GoogleAuthProvider, linkWithPopup, linkWithRedirect, signInWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult, type Auth } from 'firebase/auth';
 import { getDatabase, type Database } from 'firebase/database';
 
 const requiredEnvVars = [
@@ -38,6 +38,10 @@ if (firebaseConfigured) {
   app = initializeApp(config);
   auth = getAuth(app);
   db = getDatabase(app);
+
+  if (import.meta.env.VITE_FIREBASE_AUTH_EMULATOR) {
+    connectAuthEmulator(auth, import.meta.env.VITE_FIREBASE_AUTH_EMULATOR, { disableWarnings: true });
+  }
 }
 
 export { auth, db };
