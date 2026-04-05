@@ -63,7 +63,7 @@ function AppContent() {
     // Event link takes priority
     const eventCode = params.get('event')
       ?? (startParam?.startsWith('event_') ? startParam.slice(6) : null);
-    if (eventCode && eventCode.length === 6) {
+    if (eventCode && (eventCode.length === 6 || eventCode.length === 7)) {
       loadEventByCode(eventCode).then(found => {
         setScreen(found ? 'event-join' : 'home');
       });
@@ -71,7 +71,7 @@ function AppContent() {
     }
 
     const code = params.get('code') ?? startParam ?? null;
-    if (code && code.length === 6) {
+    if (code && (code.length === 6 || code.length === 7)) {
       loadByCode(code).then(found => {
         setScreen(found ? 'join' : 'home');
       });

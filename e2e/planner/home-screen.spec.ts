@@ -83,7 +83,7 @@ test.describe('Planner Home Screen', () => {
     await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
     // Create an event to get a code
     const eventName = await createEvent(page);
-    const codeEl = page.locator('[class*="code"]').filter({ hasText: /^[A-Z2-9]{6}$/ });
+    const codeEl = page.locator('[class*="code"]').filter({ hasText: /^[A-Z2-9]{6,7}$/ });
     const eventCode = await codeEl.textContent();
     await page.getByLabel('Back').click();
     await waitForHome(page);

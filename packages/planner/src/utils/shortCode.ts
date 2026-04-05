@@ -2,7 +2,7 @@ import { ref, get } from 'firebase/database';
 import { db } from '../firebase';
 
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const CODE_LENGTH = 6;
+const CODE_LENGTH = 7;
 
 function randomCode(): string {
   let code = '';

@@ -41,10 +41,10 @@ beforeEach(() => {
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 describe('generateUniqueCode', () => {
-  it('returns a 6-character code from the valid alphabet', async () => {
+  it('returns a 7-character code from the valid alphabet', async () => {
     const { generateUniqueCode } = await import('./shortCode');
     const code = await generateUniqueCode();
-    expect(code).toHaveLength(6);
+    expect(code).toHaveLength(7);
     for (const char of code) {
       expect(ALPHABET).toContain(char);
     }
@@ -54,7 +54,7 @@ describe('generateUniqueCode', () => {
     const { generateUniqueCode } = await import('./shortCode');
     const code = await generateUniqueCode();
     expect(mockGet).toHaveBeenCalledTimes(1);
-    expect(code).toHaveLength(6);
+    expect(code).toHaveLength(7);
   });
 
   it('retries when code already exists', async () => {
@@ -71,7 +71,7 @@ describe('generateUniqueCode', () => {
     const { generateUniqueCode } = await import('./shortCode');
     const code = await generateUniqueCode();
     expect(callCount).toBe(2);
-    expect(code).toHaveLength(6);
+    expect(code).toHaveLength(7);
   });
 
   it('throws after 10 failed attempts', async () => {

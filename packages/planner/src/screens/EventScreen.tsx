@@ -112,7 +112,7 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
 
   const handleLinkByCode = async () => {
     const code = linkCode.trim().toUpperCase();
-    if (code.length !== 6) {
+    if (code.length !== 6 && code.length !== 7) {
       setLinkError(t('home.codeMustBe6'));
       return;
     }
@@ -283,12 +283,12 @@ export function EventScreen({ eventId, uid, onBack, onOpenTournament }: EventScr
                 className={styles.linkInput}
                 type="text"
                 value={linkCode}
-                onChange={e => { setLinkCode(e.target.value.toUpperCase().slice(0, 6)); setLinkError(null); }}
+                onChange={e => { setLinkCode(e.target.value.toUpperCase().slice(0, 7)); setLinkError(null); }}
                 placeholder={t('event.linkPlaceholder')}
-                maxLength={6}
+                maxLength={7}
                 onKeyDown={e => e.key === 'Enter' && handleLinkByCode()}
               />
-              <Button size="small" onClick={handleLinkByCode} disabled={linking || linkCode.length !== 6}>
+              <Button size="small" onClick={handleLinkByCode} disabled={linking || (linkCode.length !== 6 && linkCode.length !== 7)}>
                 {linking ? '...' : t('event.link')}
               </Button>
             </div>

@@ -67,7 +67,7 @@ test.describe('Staging Smoke Tests', () => {
 
       // Share code exists
       const code = await getShareCode(page);
-      expect(code).toMatch(/^[A-Z2-9]{6}$/);
+      expect(code).toMatch(/^[A-Z2-9]{6,7}$/);
 
       // Delete
       await deleteTournament(page);
@@ -224,7 +224,7 @@ test.describe('Staging Smoke Tests', () => {
       await expect(page.getByText(tournamentName)).toBeVisible({ timeout: 10_000 });
 
       // Event share code should exist
-      const eventCode = page.locator('[class*="code"]').filter({ hasText: /^[A-Z2-9]{6}$/ }).first();
+      const eventCode = page.locator('[class*="code"]').filter({ hasText: /^[A-Z2-9]{6,7}$/ }).first();
       await expect(eventCode).toBeVisible();
 
       // Clean up event
@@ -245,7 +245,7 @@ test.describe('Staging Smoke Tests', () => {
       const eventName = await createEvent(page);
 
       // Get event code
-      const codeEl = page.locator('[class*="code"]').filter({ hasText: /^[A-Z2-9]{6}$/ }).first();
+      const codeEl = page.locator('[class*="code"]').filter({ hasText: /^[A-Z2-9]{6,7}$/ }).first();
       const eventCode = await codeEl.textContent();
 
       // Go back and join by code
@@ -614,7 +614,7 @@ test.describe('Staging Smoke Tests', () => {
       const eventName = await createEvent(orgPage);
 
       // Get event code
-      const codeEl = orgPage.locator('[class*="code"]').filter({ hasText: /^[A-Z2-9]{6}$/ });
+      const codeEl = orgPage.locator('[class*="code"]').filter({ hasText: /^[A-Z2-9]{6,7}$/ });
       const eventCode = await codeEl.textContent();
 
       // --- Other user joins event ---

@@ -63,7 +63,7 @@ async function toggleCaptainCheckbox(page: import('@playwright/test').Page, chec
 /** Approve a player via Firebase REST API (simulates captain approval) */
 async function approvePlayer(page: import('@playwright/test').Page, playerName: string) {
   // Get the share code from the page to identify the tournament
-  const shareCode = await page.locator('text=/^[A-Z2-9]{6}$/').first().textContent({ timeout: 5000 });
+  const shareCode = await page.locator('text=/^[A-Z2-9]{6,7}$/').first().textContent({ timeout: 5000 });
   if (!shareCode) throw new Error('Share code not found on page');
 
   await page.evaluate(async ({ name, code }) => {

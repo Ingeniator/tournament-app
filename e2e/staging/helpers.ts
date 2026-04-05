@@ -74,9 +74,9 @@ export async function getShareCode(page: Page): Promise<string> {
   if (await shareBtn.isVisible().catch(() => false)) {
     await shareBtn.click();
   }
-  const codeEl = page.locator('span[class*="code"]').filter({ hasText: /^[A-Z2-9]{6}$/ });
+  const codeEl = page.locator('span[class*="code"]').filter({ hasText: /^[A-Z2-9]{6,7}$/ });
   const code = await codeEl.textContent({ timeout: 10_000 });
-  if (!code || code.length !== 6) throw new Error(`Invalid share code: ${code}`);
+  if (!code || (code.length !== 6 && code.length !== 7)) throw new Error(`Invalid share code: ${code}`);
   return code;
 }
 

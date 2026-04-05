@@ -78,7 +78,7 @@ export function HomeScreen() {
 
   const handleJoin = async () => {
     const code = joinCode.trim().toUpperCase();
-    if (code.length !== 6) {
+    if (code.length !== 6 && code.length !== 7) {
       setError(t('home.codeMustBe6'));
       return;
     }
@@ -397,17 +397,17 @@ export function HomeScreen() {
                   type="text"
                   value={joinCode}
                   onChange={e => {
-                    setJoinCode(e.target.value.toUpperCase().slice(0, 6));
+                    setJoinCode(e.target.value.toUpperCase().slice(0, 7));
                     setError(null);
                   }}
                   placeholder={t('home.codePlaceholder')}
-                  maxLength={6}
+                  maxLength={7}
                   autoFocus
                   onKeyDown={e => e.key === 'Enter' && handleJoin()}
                   aria-label="Join code"
                 />
                 {error && <div className={styles.error}>{error}</div>}
-                <Button fullWidth onClick={handleJoin} disabled={joining || joinCode.length !== 6}>
+                <Button fullWidth onClick={handleJoin} disabled={joining || (joinCode.length !== 6 && joinCode.length !== 7)}>
                   {joining ? t('home.joining') : t('home.join')}
                 </Button>
                 <Button variant="ghost" fullWidth onClick={() => { setJoinMode(false); setError(null); }}>

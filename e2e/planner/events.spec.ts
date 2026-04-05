@@ -116,7 +116,7 @@ test.describe('Events', () => {
     const eventName = await createEvent(page);
 
     // Share code should be visible
-    const codeEl = page.locator('[class*="code"]').filter({ hasText: /^[A-Z2-9]{6}$/ });
+    const codeEl = page.locator('[class*="code"]').filter({ hasText: /^[A-Z2-9]{6,7}$/ });
     await expect(codeEl).toBeVisible();
 
     // Copy link button should work
@@ -159,7 +159,7 @@ test.describe('Events', () => {
     const eventName = await createEvent(page);
 
     // Get event code
-    const codeEl = page.locator('[class*="code"]').filter({ hasText: /^[A-Z2-9]{6}$/ });
+    const codeEl = page.locator('[class*="code"]').filter({ hasText: /^[A-Z2-9]{6,7}$/ });
     const eventCode = await codeEl.textContent();
 
     // Go back to home
